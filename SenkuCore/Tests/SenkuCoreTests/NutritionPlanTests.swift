@@ -69,6 +69,26 @@ final class NutritionPlanTests: XCTestCase {
         XCTAssertTrue(plan.advisories.contains { $0.id == "calories.clamped" && $0.severity == .warning })
     }
 
+    func testFloorAboveMaintenanceIsCalledOut() throws {
+        // 45 kg and sedentary: maintenance is ~1100 kcal, under the 1200 floor,
+        // so eating at the floor is actually a surplus despite the cut goal.
+        let small = try BodyMetrics(sex: .female, age: 62, heightCM: 150, weightKG: 45)
+        let plan = NutritionPlan.make(for: small, activityLevel: .sedentary, goal: .aggressiveCut)
+
+        XCTAssertGreaterThan(plan.energy.dailyDelta, 0)
+        XCTAssertTrue(plan.advisories.contains { $0.id == "calories.floorAboveMaintenance" })
+    }
+
+    func testFloorAdvisoryStaysQuietWhenTheClampStillLeavesADeficit() throws {
+        // Clamped, but maintenance is comfortably above the floor, so the plan
+        // remains a genuine deficit and the extra warning would be noise.
+        let bigger = try BodyMetrics(sex: .female, age: 30, heightCM: 170, weightKG: 75)
+        let plan = NutritionPlan.make(for: bigger, activityLevel: .sedentary, goal: .aggressiveCut)
+
+        XCTAssertLessThan(plan.energy.dailyDelta, 0)
+        XCTAssertFalse(plan.advisories.contains { $0.id == "calories.floorAboveMaintenance" })
+    }
+
     func testAdvisoriesAreOrderedMostSevereFirst() throws {
         let minor = try BodyMetrics(sex: .female, age: 15, heightCM: 150, weightKG: 42)
         let plan = NutritionPlan.make(for: minor, activityLevel: .sedentary, goal: .aggressiveCut)

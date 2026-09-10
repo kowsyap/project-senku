@@ -68,6 +68,22 @@ public struct NutritionPlan: Hashable, Sendable {
             ))
         }
 
+        // Clamping can invert the direction of the plan: for a small, sedentary
+        // person the safe floor can sit above maintenance, so a "cut" becomes a
+        // slight surplus. Saying so is better than letting the user work it out
+        // from a deficit that reads as a positive number.
+        if energy.wasClampedToSafeMinimum, energy.dailyDelta > 0 {
+            notes.append(Advisory(
+                id: "calories.floorAboveMaintenance",
+                severity: .warning,
+                message: """
+                At your size the safe minimum is actually above what you burn in a day, so this \
+                target will hold your weight or add a little. Losing weight from here means \
+                moving more rather than eating less — and is worth a conversation with a doctor.
+                """
+            ))
+        }
+
         if metrics.bodyFatPercentage == nil {
             notes.append(Advisory(
                 id: "bodyfat.estimated",

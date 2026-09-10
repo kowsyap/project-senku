@@ -141,6 +141,21 @@ func runVerification() -> Int32 {
             .advisories.contains { $0.id == "bodyfat.estimated" },
         "Measured body fat is not flagged"
     )
+    // Clamping can invert a cut into a surplus; that must be surfaced.
+    let floored = try! BodyMetrics(sex: .female, age: 62, heightCM: 150, weightKG: 45)
+    let flooredPlan = NutritionPlan.make(for: floored, activityLevel: .sedentary, goal: .aggressiveCut)
+    v.expect(flooredPlan.energy.dailyDelta > 0, "Floor above maintenance yields a surplus")
+    v.expect(
+        flooredPlan.advisories.contains { $0.id == "calories.floorAboveMaintenance" },
+        "Floor above maintenance is flagged"
+    )
+    let deficitStillHolds = try! BodyMetrics(sex: .female, age: 30, heightCM: 170, weightKG: 75)
+    v.expect(
+        !NutritionPlan.make(for: deficitStillHolds, activityLevel: .sedentary, goal: .aggressiveCut)
+            .advisories.contains { $0.id == "calories.floorAboveMaintenance" },
+        "Floor advisory stays quiet on a real deficit"
+    )
+
     let minor = try! BodyMetrics(sex: .female, age: 15, heightCM: 150, weightKG: 42)
     let minorPlan = NutritionPlan.make(for: minor, activityLevel: .sedentary, goal: .aggressiveCut)
     v.expect(minorPlan.advisories.contains { $0.id == "age.minor" }, "Minors are warned")

@@ -12,7 +12,16 @@ Senku.xcworkspace
 ├── Senku (iOS)                 iPhone + iPad. Mac Catalyst enabled.
 ├── Senku Watch                 watchOS app
 ├── SenkuWidgets                Widget + Live Activity extension
-└── SenkuUI/                    Swift package — shared SwiftUI components
+│
+├── SenkuUI/                    Swift package — shared SwiftUI
+│   ├── Theme/                  Palette and metrics
+│   ├── Formatting/             Unit conversion and display strings
+│   ├── State/                  PlanDraft, ProfileStore
+│   ├── Components/             Card, StatRow, MacroRing, EnergyLadder, AdvisoryBanner
+│   ├── Screens/                RootView, CalculatorView, ResultsView, WatchPlanView
+│   └── SenkuRender/            Offscreen PNG renderer for layout review
+│
+└── App/                        Thin per-platform entry points
 ```
 
 `SenkuCore` imports only `Foundation`. That constraint is what lets the same
@@ -56,8 +65,11 @@ Guest mode writes nothing. That is enforced by never constructing a
 Two layers, deliberately:
 
 - **`SenkuCoreTests`** — the XCTest suite. Requires Xcode.
-- **`senku verify`** — 61 dependency-free assertions in the CLI target. Runs with
+- **`senku verify`** — 64 dependency-free assertions in the CLI target. Runs with
   Command Line Tools alone, and in CI without an Xcode toolchain.
+- **`senku-render`** — renders screens to PNG offscreen, so layout regressions
+  are visible without launching a simulator. This is how the deficit/surplus
+  labelling bug was caught.
 
 The overlap is intentional. The core's arithmetic is the part of this app that
 must not silently break, and it should stay checkable on any machine.

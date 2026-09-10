@@ -13,9 +13,10 @@ Early. The calculation core is built and verified; the apps are not started yet.
 
 | Component | State |
 |---|---|
-| `SenkuCore` — energy and macro engine | ✅ Complete, 61 checks passing |
-| `senku` CLI | ✅ Working |
-| iOS / Mac / watchOS apps | ⬜ Blocked on installing Xcode |
+| `SenkuCore` — energy and macro engine | ✅ 64 checks + 33 tests passing |
+| `SenkuUI` — SwiftUI screens | ✅ Builds for iOS, macOS and watchOS |
+| `senku` CLI, `senku-render` | ✅ Working |
+| Xcode app project | ⬜ [One-time manual setup](docs/XCODE_SETUP.md) |
 
 ## What the core does
 
@@ -68,17 +69,25 @@ MACROS
 ## Testing
 
 ```sh
-swift run senku verify   # 61 checks, no Xcode required
-swift test               # XCTest suite, requires Xcode
+cd SenkuCore
+swift run senku verify   # 64 checks, no Xcode required
+swift test               # 33 XCTest cases, requires Xcode
+
+cd ../SenkuUI
+swift build                                                    # macOS
+xcodebuild -scheme SenkuUI -destination 'generic/platform=iOS' build
+xcodebuild -scheme SenkuUI -destination 'generic/platform=watchOS' build
+swift run senku-render /tmp/senku-shots                        # screens as PNG
 ```
 
-`swift test` fails with *"no such module 'XCTest'"* until Xcode is installed —
-XCTest ships inside Xcode, not Command Line Tools. The `verify` command exists so
-the arithmetic stays checkable in the meantime.
+`senku verify` exists because XCTest ships inside Xcode rather than Command Line
+Tools — the arithmetic stays checkable on any machine, and in CI without an
+Xcode toolchain.
 
 ## Documentation
 
 - [Project definition](docs/PROJECT.md) — the idea, the feature set, what is out of scope
+- [Xcode setup](docs/XCODE_SETUP.md) — one-time steps to create the app project
 - [Architecture](docs/ARCHITECTURE.md) — targets, code sharing, data and sync
 - [Roadmap](docs/ROADMAP.md) — phased plan
 

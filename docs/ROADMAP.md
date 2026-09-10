@@ -14,15 +14,18 @@ saving all the value for the end.
 
 ## Phase 1 — Calculator that ships
 
-*Blocked on: installing Xcode*
-
-- [ ] Xcode project with iOS target, Catalyst enabled
-- [ ] Input form: sex, age, height, weight, body fat, activity, goal
-- [ ] Unit switching (metric ↔ imperial) at the presentation layer only
-- [ ] Results screen: energy ladder, macro rings, advisories
-- [ ] Guest mode — calculate and discard
-- [ ] Saved profile via SwiftData
-- [ ] Migrate `SenkuCoreTests` to Swift Testing
+- [x] `SenkuUI` package, building for iOS, macOS and watchOS
+- [x] Input form: sex, age, height, weight, body fat, activity, goal, formula
+- [x] Unit switching (metric ↔ imperial) at the presentation layer only
+- [x] Results screen: macro ring, energy ladder, advisories, body composition
+- [x] Adaptive layout — side by side on wide windows, stacked on phones
+- [x] Guest mode and saved profile, split across two tabs
+- [x] Profile persistence via `ProfileStore`
+- [x] Offscreen PNG renderer for reviewing layout without a simulator
+- [ ] Xcode project with iOS target, Catalyst enabled — see [XCODE_SETUP.md](XCODE_SETUP.md)
+- [ ] Run on a simulator and a device
+- [ ] Migrate `SenkuCoreTests` to Swift Testing (now that Xcode is installed)
+- [ ] Move `ProfileStore` onto SwiftData once history needs storing
 
 ## Phase 2 — Rest timer
 
@@ -57,4 +60,5 @@ saving all the value for the end.
 
 ## Immediate next step
 
-Install Xcode from the Mac App Store, then Phase 1.
+Follow [XCODE_SETUP.md](XCODE_SETUP.md) to create the app project, then run it.
+After that, Phase 2.
