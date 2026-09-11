@@ -45,7 +45,10 @@ public struct RootView: View {
             .tag(Tab.me)
 
             NavigationStack {
-                CalculatorView(draft: PlanDraft()) { profile in
+                CalculatorView(
+                    draft: PlanDraft(),
+                    replacesExistingProfile: store.hasProfile
+                ) { profile in
                     store.save(profile)
                     profileEditionID = UUID()
                     selection = .me
