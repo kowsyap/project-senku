@@ -12,6 +12,9 @@
 		1A000000000000000000001B /* SenkuWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000010 /* SenkuWidgets.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1A0000000000000000000019x /* SenkuCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1A0000000000000000000019 /* SenkuCore */; };
 		1A000000000000000000001Ax /* SenkuUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1A000000000000000000001A /* SenkuUI */; };
+		1A000000000000000000002B /* SenkuWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000020 /* SenkuWatch.app */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1A0000000000000000000029x /* SenkuCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1A0000000000000000000029 /* SenkuCore */; };
+		1A000000000000000000002Ax /* SenkuUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1A000000000000000000002A /* SenkuUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +39,13 @@
 			remoteGlobalIDString = 1A0000000000000000000015;
 			remoteInfo = SenkuWidgets;
 		};
+		1A000000000000000000002D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D889B6AD305389DF001DB1A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1A0000000000000000000025;
+			remoteInfo = SenkuWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +53,7 @@
 		D889B6C4305389E1001DB1A6 /* SenkuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SenkuTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D889B6CE305389E1001DB1A6 /* SenkuUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SenkuUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0000000000000000000010 /* SenkuWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SenkuWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0000000000000000000020 /* SenkuWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SenkuWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -64,6 +75,11 @@
 		1A0000000000000000000011 /* SenkuWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SenkuWidgets;
+			sourceTree = "<group>";
+		};
+		1A0000000000000000000021 /* SenkuWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SenkuWatch;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -101,6 +117,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1A0000000000000000000023 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0000000000000000000029x /* SenkuCore in Frameworks */,
+				1A000000000000000000002Ax /* SenkuUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -111,6 +136,7 @@
 				D889B6C7305389E1001DB1A6 /* SenkuTests */,
 				D889B6D1305389E1001DB1A6 /* SenkuUITests */,
 				1A0000000000000000000011 /* SenkuWidgets */,
+				1A0000000000000000000021 /* SenkuWatch */,
 				D889B6B6305389DF001DB1A6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -122,6 +148,7 @@
 				D889B6C4305389E1001DB1A6 /* SenkuTests.xctest */,
 				D889B6CE305389E1001DB1A6 /* SenkuUITests.xctest */,
 				1A0000000000000000000010 /* SenkuWidgets.appex */,
+				1A0000000000000000000020 /* SenkuWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -137,11 +164,13 @@
 				D889B6B2305389DF001DB1A6 /* Frameworks */,
 				D889B6B3305389DF001DB1A6 /* Resources */,
 				1A000000000000000000001C /* Embed Foundation Extensions */,
+				1A000000000000000000002C /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				1A000000000000000000001E /* PBXTargetDependency */,
+				1A000000000000000000002E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D889B6B7305389DF001DB1A6 /* Senku */,
@@ -225,6 +254,30 @@
 			productReference = 1A0000000000000000000010 /* SenkuWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		1A0000000000000000000025 /* SenkuWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0000000000000000000028 /* Build configuration list for PBXNativeTarget "SenkuWatch" */;
+			buildPhases = (
+				1A0000000000000000000022 /* Sources */,
+				1A0000000000000000000023 /* Frameworks */,
+				1A0000000000000000000024 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1A0000000000000000000021 /* SenkuWatch */,
+			);
+			name = SenkuWatch;
+			packageProductDependencies = (
+				1A0000000000000000000029 /* SenkuCore */,
+				1A000000000000000000002A /* SenkuUI */,
+			);
+			productName = SenkuWatch;
+			productReference = 1A0000000000000000000020 /* SenkuWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -247,6 +300,9 @@
 						TestTargetID = D889B6B4305389DF001DB1A6;
 					};
 					1A0000000000000000000015 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					1A0000000000000000000025 = {
 						CreatedOnToolsVersion = 26.6;
 					};
 				};
@@ -273,6 +329,7 @@
 				D889B6C3305389E1001DB1A6 /* SenkuTests */,
 				D889B6CD305389E1001DB1A6 /* SenkuUITests */,
 				1A0000000000000000000015 /* SenkuWidgets */,
+				1A0000000000000000000025 /* SenkuWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -306,6 +363,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1A0000000000000000000024 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -318,6 +382,17 @@
 				1A000000000000000000001B /* SenkuWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1A000000000000000000002C /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				1A000000000000000000002B /* SenkuWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -351,6 +426,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1A0000000000000000000022 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -369,6 +451,12 @@
 			platformFilters = (ios, );
 			target = 1A0000000000000000000015 /* SenkuWidgets */;
 			targetProxy = 1A000000000000000000001D /* PBXContainerItemProxy */;
+		};
+		1A000000000000000000002E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilters = (ios, );
+			target = 1A0000000000000000000025 /* SenkuWatch */;
+			targetProxy = 1A000000000000000000002D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -743,6 +831,58 @@
 			};
 			name = Release;
 		};
+		1A0000000000000000000026 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SenkuWatch-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Senku;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pk.Senku.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Debug;
+		};
+		1A0000000000000000000027 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SenkuWatch-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Senku;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pk.Senku.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -791,6 +931,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		1A0000000000000000000028 /* Build configuration list for PBXNativeTarget "SenkuWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A0000000000000000000026 /* Debug */,
+				1A0000000000000000000027 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -818,6 +967,14 @@
 			productName = SenkuCore;
 		};
 		1A000000000000000000001A /* SenkuUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SenkuUI;
+		};
+		1A0000000000000000000029 /* SenkuCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SenkuCore;
+		};
+		1A000000000000000000002A /* SenkuUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SenkuUI;
 		};

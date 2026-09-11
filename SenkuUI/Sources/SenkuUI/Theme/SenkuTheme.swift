@@ -27,7 +27,19 @@ public enum Senku {
         public static let cardCorner: CGFloat = 16
         public static let cardPadding: CGFloat = 16
         public static let stackSpacing: CGFloat = 14
+
+        #if os(watchOS)
+        // A 40 mm screen is about 160 pt across. At phone proportions the ring
+        // fills it entirely and pushes Start below the fold, which is the one
+        // control you need without scrolling between sets.
+        public static let ringWidth: CGFloat = 9
+        public static let timerRingMaxWidth: CGFloat = 96
+        public static let timerDigitSize: CGFloat = 26
+        #else
         public static let ringWidth: CGFloat = 18
+        public static let timerRingMaxWidth: CGFloat = 260
+        public static let timerDigitSize: CGFloat = 56
+        #endif
     }
 }
 

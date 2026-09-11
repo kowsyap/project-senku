@@ -81,9 +81,13 @@ public struct RestTimerView: View {
                     isFinished: isFinished,
                     isPaused: timer.isPaused
                 )
-                .frame(maxWidth: 260)
+                .frame(maxWidth: Senku.Metrics.timerRingMaxWidth)
                 .aspectRatio(1, contentMode: .fit)
+                #if os(watchOS)
+                .padding(.vertical, 2)
+                #else
                 .padding(.vertical, 8)
+                #endif
 
             controls
             intervalPicker

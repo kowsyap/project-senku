@@ -52,7 +52,7 @@ public struct TimerRing: View {
 
             VStack(spacing: 2) {
                 Text(Display.clock(remaining))
-                    .font(.system(size: 56, weight: .semibold, design: .rounded))
+                    .font(.system(size: Senku.Metrics.timerDigitSize, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
