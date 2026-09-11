@@ -13,6 +13,19 @@ so the app targets are thin shells.
       replaced with one that presents `RootView()`
 - [x] Builds and runs on the iOS simulator
 
+### The widget extension — done
+
+`SenkuWidgets` was added by hand rather than through the template. Two things
+about it are worth knowing before editing the project:
+
+- The extension's `Info.plist` is **outside** the synchronized folder, at
+  `SenkuWidgets-Info.plist`. A file inside a synchronized folder is also added
+  to that target's Resources, which collides with its own `Info.plist`.
+- `INFOPLIST_KEY_*` build settings only ever set a **top-level** key, and
+  WidgetKit needs `NSExtensionPointIdentifier` *nested* inside an `NSExtension`
+  dict. So the plist has to be a real file; the build setting silently produces
+  an extension that builds and never registers.
+
 ## Remaining
 
 ### Turn on Mac

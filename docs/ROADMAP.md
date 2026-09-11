@@ -35,7 +35,7 @@ saving all the value for the end.
 - [x] Timer engine with presets and a custom value
 - [x] Timer screen: countdown ring, presets, pause/resume, add-30s
 - [x] Third tab, reachable in one tap from anywhere
-- [ ] Live Activity with Dynamic Island
+- [x] Live Activity with Dynamic Island
 - [ ] Home Screen widget
 - [ ] Control Center control (iOS 18+)
 - [ ] Watch app with completion haptics
@@ -65,18 +65,19 @@ saving all the value for the end.
 
 ## Immediate next step
 
-The rest timer engine and its phone screen are in. The remaining Phase 2 items
-are all *surfaces* onto that engine rather than new logic, and every one of them
-needs a target that does not exist yet:
+The `SenkuWidgets` extension target now exists, so the Home Screen widget and
+the Control Center control have somewhere to live. Both are small next to the
+target work itself.
 
-- the Live Activity and Home Screen widget need a **widget extension** target
-  with *Include Live Activity* checked;
-- the Control Center control needs that same extension;
-- the watch haptic needs the **watch app** target.
+The Home Screen widget is the one with a real design question attached: it
+cannot run a timer, so it either deep-links into starting a rest, or it shows
+today's targets from the saved profile. The second needs an **App Group**,
+because a widget cannot read the app's `UserDefaults` without one — and
+`ProfileStore` would have to move to the shared suite.
 
-So the target work in [XCODE_SETUP.md](XCODE_SETUP.md) — Mac Catalyst and the
-watch app — is now the thing blocking the rest of Phase 2, not a detour from it.
+Still outstanding and unrelated to widgets:
 
-`RestTimer` was built for this: it hands out an absolute `endsAt`, which is
-exactly what `ActivityKit` and a local notification each want, so none of those
-surfaces need logic of their own.
+- the watch app target, for the haptic that is the whole point on a watch;
+- a local notification at `endsAt`, so a finished rest reaches you with the
+  screen off — the chime only plays while the app is foregrounded;
+- Mac Catalyst.

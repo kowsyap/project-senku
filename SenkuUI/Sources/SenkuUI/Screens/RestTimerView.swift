@@ -33,6 +33,16 @@ public struct RestTimerView: View {
         self.scrolls = scrolls
     }
 
+    /// Every control routes its mutation through here. The Live Activity is
+    /// pushed from this single point rather than from each button, so a new
+    /// control cannot quietly forget to keep the lock screen in step.
+    private func changed(at instant: Date) {
+        now = instant
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        RestActivityController.shared.sync(with: timer, at: instant)
+        #endif
+    }
+
     private var remaining: TimeInterval { timer.remaining(at: now) }
     private var isFinished: Bool { timer.hasFinished(at: now) }
 
@@ -52,6 +62,9 @@ public struct RestTimerView: View {
             now = instant
             if timer.refresh(at: instant) {
                 Feedback.restFinished()
+                // The crossing is a state change, so the lock screen needs it;
+                // the ticks either side of it do not.
+                changed(at: instant)
             }
         }
     }
@@ -86,7 +99,7 @@ public struct RestTimerView: View {
                 Button {
                     Feedback.control()
                     timer.toggle(at: .now)
-                    now = .now
+                    changed(at: .now)
                 } label: {
                     Label(primaryTitle, systemImage: primarySymbol)
                         .frame(maxWidth: .infinity)
@@ -97,7 +110,7 @@ public struct RestTimerView: View {
                 Button {
                     Feedback.control()
                     timer.reset()
-                    now = .now
+                    changed(at: .now)
                 } label: {
                     Label("Reset", systemImage: "arrow.counterclockwise")
                         .labelStyle(.iconOnly)
@@ -112,7 +125,7 @@ public struct RestTimerView: View {
             Button {
                 Feedback.control()
                 timer.extend(by: 30, at: .now)
-                now = .now
+                changed(at: .now)
             } label: {
                 Label(isFinished ? "Rest 30s more" : "Add 30 seconds", systemImage: "goforward.30")
                     .frame(maxWidth: .infinity)
@@ -173,7 +186,7 @@ public struct RestTimerView: View {
             let instant = Date.now
             try? timer.setDuration(preset.duration, at: instant)
             timer.start(at: instant)
-            now = instant
+            changed(at: instant)
         } label: {
             Text(preset.title)
                 .font(.body.weight(.semibold))
@@ -196,7 +209,7 @@ public struct RestTimerView: View {
             let instant = Date.now
             let target = timer.duration + seconds
             if (try? timer.setDuration(target, at: instant)) != nil {
-                now = instant
+                changed(at: instant)
             }
         } label: {
             Image(systemName: symbol)
