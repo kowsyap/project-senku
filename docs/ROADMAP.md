@@ -20,6 +20,7 @@ saving all the value for the end.
 - [x] Results screen: macro ring, energy ladder, advisories, body composition
 - [x] Adaptive layout — side by side on wide windows, stacked on phones
 - [x] Guest mode and saved profile, split across two tabs
+- [x] Profile tab is a dashboard, not a second copy of the calculator
 - [x] Profile persistence via `ProfileStore`
 - [x] Offscreen PNG renderer for reviewing layout without a simulator
 - [x] Xcode project with packages linked — see [XCODE_SETUP.md](XCODE_SETUP.md)

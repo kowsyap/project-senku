@@ -8,8 +8,11 @@ import SenkuCore
 /// unit systems mid-edit never loses precision or round-trips through a string.
 /// `plan` recomputes on every change — the core is pure and synchronous, so this
 /// is cheap enough to do per keystroke.
+/// `Identifiable` so a draft can drive `sheet(item:)` — opening the profile
+/// editor and seeding it with the current profile become one action. A class
+/// gets its identity from `ObjectIdentifier` for free.
 @Observable
-public final class PlanDraft {
+public final class PlanDraft: Identifiable {
     public var unitSystem: UnitSystem
     public var sex: Sex
     public var age: Int

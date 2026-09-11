@@ -30,7 +30,7 @@ public struct RootView: View {
         TabView(selection: $selection) {
             NavigationStack {
                 profileTab
-                    .navigationTitle("Senku")
+                    .navigationTitle(store.hasProfile ? "My plan" : "Senku")
                     .toolbar {
                         if store.hasProfile {
                             ToolbarItem {
@@ -45,7 +45,7 @@ public struct RootView: View {
             .tag(Tab.me)
 
             NavigationStack {
-                CalculatorView(draft: PlanDraft(), mode: .guest) { profile in
+                CalculatorView(draft: PlanDraft()) { profile in
                     store.save(profile)
                     profileEditionID = UUID()
                     selection = .me
@@ -74,10 +74,7 @@ public struct RootView: View {
     @ViewBuilder
     private var profileTab: some View {
         if let profile = store.profile {
-            CalculatorView(
-                draft: PlanDraft(profile: profile),
-                mode: .profile
-            ) { updated in
+            ProfileDashboardView(profile: profile) { updated in
                 store.save(updated)
                 profileEditionID = UUID()
             }

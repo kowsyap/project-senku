@@ -72,6 +72,8 @@ xcrun simctl launch booted pk.Senku
 xcrun simctl io booted screenshot shot.png
 ```
 
-Seeding `UserDefaults` from the host with `defaults write` does **not** work —
-the simulator's preference daemon discards it. Test persistence through
-`SenkuUIUnitTests` instead.
+Seeding a profile into the simulator from outside the app does **not** work.
+`defaults write` against the container path is discarded by the preference
+daemon, and `simctl spawn booted /usr/bin/defaults write` is refused by the
+sandbox ("Could not write domain"). Save a profile through the app's own Quick
+calc tab, and test persistence through `SenkuUIUnitTests`.

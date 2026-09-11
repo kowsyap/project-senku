@@ -6,6 +6,10 @@ import SenkuCore
 import SenkuUI
 
 /// Renders a screen to a PNG at a given width and colour scheme.
+///
+/// Pass plain layout views. `NavigationStack` and `ScrollView` need a real
+/// window to size themselves and come out blank here, so render the content
+/// they would contain rather than the container.
 @MainActor
 func render(
     _ view: some View,
