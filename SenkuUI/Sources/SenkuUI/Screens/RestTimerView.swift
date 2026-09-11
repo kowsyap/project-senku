@@ -171,14 +171,7 @@ public struct RestTimerView: View {
     private var intervalPicker: some View {
         Card("Rest interval", footnote: "Tapping an interval starts it straight away.") {
             VStack(spacing: 12) {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 86), spacing: 8)],
-                    spacing: 8
-                ) {
-                    ForEach(RestPreset.allCases) { preset in
-                        presetButton(preset)
-                    }
-                }
+                presetGrid
 
                 Divider()
 
@@ -194,6 +187,30 @@ public struct RestTimerView: View {
                         .accessibilityLabel("Rest interval")
                         .accessibilityValue(Display.spokenClock(timer.duration))
                     stepperButton("plus", by: 15)
+                }
+            }
+        }
+    }
+
+    /// Deliberately not a `LazyVGrid`. Five fixed buttons gain nothing from
+    /// laziness, and a lazy container does not build its offscreen children at
+    /// all — which left the presets missing from the accessibility tree, and so
+    /// unreachable by VoiceOver and by tests, until they were scrolled into
+    /// view. An empty slot keeps the last row's buttons the same width as the
+    /// rest rather than stretching to fill.
+    private var presetGrid: some View {
+        let columns = Senku.Metrics.presetColumns
+        let rows = stride(from: 0, to: RestPreset.allCases.count, by: columns).map { start in
+            Array(RestPreset.allCases[start ..< min(start + columns, RestPreset.allCases.count)])
+        }
+
+        return VStack(spacing: 8) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: 8) {
+                    ForEach(row) { presetButton($0) }
+                    ForEach(0 ..< (columns - row.count), id: \.self) { _ in
+                        Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
+                    }
                 }
             }
         }

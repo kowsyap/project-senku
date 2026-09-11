@@ -35,10 +35,12 @@ public enum Senku {
         public static let ringWidth: CGFloat = 9
         public static let timerRingMaxWidth: CGFloat = 96
         public static let timerDigitSize: CGFloat = 26
+        public static let presetColumns = 2
         #else
         public static let ringWidth: CGFloat = 18
         public static let timerRingMaxWidth: CGFloat = 260
         public static let timerDigitSize: CGFloat = 56
+        public static let presetColumns = 3
         #endif
     }
 }
