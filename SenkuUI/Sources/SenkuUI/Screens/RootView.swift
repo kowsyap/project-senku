@@ -47,7 +47,7 @@ public struct RootView: View {
             NavigationStack {
                 CalculatorView(
                     draft: PlanDraft(),
-                    replacesExistingProfile: store.hasProfile
+                    offersSaving: !store.hasProfile
                 ) { profile in
                     store.save(profile)
                     profileEditionID = UUID()
