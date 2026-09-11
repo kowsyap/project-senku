@@ -4,9 +4,13 @@ import SenkuCore
 
 /// The app's entry screen.
 ///
-/// Two tabs, because the two audiences genuinely differ: "Me" is a profile that
-/// persists and improves over time, while "Quick calc" is for the friend who
-/// asks a question in the gym — no account, no onboarding, nothing written down.
+/// Three tabs. "Me" is a profile that persists and improves over time, while
+/// "Quick calc" is for the friend who asks a question in the gym — no account,
+/// no onboarding, nothing written down. The two audiences genuinely differ.
+///
+/// "Rest" sits alongside them rather than inside either, because it is the one
+/// screen reached mid-set with a bar waiting: it has to be one tap from
+/// anywhere, and it needs no profile to be useful.
 public struct RootView: View {
     @State private var store: ProfileStore
     @State private var selection: Tab
@@ -19,6 +23,7 @@ public struct RootView: View {
     private enum Tab: Hashable {
         case me
         case quickCalc
+        case rest
     }
 
     public init(store: ProfileStore = ProfileStore()) {
@@ -57,6 +62,13 @@ public struct RootView: View {
             }
             .tabItem { Label("Quick calc", systemImage: "function") }
             .tag(Tab.quickCalc)
+
+            NavigationStack {
+                RestTimerView()
+                    .navigationTitle("Rest")
+            }
+            .tabItem { Label("Rest", systemImage: "timer") }
+            .tag(Tab.rest)
         }
         .confirmationDialog(
             "Delete your saved profile?",

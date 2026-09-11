@@ -32,7 +32,9 @@ saving all the value for the end.
 
 ## Phase 2 — Rest timer
 
-- [ ] Timer engine with presets and a custom value
+- [x] Timer engine with presets and a custom value
+- [x] Timer screen: countdown ring, presets, pause/resume, add-30s
+- [x] Third tab, reachable in one tap from anywhere
 - [ ] Live Activity with Dynamic Island
 - [ ] Home Screen widget
 - [ ] Control Center control (iOS 18+)
@@ -63,5 +65,18 @@ saving all the value for the end.
 
 ## Immediate next step
 
-Enable Mac Catalyst and add the watch target — both in
-[XCODE_SETUP.md](XCODE_SETUP.md). After that, Phase 2.
+The rest timer engine and its phone screen are in. The remaining Phase 2 items
+are all *surfaces* onto that engine rather than new logic, and every one of them
+needs a target that does not exist yet:
+
+- the Live Activity and Home Screen widget need a **widget extension** target
+  with *Include Live Activity* checked;
+- the Control Center control needs that same extension;
+- the watch haptic needs the **watch app** target.
+
+So the target work in [XCODE_SETUP.md](XCODE_SETUP.md) — Mac Catalyst and the
+watch app — is now the thing blocking the rest of Phase 2, not a detour from it.
+
+`RestTimer` was built for this: it hands out an absolute `endsAt`, which is
+exactly what `ActivityKit` and a local notification each want, so none of those
+surfaces need logic of their own.

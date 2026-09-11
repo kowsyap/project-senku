@@ -9,7 +9,8 @@ import SenkuUI
 ///
 /// Pass plain layout views. `NavigationStack` and `ScrollView` need a real
 /// window to size themselves and come out blank here, so render the content
-/// they would contain rather than the container.
+/// they would contain rather than the container. `RestTimerView` offers a
+/// `scrolls: false` initializer for exactly this reason.
 @MainActor
 func render(
     _ view: some View,
@@ -70,6 +71,41 @@ try MainActor.assumeIsolated {
         ResultsView(plan: clampedPlan, unitSystem: .imperial),
         width: 358, scheme: .light,
         to: outputDirectory.appending(path: "results-advisories.png")
+    )
+
+    // The rest timer in each of the states worth eyeballing. Times are frozen
+    // by passing a fixed `now`, so these renders are reproducible.
+    let t0 = Date(timeIntervalSince1970: 1_700_000_000)
+
+    func timer(_ preset: RestPreset, startedAgo: TimeInterval?) -> RestTimer {
+        var t = RestTimer(preset: preset)
+        if let startedAgo { t.start(at: t0.addingTimeInterval(-startedAgo)) }
+        return t
+    }
+
+    let states: [(String, RestTimer)] = [
+        ("idle", timer(.ninetySeconds, startedAgo: nil)),
+        ("running", timer(.twoMinutes, startedAgo: 45)),
+        ("ending", timer(.ninetySeconds, startedAgo: 84)),
+        ("finished", timer(.sixtySeconds, startedAgo: 95)),
+        ("paused", {
+            var t = timer(.threeMinutes, startedAgo: 60)
+            t.pause(at: t0)
+            return t
+        }()),
+    ]
+
+    for (name, state) in states {
+        try render(
+            RestTimerView(timer: state, now: t0, scrolls: false),
+            width: 358, scheme: .dark,
+            to: outputDirectory.appending(path: "rest-\(name).png")
+        )
+    }
+    try render(
+        RestTimerView(timer: states[1].1, now: t0, scrolls: false),
+        width: 358, scheme: .light,
+        to: outputDirectory.appending(path: "rest-running-light.png")
     )
 }
 
