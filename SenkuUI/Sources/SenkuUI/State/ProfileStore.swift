@@ -1,6 +1,9 @@
 import Foundation
 import Observation
 import SenkuCore
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 /// The owner's saved profile.
 ///
@@ -44,12 +47,15 @@ public final class ProfileStore {
         }
     }
 
-    private static let storageKey = "senku.profile.v1"
+    /// Shared with `SenkuStorage.migrateIfNeeded`, which has to know the key
+    /// before any store exists to ask.
+    static let storageKey = "senku.profile.v1"
 
     private let defaults: UserDefaults
     public private(set) var profile: Profile?
 
-    public init(defaults: UserDefaults = .standard) {
+    /// Defaults to the App Group container so the widget sees the same profile.
+    public init(defaults: UserDefaults = SenkuStorage.shared) {
         self.defaults = defaults
         self.profile = Self.load(from: defaults)
     }
@@ -63,11 +69,21 @@ public final class ProfileStore {
 
         guard let data = try? JSONEncoder().encode(stamped) else { return }
         defaults.set(data, forKey: Self.storageKey)
+        reloadWidgets()
     }
 
     public func clear() {
         profile = nil
         defaults.removeObject(forKey: Self.storageKey)
+        reloadWidgets()
+    }
+
+    /// The targets widget's timeline never expires on its own, because a plan
+    /// only changes when the profile does. This is that change.
+    private func reloadWidgets() {
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 
     private static func load(from defaults: UserDefaults) -> Profile? {

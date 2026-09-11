@@ -107,6 +107,28 @@ try MainActor.assumeIsolated {
         width: 358, scheme: .light,
         to: outputDirectory.appending(path: "rest-running-light.png")
     )
+
+    // The Home Screen widget, at both families and in its empty state. Sizes
+    // are the real point-sizes WidgetKit hands a small and a medium widget.
+    let saved = ProfileStore.Profile(
+        metrics: metrics, activityLevel: .moderate, goal: .moderateCut,
+        formula: .automatic, unitSystem: .metric
+    )
+    try render(
+        TargetsView(profile: saved, size: .small).frame(height: 158).padding(14),
+        width: 158, scheme: .dark,
+        to: outputDirectory.appending(path: "widget-small.png")
+    )
+    try render(
+        TargetsView(profile: saved, size: .medium).frame(height: 158).padding(14),
+        width: 338, scheme: .dark,
+        to: outputDirectory.appending(path: "widget-medium.png")
+    )
+    try render(
+        TargetsView(profile: nil, size: .small).frame(height: 158).padding(14),
+        width: 158, scheme: .light,
+        to: outputDirectory.appending(path: "widget-empty.png")
+    )
 }
 
 print("rendered to \(outputDirectory.path)")

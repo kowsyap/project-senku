@@ -127,3 +127,32 @@ final class ProfileStoreTests: XCTestCase {
         XCTAssertNil(draft.profileSnapshot)
     }
 }
+
+/// The App Group move is the kind of change that looks like data loss if the
+/// migration is missing: the profile is still in `.standard`, just nowhere
+/// anything reads any more.
+final class SharedStorageTests: XCTestCase {
+    func testAProfileSavedBeforeTheAppGroupIsStillFoundAfterIt() throws {
+        let legacy = UserDefaults(suiteName: "senku.test.legacy")!
+        let group = UserDefaults(suiteName: "senku.test.group")!
+        defer {
+            legacy.removePersistentDomain(forName: "senku.test.legacy")
+            group.removePersistentDomain(forName: "senku.test.group")
+        }
+        group.removeObject(forKey: ProfileStore.storageKey)
+
+        let metrics = try BodyMetrics(sex: .male, age: 30, heightCM: 180, weightKG: 80)
+        let profile = ProfileStore.Profile(
+            metrics: metrics, activityLevel: .moderate, goal: .maintain,
+            formula: .automatic, unitSystem: .metric
+        )
+        ProfileStore(defaults: legacy).save(profile)
+        XCTAssertNotNil(legacy.data(forKey: ProfileStore.storageKey))
+
+        // Standing in for SenkuStorage's one-time move.
+        let carried = try XCTUnwrap(legacy.data(forKey: ProfileStore.storageKey))
+        group.set(carried, forKey: ProfileStore.storageKey)
+
+        XCTAssertEqual(ProfileStore(defaults: group).profile?.metrics, metrics)
+    }
+}
