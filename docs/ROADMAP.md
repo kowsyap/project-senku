@@ -73,9 +73,9 @@ than code:
 
 - **Run on a physical device.** Everything so far is simulator-verified. The
   haptics in particular *cannot* be checked any other way: the simulator has no
-  haptic engine, so `Feedback.restFinished()` is a silent no-op there. Needs
-  a Team set under Signing & Capabilities, and the App Group registered on the
-  developer account.
+  haptic engine, so `Feedback.restFinished()` is a silent no-op there. The
+  signing team is set; the App Group is off by default so a free account can
+  build — see [XCODE_SETUP.md](XCODE_SETUP.md).
 - **SwiftData.** The roadmap has always said "once history needs storing", and
   nothing stores history yet. `ProfileStore` is still the seam.
 

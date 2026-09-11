@@ -465,6 +465,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				SENKU_ENTITLEMENTS = Free;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -527,6 +528,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				SENKU_ENTITLEMENTS = Free;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -598,8 +600,8 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				CODE_SIGN_ENTITLEMENTS = Senku.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = SenkuCatalyst.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Senku-$(SENKU_ENTITLEMENTS).entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Senku-Free.entitlements";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				SUPPORTS_MACCATALYST = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -646,8 +648,8 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				CODE_SIGN_ENTITLEMENTS = Senku.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = SenkuCatalyst.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "Senku-$(SENKU_ENTITLEMENTS).entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Senku-Free.entitlements";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				SUPPORTS_MACCATALYST = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -784,7 +786,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Senku;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				CODE_SIGN_ENTITLEMENTS = SenkuWidgets.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "SenkuWidgets-$(SENKU_ENTITLEMENTS).entitlements";
 				DEVELOPMENT_TEAM = 52JAR27L5P;
 				INFOPLIST_FILE = "SenkuWidgets-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
@@ -814,7 +816,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Senku;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				CODE_SIGN_ENTITLEMENTS = SenkuWidgets.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "SenkuWidgets-$(SENKU_ENTITLEMENTS).entitlements";
 				DEVELOPMENT_TEAM = 52JAR27L5P;
 				INFOPLIST_FILE = "SenkuWidgets-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;

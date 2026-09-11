@@ -26,21 +26,36 @@ about it are worth knowing before editing the project:
   dict. So the plist has to be a real file; the build setting silently produces
   an extension that builds and never registers.
 
-### The App Group, and what it costs on other platforms
+### The App Group is off by default
 
 The widget reads the profile out of `group.pk.Senku`, because a widget is a
-separate process and cannot see the app's `UserDefaults`. Two consequences:
+separate process and cannot see the app's `UserDefaults`. **App Groups need a
+paid Apple Developer Program membership** — free provisioning does not offer
+the capability at all — so the default build does without one:
 
-- **Mac Catalyst gets an empty entitlements file** via
-  `CODE_SIGN_ENTITLEMENTS[sdk=macosx*]`. A Mac build with an App Group
-  entitlement demands a provisioning profile, and there is no widget on
-  Catalyst to share anything with. `SenkuStorage` already falls back to
-  `.standard` when the group is unavailable.
-- **A physical device will need the group registered** on the Apple developer
-  account, alongside a Team. The simulator grants it without either.
+```
+SENKU_ENTITLEMENTS = Free      # Senku-Free.entitlements, an empty dict
+```
+
+To turn it on with a paid account, register `group.pk.Senku` under Identifiers
+on developer.apple.com, then flip the setting:
+
+```sh
+xcodebuild ... SENKU_ENTITLEMENTS=AppGroup
+```
+
+or set it once in the project's build settings. Mac Catalyst stays pinned to
+`Free` regardless, via `CODE_SIGN_ENTITLEMENTS[sdk=macosx*]`: a Mac app
+carrying an App Group demands a provisioning profile, and there is no widget on
+Catalyst to share with anyway.
+
+**What `Free` costs you.** `SenkuStorage` falls back to `.standard`, so the app
+and the watch app are unaffected. The Home Screen widget is: it runs in its own
+process, so without the group it can never see your profile and will always
+show its empty state. That is a real limitation of a free account, not a bug.
 
 Also worth knowing: `codesign -d --entitlements` prints an empty dict for
-simulator builds even when the entitlement is live. The check that works is
+simulator builds even when an entitlement is live. The check that works is
 `xcrun simctl get_app_container <device> pk.Senku groups`.
 
 ## Remaining
