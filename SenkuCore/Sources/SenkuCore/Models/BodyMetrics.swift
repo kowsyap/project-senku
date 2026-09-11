@@ -99,6 +99,7 @@ public enum ValidationError: Error, Equatable, Sendable {
     case heightOutOfRange(Double)
     case weightOutOfRange(Double)
     case bodyFatOutOfRange(Double)
+    case restDurationOutOfRange(TimeInterval)
 }
 
 extension ValidationError: LocalizedError {
@@ -112,6 +113,8 @@ extension ValidationError: LocalizedError {
             "Weight must be between 20 kg and 500 kg."
         case .bodyFatOutOfRange:
             "Body fat must be between 3% and 70%."
+        case .restDurationOutOfRange:
+            "A rest timer must be between 5 seconds and 60 minutes."
         }
     }
 }
