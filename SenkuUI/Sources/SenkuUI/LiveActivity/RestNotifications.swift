@@ -14,59 +14,80 @@ import UserNotifications
 /// It is scheduled from the timer's absolute `endsAt`, so the system owns the
 /// firing and Senku can be suspended or killed in the meantime. Anything that
 /// moves the deadline — pause, reset, retarget, extend — reschedules, because a
-/// notification that survives its timer is worse than none.
+/// notification that outlives its timer is worse than none.
 public enum RestNotifications {
     private static let identifier = "senku.rest.finished"
 
-    /// Asked for the first time a rest is actually started, rather than at
-    /// launch. Someone who never opens the timer is never prompted.
-    public static func requestAuthorizationIfNeeded() {
-        let center = UNUserNotificationCenter.current()
-        center.getNotificationSettings { settings in
-            guard settings.authorizationStatus == .notDetermined else { return }
-            center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
-        }
+    /// The alert sound. It must live in the **app's** bundle — iOS will not
+    /// load a notification sound from a package resource bundle — which is why
+    /// a copy of this file sits in the app target as well as in `SenkuUI`.
+    ///
+    /// watchOS has no custom notification sounds at all; it decides for itself
+    /// how to alert, and the haptic is the part that matters there anyway.
+    private static var alertSound: UNNotificationSound {
+        #if os(watchOS)
+        .default
+        #else
+        UNNotificationSound(named: UNNotificationSoundName("rest-complete.wav"))
+        #endif
+    }
+
+    public static func authorizationStatus() async -> UNAuthorizationStatus {
+        await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }
 
     /// Brings the pending notification in line with `timer`. Safe to call on
     /// every change; it cancels first, so it cannot leave a stale one behind.
+    ///
+    /// Asking for permission and scheduling have to happen in that order. They
+    /// previously did not: the request was fired off alongside the schedule, so
+    /// on the very first rest the notification was registered before the user
+    /// had granted anything and iOS dropped it silently — and nothing ever
+    /// rescheduled it. That first rest was the one most likely to be tested.
     public static func sync(with timer: RestTimer, at now: Date = .now) {
         cancel()
-
-        // Only a running timer has a deadline to fire at. A paused one is
-        // waiting on the user, and an idle or finished one has nothing to say.
         guard let endsAt = timer.endsAt, endsAt > now else { return }
+
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .notDetermined:
+                center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                    guard granted else { return }
+                    schedule(endsAt: endsAt)
+                }
+            case .authorized, .provisional, .ephemeral:
+                schedule(endsAt: endsAt)
+            default:
+                break // Denied. Nothing useful to do but stay quiet.
+            }
+        }
+    }
+
+    private static func schedule(endsAt: Date) {
+        // Measured fresh rather than from the caller's `now`: asking for
+        // permission can sit on screen for a while first.
+        let seconds = endsAt.timeIntervalSinceNow
+        guard seconds > 0 else { return }
 
         let content = UNMutableNotificationContent()
         content.title = "Rest over"
         content.body = "Time for your next set."
-        content.sound = .default
+        content.sound = alertSound
         content.interruptionLevel = .timeSensitive
 
-        let request = UNNotificationRequest(
-            identifier: identifier,
-            trigger: UNTimeIntervalNotificationTrigger(
-                timeInterval: endsAt.timeIntervalSince(now),
-                repeats: false
-            ),
-            content: content
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(
+                identifier: identifier,
+                content: content,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
+            )
         )
-        UNUserNotificationCenter.current().add(request)
     }
 
     public static func cancel() {
         UNUserNotificationCenter.current()
             .removePendingNotificationRequests(withIdentifiers: [identifier])
-    }
-}
-
-private extension UNNotificationRequest {
-    convenience init(
-        identifier: String,
-        trigger: UNNotificationTrigger,
-        content: UNNotificationContent
-    ) {
-        self.init(identifier: identifier, content: content, trigger: trigger)
     }
 }
 #endif

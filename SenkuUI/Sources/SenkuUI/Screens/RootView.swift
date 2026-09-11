@@ -70,6 +70,11 @@ public struct RootView: View {
             .tabItem { Label("Rest", systemImage: "timer") }
             .tag(Tab.rest)
         }
+        .onOpenURL { url in
+            if RestDeepLink.handle(url) != nil {
+                selection = .rest
+            }
+        }
         .confirmationDialog(
             "Delete your saved profile?",
             isPresented: $isConfirmingReset,

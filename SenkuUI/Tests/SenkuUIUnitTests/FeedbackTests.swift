@@ -18,7 +18,9 @@ final class FeedbackTests: XCTestCase {
         let url = try XCTUnwrap(Bundle.module.url(forResource: "rest-complete", withExtension: "wav"))
         let player = try AVAudioPlayer(contentsOf: url)
 
-        XCTAssertGreaterThan(player.duration, 0.1, "An inaudible chime is the same as none")
-        XCTAssertLessThan(player.duration, 2.0, "This marks an instant; it should not play over you")
+        // Long enough to be found when it starts while the phone is face down
+        // in a bag, short enough not to still be playing when you pick it up.
+        XCTAssertGreaterThan(player.duration, 1.5, "Too short to be noticed across a gym")
+        XCTAssertLessThan(player.duration, 6.0, "It marks an instant; it should not play over you")
     }
 }

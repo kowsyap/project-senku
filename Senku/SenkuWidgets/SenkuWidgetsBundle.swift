@@ -4,7 +4,7 @@ import SwiftUI
 @main
 struct SenkuWidgetsBundle: WidgetBundle {
     var body: some Widget {
-        TargetsWidget()
+        RestWidget()
         RestLiveActivity()
         if #available(iOS 18.0, *) {
             RestControl()

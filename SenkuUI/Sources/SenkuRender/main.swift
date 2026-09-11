@@ -108,26 +108,23 @@ try MainActor.assumeIsolated {
         to: outputDirectory.appending(path: "rest-running-light.png")
     )
 
-    // The Home Screen widget, at both families and in its empty state. Sizes
-    // are the real point-sizes WidgetKit hands a small and a medium widget.
-    let saved = ProfileStore.Profile(
-        metrics: metrics, activityLevel: .moderate, goal: .moderateCut,
-        formula: .automatic, unitSystem: .metric
-    )
+    // The Home Screen widget: its start buttons, and a rest in progress.
+    var widgetTimer = RestTimer(preset: .twoMinutes)
+    widgetTimer.start(at: t0.addingTimeInterval(-45))
     try render(
-        TargetsView(profile: saved, size: .small).frame(height: 158).padding(14),
+        RestWidgetView(timer: nil, size: .small, now: t0).frame(height: 150).padding(14),
         width: 158, scheme: .dark,
-        to: outputDirectory.appending(path: "widget-small.png")
+        to: outputDirectory.appending(path: "widget-start-small.png")
     )
     try render(
-        TargetsView(profile: saved, size: .medium).frame(height: 158).padding(14),
+        RestWidgetView(timer: nil, size: .medium, now: t0).frame(height: 150).padding(14),
         width: 338, scheme: .dark,
-        to: outputDirectory.appending(path: "widget-medium.png")
+        to: outputDirectory.appending(path: "widget-start-medium.png")
     )
     try render(
-        TargetsView(profile: nil, size: .small).frame(height: 158).padding(14),
-        width: 158, scheme: .light,
-        to: outputDirectory.appending(path: "widget-empty.png")
+        RestWidgetView(timer: widgetTimer, size: .small, now: t0).frame(height: 150).padding(14),
+        width: 158, scheme: .dark,
+        to: outputDirectory.appending(path: "widget-resting.png")
     )
 }
 

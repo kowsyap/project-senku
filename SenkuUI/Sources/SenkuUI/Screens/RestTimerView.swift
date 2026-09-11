@@ -59,6 +59,13 @@ public struct RestTimerView: View {
             }
         }
         .background(.background)
+        .onReceive(NotificationCenter.default.publisher(for: RestDeepLink.didStart)) { _ in
+            // A widget tap while this screen is already on display.
+            if let started = RestTimerStore.load() {
+                timer = started
+                now = .now
+            }
+        }
         .onAppear {
             // A rest started from Control Center, or one left running when iOS
             // reclaimed the app, is picked up here rather than silently lost.
@@ -114,11 +121,6 @@ public struct RestTimerView: View {
             HStack(spacing: 10) {
                 Button {
                     Feedback.control()
-                    if timer.isIdle {
-                        #if canImport(UserNotifications) && !os(macOS)
-                        RestNotifications.requestAuthorizationIfNeeded()
-                        #endif
-                    }
                     timer.toggle(at: .now)
                     changed(at: .now)
                 } label: {
@@ -224,9 +226,6 @@ public struct RestTimerView: View {
             let instant = Date.now
             try? timer.setDuration(preset.duration, at: instant)
             timer.start(at: instant)
-            #if canImport(UserNotifications) && !os(macOS)
-            RestNotifications.requestAuthorizationIfNeeded()
-            #endif
             changed(at: instant)
         } label: {
             Text(preset.title)
