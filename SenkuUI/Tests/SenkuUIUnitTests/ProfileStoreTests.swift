@@ -89,8 +89,8 @@ final class ProfileStoreTests: XCTestCase {
         let draft = PlanDraft(profile: profile)
 
         XCTAssertTrue(draft.usesMeasuredBodyFat)
-        XCTAssertEqual(draft.weightKG, 80, accuracy: 0.001)
-        XCTAssertEqual(draft.heightCM, 180, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(draft.weightKG), 80, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(draft.heightCM), 180, accuracy: 0.001)
 
         let snapshot = try XCTUnwrap(draft.profileSnapshot)
         XCTAssertEqual(snapshot.metrics, profile.metrics)
@@ -105,15 +105,66 @@ final class ProfileStoreTests: XCTestCase {
         XCTAssertNil(snapshot.metrics.bodyFatPercentage)
     }
 
-    func testImperialEditingKeepsMetricAuthoritative() {
+    func testImperialEditingKeepsMetricAuthoritative() throws {
         let draft = PlanDraft(unitSystem: .imperial, heightCM: 180, weightKG: 80)
 
         draft.weightPounds = 200
-        XCTAssertEqual(draft.weightKG, 90.718, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(draft.weightKG), 90.718, accuracy: 0.01)
 
         draft.heightFeet = 6
         draft.heightInches = 0
-        XCTAssertEqual(draft.heightCM, 182.88, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(draft.heightCM), 182.88, accuracy: 0.01)
+    }
+
+    func testAFreshDraftIsEmptyAndSaysWhatItNeeds() {
+        // The calculator opens blank on purpose: a pre-filled age produces a
+        // plausible plan for a person who never entered anything.
+        let draft = PlanDraft()
+        XCTAssertNil(draft.age)
+        XCTAssertNil(draft.heightCM)
+        XCTAssertNil(draft.weightKG)
+        XCTAssertFalse(draft.isComplete)
+        XCTAssertNil(draft.plan)
+        XCTAssertEqual(draft.missingFields, ["Age", "Height", "Weight"])
+
+        let message = draft.validationMessage
+        XCTAssertNotNil(message)
+        for field in ["Age", "Height", "Weight"] {
+            XCTAssertTrue(message?.contains(field) == true, "should name \(field): \(message ?? "")")
+        }
+    }
+
+    func testAPartlyFilledDraftNamesOnlyWhatIsStillMissing() {
+        let draft = PlanDraft(age: 30, heightCM: 175)
+        XCTAssertEqual(draft.missingFields, ["Weight"])
+        XCTAssertFalse(draft.isComplete)
+        XCTAssertTrue(draft.validationMessage?.contains("Weight") == true)
+        XCTAssertFalse(draft.validationMessage?.contains("Age") == true)
+
+        draft.weightKG = 75
+        XCTAssertTrue(draft.isComplete)
+        XCTAssertNil(draft.validationMessage)
+        XCTAssertNotNil(draft.plan)
+    }
+
+    func testClearingAFieldUnanswersItRatherThanZeroingIt() {
+        let draft = PlanDraft(age: 30, heightCM: 175, weightKG: 75)
+        XCTAssertNotNil(draft.plan)
+
+        draft.weightKG = nil
+        XCTAssertNil(draft.plan, "An empty field is not a weight of zero")
+        XCTAssertEqual(draft.missingFields, ["Weight"])
+    }
+
+    func testAnEmptyDraftStaysEmptyAcrossAUnitSwitch() {
+        let draft = PlanDraft(unitSystem: .metric)
+        XCTAssertNil(draft.weightPounds)
+        XCTAssertNil(draft.heightFeet)
+        XCTAssertNil(draft.heightInches)
+
+        draft.unitSystem = .imperial
+        XCTAssertNil(draft.weightKG, "Switching units must not invent a zero")
+        XCTAssertNil(draft.heightCM)
     }
 
     func testInvalidInputYieldsNoPlanAndAnExplanation() {

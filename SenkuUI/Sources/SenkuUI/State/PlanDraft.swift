@@ -15,9 +15,14 @@ import SenkuCore
 public final class PlanDraft: Identifiable {
     public var unitSystem: UnitSystem
     public var sex: Sex
-    public var age: Int
-    public var heightCM: Double
-    public var weightKG: Double
+
+    /// Optional because a fresh calculator starts **empty**. A pre-filled age
+    /// of 30 is not a neutral default — it is a number the user never entered
+    /// but which quietly produces a plausible-looking plan, which is exactly
+    /// the kind of unearned answer this app is supposed to refuse.
+    public var age: Int?
+    public var heightCM: Double?
+    public var weightKG: Double?
 
     /// Whether the user has a measured body fat number to offer. When false the
     /// core falls back to a BMI estimate and says so in an advisory.
@@ -31,9 +36,9 @@ public final class PlanDraft: Identifiable {
     public init(
         unitSystem: UnitSystem = .metric,
         sex: Sex = .male,
-        age: Int = 30,
-        heightCM: Double = 175,
-        weightKG: Double = 75,
+        age: Int? = nil,
+        heightCM: Double? = nil,
+        weightKG: Double? = nil,
         usesMeasuredBodyFat: Bool = false,
         bodyFatPercentage: Double = 20,
         activityLevel: ActivityLevel = .moderate,
@@ -55,25 +60,49 @@ public final class PlanDraft: Identifiable {
     // MARK: - Imperial bridges
 
     /// Weight in pounds. Writing through this keeps kilograms authoritative.
-    public var weightPounds: Double {
-        get { Convert.pounds(fromKilograms: weightKG) }
-        set { weightKG = Convert.kilograms(fromPounds: newValue) }
+    /// `nil` in and `nil` out, so an empty field stays empty across a unit
+    /// switch instead of materialising a zero.
+    public var weightPounds: Double? {
+        get { weightKG.map(Convert.pounds(fromKilograms:)) }
+        set { weightKG = newValue.map(Convert.kilograms(fromPounds:)) }
     }
 
-    public var heightFeet: Int {
-        get { Convert.feetAndInches(fromCentimetres: heightCM).feet }
-        set { heightCM = Convert.centimetres(feet: newValue, inches: heightInches) }
+    public var heightFeet: Int? {
+        get { heightCM.map { Convert.feetAndInches(fromCentimetres: $0).feet } }
+        set {
+            guard let newValue else { heightCM = nil; return }
+            heightCM = Convert.centimetres(feet: newValue, inches: heightInches ?? 0)
+        }
     }
 
-    public var heightInches: Double {
-        get { Convert.feetAndInches(fromCentimetres: heightCM).inches }
-        set { heightCM = Convert.centimetres(feet: heightFeet, inches: newValue) }
+    public var heightInches: Double? {
+        get { heightCM.map { Convert.feetAndInches(fromCentimetres: $0).inches } }
+        set {
+            guard let newValue else { heightCM = nil; return }
+            heightCM = Convert.centimetres(feet: heightFeet ?? 0, inches: newValue)
+        }
     }
+
+    // MARK: - Completeness
+
+    /// The inputs with no answer yet, named as the form labels them.
+    public var missingFields: [String] {
+        var missing: [String] = []
+        if age == nil { missing.append("Age") }
+        if heightCM == nil { missing.append("Height") }
+        if weightKG == nil { missing.append("Weight") }
+        return missing
+    }
+
+    /// Every required field has a value. Says nothing about whether those
+    /// values are *sane* — `validationMessage` answers that.
+    public var isComplete: Bool { missingFields.isEmpty }
 
     // MARK: - Derived
 
     public var metrics: BodyMetrics? {
-        try? BodyMetrics(
+        guard let age, let heightCM, let weightKG else { return nil }
+        return try? BodyMetrics(
             sex: sex,
             age: age,
             heightCM: heightCM,
@@ -94,7 +123,15 @@ public final class PlanDraft: Identifiable {
     }
 
     /// Why the inputs are not usable, phrased for display under the form.
+    /// Missing answers are reported before out-of-range ones, because "fill in
+    /// your weight" is more use than a range you have not reached yet.
     public var validationMessage: String? {
+        guard let age, let heightCM, let weightKG else {
+            let missing = missingFields
+            return missing.count == 1
+                ? "\(missing[0]) is needed before Senku can work anything out."
+                : "\(missing.dropLast().joined(separator: ", ")) and \(missing[missing.count - 1]) are needed before Senku can work anything out."
+        }
         do {
             _ = try BodyMetrics(
                 sex: sex,

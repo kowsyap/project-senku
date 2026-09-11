@@ -40,20 +40,18 @@ public struct PlanInputForm: View {
             .pickerStyle(.segmented)
 
             HStack {
-                Text("Age")
-                    .font(.subheadline)
+                RequiredLabel("Age", isAnswered: draft.age != nil)
                 Spacer(minLength: 8)
                 NumericField(
                     value: Binding(
-                        get: { Double(draft.age) },
-                        set: { draft.age = Int($0.rounded()) }
+                        get: { draft.age.map(Double.init) },
+                        set: { draft.age = $0.map { Int($0.rounded()) } }
                     ),
                     range: 13...120,
                     unit: "years",
-                    width: 52
+                    width: 56,
+                    identifier: "field.age"
                 )
-                Stepper("Age", value: $draft.age, in: 13...120)
-                    .labelsHidden()
             }
 
             Divider()
@@ -75,21 +73,22 @@ public struct PlanInputForm: View {
                 range: 120...220,
                 step: 1,
                 decimals: 0,
-                unit: "cm"
+                unit: "cm",
+                isRequired: true,
+                identifier: "field.height"
             )
         case .imperial:
             HStack {
-                Text("Height")
-                    .font(.subheadline)
+                RequiredLabel("Height", isAnswered: draft.heightCM != nil)
                 Spacer(minLength: 8)
                 NumericField(
                     value: Binding(
-                        get: { Double(draft.heightFeet) },
-                        set: { draft.heightFeet = Int($0.rounded()) }
+                        get: { draft.heightFeet.map(Double.init) },
+                        set: { draft.heightFeet = $0.map { Int($0.rounded()) } }
                     ),
                     range: 3...8,
                     unit: "ft",
-                    width: 40
+                    width: 42
                 )
                 NumericField(
                     value: Binding(
@@ -98,7 +97,7 @@ public struct PlanInputForm: View {
                     ),
                     range: 0...11,
                     unit: "in",
-                    width: 40
+                    width: 42
                 )
             }
         }
@@ -113,7 +112,9 @@ public struct PlanInputForm: View {
             range: draft.unitSystem == .metric ? 35...200 : 77...440,
             step: draft.unitSystem == .metric ? 0.5 : 1,
             decimals: draft.unitSystem == .metric ? 1 : 0,
-            unit: draft.unitSystem.massLabel
+            unit: draft.unitSystem.massLabel,
+            isRequired: true,
+            identifier: "field.weight"
         )
     }
 
@@ -132,7 +133,10 @@ public struct PlanInputForm: View {
         if draft.usesMeasuredBodyFat {
             SliderField(
                 label: "Body fat",
-                value: $draft.bodyFatPercentage,
+                value: Binding(
+                    get: { draft.bodyFatPercentage },
+                    set: { draft.bodyFatPercentage = $0 ?? draft.bodyFatPercentage }
+                ),
                 range: 3...60,
                 step: 0.5,
                 decimals: 1,
@@ -215,24 +219,67 @@ public struct PlanInputForm: View {
 /// know — asking someone to land 82.5 kg on a slider is needless work.
 struct SliderField: View {
     let label: String
-    @Binding var value: Double
+    @Binding var value: Double?
     let range: ClosedRange<Double>
     let step: Double
     var decimals: Int = 0
     var unit: String?
+    var isRequired: Bool = false
+    var identifier: String? = nil
 
     var body: some View {
         VStack(spacing: 4) {
             HStack {
-                Text(label)
-                    .font(.subheadline)
+                if isRequired {
+                    RequiredLabel(label, isAnswered: value != nil)
+                } else {
+                    Text(label).font(.subheadline)
+                }
                 Spacer(minLength: 8)
-                NumericField(value: $value, range: range, decimals: decimals, unit: unit)
+                NumericField(
+                    value: $value, range: range, decimals: decimals,
+                    unit: unit, identifier: identifier
+                )
             }
-            Slider(value: $value, in: range, step: step)
+
+            // The slider only appears once there is a value to drag. Showing
+            // one over an empty field would park a handle somewhere in the
+            // range and make it look as though an answer had been given.
+            if let current = value {
+                Slider(
+                    value: Binding(get: { current }, set: { value = $0 }),
+                    in: range,
+                    step: step
+                )
                 .accessibilityLabel(label)
-                .accessibilityValue(String(format: "%.\(decimals)f \(unit ?? "")", value))
+                .accessibilityValue(String(format: "%.\(decimals)f \(unit ?? "")", current))
+            }
         }
+    }
+}
+
+/// A field label that shows whether it still needs an answer.
+struct RequiredLabel: View {
+    private let label: String
+    private let isAnswered: Bool
+
+    init(_ label: String, isAnswered: Bool) {
+        self.label = label
+        self.isAnswered = isAnswered
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(.subheadline)
+            if !isAnswered {
+                Text("Required")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(Senku.Palette.caution)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isAnswered ? label : "\(label), required")
     }
 }
 #endif

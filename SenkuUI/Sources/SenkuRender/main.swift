@@ -108,6 +108,18 @@ try MainActor.assumeIsolated {
         to: outputDirectory.appending(path: "rest-running-light.png")
     )
 
+    // The calculator as it opens: empty, with nothing worked out yet.
+    try render(
+        PlanInputForm(draft: PlanDraft()),
+        width: 358, scheme: .dark,
+        to: outputDirectory.appending(path: "calc-empty.png")
+    )
+    try render(
+        PlanInputForm(draft: PlanDraft(age: 30, heightCM: 180, weightKG: 80)),
+        width: 358, scheme: .dark,
+        to: outputDirectory.appending(path: "calc-filled.png")
+    )
+
     // The Home Screen widget: its start buttons, and a rest in progress.
     var widgetTimer = RestTimer(preset: .twoMinutes)
     widgetTimer.start(at: t0.addingTimeInterval(-45))
