@@ -25,9 +25,9 @@ saving all the value for the end.
 - [x] Offscreen PNG renderer for reviewing layout without a simulator
 - [x] Xcode project with packages linked — see [XCODE_SETUP.md](XCODE_SETUP.md)
 - [x] Runs on the iOS simulator
-- [ ] Enable Mac Catalyst
+- [x] Enable Mac Catalyst
 - [ ] Run on a physical device
-- [ ] Migrate `SenkuCoreTests` to Swift Testing (now that Xcode is installed)
+- [x] Migrate `SenkuCoreTests` to Swift Testing
 - [ ] Move `ProfileStore` onto SwiftData once history needs storing
 
 ## Phase 2 — Rest timer
@@ -36,10 +36,10 @@ saving all the value for the end.
 - [x] Timer screen: countdown ring, presets, pause/resume, add-30s
 - [x] Third tab, reachable in one tap from anywhere
 - [x] Live Activity with Dynamic Island
-- [ ] Home Screen widget
-- [ ] Control Center control (iOS 18+)
-- [ ] Watch app with completion haptics
-- [ ] Background audio/notification so it fires with the screen off
+- [x] Home Screen widget
+- [x] Control Center control (iOS 18+)
+- [x] Watch app with completion haptics
+- [x] Local notification so it fires with the screen off
 
 ## Phase 3 — Watch and Mac
 
@@ -65,19 +65,19 @@ saving all the value for the end.
 
 ## Immediate next step
 
-The `SenkuWidgets` extension target now exists, so the Home Screen widget and
-the Control Center control have somewhere to live. Both are small next to the
-target work itself.
+Phase 2 is done. All four targets now exist — app, widget extension, watch app,
+and the test bundles — so nothing further is blocked on project surgery.
 
-The Home Screen widget is the one with a real design question attached: it
-cannot run a timer, so it either deep-links into starting a rest, or it shows
-today's targets from the saved profile. The second needs an **App Group**,
-because a widget cannot read the app's `UserDefaults` without one — and
-`ProfileStore` would have to move to the shared suite.
+Two things remain from Phase 1, and both need hardware or a decision rather
+than code:
 
-Still outstanding and unrelated to widgets:
+- **Run on a physical device.** Everything so far is simulator-verified. The
+  haptics in particular *cannot* be checked any other way: the simulator has no
+  haptic engine, so `Feedback.restFinished()` is a silent no-op there. Needs
+  a Team set under Signing & Capabilities, and the App Group registered on the
+  developer account.
+- **SwiftData.** The roadmap has always said "once history needs storing", and
+  nothing stores history yet. `ProfileStore` is still the seam.
 
-- the watch app target, for the haptic that is the whole point on a watch;
-- a local notification at `endsAt`, so a finished rest reaches you with the
-  screen off — the chime only plays while the app is foregrounded;
-- Mac Catalyst.
+After that, Phase 3: the watch layout is a fitting pass, not the rewrite the
+architecture doc calls for, and the Mac is still running the iPad layout.

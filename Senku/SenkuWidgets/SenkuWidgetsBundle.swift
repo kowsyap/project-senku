@@ -6,5 +6,8 @@ struct SenkuWidgetsBundle: WidgetBundle {
     var body: some Widget {
         TargetsWidget()
         RestLiveActivity()
+        if #available(iOS 18.0, *) {
+            RestControl()
+        }
     }
 }

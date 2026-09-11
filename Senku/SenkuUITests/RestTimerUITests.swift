@@ -86,6 +86,28 @@ final class RestTimerUITests: XCTestCase {
         XCTAssertEqual(remainingValue(app), "Rest finished")
     }
 
+    /// A rest held only in `@State` is lost if iOS reclaims the app mid-set —
+    /// which looked especially wrong once the Live Activity kept counting on
+    /// the lock screen after the app itself had forgotten.
+    @MainActor
+    func testARunningRestSurvivesTheAppBeingKilled() {
+        let app = launchOnRestTab()
+        app.buttons["preset.threeMinutes"].tap()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 3))
+
+        app.terminate()
+
+        app.launch()
+        app.tabBars.buttons["Rest"].tap()
+
+        XCTAssertTrue(
+            app.buttons["Pause"].waitForExistence(timeout: 5),
+            "The rest should still be running after a relaunch"
+        )
+        let value = remainingValue(app)
+        XCTAssertFalse(value.contains("3 minutes"), "It should have kept counting, got \(value)")
+    }
+
     @MainActor
     func testResetReturnsToTheFullInterval() {
         let app = launchOnRestTab()

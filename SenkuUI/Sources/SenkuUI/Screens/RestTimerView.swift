@@ -44,6 +44,7 @@ public struct RestTimerView: View {
         #if canImport(UserNotifications) && !os(macOS)
         RestNotifications.sync(with: timer, at: instant)
         #endif
+        RestTimerStore.save(timer)
     }
 
     private var remaining: TimeInterval { timer.remaining(at: now) }
@@ -58,6 +59,14 @@ public struct RestTimerView: View {
             }
         }
         .background(.background)
+        .onAppear {
+            // A rest started from Control Center, or one left running when iOS
+            // reclaimed the app, is picked up here rather than silently lost.
+            if timer.isIdle, let restored = RestTimerStore.load() {
+                timer = restored
+                now = .now
+            }
+        }
         .onReceive(tick) { instant in
             // A paused or unstarted timer renders identically every frame, so
             // there is nothing to gain from waking the view for it.
