@@ -785,6 +785,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Senku;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				CODE_SIGN_ENTITLEMENTS = SenkuWidgets.entitlements;
+				DEVELOPMENT_TEAM = 52JAR27L5P;
 				INFOPLIST_FILE = "SenkuWidgets-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -814,6 +815,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Senku;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				CODE_SIGN_ENTITLEMENTS = SenkuWidgets.entitlements;
+				DEVELOPMENT_TEAM = 52JAR27L5P;
 				INFOPLIST_FILE = "SenkuWidgets-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -840,6 +842,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				DEVELOPMENT_TEAM = 52JAR27L5P;
 				INFOPLIST_FILE = "SenkuWatch-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Senku;
 				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
@@ -866,6 +869,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				DEVELOPMENT_TEAM = 52JAR27L5P;
 				INFOPLIST_FILE = "SenkuWatch-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Senku;
 				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
