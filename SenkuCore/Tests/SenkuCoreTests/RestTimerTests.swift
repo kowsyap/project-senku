@@ -1,11 +1,13 @@
-import XCTest
+import Testing
+import Foundation
 @testable import SenkuCore
 
 /// The timer's whole reason for storing a deadline is that it has to stay
-/// correct across suspension, so these tests move `now` in jumps rather than
-/// waiting on a real clock. Nothing here sleeps.
-final class RestTimerTests: XCTestCase {
-    private let start = Date(timeIntervalSince1970: 1_700_000_000)
+/// correct across suspension, so these move `now` in jumps rather than waiting
+/// on a real clock. Nothing here sleeps.
+@Suite("Rest timer")
+struct RestTimerTests {
+    let start = Date(timeIntervalSince1970: 1_700_000_000)
 
     private func at(_ seconds: TimeInterval) -> Date {
         start.addingTimeInterval(seconds)
@@ -13,172 +15,193 @@ final class RestTimerTests: XCTestCase {
 
     // MARK: - Counting down
 
-    func testRunningTimerIsUnaffectedByHowLongTheAppWasAway() {
+    @Test("A running timer is unaffected by how long the app was away")
+    func runningTimerIsUnaffectedByHowLongTheAppWasAway() {
         var timer = RestTimer(preset: .twoMinutes)
         timer.start(at: start)
 
         // Suspended for an hour, well past the deadline.
-        XCTAssertEqual(timer.remaining(at: at(3600)), 0)
-        XCTAssertTrue(timer.hasFinished(at: at(3600)))
+        #expect(timer.remaining(at: at(3600)) == 0)
+        #expect(timer.hasFinished(at: at(3600)))
 
         // And a timer still mid-rest when it comes back reads the truth, not a
         // figure that stopped decrementing while the process was gone.
         var midRest = RestTimer(preset: .fiveMinutes)
         midRest.start(at: start)
-        XCTAssertEqual(midRest.remaining(at: at(200)), 100)
-        XCTAssertFalse(midRest.hasFinished(at: at(200)))
+        #expect(midRest.remaining(at: at(200)) == 100)
+        #expect(!midRest.hasFinished(at: at(200)))
     }
 
-    func testProgressRunsFromZeroToOneAndClamps() {
+    @Test("Progress runs from zero to one and clamps")
+    func progressRunsFromZeroToOneAndClamps() {
         var timer = RestTimer(preset: .sixtySeconds)
-        XCTAssertEqual(timer.progress(at: start), 0)
+        #expect(timer.progress(at: start) == 0)
 
         timer.start(at: start)
-        XCTAssertEqual(timer.progress(at: at(15)), 0.25, accuracy: 0.0001)
-        XCTAssertEqual(timer.progress(at: at(60)), 1)
-        XCTAssertEqual(timer.progress(at: at(600)), 1, "Progress must not run past one")
+        expectClose(timer.progress(at: at(15)), 0.25, tolerance: 0.0001)
+        #expect(timer.progress(at: at(60)) == 1)
+        #expect(timer.progress(at: at(600)) == 1, "Progress must not run past one")
     }
 
-    func testExposesADeadlineOnlyWhileRunning() {
+    @Test("A deadline is published only while running")
+    func exposesADeadlineOnlyWhileRunning() {
         var timer = RestTimer(preset: .sixtySeconds)
-        XCTAssertNil(timer.endsAt, "An idle timer has no deadline to publish")
+        #expect(timer.endsAt == nil, "An idle timer has no deadline to publish")
 
         timer.start(at: start)
-        XCTAssertEqual(timer.endsAt, at(60))
+        #expect(timer.endsAt == at(60))
 
         timer.pause(at: at(10))
-        XCTAssertNil(timer.endsAt, "A paused timer has no deadline to publish")
+        #expect(timer.endsAt == nil, "A paused timer has no deadline to publish")
     }
 
     // MARK: - Finishing
 
-    func testRefreshReportsTheCrossingExactlyOnce() {
+    @Test("Refresh reports the crossing exactly once")
+    func refreshReportsTheCrossingExactlyOnce() {
         var timer = RestTimer(preset: .sixtySeconds)
         timer.start(at: start)
 
-        XCTAssertFalse(timer.refresh(at: at(59)))
-        XCTAssertTrue(timer.refresh(at: at(60)), "The crossing is the haptic's cue")
-        XCTAssertFalse(timer.refresh(at: at(61)), "Firing twice would buzz twice")
+        // Bound to locals because `#expect` decomposes the expression it is
+        // given and cannot call a `mutating` method on the way through.
+        let early = timer.refresh(at: at(59))
+        let crossing = timer.refresh(at: at(60))
+        let again = timer.refresh(at: at(61))
+
+        #expect(!early)
+        #expect(crossing, "The crossing is the haptic's cue")
+        #expect(!again, "Firing twice would buzz twice")
     }
 
-    func testFinishIsStampedAtTheDeadlineNotAtALateRefresh() throws {
+    @Test("The finish is stamped at the deadline, not at a late refresh")
+    func finishIsStampedAtTheDeadlineNotAtALateRefresh() throws {
         var timer = RestTimer(preset: .sixtySeconds)
         timer.start(at: start)
 
         // The app was suspended and only noticed five minutes later.
         timer.refresh(at: at(360))
 
-        let phase = try XCTUnwrap(
-            { if case .finished(let stamp) = timer.phase { return stamp } else { return nil } }()
-        )
-        XCTAssertEqual(phase, at(60), "A late notice must not drag the finish time with it")
-        XCTAssertEqual(timer.overrun(at: at(360)), 300)
+        guard case .finished(let stamp) = timer.phase else {
+            Issue.record("Expected a finished timer, got \(timer.phase)")
+            return
+        }
+        #expect(stamp == at(60), "A late notice must not drag the finish time with it")
+        #expect(timer.overrun(at: at(360)) == 300)
     }
 
     // MARK: - Pausing
 
-    func testPausedTimeDoesNotDecay() {
+    @Test("Paused time does not decay")
+    func pausedTimeDoesNotDecay() {
         var timer = RestTimer(preset: .twoMinutes)
         timer.start(at: start)
         timer.pause(at: at(30))
 
-        XCTAssertEqual(timer.remaining(at: at(30)), 90)
-        XCTAssertEqual(timer.remaining(at: at(30_000)), 90, "A paused timer owes nothing to the clock")
+        #expect(timer.remaining(at: at(30)) == 90)
+        #expect(timer.remaining(at: at(30_000)) == 90, "A paused timer owes nothing to the clock")
 
         timer.resume(at: at(30_000))
-        XCTAssertEqual(timer.remaining(at: at(30_000)), 90)
-        XCTAssertEqual(timer.endsAt, at(30_090))
+        #expect(timer.remaining(at: at(30_000)) == 90)
+        #expect(timer.endsAt == at(30_090))
     }
 
-    func testPausingAnAlreadyElapsedTimerFinishesIt() {
+    @Test("Pausing an already elapsed timer finishes it")
+    func pausingAnAlreadyElapsedTimerFinishesIt() {
         var timer = RestTimer(preset: .sixtySeconds)
         timer.start(at: start)
         timer.pause(at: at(90))
 
-        XCTAssertFalse(timer.isPaused, "Pausing late must not park the timer at zero")
-        XCTAssertTrue(timer.hasFinished(at: at(90)))
+        #expect(!timer.isPaused, "Pausing late must not park the timer at zero")
+        #expect(timer.hasFinished(at: at(90)))
     }
 
-    func testPausingLeavesTheDurationAlone() {
+    @Test("Pausing leaves the duration alone")
+    func pausingLeavesTheDurationAlone() {
         var timer = RestTimer(preset: .twoMinutes)
         timer.start(at: start)
         timer.pause(at: at(30))
         timer.resume(at: at(45))
 
-        XCTAssertEqual(timer.duration, 120, "Progress is measured against what was asked for")
+        #expect(timer.duration == 120, "Progress is measured against what was asked for")
     }
 
     // MARK: - Adjusting
 
-    func testExtendingGrowsBothTheRemainderAndTheTotal() {
+    @Test("Extending grows both the remainder and the total")
+    func extendingGrowsBothTheRemainderAndTheTotal() {
         var timer = RestTimer(preset: .sixtySeconds)
         timer.start(at: start)
         timer.extend(by: 30, at: at(10))
 
-        XCTAssertEqual(timer.remaining(at: at(10)), 80)
-        XCTAssertEqual(timer.duration, 90)
+        #expect(timer.remaining(at: at(10)) == 80)
+        #expect(timer.duration == 90)
         // Elapsed time stays consistent across the change.
-        XCTAssertEqual(timer.progress(at: at(10)), 10.0 / 90.0, accuracy: 0.0001)
+        expectClose(timer.progress(at: at(10)), 10.0 / 90.0, tolerance: 0.0001)
     }
 
-    func testExtendingAFinishedTimerRestartsIt() {
+    @Test("Extending a finished timer restarts it")
+    func extendingAFinishedTimerRestartsIt() {
         var timer = RestTimer(preset: .sixtySeconds)
         timer.start(at: start)
         timer.refresh(at: at(60))
         timer.extend(by: 30, at: at(60))
 
-        XCTAssertTrue(timer.isRunning, "Adding time to a finished timer is a request for more rest")
-        XCTAssertEqual(timer.remaining(at: at(60)), 30)
+        #expect(timer.isRunning, "Adding time to a finished timer is a request for more rest")
+        #expect(timer.remaining(at: at(60)) == 30)
     }
 
-    func testChangingDurationMidRunRestartsRatherThanKeepingAStaleDeadline() throws {
+    @Test("Changing duration mid-run restarts rather than keeping a stale deadline")
+    func changingDurationMidRunRestarts() throws {
         var timer = RestTimer(preset: .fiveMinutes)
         timer.start(at: start)
         try timer.setDuration(60, at: at(10))
 
-        XCTAssertEqual(timer.remaining(at: at(10)), 60)
-        XCTAssertEqual(timer.endsAt, at(70))
+        #expect(timer.remaining(at: at(10)) == 60)
+        #expect(timer.endsAt == at(70))
     }
 
-    func testAdjustmentsStayInsideTheAllowedRange() {
+    @Test("Adjustments stay inside the allowed range")
+    func adjustmentsStayInsideTheAllowedRange() {
         var timer = RestTimer(preset: .sixtySeconds)
         timer.start(at: start)
 
         timer.extend(by: -10_000, at: at(1))
-        XCTAssertEqual(timer.remaining(at: at(1)), RestTimer.allowedDuration.lowerBound)
+        #expect(timer.remaining(at: at(1)) == RestTimer.allowedDuration.lowerBound)
 
         timer.extend(by: 10_000, at: at(1))
-        XCTAssertEqual(timer.remaining(at: at(1)), RestTimer.allowedDuration.upperBound)
+        #expect(timer.remaining(at: at(1)) == RestTimer.allowedDuration.upperBound)
     }
 
     // MARK: - Validation
 
-    func testRejectsDurationsOutsideTheAllowedRange() {
-        XCTAssertThrowsError(try RestTimer(duration: 0))
-        XCTAssertThrowsError(try RestTimer(duration: 4.9))
-        XCTAssertThrowsError(try RestTimer(duration: 3601))
-
-        XCTAssertThrowsError(try RestTimer(duration: -5)) { error in
-            XCTAssertEqual(error as? ValidationError, .restDurationOutOfRange(-5))
+    @Test("Durations outside the allowed range are rejected", arguments: [0.0, 4.9, 3601.0, -5.0])
+    func rejectsDurationsOutsideTheAllowedRange(duration: Double) {
+        #expect(throws: ValidationError.restDurationOutOfRange(duration)) {
+            try RestTimer(duration: duration)
         }
     }
 
-    func testAcceptsTheBoundsThemselves() {
-        XCTAssertNoThrow(try RestTimer(duration: RestTimer.allowedDuration.lowerBound))
-        XCTAssertNoThrow(try RestTimer(duration: RestTimer.allowedDuration.upperBound))
+    @Test("The bounds themselves are accepted")
+    func acceptsTheBoundsThemselves() throws {
+        _ = try RestTimer(duration: RestTimer.allowedDuration.lowerBound)
+        _ = try RestTimer(duration: RestTimer.allowedDuration.upperBound)
     }
 
-    func testEveryPresetIsALegalDurationAndRoundTrips() {
-        for preset in RestPreset.allCases {
-            XCTAssertTrue(RestTimer.allowedDuration.contains(preset.duration), "\(preset.rawValue)")
-            XCTAssertEqual(RestPreset.matching(preset.duration), preset, "\(preset.rawValue)")
-        }
-        XCTAssertNil(RestPreset.matching(137), "A custom duration is not a preset")
+    @Test("Every preset is a legal duration and round trips", arguments: RestPreset.allCases)
+    func everyPresetIsALegalDurationAndRoundTrips(preset: RestPreset) {
+        #expect(RestTimer.allowedDuration.contains(preset.duration))
+        #expect(RestPreset.matching(preset.duration) == preset)
+    }
+
+    @Test("A custom duration matches no preset")
+    func customDurationMatchesNoPreset() {
+        #expect(RestPreset.matching(137) == nil)
     }
 
     // MARK: - Restoring
 
-    func testSurvivesACodableRoundTrip() throws {
+    @Test("A timer survives a Codable round trip")
+    func survivesACodableRoundTrip() throws {
         // This is what relaunching mid-rest, or restoring a Live Activity,
         // amounts to.
         var timer = RestTimer(preset: .threeMinutes)
@@ -187,7 +210,7 @@ final class RestTimerTests: XCTestCase {
         let data = try JSONEncoder().encode(timer)
         let restored = try JSONDecoder().decode(RestTimer.self, from: data)
 
-        XCTAssertEqual(restored, timer)
-        XCTAssertEqual(restored.remaining(at: at(60)), 120)
+        #expect(restored == timer)
+        #expect(restored.remaining(at: at(60)) == 120)
     }
 }
