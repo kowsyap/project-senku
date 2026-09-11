@@ -22,8 +22,10 @@ saving all the value for the end.
 - [x] Guest mode and saved profile, split across two tabs
 - [x] Profile persistence via `ProfileStore`
 - [x] Offscreen PNG renderer for reviewing layout without a simulator
-- [ ] Xcode project with iOS target, Catalyst enabled — see [XCODE_SETUP.md](XCODE_SETUP.md)
-- [ ] Run on a simulator and a device
+- [x] Xcode project with packages linked — see [XCODE_SETUP.md](XCODE_SETUP.md)
+- [x] Runs on the iOS simulator
+- [ ] Enable Mac Catalyst
+- [ ] Run on a physical device
 - [ ] Migrate `SenkuCoreTests` to Swift Testing (now that Xcode is installed)
 - [ ] Move `ProfileStore` onto SwiftData once history needs storing
 
@@ -60,5 +62,5 @@ saving all the value for the end.
 
 ## Immediate next step
 
-Follow [XCODE_SETUP.md](XCODE_SETUP.md) to create the app project, then run it.
-After that, Phase 2.
+Enable Mac Catalyst and add the watch target — both in
+[XCODE_SETUP.md](XCODE_SETUP.md). After that, Phase 2.

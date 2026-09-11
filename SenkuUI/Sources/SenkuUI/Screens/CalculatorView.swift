@@ -154,33 +154,51 @@ public struct CalculatorView: View {
 
     private var goalCard: some View {
         Card("Goal") {
-            Picker("Activity level", selection: $draft.activityLevel) {
-                ForEach(ActivityLevel.allCases) { level in
-                    Text(level.title).tag(level)
+            // Each picker carries a visible label. Outside a `Form`, SwiftUI
+            // hides a Picker's own label, which would leave three unlabelled
+            // menus with no way to tell which one is which.
+            LabeledContent("Activity level") {
+                Picker("Activity level", selection: $draft.activityLevel) {
+                    ForEach(ActivityLevel.allCases) { level in
+                        Text(level.title).tag(level)
+                    }
                 }
+                .labelsHidden()
             }
             Text(draft.activityLevel.detail)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Divider()
 
-            Picker("Goal", selection: $draft.goal) {
-                ForEach(Goal.allCases) { goal in
-                    Text(goal.title).tag(goal)
+            LabeledContent("Goal") {
+                Picker("Goal", selection: $draft.goal) {
+                    ForEach(Goal.allCases) { goal in
+                        Text(goal.title).tag(goal)
+                    }
                 }
+                .labelsHidden()
             }
+            Text(draft.goal.detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Divider()
 
-            Picker("Formula", selection: $draft.formula) {
-                ForEach(BMRFormula.allCases) { formula in
-                    Text(formula.title).tag(formula)
+            LabeledContent("Formula") {
+                Picker("Formula", selection: $draft.formula) {
+                    ForEach(BMRFormula.allCases) { formula in
+                        Text(formula.title).tag(formula)
+                    }
                 }
+                .labelsHidden()
             }
             Text(formulaExplanation)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

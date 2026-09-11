@@ -16,7 +16,9 @@ Early. The calculation core is built and verified; the apps are not started yet.
 | `SenkuCore` — energy and macro engine | ✅ 64 checks + 33 tests passing |
 | `SenkuUI` — SwiftUI screens | ✅ Builds for iOS, macOS and watchOS |
 | `senku` CLI, `senku-render` | ✅ Working |
-| Xcode app project | ⬜ [One-time manual setup](docs/XCODE_SETUP.md) |
+| `SenkuUI` persistence tests | ✅ 9 tests passing |
+| iOS app | ✅ Builds and runs on the simulator |
+| Mac Catalyst, watchOS targets | ⬜ [Remaining setup](docs/XCODE_SETUP.md) |
 
 ## What the core does
 
