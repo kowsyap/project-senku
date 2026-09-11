@@ -76,6 +76,7 @@ private struct ProfileEditorSheet: View {
                 .frame(maxWidth: .infinity)
             }
             .background(.background)
+            .dismissableKeyboard()
             .navigationTitle("Edit profile")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

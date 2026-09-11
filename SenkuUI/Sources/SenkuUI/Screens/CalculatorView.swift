@@ -53,6 +53,7 @@ public struct CalculatorView: View {
             .frame(maxWidth: .infinity)
         }
         .background(.background)
+        .dismissableKeyboard()
         .animation(.snappy(duration: 0.2), value: draft.goal)
         .animation(.snappy(duration: 0.2), value: draft.activityLevel)
     }

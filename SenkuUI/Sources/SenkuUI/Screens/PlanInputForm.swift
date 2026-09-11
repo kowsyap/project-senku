@@ -39,8 +39,21 @@ public struct PlanInputForm: View {
             }
             .pickerStyle(.segmented)
 
-            Stepper(value: $draft.age, in: 13...120) {
-                StatRow("Age", value: "\(draft.age)")
+            HStack {
+                Text("Age")
+                    .font(.subheadline)
+                Spacer(minLength: 8)
+                NumericField(
+                    value: Binding(
+                        get: { Double(draft.age) },
+                        set: { draft.age = Int($0.rounded()) }
+                    ),
+                    range: 13...120,
+                    unit: "years",
+                    width: 52
+                )
+                Stepper("Age", value: $draft.age, in: 13...120)
+                    .labelsHidden()
             }
 
             Divider()
@@ -61,22 +74,32 @@ public struct PlanInputForm: View {
                 value: $draft.heightCM,
                 range: 120...220,
                 step: 1,
-                display: Display.height(draft.heightCM, in: .metric)
+                decimals: 0,
+                unit: "cm"
             )
         case .imperial:
-            VStack(spacing: 6) {
-                StatRow("Height", value: Display.height(draft.heightCM, in: .imperial))
-                HStack(spacing: 12) {
-                    Stepper("Feet", value: Binding(
-                        get: { draft.heightFeet },
-                        set: { draft.heightFeet = $0 }
-                    ), in: 3...8)
-                    Stepper("Inches", value: Binding(
-                        get: { Int(draft.heightInches) },
-                        set: { draft.heightInches = Double($0) }
-                    ), in: 0...11)
-                }
-                .font(.caption)
+            HStack {
+                Text("Height")
+                    .font(.subheadline)
+                Spacer(minLength: 8)
+                NumericField(
+                    value: Binding(
+                        get: { Double(draft.heightFeet) },
+                        set: { draft.heightFeet = Int($0.rounded()) }
+                    ),
+                    range: 3...8,
+                    unit: "ft",
+                    width: 40
+                )
+                NumericField(
+                    value: Binding(
+                        get: { draft.heightInches },
+                        set: { draft.heightInches = $0 }
+                    ),
+                    range: 0...11,
+                    unit: "in",
+                    width: 40
+                )
             }
         }
     }
@@ -89,7 +112,8 @@ public struct PlanInputForm: View {
                 : Binding(get: { draft.weightPounds }, set: { draft.weightPounds = $0 }),
             range: draft.unitSystem == .metric ? 35...200 : 77...440,
             step: draft.unitSystem == .metric ? 0.5 : 1,
-            display: Display.mass(draft.weightKG, in: draft.unitSystem)
+            decimals: draft.unitSystem == .metric ? 1 : 0,
+            unit: draft.unitSystem.massLabel
         )
     }
 
@@ -111,7 +135,8 @@ public struct PlanInputForm: View {
                 value: $draft.bodyFatPercentage,
                 range: 3...60,
                 step: 0.5,
-                display: Display.percent(draft.bodyFatPercentage)
+                decimals: 1,
+                unit: "%"
             )
         }
     }
@@ -184,20 +209,29 @@ public struct PlanInputForm: View {
     }
 }
 
-/// A labelled slider with its current value shown above it.
+/// A slider paired with a field, so a value can be dragged or typed.
+///
+/// The slider is for exploring, the field for entering a number you already
+/// know — asking someone to land 82.5 kg on a slider is needless work.
 struct SliderField: View {
     let label: String
     @Binding var value: Double
     let range: ClosedRange<Double>
     let step: Double
-    let display: String
+    var decimals: Int = 0
+    var unit: String?
 
     var body: some View {
-        VStack(spacing: 2) {
-            StatRow(label, value: display)
+        VStack(spacing: 4) {
+            HStack {
+                Text(label)
+                    .font(.subheadline)
+                Spacer(minLength: 8)
+                NumericField(value: $value, range: range, decimals: decimals, unit: unit)
+            }
             Slider(value: $value, in: range, step: step)
                 .accessibilityLabel(label)
-                .accessibilityValue(display)
+                .accessibilityValue(String(format: "%.\(decimals)f \(unit ?? "")", value))
         }
     }
 }
