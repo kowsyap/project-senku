@@ -41,6 +41,9 @@ public struct RestTimerView: View {
         #if os(iOS) && !targetEnvironment(macCatalyst)
         RestActivityController.shared.sync(with: timer, at: instant)
         #endif
+        #if canImport(UserNotifications) && !os(macOS)
+        RestNotifications.sync(with: timer, at: instant)
+        #endif
     }
 
     private var remaining: TimeInterval { timer.remaining(at: now) }
@@ -98,6 +101,11 @@ public struct RestTimerView: View {
             HStack(spacing: 10) {
                 Button {
                     Feedback.control()
+                    if timer.isIdle {
+                        #if canImport(UserNotifications) && !os(macOS)
+                        RestNotifications.requestAuthorizationIfNeeded()
+                        #endif
+                    }
                     timer.toggle(at: .now)
                     changed(at: .now)
                 } label: {
@@ -186,6 +194,9 @@ public struct RestTimerView: View {
             let instant = Date.now
             try? timer.setDuration(preset.duration, at: instant)
             timer.start(at: instant)
+            #if canImport(UserNotifications) && !os(macOS)
+            RestNotifications.requestAuthorizationIfNeeded()
+            #endif
             changed(at: instant)
         } label: {
             Text(preset.title)
