@@ -599,6 +599,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				CODE_SIGN_ENTITLEMENTS = Senku.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = SenkuCatalyst.entitlements;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				SUPPORTS_MACCATALYST = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -646,6 +647,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				CODE_SIGN_ENTITLEMENTS = Senku.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = SenkuCatalyst.entitlements;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				SUPPORTS_MACCATALYST = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
