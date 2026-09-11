@@ -18,7 +18,8 @@ let package = Package(
     targets: [
         .target(
             name: "SenkuUI",
-            dependencies: [.product(name: "SenkuCore", package: "SenkuCore")]
+            dependencies: [.product(name: "SenkuCore", package: "SenkuCore")],
+            resources: [.process("Resources")]
         ),
 
         // Renders screens to PNG off screen, so layout can be reviewed without

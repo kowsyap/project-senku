@@ -63,6 +63,29 @@ final class RestTimerUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 2), "Resume returns to running")
     }
 
+    /// The chime and haptic hang off the running→finished edge, so this checks
+    /// that edge is actually reached by a live app rather than only in the
+    /// engine's unit tests. The simulator has no haptics and the sound cannot
+    /// be asserted on, but if this passes, `Feedback.restFinished()` ran.
+    @MainActor
+    func testATimerActuallyReachesTheFinishedState() {
+        let app = launchOnRestTab()
+
+        // Tapping a preset starts it, and the stepper re-aims a running timer,
+        // so this is already counting down from the shortest interval the
+        // stepper reaches. There is no Start to press.
+        app.buttons["preset.sixtySeconds"].tap()
+        let shorter = app.buttons["Shorter"]
+        for _ in 0..<3 { shorter.tap() }
+        XCTAssertTrue(app.buttons["Pause"].exists, "A preset tap should already be running")
+
+        XCTAssertTrue(
+            app.buttons["Go again"].waitForExistence(timeout: 30),
+            "The timer never crossed into finished, so nothing would have chimed"
+        )
+        XCTAssertEqual(remainingValue(app), "Rest finished")
+    }
+
     @MainActor
     func testResetReturnsToTheFullInterval() {
         let app = launchOnRestTab()
