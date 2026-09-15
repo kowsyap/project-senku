@@ -50,10 +50,19 @@ saving all the value for the end.
 
 ## Phase 4 — Logging and trends
 
-- [ ] Workout logger, with the rest timer auto-starting on a logged set
-- [ ] Weight history with EWMA trend line
+Specified in full in [REQUIREMENTS.md](REQUIREMENTS.md), which supersedes this
+list: five features, their data models, the rules they have to obey, and the
+questions still open.
+
+- [ ] Storage and notification-scheduler foundations (S1, S2)
+- [ ] Weight log with reminders and EWMA trend (F1)
+- [ ] Exercise catalogue and muscle-coverage maths
+- [ ] PR page (F2)
+- [ ] Workout page, splits and coverage, with the rest timer auto-starting (F3)
+- [ ] Water tracking with rolling reminders (F4)
+- [ ] Protein and macro intake (F5)
 - [ ] Adaptive TDEE from observed change
-- [ ] HealthKit read/write
+- [ ] HealthKit read/write — open question 1
 
 ## Phase 5 — Polish and ship
 

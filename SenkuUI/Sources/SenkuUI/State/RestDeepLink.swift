@@ -1,5 +1,8 @@
 import Foundation
 import SenkuCore
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 /// `senku://rest/start?seconds=90` — how the Home Screen widget starts a rest.
 ///
@@ -14,6 +17,16 @@ public enum RestDeepLink {
     /// Posted once a link has started a rest, so a timer screen already on
     /// display picks it up instead of waiting for its next `onAppear`.
     public static let didStart = Notification.Name("senku.rest.didStartFromLink")
+
+    /// Announces a rest that was started from outside a timer screen, so one
+    /// already on display picks it up instead of waiting for its next
+    /// `onAppear`, and the widget redraws against the new state.
+    public static func notifyStarted() {
+        NotificationCenter.default.post(name: didStart, object: nil)
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
+    }
 
     public static func url(seconds: TimeInterval) -> URL {
         URL(string: "\(scheme)://rest/start?seconds=\(Int(seconds))")!
@@ -38,7 +51,7 @@ public enum RestDeepLink {
 
         timer.start(at: now)
         RestTimerStore.save(timer)
-        NotificationCenter.default.post(name: didStart, object: nil)
+        notifyStarted()
         return timer
     }
 }

@@ -85,9 +85,17 @@ public enum RestNotifications {
         )
     }
 
+    /// Clears the notification both ways: the one still waiting to fire, and
+    /// the one already sitting in Notification Center.
+    ///
+    /// Cancelling only the pending request was half a job. Reset a rest that
+    /// had already ended and the alert stayed on the lock screen announcing a
+    /// timer that no longer existed — the app said the rest was over and gone,
+    /// and the notification said it was still there.
     public static func cancel() {
-        UNUserNotificationCenter.current()
-            .removePendingNotificationRequests(withIdentifiers: [identifier])
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+        center.removeDeliveredNotifications(withIdentifiers: [identifier])
     }
 }
 #endif

@@ -16,7 +16,9 @@ struct RestWidget: Widget {
         }
         .configurationDisplayName("Rest timer")
         .description("Start a rest, and see the one you are on.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        // Small only. The face is three stacked buttons; stretched wide it is
+        // the same three buttons with nothing more to say.
+        .supportedFamilies([.systemSmall])
     }
 }
 
@@ -48,16 +50,11 @@ struct RestProvider: TimelineProvider {
     }
 }
 
-/// Bridges WidgetKit's environment to the package's plain view.
+/// Bridges WidgetKit's timeline entry to the package's plain view.
 struct RestWidgetEntryView: View {
-    @Environment(\.widgetFamily) private var family
     let entry: RestEntry
 
     var body: some View {
-        RestWidgetView(
-            timer: entry.timer,
-            size: family == .systemMedium ? .medium : .small,
-            now: entry.date
-        )
+        RestWidgetView(timer: entry.timer, now: entry.date)
     }
 }

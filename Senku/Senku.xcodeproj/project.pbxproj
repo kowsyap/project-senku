@@ -237,13 +237,11 @@
 				D889B6B2305389DF001DB1A6 /* Frameworks */,
 				D889B6B3305389DF001DB1A6 /* Resources */,
 				1A000000000000000000001C /* Embed Foundation Extensions */,
-				1A000000000000000000002C /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				1A000000000000000000001E /* PBXTargetDependency */,
-				1A000000000000000000002E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D889B6B7305389DF001DB1A6 /* Senku */,

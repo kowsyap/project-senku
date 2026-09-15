@@ -124,17 +124,12 @@ try MainActor.assumeIsolated {
     var widgetTimer = RestTimer(preset: .twoMinutes)
     widgetTimer.start(at: t0.addingTimeInterval(-45))
     try render(
-        RestWidgetView(timer: nil, size: .small, now: t0).frame(height: 150).padding(14),
+        RestWidgetView(timer: nil, now: t0).frame(height: 150).padding(14),
         width: 158, scheme: .dark,
-        to: outputDirectory.appending(path: "widget-start-small.png")
+        to: outputDirectory.appending(path: "widget-start.png")
     )
     try render(
-        RestWidgetView(timer: nil, size: .medium, now: t0).frame(height: 150).padding(14),
-        width: 338, scheme: .dark,
-        to: outputDirectory.appending(path: "widget-start-medium.png")
-    )
-    try render(
-        RestWidgetView(timer: widgetTimer, size: .small, now: t0).frame(height: 150).padding(14),
+        RestWidgetView(timer: widgetTimer, now: t0).frame(height: 150).padding(14),
         width: 158, scheme: .dark,
         to: outputDirectory.appending(path: "widget-resting.png")
     )

@@ -13,6 +13,10 @@ import SenkuCore
 /// gets its identity from `ObjectIdentifier` for free.
 @Observable
 public final class PlanDraft: Identifiable {
+    /// What to call this person. Empty for the quick calculator, which is for
+    /// someone who is not saving anything; the profile editor asks for it.
+    public var name: String
+
     public var unitSystem: UnitSystem
     public var sex: Sex
 
@@ -33,7 +37,13 @@ public final class PlanDraft: Identifiable {
     public var goal: Goal
     public var formula: BMRFormula
 
+    /// The weight being worked towards, if there is one. Optional because a
+    /// goal of maintaining has no target, and because most people arrive
+    /// without a number in mind.
+    public var goalWeightKG: Double?
+
     public init(
+        name: String = "",
         unitSystem: UnitSystem = .metric,
         sex: Sex = .male,
         age: Int? = nil,
@@ -43,8 +53,10 @@ public final class PlanDraft: Identifiable {
         bodyFatPercentage: Double = 20,
         activityLevel: ActivityLevel = .moderate,
         goal: Goal = .maintain,
-        formula: BMRFormula = .automatic
+        formula: BMRFormula = .automatic,
+        goalWeightKG: Double? = nil
     ) {
+        self.name = name
         self.unitSystem = unitSystem
         self.sex = sex
         self.age = age
@@ -55,6 +67,7 @@ public final class PlanDraft: Identifiable {
         self.activityLevel = activityLevel
         self.goal = goal
         self.formula = formula
+        self.goalWeightKG = goalWeightKG
     }
 
     // MARK: - Imperial bridges
@@ -65,6 +78,12 @@ public final class PlanDraft: Identifiable {
     public var weightPounds: Double? {
         get { weightKG.map(Convert.pounds(fromKilograms:)) }
         set { weightKG = newValue.map(Convert.kilograms(fromPounds:)) }
+    }
+
+    /// The goal weight in pounds, on the same nil-in nil-out terms as `weightPounds`.
+    public var goalWeightPounds: Double? {
+        get { goalWeightKG.map(Convert.pounds(fromKilograms:)) }
+        set { goalWeightKG = newValue.map(Convert.kilograms(fromPounds:)) }
     }
 
     public var heightFeet: Int? {
@@ -116,6 +135,36 @@ public final class PlanDraft: Identifiable {
         guard let metrics else { return nil }
         return NutritionPlan.make(
             for: metrics,
+            activityLevel: activityLevel,
+            goal: goal,
+            formula: formula
+        )
+    }
+
+    /// Everything the plan is computed from, as one comparable value.
+    ///
+    /// The calculator needs to know whether anything has changed *since* it
+    /// last answered, and comparing plans is not enough: a change that leaves
+    /// the calories identical is still a change the user made and expects the
+    /// button to acknowledge.
+    public struct Inputs: Hashable, Sendable {
+        var sex: Sex
+        var age: Int?
+        var heightCM: Double?
+        var weightKG: Double?
+        var bodyFatPercentage: Double?
+        var activityLevel: ActivityLevel
+        var goal: Goal
+        var formula: BMRFormula
+    }
+
+    public var inputs: Inputs {
+        Inputs(
+            sex: sex,
+            age: age,
+            heightCM: heightCM,
+            weightKG: weightKG,
+            bodyFatPercentage: usesMeasuredBodyFat ? bodyFatPercentage : nil,
             activityLevel: activityLevel,
             goal: goal,
             formula: formula

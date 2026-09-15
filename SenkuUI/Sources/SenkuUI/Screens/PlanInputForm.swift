@@ -10,8 +10,14 @@ import SenkuCore
 public struct PlanInputForm: View {
     @Bindable private var draft: PlanDraft
 
-    public init(draft: PlanDraft) {
+    /// Whether to ask for the things only a *saved* profile has a use for — a
+    /// name and a goal weight. The quick calculator writes nothing down, so
+    /// asking a stranger's name there would be a question with no purpose.
+    private let includesIdentity: Bool
+
+    public init(draft: PlanDraft, includesIdentity: Bool = false) {
         self.draft = draft
+        self.includesIdentity = includesIdentity
     }
 
     public var body: some View {
@@ -25,6 +31,22 @@ public struct PlanInputForm: View {
 
     private var aboutYouCard: some View {
         Card("About you") {
+            if includesIdentity {
+                HStack {
+                    Text("Name").font(.subheadline)
+                    Spacer(minLength: 8)
+                    TextField("Optional", text: $draft.name)
+                        .multilineTextAlignment(.trailing)
+                        #if os(iOS)
+                        .textInputAutocapitalization(.words)
+                        #endif
+                        .accessibilityIdentifier("field.name")
+                }
+                .textFieldStyle(.plain)
+
+                Divider()
+            }
+
             Picker("Units", selection: $draft.unitSystem) {
                 ForEach(UnitSystem.allCases) { system in
                     Text(system.title).tag(system)
@@ -176,6 +198,11 @@ public struct PlanInputForm: View {
 
             Divider()
 
+            if includesIdentity {
+                goalWeightField
+                Divider()
+            }
+
             LabeledContent("Formula") {
                 Picker("Formula", selection: $draft.formula) {
                     ForEach(BMRFormula.allCases) { formula in
@@ -186,6 +213,36 @@ public struct PlanInputForm: View {
             }
             caption(formulaExplanation)
         }
+    }
+
+    /// Not required, and not part of the calculation: the plan's calorie target
+    /// comes from the goal, not from a destination. It earns its place by
+    /// turning the weekly rate into an answer — how long this will take.
+    @ViewBuilder
+    private var goalWeightField: some View {
+        SliderField(
+            label: "Goal weight",
+            value: draft.unitSystem == .metric
+                ? $draft.goalWeightKG
+                : Binding(get: { draft.goalWeightPounds }, set: { draft.goalWeightPounds = $0 }),
+            range: draft.unitSystem == .metric ? 35...200 : 77...440,
+            step: draft.unitSystem == .metric ? 0.5 : 1,
+            decimals: draft.unitSystem == .metric ? 1 : 0,
+            unit: draft.unitSystem.massLabel,
+            identifier: "field.goalWeight"
+        )
+        caption(goalWeightExplanation)
+    }
+
+    private var goalWeightExplanation: String {
+        guard let goalWeightKG = draft.goalWeightKG else {
+            return "Optional. Set one and Senku will tell you how long the plan takes."
+        }
+        let weeks = draft.plan?.projectedWeeksTo(targetWeightKG: goalWeightKG)
+        guard let phrase = Display.duration(weeks: weeks) else {
+            return "This goal does not move you towards that weight, so there is no date to give."
+        }
+        return "\(phrase.prefix(1).uppercased())\(phrase.dropFirst()) at this rate."
     }
 
     private func caption(_ text: String) -> some View {
@@ -259,6 +316,10 @@ struct SliderField: View {
 }
 
 /// A field label that shows whether it still needs an answer.
+///
+/// A star rather than the word "Required": it marks the row without competing
+/// with the label for it, and three of them down a form read as a list of what
+/// is left rather than as three warnings. VoiceOver still hears the word.
 struct RequiredLabel: View {
     private let label: String
     private let isAnswered: Bool
@@ -269,13 +330,14 @@ struct RequiredLabel: View {
     }
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 3) {
             Text(label)
                 .font(.subheadline)
             if !isAnswered {
-                Text("Required")
-                    .font(.caption2.weight(.medium))
+                Text("\u{2217}")
+                    .font(.footnote.weight(.bold))
                     .foregroundStyle(Senku.Palette.caution)
+                    .baselineOffset(1)
             }
         }
         .accessibilityElement(children: .combine)

@@ -207,3 +207,68 @@ final class SharedStorageTests: XCTestCase {
         XCTAssertEqual(ProfileStore(defaults: group).profile?.metrics, metrics)
     }
 }
+
+/// The fields added after the first release: a name, and a goal weight.
+final class ProfileIdentityTests: XCTestCase {
+    /// A profile written before either field existed has to keep opening.
+    /// Both are optional for exactly this reason, and this is the test that
+    /// says so — the alternative is a decode failure that silently drops
+    /// someone's saved numbers.
+    func testAProfileSavedWithoutANameStillDecodes() throws {
+        let json = """
+        {
+          "metrics": { "sex": "male", "age": 30, "heightCM": 180, "weightKG": 80 },
+          "activityLevel": "moderate",
+          "goal": "maintain",
+          "formula": "automatic",
+          "unitSystem": "metric",
+          "updatedAt": 750000000
+        }
+        """.data(using: .utf8)!
+
+        let profile = try JSONDecoder().decode(ProfileStore.Profile.self, from: json)
+
+        XCTAssertNil(profile.name)
+        XCTAssertNil(profile.goalWeightKG)
+        XCTAssertEqual(profile.metrics.weightKG, 80)
+    }
+
+    func testADraftKeepsTheNameAndGoalWeightThroughASaveAndAnEdit() throws {
+        let draft = PlanDraft(
+            name: "  Kowsyap  ",
+            age: 30, heightCM: 180, weightKG: 80,
+            goal: .moderateCut,
+            goalWeightKG: 72
+        )
+
+        let saved = try XCTUnwrap(draft.profileSnapshot)
+        // Trimmed on the way in, so a stray space never becomes the name.
+        XCTAssertEqual(saved.name, "Kowsyap")
+        XCTAssertEqual(saved.goalWeightKG, 72)
+
+        let reopened = PlanDraft(profile: saved)
+        XCTAssertEqual(reopened.name, "Kowsyap")
+        XCTAssertEqual(reopened.goalWeightKG, 72)
+    }
+
+    /// A name of nothing but whitespace is no name at all.
+    func testABlankNameIsNotSaved() throws {
+        let draft = PlanDraft(name: "   ", age: 30, heightCM: 180, weightKG: 80)
+        XCTAssertNil(try XCTUnwrap(draft.profileSnapshot).name)
+    }
+
+    /// The signature behind the Calculate button: it must notice a changed
+    /// input, and must not fire on a change that the plan does not depend on.
+    func testInputsChangeWithTheNumbersButNotWithTheUnitsOrTheName() {
+        let draft = PlanDraft(age: 30, heightCM: 180, weightKG: 80)
+        let before = draft.inputs
+
+        draft.unitSystem = .imperial
+        draft.name = "Someone"
+        draft.goalWeightKG = 72
+        XCTAssertEqual(draft.inputs, before)
+
+        draft.weightKG = 79.5
+        XCTAssertNotEqual(draft.inputs, before)
+    }
+}

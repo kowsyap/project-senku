@@ -14,26 +14,38 @@ import WidgetKit
 @Observable
 public final class ProfileStore {
     public struct Profile: Codable, Hashable, Sendable {
+        /// Optional, and decoded as nil when absent, so a profile saved before
+        /// there was a name to give still reads back.
+        public var name: String?
+
         public var metrics: BodyMetrics
         public var activityLevel: ActivityLevel
         public var goal: Goal
         public var formula: BMRFormula
         public var unitSystem: UnitSystem
+
+        /// The weight being worked towards, if one was named.
+        public var goalWeightKG: Double?
+
         public var updatedAt: Date
 
         public init(
+            name: String? = nil,
             metrics: BodyMetrics,
             activityLevel: ActivityLevel,
             goal: Goal,
             formula: BMRFormula,
             unitSystem: UnitSystem,
+            goalWeightKG: Double? = nil,
             updatedAt: Date = .now
         ) {
+            self.name = name
             self.metrics = metrics
             self.activityLevel = activityLevel
             self.goal = goal
             self.formula = formula
             self.unitSystem = unitSystem
+            self.goalWeightKG = goalWeightKG
             self.updatedAt = updatedAt
         }
 
@@ -44,6 +56,13 @@ public final class ProfileStore {
                 goal: goal,
                 formula: formula
             )
+        }
+
+        /// How long the current plan would take to reach `goalWeightKG`, when
+        /// there is a target and the plan is actually moving towards it.
+        public var weeksToGoalWeight: Double? {
+            guard let goalWeightKG else { return nil }
+            return plan.projectedWeeksTo(targetWeightKG: goalWeightKG)
         }
     }
 
@@ -98,6 +117,7 @@ extension PlanDraft {
     /// Seeds a draft from a saved profile.
     public convenience init(profile: ProfileStore.Profile) {
         self.init(
+            name: profile.name ?? "",
             unitSystem: profile.unitSystem,
             sex: profile.metrics.sex,
             age: profile.metrics.age,
@@ -107,19 +127,23 @@ extension PlanDraft {
             bodyFatPercentage: profile.metrics.bodyFatPercentage ?? 20,
             activityLevel: profile.activityLevel,
             goal: profile.goal,
-            formula: profile.formula
+            formula: profile.formula,
+            goalWeightKG: profile.goalWeightKG
         )
     }
 
     /// A snapshot of the draft, or nil while the inputs are not yet valid.
     public var profileSnapshot: ProfileStore.Profile? {
         guard let metrics else { return nil }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         return ProfileStore.Profile(
+            name: trimmed.isEmpty ? nil : trimmed,
             metrics: metrics,
             activityLevel: activityLevel,
             goal: goal,
             formula: formula,
-            unitSystem: unitSystem
+            unitSystem: unitSystem,
+            goalWeightKG: goalWeightKG
         )
     }
 }

@@ -10,15 +10,23 @@ import SenkuCore
 /// app's state — it falls back to being what it is most useful as anyway: a
 /// one-tap start.
 public struct RestWidgetView: View {
-    public enum Size { case small, medium }
+    /// The three intervals worth a one-tap start, in the order they are stacked.
+    ///
+    /// One, two and three minutes — accessory work, moderate compounds, heavy
+    /// compounds. The colours run red, orange, yellow down that list, so the
+    /// right button is found by colour at arm's length rather than by reading
+    /// three near-identical numbers mid-set.
+    public static let presets: [(preset: RestPreset, tint: Color)] = [
+        (.sixtySeconds, .red),
+        (.twoMinutes, .orange),
+        (.threeMinutes, .yellow),
+    ]
 
     private let timer: RestTimer?
-    private let size: Size
     private let now: Date
 
-    public init(timer: RestTimer?, size: Size = .small, now: Date = .now) {
+    public init(timer: RestTimer?, now: Date = .now) {
         self.timer = timer
-        self.size = size
         self.now = now
     }
 
@@ -62,49 +70,63 @@ public struct RestWidgetView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// The presets, as links. Widgets cannot hold state, so each is simply a
-    /// way into the app with a duration already chosen.
+    /// The presets, one per row.
     private var starter: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label("REST", systemImage: "timer")
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-            let presets: [RestPreset] = size == .medium
-                ? RestPreset.allCases
-                : [.sixtySeconds, .ninetySeconds, .twoMinutes]
-
-            let columns = size == .medium ? 3 : 1
-            let rows = stride(from: 0, to: presets.count, by: columns).map { start in
-                Array(presets[start ..< min(start + columns, presets.count)])
-            }
-
             VStack(spacing: 6) {
-                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                    HStack(spacing: 6) {
-                        ForEach(row) { tile($0) }
-                        ForEach(0 ..< (columns - row.count), id: \.self) { _ in
-                            Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
-                        }
-                    }
+                ForEach(Self.presets, id: \.preset) { preset, tint in
+                    tile(preset, tint: tint)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func tile(_ preset: RestPreset) -> some View {
+    /// A tap starts the rest where it belongs.
+    ///
+    /// On iOS that is a `LiveActivityIntent`, which iOS runs in the app's own
+    /// process in the background: the rest starts, the Dynamic Island picks it
+    /// up, and the app is never brought forward. Everywhere else — and on any
+    /// system without the intent — the deep link opens the app and does the
+    /// same work there.
+    @ViewBuilder
+    private func tile(_ preset: RestPreset, tint: Color) -> some View {
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        if #available(iOS 17.0, *) {
+            Button(intent: StartRestFromWidgetIntent(seconds: preset.duration)) {
+                face(preset, tint: tint)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Start a \(Display.spokenClock(preset.duration)) rest")
+        } else {
+            link(preset, tint: tint)
+        }
+        #else
+        link(preset, tint: tint)
+        #endif
+    }
+
+    private func link(_ preset: RestPreset, tint: Color) -> some View {
         Link(destination: RestDeepLink.url(seconds: preset.duration)) {
-            Text(preset.title)
-                .font(.callout.weight(.semibold))
-                .monospacedDigit()
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(.quaternary)
-                )
+            face(preset, tint: tint)
         }
         .accessibilityLabel("Start a \(Display.spokenClock(preset.duration)) rest")
+    }
+
+    private func face(_ preset: RestPreset, tint: Color) -> some View {
+        Text(preset.title)
+            .font(.callout.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(tint)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(tint.opacity(0.22))
+            )
     }
 }

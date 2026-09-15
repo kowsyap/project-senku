@@ -45,7 +45,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1A0000000000000000000025"
             BuildableName = "SenkuWatch.app"
-            BlueprintName = "SenkuWatch"
             ReferencedContainer = "container:Senku.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,7 +61,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1A0000000000000000000025"
             BuildableName = "SenkuWatch.app"
-            BlueprintName = "SenkuWatch"
             ReferencedContainer = "container:Senku.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

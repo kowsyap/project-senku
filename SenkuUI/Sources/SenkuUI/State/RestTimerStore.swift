@@ -1,5 +1,8 @@
 import Foundation
 import SenkuCore
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 /// The running rest, persisted to the shared App Group.
 ///
@@ -27,9 +30,20 @@ public enum RestTimerStore {
         }
         guard let data = try? JSONEncoder().encode(timer) else { return }
         defaults.set(data, forKey: key)
+        reloadWidgets()
     }
 
     public static func clear(from defaults: UserDefaults = SenkuStorage.shared) {
         defaults.removeObject(forKey: key)
+        reloadWidgets()
+    }
+
+    /// The widget shows a countdown for as long as there is one to show, so a
+    /// rest that starts, ends or is reset is exactly when it needs redrawing.
+    /// Only reaches the widget on a build with the App Group; harmless without.
+    private static func reloadWidgets() {
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 }

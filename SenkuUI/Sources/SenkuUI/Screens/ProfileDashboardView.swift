@@ -24,6 +24,7 @@ public struct ProfileDashboardView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: Senku.Metrics.stackSpacing) {
+                detailsCard
                 ResultsView(plan: profile.plan, unitSystem: profile.unitSystem)
                 lastUpdated
             }
@@ -49,6 +50,51 @@ public struct ProfileDashboardView: View {
         }
     }
 
+    /// What the plan was worked out from, spelled out.
+    ///
+    /// First on the screen rather than under the results, which are long enough
+    /// that anything below them is found only by someone who already knows it
+    /// is there. It also reads in the right order: who this is, then what they
+    /// should eat.
+    private var detailsCard: some View {
+        Card("About you") {
+            StatRow("Name", value: profile.name ?? "—")
+            StatRow("Sex", value: profile.metrics.sex.rawValue.capitalized)
+            StatRow("Age", value: "\(profile.metrics.age)")
+            StatRow("Height", value: Display.height(profile.metrics.heightCM, in: profile.unitSystem))
+            StatRow("Weight", value: Display.mass(profile.metrics.weightKG, in: profile.unitSystem))
+
+            StatRow(
+                "Body fat",
+                value: Display.percent(profile.metrics.effectiveBodyFatPercentage),
+                detail: profile.metrics.bodyFatPercentage == nil
+                    ? "Estimated from BMI — measure it to sharpen your protein target"
+                    : "Measured"
+            )
+
+            Divider()
+
+            StatRow("Activity", value: profile.activityLevel.title, detail: profile.activityLevel.detail)
+            StatRow("Goal", value: profile.goal.title)
+            goalWeightRow
+            StatRow("Formula", value: profile.plan.energy.formulaUsed.title)
+            StatRow("Units", value: profile.unitSystem.title)
+        }
+    }
+
+    @ViewBuilder
+    private var goalWeightRow: some View {
+        if let goalWeightKG = profile.goalWeightKG {
+            StatRow(
+                "Goal weight",
+                value: Display.mass(goalWeightKG, in: profile.unitSystem),
+                detail: Display.duration(weeks: profile.weeksToGoalWeight).map { "\($0) at this rate" }
+                    ?? "This goal does not move you towards it",
+                tint: Senku.Palette.protein
+            )
+        }
+    }
+
     private var lastUpdated: some View {
         Text("Updated \(profile.updatedAt.formatted(.relative(presentation: .named)))")
             .font(.caption)
@@ -69,7 +115,7 @@ private struct ProfileEditorSheet: View {
             ScrollView {
                 VStack(spacing: Senku.Metrics.stackSpacing) {
                     livePreview
-                    PlanInputForm(draft: draft)
+                    PlanInputForm(draft: draft, includesIdentity: true)
                 }
                 .padding()
                 .frame(maxWidth: 620)

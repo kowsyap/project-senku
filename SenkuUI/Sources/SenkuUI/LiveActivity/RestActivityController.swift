@@ -49,8 +49,13 @@ public final class RestActivityController: @unchecked Sendable {
         guard isAvailable else { return }
 
         // Nothing to show for a timer that has not started or has been reset.
+        //
+        // Dismissed immediately rather than by the default policy, which leaves
+        // the activity on the lock screen for up to four hours. That is right
+        // for a rest that ran its course and wrong for one you just deleted:
+        // reset means gone now.
         guard !timer.isIdle else {
-            end()
+            end(dismissing: .immediate)
             return
         }
 
