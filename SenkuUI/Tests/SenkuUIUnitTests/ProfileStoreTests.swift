@@ -272,3 +272,235 @@ final class ProfileIdentityTests: XCTestCase {
         XCTAssertNotEqual(draft.inputs, before)
     }
 }
+
+/// The weight log's storage. The maths is tested in SenkuCore; this is about
+/// what survives a round trip and what the store hands to it.
+final class WeightLogStoreTests: XCTestCase {
+    private func store() -> WeightLogStore {
+        let defaults = UserDefaults(suiteName: "senku.test.weight")!
+        defaults.removePersistentDomain(forName: "senku.test.weight")
+        return WeightLogStore(defaults: defaults)
+    }
+
+    func testWeighInsSurviveAReload() throws {
+        let defaults = UserDefaults(suiteName: "senku.test.weight.reload")!
+        defaults.removePersistentDomain(forName: "senku.test.weight.reload")
+        defer { defaults.removePersistentDomain(forName: "senku.test.weight.reload") }
+
+        let first = WeightLogStore(defaults: defaults)
+        first.add(try WeighIn(date: Date(timeIntervalSince1970: 1_700_000_000), weightKG: 80))
+        first.add(try WeighIn(date: Date(timeIntervalSince1970: 1_700_086_400), weightKG: 79.5))
+
+        XCTAssertEqual(WeightLogStore(defaults: defaults).weighIns.count, 2)
+    }
+
+    func testTheNewestWeighInComesFirst() throws {
+        let log = store()
+        let old = try WeighIn(date: Date(timeIntervalSince1970: 1_700_000_000), weightKG: 80)
+        let new = try WeighIn(date: Date(timeIntervalSince1970: 1_700_600_000), weightKG: 79)
+
+        log.add(old)
+        log.add(new)
+
+        XCTAssertEqual(log.weighIns.first?.id, new.id)
+    }
+
+    func testDeletingRemovesOnlyThatReading() throws {
+        let log = store()
+        let keep = try WeighIn(date: Date(timeIntervalSince1970: 1_700_000_000), weightKG: 80)
+        let drop = try WeighIn(date: Date(timeIntervalSince1970: 1_700_600_000), weightKG: 79)
+        log.add(keep)
+        log.add(drop)
+
+        log.delete(drop)
+
+        XCTAssertEqual(log.weighIns.map(\.id), [keep.id])
+    }
+
+    /// The store hands the series everything it has, so the trend it reports is
+    /// the trend of the whole log rather than of whatever is on screen.
+    func testTheSeriesSeesEveryReading() throws {
+        let log = store()
+        for day in 0 ..< 5 {
+            log.add(
+                try WeighIn(
+                    date: Date(timeIntervalSince1970: 1_700_000_000 + Double(day) * 86_400),
+                    weightKG: 80 - Double(day) * 0.2
+                )
+            )
+        }
+
+        XCTAssertEqual(log.series.dailyValues.count, 5)
+        XCTAssertNotNil(log.series.trendKG)
+    }
+}
+
+extension WeightLogStoreTests {
+    private func profile() throws -> ProfileStore.Profile {
+        ProfileStore.Profile(
+            metrics: try BodyMetrics(sex: .male, age: 30, heightCM: 180, weightKG: 80),
+            activityLevel: .moderate,
+            goal: .maintain,
+            formula: .automatic,
+            unitSystem: .metric,
+            updatedAt: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+    }
+
+    func testAnEmptyLogStartsFromTheProfileWeight() throws {
+        let defaults = UserDefaults(suiteName: "senku.test.weight.seed")!
+        defaults.removePersistentDomain(forName: "senku.test.weight.seed")
+        defer { defaults.removePersistentDomain(forName: "senku.test.weight.seed") }
+
+        let log = WeightLogStore(defaults: defaults)
+        XCTAssertTrue(log.seedFromProfileIfNeeded(try profile()))
+
+        XCTAssertEqual(log.weighIns.count, 1)
+        XCTAssertEqual(log.weighIns.first?.weightKG, 80)
+        // Carried over, not measured here, and recorded as such.
+        XCTAssertEqual(log.weighIns.first?.source, .imported)
+    }
+
+    func testTheProfileWeightIsSeededOnlyOnce() throws {
+        let defaults = UserDefaults(suiteName: "senku.test.weight.seed.once")!
+        defaults.removePersistentDomain(forName: "senku.test.weight.seed.once")
+        defer { defaults.removePersistentDomain(forName: "senku.test.weight.seed.once") }
+
+        let log = WeightLogStore(defaults: defaults)
+        log.seedFromProfileIfNeeded(try profile())
+        log.delete(try XCTUnwrap(log.weighIns.first))
+
+        // Deleting the seed means you did not want it. Asking again on the next
+        // appearance would be the app arguing with you.
+        XCTAssertFalse(log.seedFromProfileIfNeeded(try profile()))
+        XCTAssertTrue(log.weighIns.isEmpty)
+    }
+
+    func testSeedingDoesNothingWhenReadingsExist() throws {
+        let log = store()
+        log.add(try WeighIn(date: Date(timeIntervalSince1970: 1_700_600_000), weightKG: 77))
+
+        XCTAssertFalse(log.seedFromProfileIfNeeded(try profile()))
+        XCTAssertEqual(log.weighIns.count, 1)
+    }
+}
+
+/// The record store's own rules — the maths lives in SenkuCore.
+final class RecordStoreTests: XCTestCase {
+    private func store(_ suite: String = "senku.test.records") -> RecordStore {
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        return RecordStore(defaults: defaults)
+    }
+
+    func testABetterSetIsRecordedAndAWorseOneIsNot() throws {
+        let records = store()
+
+        XCTAssertNotNil(
+            records.offer(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5, setID: UUID())
+        )
+        // Lighter and easier: nothing to record.
+        XCTAssertNil(
+            records.offer(exerciseID: "catalogue.bench.flat", weightKG: 90, reps: 3, setID: UUID())
+        )
+        XCTAssertEqual(records.records.count, 1)
+    }
+
+    /// The rule the PR page exists for: beating a lift adds to the history, it
+    /// does not overwrite it.
+    func testBeatingARecordKeepsTheOldOne() throws {
+        let records = store()
+        records.offer(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5, setID: UUID())
+        records.offer(exerciseID: "catalogue.bench.flat", weightKG: 110, reps: 3, setID: UUID())
+
+        XCTAssertEqual(records.records.count, 2)
+        XCTAssertEqual(records.book.records(for: "catalogue.bench.flat").heaviest?.weightKG, 110)
+    }
+
+    func testRecordsSurviveAReload() throws {
+        let suite = "senku.test.records.reload"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let first = RecordStore(defaults: defaults)
+        first.add(try PersonalRecord(exerciseID: "catalogue.squat.back", weightKG: 140, reps: 1))
+
+        XCTAssertEqual(RecordStore(defaults: defaults).records.count, 1)
+    }
+
+    /// Open question 4, answered: deleting a session you mislogged is not the
+    /// same as un-lifting the weight.
+    func testDeletingTheSetBehindARecordLeavesTheRecordAsManual() throws {
+        let records = store()
+        let setID = UUID()
+        records.offer(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5, setID: setID)
+
+        records.detachRecords(fromSets: [setID])
+
+        XCTAssertEqual(records.records.count, 1)
+        XCTAssertEqual(records.records.first?.source, .manual)
+    }
+
+    func testDeletingARecordRemovesOnlyThatOne() throws {
+        let records = store()
+        let keep = try PersonalRecord(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5)
+        let drop = try PersonalRecord(exerciseID: "catalogue.squat.back", weightKG: 140, reps: 1)
+        records.add(keep)
+        records.add(drop)
+
+        records.delete(drop)
+
+        XCTAssertEqual(records.records.map(\.id), [keep.id])
+    }
+}
+
+extension RecordStoreTests {
+    func testEditingARecordKeepsItsPlaceAndItsIdentity() throws {
+        let records = store("senku.test.records.edit")
+        let original = try PersonalRecord(
+            exerciseID: "catalogue.bench.flat",
+            weightKG: 100,
+            reps: 5,
+            date: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        records.add(original)
+
+        // The row you fix is the row you mistyped: same id, new figure.
+        let corrected = try PersonalRecord(
+            id: original.id,
+            exerciseID: original.exerciseID,
+            weightKG: 105,
+            reps: 5,
+            date: original.date,
+            source: original.source
+        )
+        records.update(corrected)
+
+        XCTAssertEqual(records.records.count, 1)
+        XCTAssertEqual(records.records.first?.id, original.id)
+        XCTAssertEqual(records.records.first?.weightKG, 105)
+    }
+
+    func testEditingSomethingThatIsNotThereChangesNothing() throws {
+        let records = store("senku.test.records.edit.missing")
+        records.add(try PersonalRecord(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5))
+
+        records.update(try PersonalRecord(exerciseID: "catalogue.bench.flat", weightKG: 999, reps: 1))
+
+        XCTAssertEqual(records.records.count, 1)
+        XCTAssertEqual(records.records.first?.weightKG, 100)
+    }
+
+    func testDeletingAnExerciseRemovesOnlyItsOwnRecords() throws {
+        let records = store("senku.test.records.deleteAll")
+        records.add(try PersonalRecord(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5))
+        records.add(try PersonalRecord(exerciseID: "catalogue.bench.flat", weightKG: 110, reps: 3))
+        let squat = try PersonalRecord(exerciseID: "catalogue.squat.back", weightKG: 140, reps: 1)
+        records.add(squat)
+
+        records.deleteAll(forExercise: "catalogue.bench.flat")
+
+        XCTAssertEqual(records.records.map(\.id), [squat.id])
+    }
+}

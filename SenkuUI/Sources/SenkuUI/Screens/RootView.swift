@@ -21,7 +21,12 @@ import SenkuCore
 /// guarantee above for a tap, a read and a second tap, and hide every new
 /// feature behind a button until someone went looking for it.
 public struct RootView: View {
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var store: ProfileStore
+    @State private var weightLog = WeightLogStore()
+    @State private var records = RecordStore()
+    @State private var library = ExerciseLibrary()
     @State private var selection: Tab
 
     /// Reset when a profile is saved or cleared, so the calculator rebuilds its
@@ -32,6 +37,8 @@ public struct RootView: View {
         case me
         case quickCalc
         case rest
+        case weight
+        case records
     }
 
     public init(store: ProfileStore = ProfileStore()) {
@@ -48,6 +55,10 @@ public struct RootView: View {
                     quickCalcTab
                 } rest: {
                     restTab
+                } weight: {
+                    weightTab
+                } records: {
+                    recordsTab
                 }
             } else {
                 legacyTabs
@@ -58,6 +69,44 @@ public struct RootView: View {
                 selection = .rest
             }
         }
+        .task {
+            // The phone publishes the profile; the watch picks it up whenever
+            // it next runs. Started here rather than in the app entry point so
+            // that previews and tests, which build their own store, never open
+            // a session at all.
+            #if os(iOS) && !targetEnvironment(macCatalyst)
+            ProfileSync.shared.start(applying: store)
+
+            // A weigh-in typed on the watch lands here, in the log that owns
+            // the history. The watch keeps none of its own.
+            ProfileSync.shared.onWeighInReceived { weighIn in
+                weightLog.add(weighIn)
+                publishWeight()
+            }
+
+            publishWeight()
+            #endif
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Republished whenever the app comes forward, which is the cheapest
+            // honest definition of "regularly": the phone is the source, and
+            // the moment you have been looking at it is the moment its numbers
+            // are most likely to have changed.
+            #if os(iOS) && !targetEnvironment(macCatalyst)
+            if phase == .active { publishWeight() }
+            #endif
+        }
+        .onChange(of: weightLog.weighIns) { _, _ in publishWeight() }
+        .onChange(of: profileEditionID) { _, _ in publishWeight() }
+    }
+
+    /// Sends the watch the two figures it shows. Cheap enough to call freely:
+    /// an application context replaces the one before it, so calling this three
+    /// times in a second costs one delivery.
+    private func publishWeight() {
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        ProfileSync.shared.send(weight: WeightSummary(log: weightLog, profile: store.profile))
+        #endif
     }
 
     // MARK: - The destinations
@@ -98,6 +147,41 @@ public struct RootView: View {
         }
     }
 
+    private var weightTab: some View {
+        NavigationStack {
+            WeightLogView(store: weightLog, profile: store.profile) { trend in
+                // Adopting the trend edits the one field it measures and leaves
+                // the rest of the profile alone.
+                guard var updated = store.profile else { return }
+                guard let metrics = try? BodyMetrics(
+                    sex: updated.metrics.sex,
+                    age: updated.metrics.age,
+                    heightCM: updated.metrics.heightCM,
+                    weightKG: trend,
+                    bodyFatPercentage: updated.metrics.bodyFatPercentage
+                ) else { return }
+
+                updated.metrics = metrics
+                store.save(updated)
+                profileEditionID = UUID()
+            }
+            .navigationTitle("Weight")
+            .senkuWordmark()
+        }
+    }
+
+    private var recordsTab: some View {
+        NavigationStack {
+            RecordsView(
+                store: records,
+                library: library,
+                unitSystem: store.profile?.unitSystem ?? .metric
+            )
+                .navigationTitle("PRs")
+                .senkuWordmark()
+        }
+    }
+
     /// The pre-iOS 18 arrangement: a plain tab bar, no sidebar and no pinning.
     private var legacyTabs: some View {
         TabView(selection: $selection) {
@@ -112,6 +196,14 @@ public struct RootView: View {
             restTab
                 .tabItem { Label("Rest", systemImage: "timer") }
                 .tag(Tab.rest)
+
+            weightTab
+                .tabItem { Label("Weight", systemImage: "scalemass") }
+                .tag(Tab.weight)
+
+            recordsTab
+                .tabItem { Label("PRs", systemImage: "trophy") }
+                .tag(Tab.records)
         }
     }
 
@@ -148,12 +240,14 @@ public struct RootView: View {
 /// across launches — is an iOS 18 type, and a stored property cannot be marked
 /// available only from a later system the way a view can.
 @available(iOS 18.0, macOS 15.0, *)
-private struct AdaptiveTabs<Me: View, QuickCalc: View, Rest: View>: View {
+private struct AdaptiveTabs<Me: View, QuickCalc: View, Rest: View, Weight: View, Records: View>: View {
     @Binding var selection: RootView.Tab
 
     @ViewBuilder var me: Me
     @ViewBuilder var quickCalc: QuickCalc
     @ViewBuilder var rest: Rest
+    @ViewBuilder var weight: Weight
+    @ViewBuilder var records: Records
 
     /// What the user has moved, pinned or hidden. Versioned, because a stored
     /// customization is keyed by the identifiers below: renaming one silently
@@ -176,6 +270,12 @@ private struct AdaptiveTabs<Me: View, QuickCalc: View, Rest: View>: View {
                 #if os(iOS)
                 .customizationBehavior(.disabled, for: .sidebar, .tabBar)
                 #endif
+
+            Tab("Weight", systemImage: "scalemass", value: RootView.Tab.weight) { weight }
+                .customizationID("senku.tab.weight")
+
+            Tab("PRs", systemImage: "trophy", value: RootView.Tab.records) { records }
+                .customizationID("senku.tab.records")
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabViewCustomization($customization)

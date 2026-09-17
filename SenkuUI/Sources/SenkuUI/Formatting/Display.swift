@@ -50,6 +50,32 @@ public enum Display {
         }
     }
 
+    /// Grams where a quarter of a small widget is all the room there is.
+    ///
+    /// The space before the unit is what does not fit — four columns of "157 g"
+    /// at a legible size do not go into 130 points, and eliding a number is
+    /// never the right trade.
+    public static func compactGrams(_ value: Double) -> String {
+        "\(Int(value.rounded()))g"
+    }
+
+    /// Volume for a space that has no room for "2800 ml".
+    ///
+    /// Litres past a litre, which is how anyone says it out loud anyway, and
+    /// short enough to sit under a widget's macro column without eliding to
+    /// "2800…" — an ellipsis where a number should be is worse than a rounder
+    /// number.
+    public static func compactVolume(_ millilitres: Double, in system: UnitSystem) -> String {
+        switch system {
+        case .metric:
+            return millilitres >= 1000
+                ? String(format: "%.1f L", millilitres / 1000)
+                : "\(Int(millilitres.rounded())) ml"
+        case .imperial:
+            return String(format: "%.0f oz", Convert.fluidOunces(fromMillilitres: millilitres))
+        }
+    }
+
     public static func range(_ range: ClosedRange<Double>, in system: UnitSystem) -> String {
         let low = system == .metric ? range.lowerBound : Convert.pounds(fromKilograms: range.lowerBound)
         let high = system == .metric ? range.upperBound : Convert.pounds(fromKilograms: range.upperBound)

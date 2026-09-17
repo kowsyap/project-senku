@@ -10,18 +10,6 @@ import SenkuCore
 /// app's state — it falls back to being what it is most useful as anyway: a
 /// one-tap start.
 public struct RestWidgetView: View {
-    /// The three intervals worth a one-tap start, in the order they are stacked.
-    ///
-    /// One, two and three minutes — accessory work, moderate compounds, heavy
-    /// compounds. The colours run red, orange, yellow down that list, so the
-    /// right button is found by colour at arm's length rather than by reading
-    /// three near-identical numbers mid-set.
-    public static let presets: [(preset: RestPreset, tint: Color)] = [
-        (.sixtySeconds, .red),
-        (.twoMinutes, .orange),
-        (.threeMinutes, .yellow),
-    ]
-
     private let timer: RestTimer?
     private let now: Date
 
@@ -78,8 +66,8 @@ public struct RestWidgetView: View {
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 6) {
-                ForEach(Self.presets, id: \.preset) { preset, tint in
-                    tile(preset, tint: tint)
+                ForEach(RestPreset.quickStarts) { preset in
+                    tile(preset, tint: preset.tint)
                 }
             }
         }

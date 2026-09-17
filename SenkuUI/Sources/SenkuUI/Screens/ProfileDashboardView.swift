@@ -35,9 +35,12 @@ public struct ProfileDashboardView: View {
         .background(.background)
         .toolbar {
             ToolbarItem {
-                Button("Edit", systemImage: "slider.horizontal.3") {
+                Button {
                     editingDraft = PlanDraft(profile: profile)
+                } label: {
+                    StackedActionLabel("Edit", symbol: "slider.horizontal.3")
                 }
+                .accessibilityLabel("Edit profile")
             }
         }
         .sheet(item: $editingDraft) { draft in
@@ -115,7 +118,7 @@ private struct ProfileEditorSheet: View {
             ScrollView {
                 VStack(spacing: Senku.Metrics.stackSpacing) {
                     livePreview
-                    PlanInputForm(draft: draft, includesIdentity: true)
+                    PlanInputForm(draft: draft, includesName: true)
                 }
                 .padding()
                 .frame(maxWidth: 620)

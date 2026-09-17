@@ -6,6 +6,15 @@ import SwiftUI
 /// clamping every keystroke makes typing impossible: the first character of
 /// "175" is "1", which a 120–220 range would immediately rewrite to 120. The
 /// value is parsed and clamped when editing ends instead.
+///
+/// ## Hitting it
+///
+/// The field used to be about 26 points tall — a text row with four points of
+/// padding — which is well under the 44 points a finger needs, and is why it
+/// felt unresponsive rather than small: taps were landing beside it and doing
+/// nothing. It is now a 44-point target whose whole area is tappable, including
+/// the padding and the unit beside it, so a tap anywhere near the number starts
+/// editing it.
 public struct NumericField: View {
     @Binding private var value: Double?
     private let range: ClosedRange<Double>
@@ -63,21 +72,28 @@ public struct NumericField: View {
     }
 
     public var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             TextField(placeholder, text: $text)
                 .accessibilityIdentifier(identifier ?? "")
                 .focused($isEditing)
                 .multilineTextAlignment(.trailing)
-                .font(.subheadline.weight(.medium))
+                .font(.body.weight(.medium))
                 .monospacedDigit()
                 .textFieldStyle(.plain)
                 .frame(width: width)
-                .padding(.vertical, 4)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 10)
+                .frame(minHeight: 44)
                 .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(.quaternary.opacity(isEditing ? 0.65 : 0.35))
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(.quaternary.opacity(isEditing ? 0.7 : 0.35))
                 )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Senku.Palette.protein.opacity(isEditing ? 0.9 : 0), lineWidth: 2)
+                )
+                // Without this the gaps inside the field are not hittable, so a
+                // tap either side of the digits falls through to the card.
+                .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 #if os(iOS)
                 .keyboardType(decimals > 0 ? .decimalPad : .numberPad)
                 .submitLabel(.done)
@@ -85,10 +101,20 @@ public struct NumericField: View {
 
             if let unit {
                 Text(unit)
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    // A fixed column for the unit, so "kg", "cm" and "yrs" all
+                    // put their fields at the same place down the form. Without
+                    // it the widest unit drags its own row's box out of line
+                    // with every other.
+                    .frame(width: 26, alignment: .leading)
+                    .lineLimit(1)
             }
         }
+        // The unit is part of the target too: nobody aims at the number and
+        // means "not the kg".
+        .contentShape(Rectangle())
+        .onTapGesture { isEditing = true }
         .onAppear { text = formatted(value) }
         .onChange(of: value) { _, newValue in
             // Track the slider while it moves, but never fight the typist.

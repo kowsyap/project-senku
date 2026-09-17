@@ -35,7 +35,10 @@ struct RestLiveActivity: Widget {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    ProgressBar(timer: timer)
+                    VStack(spacing: 8) {
+                        ProgressBar(timer: timer)
+                        RestActivityControls()
+                    }
                 }
             } compactLeading: {
                 Image(systemName: "timer")
@@ -97,6 +100,34 @@ private struct ProgressBar: View {
     }
 }
 
+/// End and extend, from outside the app.
+///
+/// These exist because iOS never tells an app it was force quit: a rest whose
+/// app has been swiped away keeps running, with the system holding both the
+/// notification and this activity. Without a control out here there is no way
+/// to stop it except reopening the app — which is exactly what someone who just
+/// closed it does not want to do.
+private struct RestActivityControls: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Button(intent: ExtendRestIntent()) {
+                Label("+30s", systemImage: "goforward.30")
+                    .font(.caption.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+            }
+            .tint(Senku.Palette.protein)
+
+            Button(intent: StopRestIntent()) {
+                Label("End", systemImage: "xmark")
+                    .font(.caption.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+            }
+            .tint(.secondary)
+        }
+        .buttonStyle(.bordered)
+    }
+}
+
 private struct LockScreenView: View {
     let timer: RestTimer
 
@@ -115,6 +146,9 @@ private struct LockScreenView: View {
 
                 ProgressBar(timer: timer)
                     .padding(.top, 4)
+
+                RestActivityControls()
+                    .padding(.top, 6)
             }
 
             Spacer(minLength: 0)

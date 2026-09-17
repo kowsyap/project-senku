@@ -10,14 +10,24 @@ import SenkuCore
 public struct PlanInputForm: View {
     @Bindable private var draft: PlanDraft
 
-    /// Whether to ask for the things only a *saved* profile has a use for — a
-    /// name and a goal weight. The quick calculator writes nothing down, so
-    /// asking a stranger's name there would be a question with no purpose.
-    private let includesIdentity: Bool
+    /// Whether to ask for a name. Only a *saved* profile has a use for one —
+    /// the quick calculator writes nothing down, so asking a stranger's name
+    /// there would be a question with no purpose.
+    private let includesName: Bool
 
-    public init(draft: PlanDraft, includesIdentity: Bool = false) {
+    /// Whether to offer a goal weight. Unlike a name, this earns its place
+    /// anywhere: it turns the weekly rate into "about 11 weeks", which is the
+    /// answer someone asking "what should I eat" usually wanted next.
+    private let includesGoalWeight: Bool
+
+    public init(
+        draft: PlanDraft,
+        includesName: Bool = false,
+        includesGoalWeight: Bool = true
+    ) {
         self.draft = draft
-        self.includesIdentity = includesIdentity
+        self.includesName = includesName
+        self.includesGoalWeight = includesGoalWeight
     }
 
     public var body: some View {
@@ -31,7 +41,7 @@ public struct PlanInputForm: View {
 
     private var aboutYouCard: some View {
         Card("About you") {
-            if includesIdentity {
+            if includesName {
                 HStack {
                     Text("Name").font(.subheadline)
                     Spacer(minLength: 8)
@@ -70,8 +80,7 @@ public struct PlanInputForm: View {
                         set: { draft.age = $0.map { Int($0.rounded()) } }
                     ),
                     range: 13...120,
-                    unit: "years",
-                    width: 56,
+                    unit: "yrs",
                     identifier: "field.age"
                 )
             }
@@ -198,7 +207,7 @@ public struct PlanInputForm: View {
 
             Divider()
 
-            if includesIdentity {
+            if includesGoalWeight {
                 goalWeightField
                 Divider()
             }

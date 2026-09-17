@@ -45,6 +45,62 @@ public enum Senku {
     }
 }
 
+extension RestPreset {
+    /// The colour this interval wears everywhere: the phone's Rest screen, the
+    /// Home Screen widget, the watch and its complication.
+    ///
+    /// Warm to cool as the rest gets longer, so the right button is found by
+    /// colour at arm's length rather than by reading near-identical numbers
+    /// mid-set. Defined once — a colour that means "one minute" in one place
+    /// and something else in another is worse than no colour at all.
+    public var tint: Color {
+        switch self {
+        case .sixtySeconds: .red
+        case .ninetySeconds: Color(red: 0.98, green: 0.45, blue: 0.25)
+        case .twoMinutes: .orange
+        case .threeMinutes: .yellow
+        case .fiveMinutes: Senku.Palette.fat
+        }
+    }
+
+    /// The intervals offered on a full screen: one, two, three and five
+    /// minutes. Ninety seconds is left out of the row on purpose — it is a
+    /// keystroke away on the custom stepper, and five buttons across a phone
+    /// are narrower than four without being more useful.
+    public static let oneTapStarts: [RestPreset] = [
+        .sixtySeconds, .twoMinutes, .threeMinutes, .fiveMinutes,
+    ]
+
+    /// The three that fit a watch face or a small widget.
+    public static let quickStarts: [RestPreset] = [
+        .sixtySeconds, .twoMinutes, .threeMinutes,
+    ]
+
+    /// The interval in whole minutes, for a face with room for one number.
+    public var minutes: Int { Int(duration / 60) }
+}
+
+extension WorkoutGroup {
+    /// A glyph for the group, so a list of six headings can be scanned by shape
+    /// before it is read.
+    ///
+    /// SF Symbols has no chest or lat icon, and picking a vaguely athletic
+    /// figure for each would be decoration pretending to be information. These
+    /// are chosen for what they suggest about the movement instead: a press, a
+    /// row, a raise, a curl, an extension, a stride.
+    public var symbol: String {
+        switch self {
+        case .chest: "figure.strengthtraining.traditional"
+        case .back: "figure.rower"
+        case .shoulder: "figure.arms.open"
+        case .bicep: "dumbbell.fill"
+        case .tricep: "figure.strengthtraining.functional"
+        case .legs: "figure.walk"
+        default: "figure.strengthtraining.traditional"
+        }
+    }
+}
+
 extension Advisory.Severity {
     var tint: Color {
         switch self {

@@ -120,6 +120,67 @@ try MainActor.assumeIsolated {
         to: outputDirectory.appending(path: "calc-filled.png")
     )
 
+    // The weight log, with three weeks of readings that behave like real ones:
+    // a steady cut underneath, and the daily water swings that make a raw scale
+    // reading so misleading.
+    let weightDefaults = UserDefaults(suiteName: "senku.render.weight")!
+    weightDefaults.removePersistentDomain(forName: "senku.render.weight")
+    let weightLog = WeightLogStore(defaults: weightDefaults)
+
+    var noise: [Double] = [0, 0.4, -0.3, 0.2, 0.9, -0.2, 0.1, -0.4, 0.5, 0.3, -0.5,
+                           0.2, 0.7, -0.1, 0.0, 0.4, -0.6, 0.3, 0.2, -0.2, 0.6]
+    for day in 0 ..< 21 {
+        let trueWeight = 82.0 - Double(day) * 0.07
+        weightLog.add(
+            try WeighIn(
+                date: t0.addingTimeInterval(Double(day - 20) * 86_400),
+                weightKG: trueWeight + noise[day]
+            )
+        )
+    }
+
+    let weightProfile = ProfileStore.Profile(
+        name: "Kowsyap",
+        metrics: try BodyMetrics(sex: .male, age: 30, heightCM: 180, weightKG: 82),
+        activityLevel: .moderate,
+        goal: .moderateCut,
+        formula: .automatic,
+        unitSystem: .metric,
+        goalWeightKG: 78,
+        updatedAt: t0.addingTimeInterval(-21 * 86_400)
+    )
+
+    try render(
+        WeightLogView(store: weightLog, profile: weightProfile, scrolls: false),
+        width: 358, scheme: .dark,
+        to: outputDirectory.appending(path: "weight-dark.png")
+    )
+    try render(
+        WeightLogView(store: weightLog, profile: weightProfile, scrolls: false),
+        width: 358, scheme: .light,
+        to: outputDirectory.appending(path: "weight-light.png")
+    )
+
+    // The targets widget, both sizes.
+    let widgetProfile = ProfileStore.Profile(
+        name: "Kowsyap",
+        metrics: metrics,
+        activityLevel: .moderate,
+        goal: .moderateCut,
+        formula: .automatic,
+        unitSystem: .metric
+    )
+    try render(
+        TargetsView(profile: widgetProfile, size: .small).frame(height: 150).padding(14),
+        width: 158, scheme: .dark,
+        to: outputDirectory.appending(path: "widget-targets-small.png")
+    )
+    try render(
+        TargetsView(profile: widgetProfile, size: .medium).frame(height: 150).padding(14),
+        width: 338, scheme: .dark,
+        to: outputDirectory.appending(path: "widget-targets-medium.png")
+    )
+
     // The Home Screen widget: its start buttons, and a rest in progress.
     var widgetTimer = RestTimer(preset: .twoMinutes)
     widgetTimer.start(at: t0.addingTimeInterval(-45))

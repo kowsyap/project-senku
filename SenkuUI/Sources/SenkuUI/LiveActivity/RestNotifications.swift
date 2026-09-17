@@ -18,6 +18,13 @@ import UserNotifications
 public enum RestNotifications {
     private static let identifier = "senku.rest.finished"
 
+    /// Left over from an experiment worth recording: a second, silent
+    /// notification scheduled to arrive later cannot sweep the first away,
+    /// because delivering a local notification does not wake the app. iOS has
+    /// no expiry for a delivered notification at all, so the only thing that
+    /// clears one is the app being run — see ``clearDelivered``.
+    private static let sweepIdentifier = "senku.rest.finished.sweep"
+
     /// The alert sound. It must live in the **app's** bundle — iOS will not
     /// load a notification sound from a package resource bundle — which is why
     /// a copy of this file sits in the app target as well as in `SenkuUI`.
@@ -34,6 +41,33 @@ public enum RestNotifications {
 
     public static func authorizationStatus() async -> UNAuthorizationStatus {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+    }
+
+    /// Whether an alert would actually reach the user.
+    ///
+    /// Asked by the timer screen so that "you will not be told when this ends"
+    /// is something the app says out loud. Scheduling into a denied permission
+    /// fails silently, which is the worst way for a rest timer to be wrong: it
+    /// looks like it is working right up until the set you miss.
+    public static func canAlert() async -> Bool {
+        // `.ephemeral` is an App Clip status and does not exist on watchOS, so
+        // the two that matter everywhere are the two named here.
+        switch await authorizationStatus() {
+        case .authorized, .provisional: true
+        default: false
+        }
+    }
+
+    /// Asks, once, if the answer is not yet known.
+    /// - Returns: whether alerts can now be delivered.
+    @discardableResult
+    public static func requestAuthorization() async -> Bool {
+        let status = await authorizationStatus()
+        guard status == .notDetermined else {
+            return status == .authorized || status == .provisional
+        }
+        return (try? await UNUserNotificationCenter.current()
+            .requestAuthorization(options: [.alert, .sound])) ?? false
     }
 
     /// Brings the pending notification in line with `timer`. Safe to call on
@@ -94,8 +128,21 @@ public enum RestNotifications {
     /// and the notification said it was still there.
     public static func cancel() {
         let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [identifier])
-        center.removeDeliveredNotifications(withIdentifiers: [identifier])
+        center.removePendingNotificationRequests(withIdentifiers: [identifier, sweepIdentifier])
+        center.removeDeliveredNotifications(withIdentifiers: [identifier, sweepIdentifier])
+    }
+
+    /// Takes down an alert that has already been shown, leaving anything still
+    /// scheduled alone.
+    ///
+    /// iOS has no way to give a local notification an expiry — a delivered one
+    /// sits in Notification Center until it is swiped — so the app clears its
+    /// own at every point where it can tell the alert has served its purpose:
+    /// opening the app, starting the next rest, ending one from the Dynamic
+    /// Island, or the count-up giving up.
+    public static func clearDelivered() {
+        UNUserNotificationCenter.current()
+            .removeDeliveredNotifications(withIdentifiers: [identifier, sweepIdentifier])
     }
 }
 #endif

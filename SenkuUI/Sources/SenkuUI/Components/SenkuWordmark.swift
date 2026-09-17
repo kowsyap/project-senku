@@ -1,19 +1,24 @@
 #if !os(watchOS)
 import SwiftUI
 
-/// The app's name, worn at the top of every screen.
+/// The app's mark, worn at the top of every screen: the icon's own character,
+/// beside the name set in type.
 ///
-/// Drawn rather than drawn *from an asset*: it is a wordmark, and keeping it as
-/// type means it scales with Dynamic Type, inverts correctly in dark mode and
-/// costs the package no image to ship. The mark sits in the leading slot so it
-/// reads as whose app this is, while the navigation title goes on saying which
-/// screen you are looking at.
+/// The character comes from the app icon with its plate removed, so the icon on
+/// the Home Screen and the mark inside the app are recognisably the same thing.
+/// The **name** stays as type rather than as part of the image — the artwork's
+/// own "SENKU" is pale, which would be invisible on a light background and
+/// frozen against Dynamic Type. Type follows the theme; a PNG cannot.
 struct SenkuWordmark: View {
+    /// Tied to the text size beside it, so the pair scale together.
+    @ScaledMetric(relativeTo: .headline) private var markHeight: CGFloat = 22
+
     var body: some View {
         HStack(spacing: 5) {
-            Image(systemName: "flame.fill")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Senku.Palette.protein)
+            Image("SenkuMark", bundle: .module)
+                .resizable()
+                .scaledToFit()
+                .frame(height: markHeight)
 
             Text("SENKU")
                 .font(.system(size: 13, weight: .black, design: .rounded))
@@ -32,11 +37,21 @@ struct SenkuWordmark: View {
 }
 
 extension View {
-    /// Puts the wordmark in the navigation bar's leading slot.
+    /// Puts the mark in the navigation bar's leading slot.
+    ///
+    /// On iOS 26 a toolbar item is given a glass capsule of its own, which is
+    /// right for a button and wrong for a logo — it made the app look as though
+    /// its name were a control you could press. `sharedBackgroundVisibility`
+    /// takes the capsule away and leaves the mark sitting on the bar.
     func senkuWordmark() -> some View {
         toolbar {
             #if os(iOS)
-            ToolbarItem(placement: .topBarLeading) { SenkuWordmark() }
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .topBarLeading) { SenkuWordmark() }
+                    .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .topBarLeading) { SenkuWordmark() }
+            }
             #else
             ToolbarItem(placement: .navigation) { SenkuWordmark() }
             #endif

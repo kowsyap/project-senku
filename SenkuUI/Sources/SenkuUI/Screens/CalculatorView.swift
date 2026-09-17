@@ -69,10 +69,6 @@ public struct CalculatorView: View {
                         .id("results")
                 }
 
-                // Last in the scroll, under whatever it acts on: the form while
-                // there is no answer yet, the answer once there is one.
-                actionButton
-                    .padding(.top, 4)
             }
             .padding()
             .frame(maxWidth: 620)
@@ -80,6 +76,7 @@ public struct CalculatorView: View {
         }
         .background(.background)
         .dismissableKeyboard()
+        .toolbar { actionItem }
         .animation(.snappy(duration: 0.28), value: action)
         .animation(.snappy(duration: 0.2), value: draft.goal)
         .animation(.snappy(duration: 0.2), value: draft.activityLevel)
@@ -109,28 +106,37 @@ public struct CalculatorView: View {
         return nil
     }
 
-    @ViewBuilder
-    private var actionButton: some View {
+    /// The action lives in the navigation bar, beside where the profile screen
+    /// keeps Edit — one place on every screen where the thing you can do to
+    /// what you are looking at is kept, rather than a control that moves
+    /// depending on how far you have scrolled.
+    ///
+    /// Icon only, and shown only when there is something to do: the conditions
+    /// are unchanged — Calculate once the required fields are filled,
+    /// Recalculate after any change to them, Save once the answer stands.
+    @ToolbarContentBuilder
+    private var actionItem: some ToolbarContent {
         if let action {
-            Button {
-                switch action {
-                case .calculate, .recalculate:
-                    hasCalculated = true
-                    answeredInputs = draft.inputs
-                case .save:
-                    if let snapshot = draft.profileSnapshot { onSave?(snapshot) }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    perform(action)
+                } label: {
+                    StackedActionLabel(shortTitle, symbol: symbol)
                 }
-            } label: {
-                Label(title, systemImage: symbol)
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 11)
+                .tint(tint)
+                .accessibilityIdentifier("button.action")
+                .accessibilityLabel(title)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(tint)
-            .glassCapsule(tint: tint)
-            .transition(.opacity.combined(with: .scale(scale: 0.96)))
-            .accessibilityIdentifier("button.action")
+        }
+    }
+
+    private func perform(_ action: Action) {
+        switch action {
+        case .calculate, .recalculate:
+            hasCalculated = true
+            answeredInputs = draft.inputs
+        case .save:
+            if let snapshot = draft.profileSnapshot { onSave?(snapshot) }
         }
     }
 
@@ -142,10 +148,22 @@ public struct CalculatorView: View {
         }
     }
 
+    /// One word beside the icon. A bare glyph in a toolbar is a guess until
+    /// you tap it, and this is the one control on the screen that does
+    /// something irreversible-ish — it either replaces the answer or replaces
+    /// your saved profile. The full phrasing is kept for VoiceOver.
+    private var shortTitle: String {
+        switch action {
+        case .save: "Save"
+        default: "Calc"
+        }
+    }
+
     private var symbol: String {
         switch action {
-        case .save: "person.crop.circle.badge.plus"
-        default: "equal.square"
+        case .save: "square.and.arrow.down"
+        case .recalculate: "wrench.adjustable"
+        default: "wrench.adjustable"
         }
     }
 
