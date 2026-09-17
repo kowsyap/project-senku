@@ -13,7 +13,10 @@ let package = Package(
         .executable(name: "senku", targets: ["SenkuCLI"]),
     ],
     targets: [
-        .target(name: "SenkuCore"),
+        .target(
+            name: "SenkuCore",
+            resources: [.process("Resources")]
+        ),
 
         // A dependency-free command line front end. It exists so the core can be
         // exercised and smoke-tested with Command Line Tools alone — `swift test`

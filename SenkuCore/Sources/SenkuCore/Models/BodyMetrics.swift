@@ -6,6 +6,11 @@ import Foundation
 /// user typed. Presentation converts on the way in and out, so no calculation
 /// ever has to ask which unit system it is dealing with.
 public struct BodyMetrics: Hashable, Codable, Sendable {
+    /// The weights this app will accept, named so that anything else measuring
+    /// a body weight — a weigh-in, an imported reading — validates against the
+    /// same range rather than inventing its own.
+    public static let allowedWeightKG: ClosedRange<Double> = 20...500
+
     public let sex: Sex
     public let age: Int
     public let heightCM: Double
@@ -28,7 +33,7 @@ public struct BodyMetrics: Hashable, Codable, Sendable {
         guard (50.0...272.0).contains(heightCM) else {
             throw ValidationError.heightOutOfRange(heightCM)
         }
-        guard (20.0...500.0).contains(weightKG) else {
+        guard Self.allowedWeightKG.contains(weightKG) else {
             throw ValidationError.weightOutOfRange(weightKG)
         }
         if let bodyFatPercentage {
@@ -100,6 +105,8 @@ public enum ValidationError: Error, Equatable, Sendable {
     case weightOutOfRange(Double)
     case bodyFatOutOfRange(Double)
     case restDurationOutOfRange(TimeInterval)
+    case liftedWeightOutOfRange(Double)
+    case repsOutOfRange(Int)
 }
 
 extension ValidationError: LocalizedError {
@@ -113,6 +120,10 @@ extension ValidationError: LocalizedError {
             "Weight must be between 20 kg and 500 kg."
         case .bodyFatOutOfRange:
             "Body fat must be between 3% and 70%."
+        case .liftedWeightOutOfRange:
+            "A lift must be between 0 kg and 1,000 kg — zero meaning bodyweight."
+        case .repsOutOfRange:
+            "Reps must be between 1 and 100."
         case .restDurationOutOfRange:
             "A rest timer must be between 5 seconds and 60 minutes."
         }

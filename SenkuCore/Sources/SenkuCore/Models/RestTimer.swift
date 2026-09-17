@@ -128,6 +128,27 @@ public struct RestTimer: Hashable, Sendable, Codable {
         }
     }
 
+    /// Whether a stored timer is still worth putting back on screen.
+    ///
+    /// A running rest always is — that is the whole reason the deadline is
+    /// persisted, and why suspension costs nothing. A *finished* one is worth
+    /// restoring only for a few minutes afterwards: long enough to survive a
+    /// crash or a relaunch mid-set, and not long enough to greet you tomorrow
+    /// morning with yesterday's zero and an alert for a set you have long since
+    /// finished.
+    public func isWorthRestoring(at now: Date = .now, graceAfterFinish: TimeInterval = 300) -> Bool {
+        switch phase {
+        case .idle:
+            return false
+        case .paused:
+            return true
+        case .running(let endsAt):
+            return now < endsAt || now.timeIntervalSince(endsAt) < graceAfterFinish
+        case .finished(let at):
+            return now.timeIntervalSince(at) < graceAfterFinish
+        }
+    }
+
     // MARK: - Driving
     //
     // Mutating rather than returning copies: a timer is the one genuinely

@@ -214,3 +214,45 @@ struct RestTimerTests {
         #expect(restored.remaining(at: at(60)) == 120)
     }
 }
+
+@Suite("Restoring a stored rest")
+struct RestRestoreTests {
+    let start = Date(timeIntervalSince1970: 1_700_000_000)
+
+    @Test("A rest still running is restored")
+    func runningRestIsRestored() {
+        var timer = RestTimer(preset: .twoMinutes)
+        timer.start(at: start)
+        #expect(timer.isWorthRestoring(at: start.addingTimeInterval(30)))
+    }
+
+    @Test("A rest that has just finished is restored")
+    func justFinishedRestIsRestored() {
+        var timer = RestTimer(preset: .twoMinutes)
+        timer.start(at: start)
+        #expect(timer.isWorthRestoring(at: start.addingTimeInterval(130)))
+    }
+
+    @Test("Yesterday's finished rest is not")
+    func staleRestIsNotRestored() {
+        var timer = RestTimer(preset: .twoMinutes)
+        timer.start(at: start)
+        // Back the next morning. Nothing here is worth showing, and showing it
+        // would announce a set finished hours ago.
+        #expect(!timer.isWorthRestoring(at: start.addingTimeInterval(60 * 60 * 14)))
+    }
+
+    @Test("A paused rest is kept however long you were away")
+    func pausedRestIsKept() {
+        var timer = RestTimer(preset: .threeMinutes)
+        timer.start(at: start)
+        timer.pause(at: start.addingTimeInterval(20))
+        // A pause is an explicit "hold this", with no deadline to go stale.
+        #expect(timer.isWorthRestoring(at: start.addingTimeInterval(60 * 60 * 14)))
+    }
+
+    @Test("An idle timer is nothing to restore")
+    func idleRestIsNotRestored() {
+        #expect(!RestTimer(preset: .sixtySeconds).isWorthRestoring(at: start))
+    }
+}
