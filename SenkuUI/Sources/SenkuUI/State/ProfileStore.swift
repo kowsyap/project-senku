@@ -81,7 +81,10 @@ public final class ProfileStore {
 
     public var hasProfile: Bool { profile != nil }
 
-    public func save(_ profile: Profile) {
+    /// - Parameter broadcast: whether to publish to the watch. False only when
+    ///   the save *came* from the watch link, which would otherwise echo
+    ///   straight back to the sender.
+    public func save(_ profile: Profile, broadcast: Bool = true) {
         var stamped = profile
         stamped.updatedAt = .now
         self.profile = stamped
@@ -89,12 +92,34 @@ public final class ProfileStore {
         guard let data = try? JSONEncoder().encode(stamped) else { return }
         defaults.set(data, forKey: Self.storageKey)
         reloadWidgets()
+
+        if broadcast { publish(stamped) }
     }
 
-    public func clear() {
+    /// Takes a profile that arrived from the other device, as it stands.
+    ///
+    /// Not `save`: the timestamp is the sender's, and re-stamping it here would
+    /// make every device think it had the newest copy.
+    public func apply(_ profile: Profile) {
+        self.profile = profile
+        if let data = try? JSONEncoder().encode(profile) {
+            defaults.set(data, forKey: Self.storageKey)
+        }
+        reloadWidgets()
+    }
+
+    public func clear(broadcast: Bool = true) {
         profile = nil
         defaults.removeObject(forKey: Self.storageKey)
         reloadWidgets()
+
+        if broadcast { publish(nil) }
+    }
+
+    private func publish(_ profile: Profile?) {
+        #if (os(iOS) && !targetEnvironment(macCatalyst)) || os(watchOS)
+        ProfileSync.shared.send(profile)
+        #endif
     }
 
     /// The targets widget's timeline never expires on its own, because a plan
