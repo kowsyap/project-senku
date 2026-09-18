@@ -84,6 +84,13 @@ public struct FoodFavourite: Identifiable, Codable, Hashable, Sendable {
     public var carbsG: Double
     public var fatG: Double
     public var fiberG: Double?
+    /// A calorie figure for something whose macros you do not know.
+    ///
+    /// The takeaway you order every fortnight is 900 kcal and an unknown split.
+    /// Without this it could not be a button at all — and a button that made you
+    /// guess at its protein would put a fiction into the figure this whole
+    /// screen exists to keep honest.
+    public var enteredCalories: Double?
     /// How often it has been logged. Ordering by this rather than by when it
     /// was added puts the four things you actually eat at the top on their own,
     /// with no sorting screen to visit.
@@ -96,6 +103,7 @@ public struct FoodFavourite: Identifiable, Codable, Hashable, Sendable {
         carbsG: Double = 0,
         fatG: Double = 0,
         fiberG: Double? = nil,
+        enteredCalories: Double? = nil,
         timesUsed: Int = 0
     ) {
         self.id = id
@@ -104,13 +112,22 @@ public struct FoodFavourite: Identifiable, Codable, Hashable, Sendable {
         self.carbsG = carbsG
         self.fatG = fatG
         self.fiberG = fiberG
+        self.enteredCalories = enteredCalories
         self.timesUsed = timesUsed
     }
 
     public var calories: Double {
-        proteinG * CaloriesPerGram.protein
-            + carbsG * CaloriesPerGram.carbohydrate
-            + fatG * CaloriesPerGram.fat
+        enteredCalories ?? (
+            proteinG * CaloriesPerGram.protein
+                + carbsG * CaloriesPerGram.carbohydrate
+                + fatG * CaloriesPerGram.fat
+        )
+    }
+
+    /// Nothing but a calorie figure — drawn and described differently, because
+    /// it contributes to one ring and not the other.
+    public var isCaloriesOnly: Bool {
+        enteredCalories != nil && proteinG == 0 && carbsG == 0 && fatG == 0
     }
 
     /// A fresh entry, as of now.
@@ -121,7 +138,8 @@ public struct FoodFavourite: Identifiable, Codable, Hashable, Sendable {
             proteinG: proteinG,
             carbsG: carbsG,
             fatG: fatG,
-            fiberG: fiberG
+            fiberG: fiberG,
+            enteredCalories: enteredCalories
         )
     }
 }
@@ -192,6 +210,12 @@ public struct IntakeDay: Hashable, Sendable, Identifiable {
     public var isCaloriesMet: Bool {
         guard targets.calories > 0, !isUnlogged else { return false }
         return abs(calories - targets.calories) <= targets.calories * Self.calorieTolerance
+    }
+
+    /// Past the top of the band — the state a filling bar cannot show, since a
+    /// full bar reads as success however far past full you went.
+    public var isOverCalories: Bool {
+        targets.calories > 0 && calories > targets.calories * (1 + Self.calorieTolerance)
     }
 
     /// The sentence the rings cannot say.

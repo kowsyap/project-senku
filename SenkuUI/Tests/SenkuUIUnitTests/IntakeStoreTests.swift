@@ -28,6 +28,23 @@ import SenkuCore
         #expect(store.entries[0].name == nil)
     }
 
+    /// The other bare case: calories with no macros known.
+    @Test func aBareCalorieFigureIsAnEntry() throws {
+        let store = store()
+
+        #expect(store.addCalories(700))
+        #expect(store.entries.count == 1)
+        #expect(store.entries[0].calories == 700)
+        #expect(store.entries[0].proteinG == 0)
+    }
+
+    @Test func zeroCaloriesIsNotAnEntry() {
+        let store = store()
+
+        #expect(store.addCalories(0) == false)
+        #expect(store.entries.isEmpty)
+    }
+
     @Test func anEmptyEntryIsRefused() throws {
         let store = store()
 

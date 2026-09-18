@@ -36,7 +36,7 @@ struct IntakeEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Name (optional)", text: $name)
+                    TextField(Self.defaultName, text: $name)
                         #if os(iOS)
                         .textInputAutocapitalization(.sentences)
                         #endif
@@ -76,7 +76,7 @@ struct IntakeEditor: View {
                     } footer: {
                         Text(trimmedName.isEmpty
                              ? "Give it a name to keep it as a button."
-                             : "Adds \(trimmedName) to the quick-add row.")
+                             : "Adds \(trimmedName) to the quick-add menu.")
                     }
                 }
 
@@ -118,8 +118,22 @@ struct IntakeEditor: View {
         }
     }
 
+    /// What an unnamed meal is called.
+    ///
+    /// Not left blank: the day's list is read back in the evening to work out
+    /// where the calories went, and a row with no name at all reads as a glitch.
+    /// "Meal" is honest about being a placeholder while still being something to
+    /// point at.
+    static let defaultName = "Meal"
+
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// The name as saved: what you typed, or "Meal". A quick-add still has to be
+    /// named by you — a menu full of "Meal" would be no menu at all.
+    private var savedName: String {
+        trimmedName.isEmpty ? Self.defaultName : trimmedName
     }
 
     private func row(_ title: String, value: Binding<Double?>, tint: Color) -> some View {
@@ -137,7 +151,7 @@ struct IntakeEditor: View {
         guard let entry = try? IntakeEntry(
             id: editing?.id ?? UUID(),
             date: editing?.date ?? .now,
-            name: trimmedName,
+            name: savedName,
             proteinG: protein ?? 0,
             carbsG: carbs ?? 0,
             fatG: fat ?? 0,
@@ -155,6 +169,9 @@ struct IntakeEditor: View {
                         carbsG: carbs ?? 0,
                         fatG: fat ?? 0,
                         fiberG: fibre,
+                        enteredCalories: (protein ?? 0) == 0 && (carbs ?? 0) == 0 && (fat ?? 0) == 0
+                            ? calories
+                            : nil,
                         timesUsed: 1
                     )
                 )
@@ -190,7 +207,9 @@ struct IntakeSettingsView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(favourite.name)
                                         .foregroundStyle(Color.primary)
-                                    Text("\(Int(favourite.proteinG.rounded())) g protein · \(Int(favourite.calories.rounded())) kcal")
+                                    Text(favourite.isCaloriesOnly
+                                         ? "\(Int(favourite.calories.rounded())) kcal"
+                                         : "\(Int(favourite.proteinG.rounded())) g protein · \(Int(favourite.calories.rounded())) kcal")
                                         .font(.caption)
                                         .foregroundStyle(Color.secondary)
                                 }
@@ -217,7 +236,7 @@ struct IntakeSettingsView: View {
             } header: {
                 Text("Quick add")
             } footer: {
-                Text("The row on the food screen. Ordered by how often you log each one, so what you eat most sits first.")
+                Text("The menu on the food screen. Ordered by how often you log each one, so what you eat most sits first.")
             }
         }
         .navigationTitle("Food settings")
@@ -245,7 +264,18 @@ private struct FavouriteEditor: View {
     @State private var carbs: Double?
     @State private var fat: Double?
     @State private var fibre: Double?
+    @State private var calories: Double?
     @State private var loaded = false
+
+    private var macrosGiven: Bool {
+        (protein ?? 0) > 0 || (carbs ?? 0) > 0 || (fat ?? 0) > 0
+    }
+
+    private var derivedCalories: Double {
+        (protein ?? 0) * CaloriesPerGram.protein
+            + (carbs ?? 0) * CaloriesPerGram.carbohydrate
+            + (fat ?? 0) * CaloriesPerGram.fat
+    }
 
     var body: some View {
         NavigationStack {
@@ -257,7 +287,7 @@ private struct FavouriteEditor: View {
                         #endif
                 }
 
-                Section("Macros") {
+                Section {
                     LabeledContent("Protein") {
                         NumericField(value: $protein, range: 0 ... 1000, unit: "g")
                     }
@@ -270,6 +300,28 @@ private struct FavouriteEditor: View {
                     LabeledContent("Fibre") {
                         NumericField(value: $fibre, range: 0 ... 1000, unit: "g")
                     }
+                } header: {
+                    Text("Macros")
+                } footer: {
+                    Text(macrosGiven
+                         ? "\(Int(derivedCalories.rounded())) kcal at 4/4/9."
+                         : "Leave these empty for something you only know the calories of.")
+                }
+
+                Section {
+                    LabeledContent("Calories") {
+                        NumericField(value: $calories, range: 0 ... 5000, unit: "kcal", width: 76)
+                    }
+                    .disabled(macrosGiven)
+                } footer: {
+                    // A go-to item whose macros you do not know is still worth a
+                    // button: the takeaway you order every fortnight moves the
+                    // calorie ring and should not have to be invented to be
+                    // logged. Disabled once macros are given, because then the
+                    // arithmetic has the answer and two figures would disagree.
+                    Text(macrosGiven
+                         ? "Worked out from the macros above."
+                         : "For a go-to item whose macros you do not know. It moves the calorie ring and leaves protein alone.")
                 }
 
                 if let favourite {
@@ -303,6 +355,7 @@ private struct FavouriteEditor: View {
                 carbs = favourite.carbsG
                 fat = favourite.fatG
                 fibre = favourite.fiberG
+                calories = favourite.enteredCalories
             }
         }
     }
@@ -319,6 +372,7 @@ private struct FavouriteEditor: View {
                 carbsG: carbs ?? 0,
                 fatG: fat ?? 0,
                 fiberG: fibre,
+                enteredCalories: macrosGiven ? nil : calories,
                 timesUsed: favourite?.timesUsed ?? 0
             )
         )

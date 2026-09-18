@@ -31,6 +31,8 @@ public struct IntakeView: View {
     @State private var isShowingStreaks = false
     @State private var isShowingSettings = false
     @State private var quickProtein: Double?
+    @State private var quickCalories: Double?
+    @State private var picked: UUID?
 
     public init(
         store: IntakeStore,
@@ -103,38 +105,36 @@ public struct IntakeView: View {
     private func proteinCard(_ day: IntakeDay) -> some View {
         Card {
             HStack(alignment: .center, spacing: 18) {
-                GoalRing(
-                    fraction: day.proteinFraction,
-                    tint: Senku.Palette.protein,
-                    isMet: day.isProteinMet
+                DualGoalRing(
+                    outer: day.calorieFraction,
+                    outerTint: calorieTint(day),
+                    inner: day.proteinFraction,
+                    innerTint: day.isProteinMet ? Senku.Palette.surplus : Senku.Palette.protein
                 ) {
                     VStack(spacing: -2) {
                         Text("\(Int(day.proteinG.rounded()))")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .minimumScaleFactor(0.6)
                             .lineLimit(1)
+                            .foregroundStyle(Senku.Palette.protein)
                         Text("g")
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
                 }
-                .frame(width: 104, height: 104)
+                .frame(width: 116, height: 116)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Protein")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.primary)
+                    legend("Protein", Senku.Palette.protein,
+                           day.isProteinMet
+                           ? "Target met"
+                           : "\(Int(day.proteinRemainingG.rounded())) g to go",
+                           met: day.isProteinMet)
 
-                    Text(day.isProteinMet
-                         ? "Target met"
-                         : "\(Int(day.proteinRemainingG.rounded())) g to go")
-                        .font(.headline)
-                        .foregroundStyle(day.isProteinMet ? Senku.Palette.surplus : Color.primary)
-
-                    Text("Target \(Int(day.targets.proteinGrams.rounded())) g")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    legend("Calories", Senku.Palette.carbs,
+                           calorieCaption(day),
+                           met: day.isCaloriesMet)
 
                     Button {
                         isShowingStreaks = true
@@ -156,6 +156,46 @@ public struct IntakeView: View {
             .accessibilityLabel("Food today")
             .accessibilityValue(day.spoken)
         }
+    }
+
+    /// One ring, named and coloured, with the figure it is reporting.
+    ///
+    /// The rings are concentric and unlabelled on their own — which is fine on a
+    /// watch face people learn once, and not fine on a screen opened four times
+    /// a day. The dot is the same colour as the arc, so which number belongs to
+    /// which ring is answered by looking rather than by remembering.
+    private func legend(_ title: String, _ tint: Color, _ detail: String, met: Bool) -> some View {
+        HStack(alignment: .center, spacing: 7) {
+            Circle()
+                .fill(met ? Senku.Palette.surplus : tint)
+                .frame(width: 8, height: 8)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.secondary)
+                Text(detail)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(met ? Senku.Palette.surplus : Color.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+        }
+    }
+
+    /// Green inside the band, red past it, amber on the way — the one place a
+    /// colour carries the judgement, since the arc itself stops at full and
+    /// cannot show how far past the target you went.
+    private func calorieTint(_ day: IntakeDay) -> Color {
+        if day.isOverCalories { return Senku.Palette.warning }
+        return day.isCaloriesMet ? Senku.Palette.surplus : Senku.Palette.carbs
+    }
+
+    private func calorieCaption(_ day: IntakeDay) -> String {
+        let over = day.calories - day.targets.calories
+        if day.isUnlogged { return "Nothing logged" }
+        if over > 0 { return "\(Int(over.rounded())) over" }
+        return "\(Int((-over).rounded())) to go"
     }
 
     // MARK: - Everything else, smaller
@@ -246,74 +286,150 @@ public struct IntakeView: View {
 
     // MARK: - Logging
 
+    /// Three ways in, in the order they get used.
+    ///
+    /// A menu rather than a grid of buttons: the grid was one tap, which is
+    /// better, but it grows down the screen with every thing you save until the
+    /// numbers it is meant to serve are below the fold. A menu costs one extra
+    /// tap and stays one line however many favourites you keep.
     private var favouritesCard: some View {
         Card("Quick add") {
-            if store.favourites.isEmpty {
-                Text("Save the things you eat often and they get a button here.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 10)], spacing: 10) {
+            HStack(spacing: 10) {
+                Menu {
                     ForEach(store.orderedFavourites) { favourite in
                         Button {
-                            store.log(favourite)
-                            Feedback.control()
+                            picked = favourite.id
                         } label: {
-                            VStack(spacing: 2) {
-                                Text(favourite.name)
-                                    .font(.caption.weight(.semibold))
-                                    .lineLimit(1)
-                                    .foregroundStyle(Color.primary)
-                                Text("\(Int(favourite.proteinG.rounded())) g · \(Int(favourite.calories.rounded())) kcal")
-                                    .font(.caption2)
-                                    .foregroundStyle(Color.secondary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(Senku.Palette.protein.opacity(0.14))
-                            )
+                            Text("\(favourite.name) — \(favouriteDetail(favourite))")
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Log \(favourite.name)")
                     }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(pickedFavourite?.name ?? "Pick a food")
+                            .font(.subheadline)
+                            .foregroundStyle(pickedFavourite == nil ? Color.secondary : Color.primary)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(height: 38)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(.quaternary.opacity(0.5))
+                    )
                 }
+                .disabled(store.favourites.isEmpty)
+
+                addButton(tint: Senku.Palette.protein, enabled: pickedFavourite != nil) {
+                    guard let favourite = pickedFavourite else { return }
+                    store.log(favourite)
+                    picked = nil
+                    Feedback.control()
+                }
+                .accessibilityLabel("Add the picked food")
+            }
+
+            if let favourite = pickedFavourite {
+                Text(favouriteDetail(favourite))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if store.favourites.isEmpty {
+                Text("Save the things you eat often — in the editor, or behind the gear — and they appear here.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Divider()
 
-            // The bare case, and deliberately the shortest path on the screen:
-            // a number, a button, done. Somebody who knows their shake is 30 g
-            // should not have to open a form to say so.
+            // The two bare cases, side by side. Somebody who knows their shake
+            // is 30 g of protein, or that dinner was about 700 kcal, should not
+            // have to open a form to say so — and should not have to invent the
+            // half they do not know either.
             HStack(spacing: 10) {
-                Text("Protein only")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.secondary)
-
-                Spacer(minLength: 0)
-
-                NumericField(value: $quickProtein, range: 0 ... 300, unit: "g", width: 58)
-
-                Button {
+                quickField(
+                    "Protein",
+                    unit: "g",
+                    tint: Senku.Palette.protein,
+                    value: $quickProtein,
+                    range: 0 ... 300
+                ) {
                     guard let grams = quickProtein, grams > 0 else { return }
                     store.addProtein(grams)
                     quickProtein = nil
                     Feedback.control()
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .bold))
-                        .frame(width: 34, height: 34)
-                        .background(Senku.Palette.protein.opacity(0.18), in: .circle)
-                        .foregroundStyle(Senku.Palette.protein)
                 }
-                .buttonStyle(.plain)
-                .disabled((quickProtein ?? 0) <= 0)
-                .accessibilityLabel("Log protein")
+
+                quickField(
+                    "Calories",
+                    unit: "kcal",
+                    tint: Senku.Palette.carbs,
+                    value: $quickCalories,
+                    range: 0 ... 5000
+                ) {
+                    guard let calories = quickCalories, calories > 0 else { return }
+                    store.addCalories(calories)
+                    quickCalories = nil
+                    Feedback.control()
+                }
             }
         }
+    }
+
+    private var pickedFavourite: FoodFavourite? {
+        picked.flatMap { id in store.favourites.first { $0.id == id } }
+    }
+
+    private func favouriteDetail(_ favourite: FoodFavourite) -> String {
+        favourite.isCaloriesOnly
+            ? "\(Int(favourite.calories.rounded())) kcal"
+            : "\(Int(favourite.proteinG.rounded())) g protein · \(Int(favourite.calories.rounded())) kcal"
+    }
+
+    /// A number and a button to commit it. The field clears on add, so the next
+    /// thing you eat starts from empty rather than from what you last typed.
+    private func quickField(
+        _ title: String,
+        unit: String,
+        tint: Color,
+        value: Binding<Double?>,
+        range: ClosedRange<Double>,
+        add: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(title) only")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(Color.secondary)
+
+            HStack(spacing: 6) {
+                NumericField(value: value, range: range, unit: unit, width: 52)
+
+                Spacer(minLength: 0)
+
+                addButton(tint: tint, enabled: (value.wrappedValue ?? 0) > 0, action: add)
+                    .accessibilityLabel("Log \(title.lowercased())")
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func addButton(
+        tint: Color,
+        enabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: "plus")
+                .font(.system(size: 14, weight: .bold))
+                .frame(width: 38, height: 38)
+                .background(tint.opacity(enabled ? 0.18 : 0.08), in: .circle)
+                .foregroundStyle(enabled ? tint : Color.secondary)
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 
     private func todayCard(_ day: IntakeDay) -> some View {
@@ -324,7 +440,7 @@ public struct IntakeView: View {
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(entry.name ?? "Protein")
+                            Text(entry.name ?? (entry.proteinG > 0 ? "Protein" : "Calories"))
                                 .font(.subheadline)
                                 .foregroundStyle(Color.primary)
                             Text(entry.date.formatted(date: .omitted, time: .shortened))
@@ -396,34 +512,62 @@ public struct IntakeView: View {
     }
 }
 
-/// A ring that fills towards a target, with whatever you like in the middle.
+/// Two rings, concentric: calories outside, protein inside.
 ///
-/// Distinct from ``MacroRing``, which divides a whole into three shares. This
-/// one answers "how far through are you", which is a different question and
-/// wants a different shape: one arc, from the top, clockwise.
-struct GoalRing<Label: View>: View {
-    let fraction: Double
-    let tint: Color
-    let isMet: Bool
+/// ## Why two and not two cards
+///
+/// They are the same question asked twice — how much of today's target is done
+/// — and the thing you actually want to know is how they stand *against each
+/// other*. A day where the outer ring is full and the inner one is half is a
+/// day you ate enough and ate the wrong things, and that is legible at a glance
+/// here in a way that two numbers in two cards never made it.
+///
+/// Calories go outside because the outer arc is the longer one, and calories are
+/// the figure with the wider range to travel. Protein is inside, wrapped around
+/// its own number, because it is the one the screen is headlining.
+struct DualGoalRing<Label: View>: View {
+    let outer: Double
+    let outerTint: Color
+    let inner: Double
+    let innerTint: Color
     @ViewBuilder let label: Label
 
+    private let outerWidth: CGFloat = 11
+    private let innerWidth: CGFloat = 9
+    /// The gap between them. Enough that the two arcs never read as one thick
+    /// band, which is what happened at four points.
+    private let gap: CGFloat = 5
+
     var body: some View {
+        GeometryReader { proxy in
+            let size = min(proxy.size.width, proxy.size.height)
+            let innerInset = outerWidth + gap
+
+            ZStack {
+                ring(fraction: outer, tint: outerTint, width: outerWidth)
+                    .frame(width: size, height: size)
+
+                ring(fraction: inner, tint: innerTint, width: innerWidth)
+                    .frame(width: size - innerInset * 2, height: size - innerInset * 2)
+
+                label
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func ring(fraction: Double, tint: Color, width: CGFloat) -> some View {
         ZStack {
             Circle()
-                .stroke(.quaternary, lineWidth: 11)
+                .stroke(.quaternary, lineWidth: width)
 
             Circle()
                 .trim(from: 0, to: max(0.001, fraction))
-                .stroke(
-                    isMet ? Senku.Palette.surplus : tint,
-                    style: StrokeStyle(lineWidth: 11, lineCap: .round)
-                )
+                .stroke(tint, style: StrokeStyle(lineWidth: width, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.snappy(duration: 0.35), value: fraction)
-
-            label
         }
-        .accessibilityHidden(true)
     }
 }
 #endif

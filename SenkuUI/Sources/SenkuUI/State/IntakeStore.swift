@@ -95,6 +95,19 @@ public final class IntakeStore {
         return add(entry)
     }
 
+    /// The other half of the bare case: a calorie figure for something whose
+    /// macros you do not know. It moves the calorie ring and leaves the protein
+    /// ring alone, which is the honest thing for it to do — a guess at its
+    /// protein would be a fiction in the one number this screen exists to keep
+    /// straight.
+    @discardableResult
+    public func addCalories(_ calories: Double, at date: Date = .now) -> Bool {
+        guard calories > 0,
+              let entry = try? IntakeEntry(date: date, enteredCalories: calories)
+        else { return false }
+        return add(entry)
+    }
+
     public func update(_ entry: IntakeEntry) {
         reload()
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }

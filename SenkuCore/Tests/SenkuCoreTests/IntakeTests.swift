@@ -160,6 +160,36 @@ import Testing
         #expect(IntakeLog([]).averageCalories(days: 14) == nil)
     }
 
+    /// A go-to item whose macros you do not know: it moves calories and leaves
+    /// protein alone, rather than inventing a split to look complete.
+    @Test func aFavouriteCanBeCaloriesAlone() throws {
+        let takeaway = FoodFavourite(name: "Takeaway", enteredCalories: 900)
+
+        #expect(takeaway.isCaloriesOnly)
+        #expect(takeaway.calories == 900)
+
+        let entry = try #require(takeaway.entry())
+        #expect(entry.proteinG == 0)
+        #expect(entry.calories == 900)
+    }
+
+    @Test func aFavouriteWithMacrosIsNotCaloriesOnly() {
+        #expect(FoodFavourite(name: "Eggs", proteinG: 12).isCaloriesOnly == false)
+    }
+
+    /// Past the band, which a filled ring cannot show on its own.
+    @Test func eatingWellOverTheTargetIsItsOwnState() throws {
+        let day = IntakeDay(
+            date: .now,
+            entries: [try IntakeEntry(carbsG: 800)],   // 3,200 kcal
+            targets: targets(calories: 2500)
+        )
+
+        #expect(day.isOverCalories)
+        #expect(day.isCaloriesMet == false)
+        #expect(day.calorieFraction == 1)             // the arc stops; the colour does not
+    }
+
     @Test func aFavouriteBecomesAFreshEntryEachTime() throws {
         let favourite = FoodFavourite(name: "Shake", proteinG: 30, carbsG: 5, fatG: 2)
 
