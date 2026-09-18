@@ -1,0 +1,3357 @@
+{
+  "schemaVersion": 1,
+  "anime": [
+    {
+      "id": "3d877733-4c5e-430c-952d-7377b6a2f710",
+      "title": "Baki",
+      "genres": [
+        "Action",
+        "Sports"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx287-goNFQRZPze2g.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "c6e2fb4f-2771-41e9-b0c1-2c0375b0f250",
+      "title": "JoJo's Bizarre Adventure",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Horror",
+        "Supernatural"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 26,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx666-kYzXvKlUbeMP.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "392e9328-0cde-4fbd-ae50-7313e92b2545",
+      "title": "Boruto: Naruto Next Generations",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 208,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97938-BnF6M5yTaNB1.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "0ad1a175-304c-4919-a0d7-7a9880c1f771",
+      "title": "Fate",
+      "genres": [
+        "Action",
+        "Fantasy",
+        "Romance",
+        "Supernatural"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 26,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx356-mTpMvtillumS.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "09f55ac5-2f50-4fd8-acf3-a71c250ca853",
+      "title": "Fairy Tail",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 175,
+      "seasonCountOverride": 6,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b6702-KI4qgSMyI8Pm.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "2e0be43e-d959-4395-8d32-e4804293dd42",
+      "title": "The Daily Life of the Immortal King",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 27,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114121-vxWVgIBlBjox.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "5504df16-ca76-4ca4-8641-542d6bff4cc2",
+      "title": "In Another World With My Smartphone",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Romance"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx98491-5vyX89aabiHz.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "12d8b0d4-8c4c-4af6-9efa-25a8aaaa6c1c",
+      "title": "BOFURI: I Don't Want to Get Hurt, so I'll Max Out My Defense.",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Slice of Life"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx106479-JmPk1F5ubMtm.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "52fb3074-b78e-4ee7-afec-ad563a7d6cae",
+      "title": "GOBLIN SLAYER",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101165-v5NwPXWPFDuD.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "7fc069ea-420d-42cd-889d-a17161ea4aae",
+      "title": "The Way of the Househusband",
+      "genres": [
+        "Animation",
+        "Comedy",
+        "Crime"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 10,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx125426-WeKnIVjCRNIC.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ac9270e0-547d-4ba1-9de8-e64cb820652c",
+      "title": "The Irregular at Magic High School",
+      "genres": [
+        "Action",
+        "Romance",
+        "Sci-Fi",
+        "Supernatural"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 39,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20458-tGh343Ew10yU.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "f202e839-b294-40a1-9e9e-0118f9b18d18",
+      "title": "ROLL OVER AND DIE",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Horror"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx191718-FeR6bnlkqF0J.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "269d94f9-3de5-4cb9-b320-8fedfa767bab",
+      "title": "Campfire Cooking in Another World with my Absurd Skill",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156067-Jovklss4VWIx.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "c72e5a51-3a6f-4e4e-a66c-704ec41dc090",
+      "title": "The Misfit of Demon King Academy",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "dropped",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx112301-f88Fs2es4pSr.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "8a2ff81a-fb04-4e4b-9331-0c95a8504168",
+      "title": "Naruto",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Drama",
+        "Fantasy",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 720,
+      "seasonCountOverride": 21,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "54192519-bd7e-47e7-8c2d-3c22809c5f25",
+      "title": "Assassination Classroom",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Drama",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 48,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20755-dWrhs569YGUO.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "3cb04df9-b225-47c2-a3d6-5b7afca3fb79",
+      "title": "Fullmetal Alchemist",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 51,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx121-zjmixZ428Mwv.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "cf575cab-3e86-471e-8304-e2e14e02f227",
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 64,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx5114-nSWCgQlmOMtj.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "53726fe4-7aa4-4d0c-97f2-c3606898273c",
+      "title": "Hunter x Hunter",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 148,
+      "seasonCountOverride": 6,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx136-gj0bbCpDNrKG.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "96491f54-310b-4979-ab72-c7dc04014a1b",
+      "title": "Tokyo Ghoul",
+      "genres": [
+        "Action",
+        "Drama",
+        "Horror",
+        "Mystery",
+        "Psychological",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 48,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b20605-k665mVkSug8D.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "62b933c4-2847-4c8d-a17f-478d45fa17b7",
+      "title": "Kuroko's Basketball",
+      "genres": [
+        "Comedy",
+        "Sports"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 75,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11771-uvr44RAwRxPw.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "76c9101b-a36d-4d52-91e2-2732520a7382",
+      "title": "Inazuma Eleven",
+      "genres": [
+        "Drama",
+        "Sports",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 268,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx5231-SuMNWJQQK8jl.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "bd9f164d-6b34-454c-a384-b5204a90f373",
+      "title": "Death Note",
+      "genres": [
+        "Mystery",
+        "Psychological",
+        "Supernatural",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 37,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1535-kUgkcrfOrkUM.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "df825065-8f49-444e-b6dc-5cf552177da6",
+      "title": "Dororo",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101347-TGaDwEYqLfm1.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "bb062779-3ef4-4b56-8223-8d2e07455af0",
+      "title": "Big Windup!",
+      "genres": [
+        "Comedy",
+        "Sports"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 38,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx2159-eTI4nRTqCTDM.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "dc4d6789-dff0-42b1-8cd1-be2991784323",
+      "title": "Akame ga Kill!",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Horror",
+        "Psychological",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20613-HXHpec4bemk5.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "37b5f984-5f7d-483a-9ca1-be3e82e79550",
+      "title": "The Future Diary",
+      "genres": [
+        "Action",
+        "Horror",
+        "Mystery",
+        "Psychological",
+        "Supernatural",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 26,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx10620-dUZeNej0W4QN.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "064e9c56-3f95-4917-bf5d-cb4648699d8d",
+      "title": "Mob Psycho 100",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Drama",
+        "Psychological",
+        "Slice of Life",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 37,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21507-6YUSbh2m0N1p.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "647a9f55-471e-4927-a6b5-b98a40292fcf",
+      "title": "Food Wars!",
+      "genres": [
+        "Comedy",
+        "Ecchi"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 86,
+      "seasonCountOverride": 5,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20923-pNT38pjW3RFH.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "5f31e0d9-dfbc-413a-b45e-15424c1d46dc",
+      "title": "School Babysitters",
+      "genres": [
+        "Comedy",
+        "Slice of Life"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx98503-oUCGDkv2osNK.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ac28ea49-436d-4796-802b-e18b3ba0367a",
+      "title": "The Disastrous Life of Saiki K.",
+      "genres": [
+        "Comedy",
+        "Slice of Life",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 151,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21804-As6tDLAvEvNY.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "109ae425-74c8-4458-b51f-8c918bb90136",
+      "title": "The Seven Deadly Sins",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Ecchi",
+        "Fantasy",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 100,
+      "seasonCountOverride": 5,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20789-Ma5ouSYPkru9.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "13c5a2d9-e36c-4ee3-a5a5-182ea2a7f6ce",
+      "title": "Deadman Wonderland",
+      "genres": [
+        "Action",
+        "Drama",
+        "Sci-Fi",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx6880-qZ1jIqIYpST2.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4bd448af-79df-44ff-ad67-716dbcd00bcb",
+      "title": "Code Geass",
+      "genres": [
+        "Action",
+        "Drama",
+        "Mecha",
+        "Sci-Fi",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 50,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1575-hsmWM2ydNm1m.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "dd048b75-d415-4400-b3cd-2e55b0f1da06",
+      "title": "The Promised Neverland",
+      "genres": [
+        "Drama",
+        "Fantasy",
+        "Horror",
+        "Mystery",
+        "Psychological",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 23,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101759-8UR7r9MNVpz2.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "09556605-5fa8-41cf-99f1-f4998b3bbd7b",
+      "title": "Parasyte",
+      "genres": [
+        "Action",
+        "Drama",
+        "Horror",
+        "Psychological",
+        "Sci-Fi"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20623-dUARfggnNDOe.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "5714bbc9-53ba-4c66-9eff-b9b605939258",
+      "title": "ERASED",
+      "genres": [
+        "Drama",
+        "Mystery",
+        "Psychological",
+        "Supernatural",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21234-XmqW39aQ9o7O.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "e97b4ed4-9c79-494a-9c1a-a65d9ac2844b",
+      "title": "Buddy Daddies",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy",
+        "Drama"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx155907-wY1RqFUHvZ60.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "92ca9d12-ff5f-4fa4-bff5-9db730676c4b",
+      "title": "Summer Time Rendering",
+      "genres": [
+        "Animation",
+        "Mystery",
+        "Sci-Fi",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 25,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx129201-HJBauga2be8I.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "e675c511-24f3-4377-9d8f-0c670a40f8f2",
+      "title": "Akashic Records of Bastard Magic Instructor",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21700-HhTEXPZKxupP.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "5af0b937-c2a2-4d3c-b6e4-3c56c202c384",
+      "title": "Kabaneri of the Iron Fortress",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy",
+        "Horror",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21196-2PfPfIDrxKki.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d5459b0a-88e2-4940-977b-cc7cb6f96fe7",
+      "title": "Stein's Gate",
+      "genres": [
+        "Drama",
+        "Psychological",
+        "Sci-Fi",
+        "Thriller"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 25,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-tIUXF2gfU8Sg.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "56f69ff0-da7e-4b3f-a3b0-ad74b3175964",
+      "title": "My Hero Academia",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 170,
+      "seasonCountOverride": 8,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21459-nYh85uj2Fuwr.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "c4a79447-88bf-48e3-ae58-24e27e54ee29",
+      "title": "Dr. STONE",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Sci-Fi"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 95,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105333-GybuoSoOZfpH.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "479842ce-d594-4979-a94f-eb66b5388356",
+      "title": "Fire Force",
+      "genres": [
+        "Action",
+        "Drama",
+        "Sci-Fi",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 73,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105310-2PKUvoaA6fTn.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ce45ec10-f7af-4425-80dd-469585cde3ba",
+      "title": "BEASTARS",
+      "genres": [
+        "Drama",
+        "Mystery",
+        "Psychological",
+        "Romance",
+        "Slice of Life"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 48,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx107660-hgknnyaLchJW.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ac44900f-b4c1-42aa-857c-c9f77f73d6ca",
+      "title": "To Your Eternity",
+      "genres": [
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Psychological",
+        "Supernatural"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 62,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx114535-y3NnjexcqKG1.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "f49efaaa-948c-4f1f-bab1-a2d2fd97a35b",
+      "title": "Your lie in April",
+      "genres": [
+        "Animation",
+        "Drama",
+        "Music",
+        "Romance"
+      ],
+      "status": "completed",
+      "seasons": [],
+      "totalEpisodes": 22,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20665-TLgkL8T8IRFd.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "5a450c0d-b505-4581-906b-3ca96443e748",
+      "title": "Dragon Ball Z",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 844,
+      "seasonCountOverride": 30,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx813-ZhnFNOeCU5dQ.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "1f21da58-ba6d-48b2-88e5-e4e2be9903c3",
+      "title": "Attack on Titan",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 75,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-buvcRTBx4NSm.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "a7460794-00b0-4834-855a-6b096dd3aacd",
+      "title": "Kakegurui",
+      "genres": [
+        "Animation",
+        "Drama",
+        "Thriller"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 30,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b98314-TSJykxVwCCQN.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "fc2d3631-6104-4fff-8e9d-791e9c637e55",
+      "title": "HAIKYU!!",
+      "genres": [
+        "Animation",
+        "Comedy",
+        "Drama",
+        "Sport"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 85,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20464-ooZUyBe4ptp9.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "64df7aac-2da3-4036-a733-84fa7e91ecb5",
+      "title": "Ahiru no Sora",
+      "genres": [
+        "Drama",
+        "Sports"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 50,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101239-iGhniUbzVgpn.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "af0c419b-2b69-455b-bc47-be9460209095",
+      "title": "Black Clover",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 170,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97940-fyh8o7gNbha0.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "3a084646-0c50-41b7-946b-3ccda64ca261",
+      "title": "The God of High School",
+      "genres": [
+        "Action",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx116006-Wt8JSA1ZQxlM.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "365b4ff5-cb5e-43e8-b479-cb51d1c99592",
+      "title": "The Slime Diaries",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Slice of Life"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx116741-MI9aI2ikNyAP.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ea81d3c1-35b8-4ba3-bab1-a3982d0bac3e",
+      "title": "Sword Art Online",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy",
+        "Romance"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 96,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11757-SxYDUzdr9rh2.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "98361124-8149-4799-88a6-256193612319",
+      "title": "Cautious Hero",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105156-ZVtxISdoUqnY.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "c56af7ed-48f4-440d-93c4-79b45e2518ed",
+      "title": "So I'm a Spider, So What?",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Mystery"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx103632-2wsy9wFUdm1C.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "3a055abb-5286-48ba-a9d3-30ab11834542",
+      "title": "Blue Period",
+      "genres": [
+        "Drama",
+        "Slice of Life"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx128705-LqIWVpiwDlDc.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "76c2d28b-3060-4820-baf3-27c648f3437e",
+      "title": "Seraph of the End: Vampire Reign",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Sci-Fi",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20829-pgsXVjrfyI5V.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "54bcd4ad-a56b-4cb3-a894-eace46b25be5",
+      "title": "Berserk",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Horror",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx33-PSwfE5B0gejI.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "51781965-f338-408c-a3a0-94902743b1b8",
+      "title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx129898-FRUzDtPhRigt.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "e753d4fe-c167-43d7-990b-3ebdaeacf011",
+      "title": "Overlord",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 52,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20832-vUNm5zrYWifc.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "222e31fd-e4d4-413d-8d26-92ef3f8bc0a6",
+      "title": "Mieruko-chan",
+      "genres": [
+        "Comedy",
+        "Horror",
+        "Slice of Life",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx131083-sKGHkpVDksaZ.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "aab07dd3-9648-4290-a905-e4df1daec92b",
+      "title": "Beast Tamer",
+      "genres": [
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx150695-UOQF6Zz2iCTX.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "b1461752-355e-4d88-8ac1-bf2b7ce833c8",
+      "title": "Parallel World Pharmacy",
+      "genres": [
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx136707-StRFbEwZT7q5.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "1b01194c-324e-4a89-a303-1470a87fdc56",
+      "title": "Reincarnated as a Sword",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx139587-rbZVcigCRtHY.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "59e9675d-829f-46ce-b41c-8b34be9784d6",
+      "title": "Black Summoner",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx145260-Yt5W8aQQKqF2.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "602230a9-0340-4f08-970b-907dc86392ce",
+      "title": "Chainsaw Man",
+      "genres": [
+        "Action",
+        "Drama",
+        "Horror",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx127230-DdP4vAdssLoz.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "b8b6477b-b731-4510-bec6-8f213fba09f6",
+      "title": "Log Horizon",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 62,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx17265-RyErURYesjJt.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ed4480e3-c523-4229-b945-20126bf5b59f",
+      "title": "Aoashi",
+      "genres": [
+        "Drama",
+        "Sports"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx134732-OXKSrOhF9pCM.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d971c17f-1a5f-49d1-b9f1-2be411dfcb1d",
+      "title": "The Reincarnation of the Strongest Exorcist in Another World",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy",
+        "Romance",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx144553-Q5M7iNLHMuCl.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "48e4a6fd-3e12-43c3-859a-81eafd86559a",
+      "title": "I Got a Cheat Skill in Another World and Became Unrivaled in The Real World, Too",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy",
+        "Romance"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx153845-C47aoKy7wf19.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "c0d2e5f4-8bdc-4cd9-9cb2-3a4b441c399a",
+      "title": "Vinland Saga",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 48,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101348-2fhDFPCuMNiz.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d0f18d34-7796-4410-92b8-96c1baba96d3",
+      "title": "Welcome to Demon School! Iruma-kun",
+      "genres": [
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 65,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx107693-A9bSSFAMxA6j.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "784aef4f-e979-46fe-b722-a863645500a9",
+      "title": "Ranking of Kings",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 33,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113717-9sNnN8WRgK15.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ffbafff8-3cef-4e8a-8c4d-310a68f96b86",
+      "title": "Liar, Liar",
+      "genres": [
+        "Psychological",
+        "Romance"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx131863-G7bfAMPea08v.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "68ff24d8-354a-4f45-b6da-52f89eb43f33",
+      "title": "The King's Avatar",
+      "genres": [
+        "Action",
+        "Drama"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 44,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx98861-MMwQxW1S8WkF.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "33864cb5-44ed-4863-8259-f130a4029345",
+      "title": "Made in Abyss",
+      "genres": [
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Horror",
+        "Mystery",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 25,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97986-TQ7dCgbS3y5s.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "863b50da-376f-4e65-8b98-d7b596282f32",
+      "title": "The Eminence in Shadow",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 32,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx130298-YMdcKHytpWNH.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "69199dd2-0ea6-4fbd-9a98-ed0ca7f6c0a1",
+      "title": "Tokyo Revengers",
+      "genres": [
+        "Action",
+        "Drama",
+        "Romance",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 50,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx120120-cWDmnmeEntSe.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "104b7c2b-73ab-4960-a704-14448ef78ebc",
+      "title": "Tengoku Daimakyo",
+      "genres": [
+        "Animation",
+        "Adventure",
+        "Drama",
+        "Mystery",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx155783-YosKbsmZzuDE.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "337a0a3f-1368-48cc-aa19-162d5d4481c5",
+      "title": "Saga of Tanya the Evil",
+      "genres": [
+        "Animation",
+        "Action",
+        "Drama",
+        "Fantasy",
+        "War"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21613-qT3NiwYP5dYc.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ad3afe1a-c33d-45e5-a46b-003b5e315d9f",
+      "title": "Blood Lad",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Ecchi",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 10,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11633-vIjtabJq64Xt.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "543bd803-5be5-4689-b68e-7d3e77d6bbb4",
+      "title": "Komi Can't Communicate",
+      "genres": [
+        "Comedy",
+        "Romance",
+        "Slice of Life"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx142984-nv2MWVWZ1yYH.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "0919f33c-0a25-4003-b76f-ced0d0782843",
+      "title": "Magi: The Labyrinth of Magic",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 63,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx14513-HuUdrFFYftA7.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "bca2e198-8774-46e4-a359-147338f627c9",
+      "title": "Zom 100: Bucket List of the Dead",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy",
+        "Horror"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx159831-cJUNqCqzuApc.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "77e48e4e-23bb-4d55-8494-137d656ac6bb",
+      "title": "Ragna Crimson",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx146493-bThyDJ4ZmbfV.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d229c2a4-5634-482b-93e2-4fc03db3d4d7",
+      "title": "MASHLE: MAGIC AND MUSCLES",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151801-XxVf22Le6C8o.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "c73b2aed-a91a-4927-b671-183f4aa4566c",
+      "title": "The Wrong Way to Use Healing Magic",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx137908-50af3lKVbst2.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "cbc4aba9-7744-4ffd-9213-7a24151255a6",
+      "title": "Frieren: Beyond Journey’s End",
+      "genres": [
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 38,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "1cb1e017-689f-4138-b5f5-cdedfdde251f",
+      "title": "The Faraway Paladin",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy",
+        "Mystery",
+        "Psychological"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx132473-L64hP24nJyEV.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ea824bc4-f43e-4a86-90cd-4348df2a9b89",
+      "title": "Grimgar of Fantasy and Ash",
+      "genres": [
+        "Animation",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21428-dFVIHeZ8McBe.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "072a07fd-aa66-48ce-b16e-2839a1049e72",
+      "title": "Tomodachi Game",
+      "genres": [
+        "Drama",
+        "Mystery",
+        "Psychological",
+        "Thriller"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx141014-bTWr7TtS0wt9.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "0d21e7b9-bbf1-4579-9e4f-bb1b63372544",
+      "title": "No Game, No Life",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Ecchi",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b19815-sEOQ9yQaPKlk.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "f9cd4de0-bed6-43ed-a443-8353b69e8684",
+      "title": "Undead Unluck",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Sci-Fi",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154116-3ydDI9hhvPgw.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "7ce5cdd5-effb-448f-8e76-1225eec3883a",
+      "title": "Lookism",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Drama",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 8,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx158539-jcLUcvqALA08.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d0cc428c-eeee-4b30-b01f-decdbac0a7cf",
+      "title": "TSUKIMICHI",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 37,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx125206-O2MsOWdW1lVi.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "9d800ca4-4d11-4e53-8dad-293d088b8219",
+      "title": "Viral Hit",
+      "genres": [
+        "Action",
+        "Comedy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx174653-OsnK4BuENjUT.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "65c704dc-75d5-4141-95ec-b678ed663fec",
+      "title": "Demon Slayer: Kimetsu no Yaiba",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 63,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-WBsBl0ClmgYL.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "70c6af19-ff5b-4997-8035-9239a51ca1c8",
+      "title": "Alderamin on the Sky",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21410-ZGPqM634gFlX.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "aa688075-4a5b-4478-b056-3d24968d39b5",
+      "title": "I Parry Everything",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx170695-Nb1DIg7gIHCF.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "f9ebee56-5b24-42ca-973e-8d96e1cf1ba0",
+      "title": "KONOSUBA -God's blessing on this wonderful world!",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Ecchi",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 31,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21202-mPOr80AEjUcZ.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "6cbcd461-e9dd-4e76-b457-fb0f71edb4f7",
+      "title": "The Devil is a Part-Timer!",
+      "genres": [
+        "Comedy",
+        "Fantasy",
+        "Romance",
+        "Slice of Life"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 37,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx15809-ECv3HyOYJKrk.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "c0bf3887-af77-47b0-8260-b030717fe8a5",
+      "title": "Wise Man’s Grandchild",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Fantasy",
+        "Romance"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100112-eExFpnYG2QAK.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "9b874502-e432-4480-b6cf-fdcd3ad9e13d",
+      "title": "The Healer Who Was Banished From His Party, Is, in Fact, the Strongest",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx174043-Hh9mvGibvoVb.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "145084b3-6a99-4342-b0ed-42cee9c3a5ab",
+      "title": "As a Reincarnated Aristocrat, I'll Use My Appraisal Skill to Rise in the World",
+      "genres": [
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx164702-FjpM96MPdzVm.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d2695a7c-a4ca-489e-8380-a459f74bb4a0",
+      "title": "Seirei Gensouki: Spirit Chronicles",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy",
+        "Romance"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx126546-Jujx9OvKxLzA.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "b73788bd-695b-4c60-ab93-b6dbc6f302c0",
+      "title": "I'm Standing on a Million Lives",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx116242-JY81Khmbqysn.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "b47b462c-6c38-4397-b0ca-ba8e4b47b7b7",
+      "title": "DEMON LORD 2099",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Drama",
+        "Fantasy",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163135-NjvXyXvTYSHH.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "14bb7ecc-e0ef-4118-bb83-2f38b1bf809c",
+      "title": "BLUE LOCK",
+      "genres": [
+        "Action",
+        "Drama",
+        "Sports"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 38,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx137822-U8naszP96vzC.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "8ce9ddde-e0f8-4a4f-907a-796862fc1957",
+      "title": "Tower of God",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Mystery"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 39,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx115230-QHOdSN7yt8ab.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "7e7f3bfd-e870-406f-9cc8-d3cf0d385eeb",
+      "title": "Hajime no Ippo",
+      "genres": [
+        "Comedy",
+        "Drama",
+        "Sports"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 127,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx263-ivVyn9xAgwSZ.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "9aec0acf-742f-4bbb-915f-bdd1d7c32073",
+      "title": "The Seven Deadly Sins: Four Knights of the Apocalypse",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 36,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx148862-ctw1sn45I4ZX.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "43a9437d-0279-436c-a489-68fad22c2f29",
+      "title": "Arifureta: From Commonplace to World's Strongest",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy",
+        "Psychological"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 41,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100668-DvOn5bMOt4cy.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "b0209480-04f3-4010-8bef-84b74a5ea7fa",
+      "title": "Is It Wrong to Try to Pick Up Girls in a Dungeon?",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Romance"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 74,
+      "seasonCountOverride": 5,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20920-MTREwZOG4BAD.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "07acf938-a3c1-430c-82af-dbec7d79f56f",
+      "title": "EDENS ZERO",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 50,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx119683-BC4i4dF5DGNO.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "a038d0c7-33bb-4ebb-8e8f-e95910a669ff",
+      "title": "Solo Leveling",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 25,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151807-it355ZgzquUd.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "12b2b826-8d7e-46f1-b9e0-fa93b78265de",
+      "title": "Shangri-La Frontier",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 50,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151970-xtIx3VqEk02X.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "dfaa8640-7511-4c0b-8f97-2db72f94ff0b",
+      "title": "From Bureaucrat to Villainess: Dad's Been Reincarnated!",
+      "genres": [
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx172453-7iYNTAEZpNsJ.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4894400f-93c7-45a4-9273-be027b38cc80",
+      "title": "Rurouni Kenshin",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Drama",
+        "History"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 47,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx45-DEFgZRCxiGmF.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4c57afb8-d546-4fea-963f-89a52c8795f9",
+      "title": "The Unaware Atelier Meister",
+      "genres": [
+        "Animation",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx183133-SSeg5j1UrMDG.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "6bf79c52-dc8a-4c3b-b8b5-be758f36ec88",
+      "title": "The Brilliant Healer's New Life in the Shadows",
+      "genres": [
+        "Animation",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx175872-d55nfiC4WWHO.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d148384c-c2b6-44d4-baa8-ffbe90e93c1c",
+      "title": "WIND BREAKER",
+      "genres": [
+        "Animation",
+        "Action",
+        "Drama"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 25,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx163270-wboZJp0ybwVK.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "98efa255-1dc7-42d2-9eca-a5ccea98c921",
+      "title": "Captain Tsubasa",
+      "genres": [
+        "Animation",
+        "Drama",
+        "Sport"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 91,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b2116-ajWg3wcwvb2q.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "2cdf99e4-a979-4ef7-80ca-f5074f387ea2",
+      "title": "Go! Go! Loser Ranger!",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx158417-Ii0DOFwNim0A.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "e0fcb604-d3b7-4a3a-bf17-754c48820e91",
+      "title": "SAKAMOTO DAYS",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 22,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx177709-e5Qx6RlsBgD5.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "51d7384a-60d8-4be7-a4c0-101d0033fa55",
+      "title": "DAN DA DAN",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Drama",
+        "Romance",
+        "Sci-Fi",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx171018-60q1B6GK2Ghb.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "cdc6974c-effa-4d6a-b370-7ece245913c3",
+      "title": "Uglymug, Epicfighter",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx184575-hEzI5V8o818U.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ce207efa-8590-4d92-af0b-d957a4133d86",
+      "title": "Kaiju No. 8",
+      "genres": [
+        "Action",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 23,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx153288-25FBfFJzEQ5O.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "7a942a38-c426-45fd-a5d7-5eddbb46e235",
+      "title": "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156415-zwP9deA786S1.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "439fde59-9187-408c-b9b6-055542985614",
+      "title": "The Water Magician",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx186052-zq8h0Qo0O0sP.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "fd4fdb5e-f3f6-42ee-8d81-849a67ddb47a",
+      "title": "New Saga",
+      "genres": [
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx155838-0zx6MTeoo5sk.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "84a7da28-e588-485e-9707-823cf36d1706",
+      "title": "Hero Without a Class: Who Even Needs Skills?!",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx169969-SqCjoqYT4A6Z.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "1d597817-4275-40cf-83f5-8d60ce3ecaf4",
+      "title": "The Unwanted Undead Adventurer",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx147642-SztpXNn9ke6P.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d8addce9-ae5e-4b6c-a092-31f689ba3ada",
+      "title": "A Gatherer's Adventure in Isekai",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Slice of Life"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx187663-VVdpMlkhwMSh.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4f851cf4-9482-41aa-bc2f-c5553f7a0e25",
+      "title": "My Gift Lvl 9999 Unlimited Gacha: Backstabbed in a Backwater Dungeon, I'm Out for Revenge!",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx184322-rRkaMQ7J1zOI.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "3e41b0b0-747d-47f2-9f8b-2f4ba9b426a1",
+      "title": "A Wild Last Boss Appeared!",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx180523-FjvW1XByUNMK.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "30590382-1811-46e9-8367-6349acd193d3",
+      "title": "Let This Grieving Soul Retire",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx175019-8lLRmHID5fMd.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "3626b704-4dc0-4aa8-9b19-82fae94ecec1",
+      "title": "The Banished Court Magician Aims to Become the Strongest",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx188487-kkeu3cMpHtup.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "7eb8029f-2f04-47f1-b5b2-53925856741a",
+      "title": "My Status as an Assassin Obviously Exceeds the Hero’s",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx186794-Ns8xWNdMdOxq.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "9a915f83-747f-46b7-bd71-bb27972282ab",
+      "title": "SPY x FAMILY",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Slice of Life",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 50,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx140960-Kb6R5nYQfjmP.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "e3099ea2-6268-4239-aaf4-139daa1b5cbf",
+      "title": "One-Punch Man",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Sci-Fi",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 36,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21087-B5DHjqZ3kW4b.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "6ed288fb-5567-424b-9ea5-f7beff69e7b7",
+      "title": "Gachiakuta",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178025-cWJKEsZynkil.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "3504f4e1-2ee9-4595-a519-89825bc5a475",
+      "title": "Noble Reincarnation: Born Blessed, So I'll Obtain Ultimate Power",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185993-BecPUaWfZJgR.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4d25427d-92a0-4918-af9f-7acac112274f",
+      "title": "Kunon the Sorcerer Can See",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 13,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx186333-32qDHxLkndpg.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "2233f6f6-eee9-4ec5-a01c-13df758804e8",
+      "title": "Jack-of-All-Trades, Party of None",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx187264-wjwbVdnynbbu.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4839d9db-846a-4a48-ae99-af3fdb57769a",
+      "title": "My Hero Academia: Vigilantes",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 26,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185736-Ci6AiGwjKKtp.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "235ca95e-0ade-4975-a7f2-361f5d198d60",
+      "title": "JUJUTSU KAISEN",
+      "genres": [
+        "Action",
+        "Drama",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 59,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-LHBAeoZDIsnF.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "2ff382cc-b485-4687-8944-3f0629549b35",
+      "title": "Hell’s Paradise",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Mystery",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 25,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx128893-Gc2t8b8M0mVu.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "e1ac86bc-8b01-40f1-9011-77a204618372",
+      "title": "OSHI NO KO",
+      "genres": [
+        "Drama",
+        "Mystery",
+        "Psychological",
+        "Supernatural"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 35,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx150672-WqmmwZ4nMzAy.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "0cff8c3d-79f8-4ebf-8136-2b1792966fe9",
+      "title": "Sentenced to Be a Hero",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx167152-O1pm6DWwifBD.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d501246e-c02f-4383-99f9-7c64013daece",
+      "title": "Sword Art Online Alternative: Gun Gale Online",
+      "genres": [
+        "Action",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/nx100183-v4S2sGAG3A24.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4a210d36-b366-4476-88b8-cf0041855b2f",
+      "title": "NIPPON SANGOKU",
+      "genres": [
+        "Action",
+        "Drama",
+        "Sci-Fi"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx206914-SHKX08LarRzB.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "ccd88955-fc68-475d-b8c5-fe701790304f",
+      "title": "Classroom of the Elite",
+      "genres": [
+        "Drama",
+        "Psychological"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 54,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx98659-WNyPLIZDpGGY.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "90624e52-bc94-43d1-b903-ac5803dcd3ec",
+      "title": "The Beginning After the End",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 24,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx183161-5M054tuPmZJX.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "7c1fb736-47b2-45e0-a366-71d0da908b02",
+      "title": "KILL BLUE",
+      "genres": [
+        "Action",
+        "Comedy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx198113-NRa47idWSlnx.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "35ed108a-6623-4dd8-8eae-2c44bcef9b97",
+      "title": "Dorohedoro",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy",
+        "Fantasy",
+        "Horror"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 23,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx105228-I4xr84QS9Pvk.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "7c783fb8-a952-48af-b1c2-221b288b0376",
+      "title": "From Overshadowed to Overpowered: Second Reincarnation of a Talentless Sage",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx208044-Pm2UhvApQFUh.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "f7b068ec-64b3-4f82-8049-d557f087bf91",
+      "title": "Bungo Stray Dogs",
+      "genres": [
+        "Animation",
+        "Action",
+        "Comedy",
+        "Mystery",
+        "Supernatural"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 25,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21311-hAXyT8Yoh6G9.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "32c0a4ea-f49c-4ba6-aa52-eedda5276b83",
+      "title": "Bleach",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 109,
+      "seasonCountOverride": 5,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx269-d2GmRkJbMopq.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "0d25a116-53a6-4696-bd06-8092d4d1df24",
+      "title": "ISHURA",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx161476-ukTxAPHib1Fg.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "4c8dc126-5800-426d-8679-ad08e10c85aa",
+      "title": "To Be Hero X",
+      "genres": [
+        "Animation",
+        "Action",
+        "Adventure",
+        "Sci-Fi"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 0,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156092-yHqgQZOF2mbg.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "f8c0c1f2-667b-4140-8b3e-0f4be781d202",
+      "title": "Sword of the Demon Hunter: Kijin Gentosho",
+      "genres": [
+        "Animation",
+        "Action",
+        "Fantasy",
+        "Supernatural"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 0,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx143598-FCvAhQJLllSP.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "a889e804-a2c6-49b3-8a8b-3d7cdb6ca67e",
+      "title": "Lord of Mysteries",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy",
+        "Mystery",
+        "Supernatural",
+        "Thriller"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 0,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx137667-xQxzQRAerw53.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "b4a0f4a1-ce3f-4648-94a4-bf86ec598ca7",
+      "title": "The Rising of the Shield Hero",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 0,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx99263-LcazQwdlWzMy.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "6369eab7-75f9-4db6-91c9-2b87c96bf2b3",
+      "title": "ONE PIECE",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 1155,
+      "seasonCountOverride": 22,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21-ELSYx3yMPcKM.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "e3112961-d365-4229-a529-5ce3213b403a",
+      "title": "That Time I Got Reincarnated as a Slime",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 72,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101280-tDxCVJm714nt.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "0044f06c-aad8-4c78-a93f-d86212b4a381",
+      "title": "Ascendance of a Bookworm",
+      "genres": [
+        "Fantasy",
+        "Slice of Life"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 36,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108268-Dtt82uOi3vq5.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "59964806-9c80-4d52-b504-34dbae3c6e0d",
+      "title": "Daemons of the Shadow Realm",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy",
+        "Supernatural"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 0,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx195600-moI0UFArtOme.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "05acbe58-5326-493c-ad0c-29d9478eef81",
+      "title": "HELL MODE: The Hardcore Gamer Dominates in Another World with Garbage Balancing",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185262-95wbx3Y9hCwm.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "17fca1fd-b592-43d4-90ac-b74952ac4348",
+      "title": "Clevatess",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178869-qiEz0gQD8H5N.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "01ca35df-f312-4a08-ac7c-1f613a723ccd",
+      "title": "Mushoku Tensei: Jobless Reincarnation",
+      "genres": [
+        "Adventure",
+        "Drama",
+        "Ecchi",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 48,
+      "seasonCountOverride": 3,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108465-1ANspF1EWyFx.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "d06d9c2e-7fac-4d45-a17b-461c0ec9127c",
+      "title": "From Old Country Bumpkin to Master Swordsman",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx179955-e4UPTow92B1O.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "31ba4e01-4bc6-40df-bb50-7849b7936825",
+      "title": "Skeleton Knight in Another World",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 12,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx132474-J2ECHSPkfb9g.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "72656564-e4a8-49ec-b95c-dcc24e2b6d88",
+      "title": "Tomb Raider King",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 0,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx184356-SlFIstXUXJYP.png",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "1ea65269-00a8-480e-9f93-38dae62b60b8",
+      "title": "The Exiled Heavy Knight Knows How to Game the System",
+      "genres": [
+        "Action",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 0,
+      "seasonCountOverride": 1,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx180136-gtMTCRlOD4OE.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    },
+    {
+      "id": "27f51bb1-9f56-4d20-8c88-4be3ae9053fb",
+      "title": "Re:ZERO -Starting Life in Another World-",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Psychological",
+        "Romance",
+        "Thriller"
+      ],
+      "status": "airing",
+      "seasons": [],
+      "totalEpisodes": 77,
+      "seasonCountOverride": 4,
+      "isMovie": false,
+      "imageURL": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21355-wRVUrGxpvIQQ.jpg",
+      "note": "",
+      "addedAt": "2026-09-17T09:00:00.000Z",
+      "updatedAt": "2026-09-17T09:00:00.000Z"
+    }
+  ]
+}

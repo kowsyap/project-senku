@@ -1,6 +1,6 @@
-# Requirements — training and intake logging
+# Requirements — training, intake, and one thing that is neither
 
-Five features, agreed in outline and specified here before any of them is built.
+Six features, agreed in outline and specified here before any of them is built.
 Nothing in this document is implemented yet. It exists so that when we start,
 the arguments have already been had.
 
@@ -15,10 +15,12 @@ taken seriously, plus water and macro intake.
 | F3 | [Workout page and splits](#f3--workout-page-and-splits) | F2, exercise catalogue, muscle map |
 | F4 | [Water tracking](#f4--water-tracking) | Storage, notification scheduler |
 | F5 | [Protein and macro intake](#f5--protein-and-macro-intake) | Storage |
+| F6 | [Anime log](#f6--anime-log) | Storage |
+| F7 | [Logging a workout from the watch](#f7--logging-a-workout-from-the-watch) | F3, WatchConnectivity |
 
 ---
 
-## The rule that governs all five
+## The rule that governs them all
 
 Senku's premise is that it **shows its work** — see [PROJECT.md](PROJECT.md).
 Every feature below inherits three obligations from it:
@@ -37,7 +39,7 @@ Every feature below inherits three obligations from it:
 
 ## Shared foundations
 
-These are not features. They are the things all five need, and building any
+These are not features. They are the things the rest need, and building any
 feature before them means building them badly twice.
 
 ### S1 — Storage
@@ -80,7 +82,7 @@ app**. That cap is a hard design constraint, not a footnote.
 
 ### S3 — What a day is
 
-All five features aggregate by day. Define it once: a day runs from **local
+These features aggregate by day. Define it once: a day runs from **local
 midnight to local midnight**, with a user-settable cutoff (default 00:00,
 typical alternative 03:00 for late trainers). Store every timestamp as an
 absolute `Date`; bucket at read time. Never store a "day string".
@@ -406,6 +408,70 @@ Favourite   { id, name, macros }            // reusable quick-adds
 
 ---
 
+## F6 — Anime log
+
+### Purpose
+
+What you are watching, where you are up to, and what you thought of it. Nothing
+to do with training, and that is fine: this is a personal app, and the thing a
+personal app can do that a product cannot is hold two unrelated parts of a life
+without either being a compromise.
+
+It is listed last on purpose. It shares the storage layer and nothing else, so
+it can be built whenever, without blocking or being blocked by F1–F5.
+
+### Data
+
+```
+Series
+  id: UUID
+  title: String
+  totalEpisodes: Int?        // nil while airing, or unknown
+  status: .watching | .completed | .paused | .dropped | .planned
+  rating: Int?               // 1–10, only once there is an opinion
+  startedAt: Date?
+  finishedAt: Date?
+  note: String?
+
+Progress
+  seriesID, episode: Int, watchedAt: Date
+```
+
+### Rules
+
+- **Episode count is the unit**, not a percentage. "19 of 24" is what someone
+  actually knows about where they are; a progress bar derived from it is
+  decoration.
+- A **series still airing has no total**, and the app must not invent one — the
+  count reads "19" rather than "19 of ?" dressed up as completion.
+- **Ratings are optional and never averaged into a score for the library.** A
+  personal log is not a review site; the number means "what I thought", and an
+  aggregate of your own opinions tells you nothing you did not already know.
+- Marking an episode watched stamps it. The **history is the log**: re-watches
+  append rather than overwrite, the same rule the PR page follows.
+- Status is explicit rather than inferred. An app deciding you have "dropped"
+  something because you have not opened it in a month is guessing at a feeling.
+
+### Open questions
+
+- **Where the metadata comes from.** Typing titles and episode counts by hand
+  is fine for a personal list and tedious past twenty. AniList and MyAnimeList
+  both publish APIs — AniList's is open GraphQL without a key, which makes it
+  the obvious first choice — but that turns a local feature into one with a
+  network dependency, a rate limit and a cache to invalidate.
+- **Whether it belongs in Senku at all**, or is a second app sharing the same
+  core. A training app with an anime tab is either charmingly personal or
+  confused, depending entirely on who is holding it.
+
+### Acceptance
+
+- [ ] A series airing weekly can be advanced one episode with one tap
+- [ ] A series with no known total never displays a completion percentage
+- [ ] A re-watch does not erase the first watch
+- [ ] Nothing here appears anywhere near the training or nutrition screens
+
+---
+
 ## Suggested order
 
 Each step ends with something usable, per the roadmap's own rule.
@@ -418,8 +484,75 @@ Each step ends with something usable, per the roadmap's own rule.
 4. **F2 PR page.** Readable value from step 3 with one screen.
 5. **F3 workout page.** The big one. Splits, logging, coverage, rest-timer tie-in.
 6. **F4 water.** Independent; could slot in earlier if you want a quick win.
-7. **F5 macros.** Last, because it is most useful once weight history exists to
-   correlate it against.
+7. **F5 macros.** Last of the training features, because it is most useful once
+   weight history exists to correlate it against.
+8. **F6 anime log.** Whenever. It touches nothing else, which is the whole
+   reason it can wait — and the reason it can jump the queue on a slow evening
+   without costing anything.
+
+
+---
+
+## F7 — Logging a workout from the watch
+
+### Purpose
+
+Log a set at the rack, without reaching for the phone. The phone is in a bag two
+metres away, your hands are chalked, and the thing you want is one tap.
+
+### Scope
+
+- The watch shows **today's session** — the split already started on the phone,
+  as a checklist, in the same muscle blocks the phone uses.
+- Each exercise offers **one primary action: log a set**, pre-filled with the
+  weight and reps of the previous set (today's, or last session's).
+- **Reps are adjustable on the crown.** Weight is read-only.
+- **No deleting and no editing** on the watch. Corrections are a phone job.
+- Starting and finishing a session stay on the phone in v1. The watch logs into
+  a session that already exists; with none, it says so and offers nothing.
+
+### Why reps must be adjustable, though weight need not be
+
+The original sketch for this had no editing at all — one button, last set's
+numbers, done. Weight is genuinely stable within a session, so read-only there
+costs nothing. **Reps are not.** A working set runs 8, 7, 5, and that fade is
+the signal. A watch that could only repeat last time's figure would record 8, 8,
+8 — a log of intentions rather than of training.
+
+It is worse than inaccurate, because logged sets feed F2 automatically: a
+repeated rep count manufactures personal records that were never hit. The crown
+is already the watch's answer to "change a number", it is one gesture, and it
+keeps the log honest.
+
+### Sync: append-only, never shared mutable state
+
+"Synced all the time" is not on offer. WatchConnectivity is opportunistic: the
+phone app may be suspended, the watch may be off the wrist, and delivery is
+eventually. A live workout is the hardest shape to sync — two devices appending
+to one list — and it is exactly what the app has avoided so far (weigh-ins go
+one way; rest timers are deliberately independent).
+
+The shape that works is to treat **a logged set as an immutable event, not an
+edit**:
+
+- Every `LoggedSet` already carries a `UUID`.
+- The watch sends *"this set was added to this exercise in this session"* with
+  `transferUserInfo`, which is queued, ordered, and survives both apps being
+  closed.
+- The phone merges by **union of ids**. Re-delivery is harmless; ordering does
+  not matter; no conflict is possible, because nothing is ever modified.
+- Deletes stay phone-only for the same reason: a delete *is* a mutation, and
+  allowing it from both ends brings back every problem this design avoids.
+
+The phone stays the owner of the session and the only thing that writes history.
+
+### Open questions
+
+- Should the watch be able to **start** a session (pick today's split) as well
+  as log into one? It is a small addition to this design and a large addition to
+  the sync, since two devices could then start different sessions at once.
+- What should the watch show when the phone has **no live session** — the day
+  list read-only, or nothing?
 
 ---
 
