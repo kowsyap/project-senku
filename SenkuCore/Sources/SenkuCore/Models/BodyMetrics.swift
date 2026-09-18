@@ -108,6 +108,7 @@ public enum ValidationError: Error, Equatable, Sendable {
     case liftedWeightOutOfRange(Double)
     case repsOutOfRange(Int)
     case waterOutOfRange(Double)
+    case macroOutOfRange(Double)
 }
 
 extension ValidationError: LocalizedError {
@@ -123,6 +124,8 @@ extension ValidationError: LocalizedError {
             "Body fat must be between 3% and 70%."
         case .waterOutOfRange:
             "That is not a drink — give an amount between 1 ml and 5 litres."
+        case .macroOutOfRange:
+            "Grams must be between 0 and 1,000. Anything outside that is a typing slip, not a meal."
         case .liftedWeightOutOfRange:
             "A lift must be between 0 kg and 1,000 kg — zero meaning bodyweight."
         case .repsOutOfRange:

@@ -401,10 +401,24 @@ Favourite   { id, name, macros }            // reusable quick-adds
 
 ### Acceptance
 
-- [ ] Targets change when the profile changes, with no copy kept
-- [ ] Derived calories and entered calories are never silently reconciled
-- [ ] A day with no entries reads as "nothing logged", not as "0 g — you failed"
+- [x] Targets change when the profile changes, with no copy kept
+- [x] Derived calories and entered calories are never silently reconciled
+- [x] A day with no entries reads as "nothing logged", not as "0 g — you failed"
 - [ ] Yesterday can be edited; tomorrow cannot be logged
+
+### Streaks
+
+Two of them, protein and calories, because they are different questions — you
+can hit protein on a day you ate 3,500 calories, and a single "nutrition" streak
+would hide whichever one you are failing.
+
+- **Protein is a floor.** At or above the target counts; over is not a failure.
+- **Calories are a band**, ±10% of the target. Both edges are a miss: 900 under
+  is not a better day than 100 under, it is the day that costs you the muscle the
+  protein was protecting. Ten per cent is about the error in eyeballing a portion
+  of rice — tighter and the streak measures your kitchen scales.
+- Both are recomputed against current targets rather than recorded at the time,
+  and an unlogged day is in neither streak.
 
 ---
 

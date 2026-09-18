@@ -55,6 +55,8 @@ public struct SenkuImportDocument: Codable, Sendable {
     public var cardioPlans: [CardioProtocol]?
     public var anime: [AnimeEntry]?
     public var water: [DrinkEntry]?
+    public var intake: [MealEntry]?
+    public var favourites: [FoodFavourite]?
 
     /// A drink, as somebody would actually type it.
     ///
@@ -99,6 +101,56 @@ public struct SenkuImportDocument: Codable, Sendable {
                 date: date ?? .now,
                 millilitres: amount,
                 containerID: containerID
+            )
+        }
+    }
+
+    /// A meal, as somebody would actually type it.
+    ///
+    /// Hand-shaped for the same reason as `DrinkEntry`: an id and a timestamp
+    /// are generated where they are missing, so a day's eating can be written
+    /// as four lines of grams. An export writes them, so a backup round-trips
+    /// and re-importing it skips what is already there.
+    public struct MealEntry: Codable, Sendable {
+        public var id: UUID?
+        public var date: Date?
+        public var name: String?
+        public var proteinG: Double?
+        public var carbsG: Double?
+        public var fatG: Double?
+        public var fiberG: Double?
+        public var calories: Double?
+
+        public init(
+            id: UUID? = nil,
+            date: Date? = nil,
+            name: String? = nil,
+            proteinG: Double? = nil,
+            carbsG: Double? = nil,
+            fatG: Double? = nil,
+            fiberG: Double? = nil,
+            calories: Double? = nil
+        ) {
+            self.id = id
+            self.date = date
+            self.name = name
+            self.proteinG = proteinG
+            self.carbsG = carbsG
+            self.fatG = fatG
+            self.fiberG = fiberG
+            self.calories = calories
+        }
+
+        public var entry: IntakeEntry? {
+            try? IntakeEntry(
+                id: id ?? UUID(),
+                date: date ?? .now,
+                name: name,
+                proteinG: proteinG ?? 0,
+                carbsG: carbsG ?? 0,
+                fatG: fatG ?? 0,
+                fiberG: fiberG,
+                enteredCalories: calories
             )
         }
     }
@@ -156,7 +208,8 @@ public struct SenkuImportDocument: Codable, Sendable {
         cardioRecords: CardioRecordStore,
         cardioPlans: CardioProtocolStore,
         anime: AnimeStore,
-        water: WaterStore
+        water: WaterStore,
+        intake: IntakeStore
     ) -> SenkuImportDocument {
         var document = SenkuImportDocument()
         document.schemaVersion = 1
@@ -193,6 +246,19 @@ public struct SenkuImportDocument: Codable, Sendable {
         document.water = water.entries.map {
             DrinkEntry(id: $0.id, date: $0.date, millilitres: $0.millilitres, containerID: $0.containerID)
         }
+        document.intake = intake.entries.map {
+            MealEntry(
+                id: $0.id,
+                date: $0.date,
+                name: $0.name,
+                proteinG: $0.proteinG,
+                carbsG: $0.carbsG,
+                fatG: $0.fatG,
+                fiberG: $0.fiberG,
+                calories: $0.enteredCalories
+            )
+        }
+        document.favourites = intake.favourites
 
         return document
     }
@@ -275,6 +341,8 @@ public struct ImportSummary: Sendable {
     public var animeSkipped = 0
     public var waterAdded = 0
     public var waterSkipped = 0
+    public var mealsAdded = 0
+    public var mealsSkipped = 0
     /// Entries the app could not make sense of, named so they can be fixed.
     public var problems: [String] = []
 
@@ -283,6 +351,7 @@ public struct ImportSummary: Sendable {
             && weighInsAdded == 0 && recordsAdded == 0 && exercisesAdded == 0
             && workoutsAdded == 0 && cardioAdded == 0 && animeAdded == 0
             && waterAdded == 0
+            && mealsAdded == 0
     }
 
     public var headline: String {
@@ -299,6 +368,7 @@ public struct ImportSummary: Sendable {
         if cardioAdded > 0 { parts.append("\(cardioAdded) cardio entr\(cardioAdded == 1 ? "y" : "ies")") }
         if animeAdded > 0 { parts.append("\(animeAdded) anime") }
         if waterAdded > 0 { parts.append("\(waterAdded) drink\(waterAdded == 1 ? "" : "s")") }
+        if mealsAdded > 0 { parts.append("\(mealsAdded) meal\(mealsAdded == 1 ? "" : "s")") }
         return "Imported " + parts.formatted(.list(type: .and))
     }
 
@@ -306,7 +376,7 @@ public struct ImportSummary: Sendable {
         var lines: [String] = []
 
         let skipped = weighInsSkipped + recordsSkipped + exercisesSkipped
-            + workoutsSkipped + cardioSkipped + animeSkipped + waterSkipped
+            + workoutsSkipped + cardioSkipped + animeSkipped + waterSkipped + mealsSkipped
         if skipped > 0 {
             lines.append("\(skipped) already there, left alone.")
         }
@@ -341,7 +411,8 @@ public enum SenkuImporter {
         cardioRecords: CardioRecordStore,
         cardioPlans: CardioProtocolStore,
         anime: AnimeStore,
-        water: WaterStore
+        water: WaterStore,
+        intake: IntakeStore
     ) -> ImportSummary {
         var summary = ImportSummary()
 
@@ -497,6 +568,30 @@ public enum SenkuImporter {
             }
             water.restore(entry)
             summary.waterAdded += 1
+        }
+
+        for meal in document.intake ?? [] {
+            guard let entry = meal.entry,
+                  !entry.isEmpty,
+                  !intake.entries.contains(where: { $0.id == entry.id })
+            else {
+                summary.mealsSkipped += 1
+                continue
+            }
+            intake.restore(entry)
+            summary.mealsAdded += 1
+        }
+
+        // Quick-adds are buttons rather than history, so they are merged by
+        // name: importing a file twice must not leave two "Shake" buttons, and
+        // a file from another device should not overwrite the count of how
+        // often you have pressed yours.
+        for favourite in document.favourites ?? [] {
+            let existing = intake.favourites.contains {
+                $0.id == favourite.id
+                    || $0.name.localizedCaseInsensitiveCompare(favourite.name) == .orderedSame
+            }
+            if !existing { intake.save(favourite) }
         }
 
         return summary

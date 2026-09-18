@@ -38,6 +38,7 @@ public struct RootView: View {
     @State private var cardioRecords = CardioRecordStore()
     @State private var anime = AnimeStore()
     @State private var water = WaterStore()
+    @State private var intake = IntakeStore()
     @State private var records = RecordStore()
     @State private var library = ExerciseLibrary()
     @State private var selection: Tab
@@ -84,6 +85,7 @@ public struct RootView: View {
         case workout
         case weight
         case water
+        case food
         case records
         case anime
 
@@ -103,6 +105,7 @@ public struct RootView: View {
             case .workout: "Workout"
             case .weight: "Weight"
             case .water: "Water"
+            case .food: "Food"
             case .records: "PRs"
             case .anime: "Anime"
             }
@@ -116,13 +119,14 @@ public struct RootView: View {
             case .workout: "figure.strengthtraining.traditional"
             case .weight: "scalemass"
             case .water: "drop.fill"
+            case .food: "fork.knife"
             case .records: "trophy"
             case .anime: "sparkles.tv"
             }
         }
 
         /// Left to right, as they appear in the bar.
-        static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .records, .anime]
+        static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime]
 
         var tint: Color {
             switch self {
@@ -134,6 +138,7 @@ public struct RootView: View {
             case .workout: Senku.Palette.fat
             case .weight: Senku.Palette.surplus
             case .water: Senku.Palette.deficit
+            case .food: Senku.Palette.protein
             case .records: Senku.Palette.carbs
             case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)
             }
@@ -208,7 +213,10 @@ public struct RootView: View {
             // Drinks can be logged from the Home Screen widget, in another
             // process, while the app is in the background — so the water it
             // read at launch is only true until you tap a glass out there.
-            if phase == .active { water.reload() }
+            if phase == .active {
+                water.reload()
+                intake.reload()
+            }
 
             // Republished whenever the app comes forward, which is the cheapest
             // honest definition of "regularly": the phone is the source, and
@@ -310,7 +318,8 @@ public struct RootView: View {
                 cardioRecords: cardioRecords,
                 cardioPlans: cardioPlans,
                 anime: anime,
-                water: water
+                water: water,
+                intake: intake
             )
 
             if summary.profileReplaced {
@@ -347,6 +356,7 @@ public struct RootView: View {
         cardioRecords = CardioRecordStore()
         anime = AnimeStore()
         water = WaterStore()
+        intake = IntakeStore()
         profileEditionID = UUID()
         generation = UUID()
         selection = .quickCalc
@@ -401,7 +411,8 @@ public struct RootView: View {
             cardioRecords: cardioRecords,
             cardioPlans: cardioPlans,
             anime: anime,
-            water: water
+            water: water,
+            intake: intake
         )
 
         let formatter = DateFormatter()
@@ -535,6 +546,16 @@ public struct RootView: View {
         }
     }
 
+    private var foodTab: some View {
+        NavigationStack {
+            IntakeView(store: intake, profile: store.profile) {
+                selection = .quickCalc
+            }
+            .navigationTitle("Food")
+            .senkuWordmark()
+        }
+    }
+
     /// Nothing to do with training, and deliberately so — see F6.
     private var animeTab: some View {
         NavigationStack {
@@ -578,6 +599,8 @@ public struct RootView: View {
                 weightTab
             } water: {
                 waterTab
+            } food: {
+                foodTab
             } records: {
                 recordsTab
             } anime: {
@@ -605,6 +628,7 @@ public struct RootView: View {
             page(.workout) { workoutTab }
             page(.weight) { weightTab }
             page(.water) { waterTab }
+            page(.food) { foodTab }
             page(.records) { recordsTab }
             page(.anime) { animeTab }
         }
@@ -675,6 +699,10 @@ public struct RootView: View {
                 .tabItem { Label("Water", systemImage: "drop.fill") }
                 .tag(Tab.water)
 
+            foodTab
+                .tabItem { Label("Food", systemImage: "fork.knife") }
+                .tag(Tab.food)
+
             animeTab
                 .tabItem { Label("Anime", systemImage: "sparkles.tv") }
                 .tag(Tab.anime)
@@ -721,6 +749,7 @@ private struct AdaptiveTabs<
     Workout: View,
     Weight: View,
     Water: View,
+    Food: View,
     Records: View,
     Anime: View
 >: View {
@@ -732,6 +761,7 @@ private struct AdaptiveTabs<
     @ViewBuilder var workout: Workout
     @ViewBuilder var weight: Weight
     @ViewBuilder var water: Water
+    @ViewBuilder var food: Food
     @ViewBuilder var records: Records
     @ViewBuilder var anime: Anime
 
@@ -769,6 +799,9 @@ private struct AdaptiveTabs<
 
             Tab("Water", systemImage: "drop.fill", value: RootView.Tab.water) { water }
                 .customizationID("senku.tab.water")
+
+            Tab("Food", systemImage: "fork.knife", value: RootView.Tab.food) { food }
+                .customizationID("senku.tab.food")
 
             Tab("PRs", systemImage: "trophy", value: RootView.Tab.records) { records }
                 .customizationID("senku.tab.records")
