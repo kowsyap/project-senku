@@ -1,6 +1,9 @@
 import Foundation
 import Observation
 import SenkuCore
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 /// Every weigh-in, kept.
 ///
@@ -84,6 +87,12 @@ public final class WeightLogStore {
     private func persist() {
         guard let data = try? JSONEncoder().encode(weighIns) else { return }
         defaults.set(data, forKey: Self.storageKey)
+
+        // The widget shows the last reading and the trend, both of which have
+        // just changed.
+        #if canImport(WidgetKit) && !os(watchOS)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 
     private static func load(from defaults: UserDefaults) -> [WeighIn] {

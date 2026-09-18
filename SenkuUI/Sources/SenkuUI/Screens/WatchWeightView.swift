@@ -87,6 +87,7 @@ public struct WatchWeightView: View {
             Text(label)
                 .font(.system(size: 8, weight: .heavy))
                 .foregroundStyle(.secondary)
+
             Text(value)
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .monospacedDigit()

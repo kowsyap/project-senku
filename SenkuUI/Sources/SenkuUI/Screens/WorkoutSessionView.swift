@@ -482,6 +482,7 @@ private struct SetLogger: View {
                 }
             }
         }
+        .dismissableKeyboard()
         .navigationTitle(library.name(of: exerciseID))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -643,8 +644,6 @@ struct WorkoutSummaryView: View {
                 }
             } header: {
                 Text("What you trained")
-            } footer: {
-                Text("Measured on the exercises you actually logged.")
             }
 
             Section("Exercises") {

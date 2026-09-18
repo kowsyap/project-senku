@@ -37,6 +37,7 @@ public struct RootView: View {
     @State private var cardioPlans = CardioProtocolStore()
     @State private var cardioRecords = CardioRecordStore()
     @State private var anime = AnimeStore()
+    @State private var water = WaterStore()
     @State private var records = RecordStore()
     @State private var library = ExerciseLibrary()
     @State private var selection: Tab
@@ -82,6 +83,7 @@ public struct RootView: View {
         case rest
         case workout
         case weight
+        case water
         case records
         case anime
 
@@ -100,6 +102,7 @@ public struct RootView: View {
             case .rest: "Rest"
             case .workout: "Workout"
             case .weight: "Weight"
+            case .water: "Water"
             case .records: "PRs"
             case .anime: "Anime"
             }
@@ -112,13 +115,14 @@ public struct RootView: View {
             case .rest: "timer"
             case .workout: "figure.strengthtraining.traditional"
             case .weight: "scalemass"
+            case .water: "drop.fill"
             case .records: "trophy"
             case .anime: "sparkles.tv"
             }
         }
 
         /// Left to right, as they appear in the bar.
-        static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .records, .anime]
+        static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .records, .anime]
 
         var tint: Color {
             switch self {
@@ -129,6 +133,7 @@ public struct RootView: View {
             case .rest: Senku.Palette.warning
             case .workout: Senku.Palette.fat
             case .weight: Senku.Palette.surplus
+            case .water: Senku.Palette.deficit
             case .records: Senku.Palette.carbs
             case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)
             }
@@ -162,6 +167,15 @@ public struct RootView: View {
         .onOpenURL { url in
             if RestDeepLink.handle(url) != nil {
                 selection = .rest
+                return
+            }
+
+            // The weight widget. It lands on the tab rather than opening the
+            // sheet from here, because the sheet belongs to that screen — and a
+            // widget that dropped you on the weight page with nothing to do
+            // would be a link to a place you were already able to reach.
+            if url.host() == "weigh-in" || url.host() == "water" {
+                selection = url.host() == "water" ? .water : .weight
             }
         }
         .task {
@@ -179,19 +193,36 @@ public struct RootView: View {
                 publishWeight()
             }
 
+            // A glass logged on the wrist. The phone owns the log, so it lands
+            // here and goes back out as a new summary.
+            ProfileSync.shared.onDrinkReceived { drink in
+                water.restore(drink)
+                publishWater()
+            }
+
             publishWeight()
+            publishWater()
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
+            // Drinks can be logged from the Home Screen widget, in another
+            // process, while the app is in the background — so the water it
+            // read at launch is only true until you tap a glass out there.
+            if phase == .active { water.reload() }
+
             // Republished whenever the app comes forward, which is the cheapest
             // honest definition of "regularly": the phone is the source, and
             // the moment you have been looking at it is the moment its numbers
             // are most likely to have changed.
             #if os(iOS) && !targetEnvironment(macCatalyst)
-            if phase == .active { publishWeight() }
+            if phase == .active {
+                publishWeight()
+                publishWater()
+            }
             #endif
         }
         .onChange(of: weightLog.weighIns) { _, _ in publishWeight() }
+        .onChange(of: water.entries) { _, _ in publishWater() }
         .onChange(of: profileEditionID) { _, _ in publishWeight() }
         .onReceive(NotificationCenter.default.publisher(for: .senkuImportRequested)) { _ in
             isShowingDataMenu = true
@@ -278,7 +309,8 @@ public struct RootView: View {
                 workouts: workouts,
                 cardioRecords: cardioRecords,
                 cardioPlans: cardioPlans,
-                anime: anime
+                anime: anime,
+                water: water
             )
 
             if summary.profileReplaced {
@@ -314,6 +346,7 @@ public struct RootView: View {
         cardioPlans = CardioProtocolStore()
         cardioRecords = CardioRecordStore()
         anime = AnimeStore()
+        water = WaterStore()
         profileEditionID = UUID()
         generation = UUID()
         selection = .quickCalc
@@ -367,7 +400,8 @@ public struct RootView: View {
             workouts: workouts,
             cardioRecords: cardioRecords,
             cardioPlans: cardioPlans,
-            anime: anime
+            anime: anime,
+            water: water
         )
 
         let formatter = DateFormatter()
@@ -391,6 +425,22 @@ public struct RootView: View {
     private func publishWeight() {
         #if os(iOS) && !targetEnvironment(macCatalyst)
         ProfileSync.shared.send(weight: WeightSummary(log: weightLog, profile: store.profile))
+        #endif
+    }
+
+    /// The watch's bottle, as two numbers.
+    private func publishWater() {
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        // Read before publishing rather than trusting what is in memory. The
+        // watch asks for this while the phone is in a pocket, and a widget tap
+        // since the app was last on screen changed the total without anything
+        // here noticing — the watch would be told a figure the phone itself no
+        // longer believes.
+        water.reload()
+
+        ProfileSync.shared.send(
+            water: WaterSummary(store: water, profile: store.profile, workouts: workouts)
+        )
         #endif
     }
 
@@ -476,6 +526,15 @@ public struct RootView: View {
         }
     }
 
+    /// The target the profile has always computed, finally something to act on.
+    private var waterTab: some View {
+        NavigationStack {
+            WaterView(store: water, workouts: workouts, profile: store.profile)
+                .navigationTitle("Water")
+                .senkuWordmark()
+        }
+    }
+
     /// Nothing to do with training, and deliberately so — see F6.
     private var animeTab: some View {
         NavigationStack {
@@ -517,6 +576,8 @@ public struct RootView: View {
                 workoutTab
             } weight: {
                 weightTab
+            } water: {
+                waterTab
             } records: {
                 recordsTab
             } anime: {
@@ -543,6 +604,7 @@ public struct RootView: View {
             page(.rest) { restTab }
             page(.workout) { workoutTab }
             page(.weight) { weightTab }
+            page(.water) { waterTab }
             page(.records) { recordsTab }
             page(.anime) { animeTab }
         }
@@ -609,6 +671,10 @@ public struct RootView: View {
                 .tabItem { Label("PRs", systemImage: "trophy") }
                 .tag(Tab.records)
 
+            waterTab
+                .tabItem { Label("Water", systemImage: "drop.fill") }
+                .tag(Tab.water)
+
             animeTab
                 .tabItem { Label("Anime", systemImage: "sparkles.tv") }
                 .tag(Tab.anime)
@@ -654,6 +720,7 @@ private struct AdaptiveTabs<
     Rest: View,
     Workout: View,
     Weight: View,
+    Water: View,
     Records: View,
     Anime: View
 >: View {
@@ -664,6 +731,7 @@ private struct AdaptiveTabs<
     @ViewBuilder var rest: Rest
     @ViewBuilder var workout: Workout
     @ViewBuilder var weight: Weight
+    @ViewBuilder var water: Water
     @ViewBuilder var records: Records
     @ViewBuilder var anime: Anime
 
@@ -698,6 +766,9 @@ private struct AdaptiveTabs<
 
             Tab("Weight", systemImage: "scalemass", value: RootView.Tab.weight) { weight }
                 .customizationID("senku.tab.weight")
+
+            Tab("Water", systemImage: "drop.fill", value: RootView.Tab.water) { water }
+                .customizationID("senku.tab.water")
 
             Tab("PRs", systemImage: "trophy", value: RootView.Tab.records) { records }
                 .customizationID("senku.tab.records")

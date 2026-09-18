@@ -142,24 +142,18 @@ public struct PlanSetupView: View {
                 .onMove { store.move(fromOffsets: $0, toOffset: $1) }
             } header: {
                 Text("Days")
-            } footer: {
-                Text("Order is yours to set, and nothing is tied to a weekday — you choose which day to do when you start it.")
             }
 
             if !store.plan.untrainedGroups.isEmpty {
                 Section {
                     groupRow(store.plan.untrainedGroups)
                 } header: {
-                    Text("Not in your week")
-                } footer: {
                     // Stated, not scolded: leaving legs out may be a choice.
-                    Text("Nothing trains these. Fine if that is deliberate.")
+                    Text("Not in your week")
                 }
             }
         }
-        #if os(iOS)
-        .toolbar { EditButton() }
-        #endif
+
     }
 
     private func dayRow(_ day: SplitDay) -> some View {

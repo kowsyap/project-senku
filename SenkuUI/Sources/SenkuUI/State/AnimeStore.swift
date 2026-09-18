@@ -62,12 +62,13 @@ public final class AnimeStore {
     public func list(
         search: String = "",
         status: AnimeStatus? = nil,
-        sort: AnimeSort = .status
+        sort: AnimeSort = .status,
+        reversed: Bool = false
     ) -> [AnimeEntry] {
         let filtered = entries.filter { entry in
             entry.matches(search) && (status == nil || entry.status == status)
         }
-        return sort.sort(filtered)
+        return sort.sort(filtered, reversed: reversed)
     }
 
     /// What the whole list adds up to, for the header.

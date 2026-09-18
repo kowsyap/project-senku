@@ -107,6 +107,7 @@ public enum ValidationError: Error, Equatable, Sendable {
     case restDurationOutOfRange(TimeInterval)
     case liftedWeightOutOfRange(Double)
     case repsOutOfRange(Int)
+    case waterOutOfRange(Double)
 }
 
 extension ValidationError: LocalizedError {
@@ -120,6 +121,8 @@ extension ValidationError: LocalizedError {
             "Weight must be between 20 kg and 500 kg."
         case .bodyFatOutOfRange:
             "Body fat must be between 3% and 70%."
+        case .waterOutOfRange:
+            "That is not a drink — give an amount between 1 ml and 5 litres."
         case .liftedWeightOutOfRange:
             "A lift must be between 0 kg and 1,000 kg — zero meaning bodyweight."
         case .repsOutOfRange:

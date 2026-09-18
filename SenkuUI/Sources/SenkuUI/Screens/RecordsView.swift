@@ -32,6 +32,7 @@ public struct RecordsView: View {
 
     /// Which cardio plan is open for editing.
     @State private var editingProtocol: ExerciseID?
+    @State private var filter: WorkoutGroup?
 
     public init(
         store: RecordStore = RecordStore(),
@@ -69,6 +70,62 @@ public struct RecordsView: View {
         }
     }
 
+    /// The groups you actually have records in, as chips.
+    ///
+    /// Built from the records rather than from the catalogue: a filter for a
+    /// muscle you have never logged is a button that can only ever empty the
+    /// screen.
+    @ViewBuilder
+    private var groupFilter: some View {
+        let groups = availableGroups
+
+        if groups.count > 1 {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    chip("All", tint: Senku.Palette.carbs, isOn: filter == nil) { filter = nil }
+
+                    ForEach(groups) { group in
+                        chip(group.title, tint: group.tint, isOn: filter == group) {
+                            filter = filter == group ? nil : group
+                        }
+                    }
+                }
+                .padding(.horizontal, 2)
+                .padding(.vertical, 2)
+            }
+        }
+    }
+
+    private func chip(
+        _ label: String,
+        tint: Color,
+        isOn: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(tint.opacity(isOn ? 0.25 : 0.10), in: .capsule)
+                .foregroundStyle(isOn ? tint : Color.secondary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var availableGroups: [WorkoutGroup] {
+        var groups = sections.map(\.group)
+        if !cardioRecords.records.isEmpty { groups.append(.cardio) }
+        return library.catalogue.workoutGroups.filter { groups.contains($0) }
+    }
+
+    /// The lifts on screen: everything, or one group's worth, newest first.
+    private var shownRecords: [ExerciseRecords] {
+        sections
+            .filter { filter == nil || $0.group == filter }
+            .flatMap(\.entries)
+    }
+
     /// Cardio, in the same shape as the rest of the page: one card per
     /// exercise, headlined by the figure that exercise is measured in.
     ///
@@ -82,15 +139,6 @@ public struct RecordsView: View {
 
         if !entries.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    GroupGlyph(group: .cardio, size: 16)
-                    Text(WorkoutGroup.cardio.title)
-                        .font(.footnote.weight(.semibold))
-                        .textCase(.uppercase)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.leading, 4)
-
                 ForEach(entries) { entry in
                     Button {
                         editingProtocol = ExerciseID(entry.exerciseID)
@@ -166,28 +214,23 @@ public struct RecordsView: View {
                 if store.records.isEmpty, cardioRecords.records.isEmpty {
                     empty
                 } else {
-                    cardioSection
+                    groupFilter
 
-                    ForEach(sections, id: \.group) { section in
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 6) {
-                                GroupGlyph(group: section.group, size: 16)
-                                Text(section.group.title)
-                                    .font(.footnote.weight(.semibold))
-                                    .textCase(.uppercase)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.leading, 4)
+                    if filter == nil || filter == .cardio {
+                        cardioSection
+                    }
 
-                            ForEach(section.entries) { record in
-                                Button {
-                                    detailID = ExerciseID(record.exerciseID)
-                                } label: {
-                                    recordCard(record)
-                                }
-                                .buttonStyle(.plain)
-                            }
+                    // A flat list, filtered. The headings said the same word as
+                    // the chip above them and cost a line each on a page that
+                    // is mostly scrolling — and with a filter chosen, a heading
+                    // announces the only group on screen.
+                    ForEach(shownRecords) { record in
+                        Button {
+                            detailID = ExerciseID(record.exerciseID)
+                        } label: {
+                            recordCard(record)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -285,11 +328,20 @@ public struct RecordsView: View {
                         .monospacedDigit()
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
-                        .foregroundStyle(Senku.Palette.protein)
+                        // In the muscle's own colour, now that the headings are
+                        // gone: the tint is what says which group a row belongs
+                        // to, and one blue for every lift would have thrown that
+                        // away along with them.
+                        .foregroundStyle(tint(for: entry.exerciseID))
                         .fixedSize(horizontal: true, vertical: false)
                 }
             }
         }
+    }
+
+    /// The colour of the muscle a lift belongs to.
+    private func tint(for exerciseID: String) -> Color {
+        library.exercise(exerciseID)?.workoutGroup.tint ?? Senku.Palette.protein
     }
 
     private func name(of exerciseID: String) -> String {

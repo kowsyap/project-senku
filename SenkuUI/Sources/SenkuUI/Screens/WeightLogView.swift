@@ -15,11 +15,23 @@ import SenkuCore
 public struct WeightLogView: View {
     @State private var store: WeightLogStore
     @State private var isAdding = false
-    #if canImport(UserNotifications) && !os(macOS)
-    @State private var isReminding = WeightReminder.isOn
+    #if !os(watchOS)
+    @State private var isShowingHistory = false
+    @State private var isShowingSettings = false
     #endif
+    /// Declared on every platform, because the settings page binds to it on
+    /// every platform — where there are no notifications to book it simply
+    /// stays false, which is cheaper than a second settings view that differs
+    /// by one row.
+    @State private var isReminding = {
+        #if canImport(UserNotifications) && !os(macOS)
+        WeightReminder.isOn
+        #else
+        false
+        #endif
+    }()
+
     @State private var window: Window = .threeMonths
-    @State private var shown = Window.pageSize
 
     private let profile: ProfileStore.Profile?
     private let onAdoptWeight: ((Double) -> Void)?
@@ -53,7 +65,6 @@ public struct WeightLogView: View {
         case sixMonths = "6M"
         case all = "All"
 
-        static let pageSize = 10
 
         var id: String { rawValue }
 
@@ -114,6 +125,20 @@ public struct WeightLogView: View {
             }
         }
         .background(.background)
+        #if canImport(UserNotifications) && !os(macOS)
+        .onChange(of: isReminding) { _, wanted in
+            Task {
+                if wanted {
+                    // Put back if permission is refused, rather than left on
+                    // and silent — a switch that lies is worse than no switch.
+                    let granted = await WeightReminder.enable()
+                    if !granted { isReminding = false }
+                } else {
+                    WeightReminder.disable()
+                }
+            }
+        }
+        #endif
         .task {
             // The chart begins where the profile does, so the first reading you
             // log is a second point on a line rather than a lone dot.
@@ -127,6 +152,19 @@ public struct WeightLogView: View {
             #endif
         }
         .toolbar {
+            #if !os(watchOS)
+            ToolbarItem(placement: .primaryAction) {
+                Button { isShowingSettings = true } label: {
+                    Label("Settings", systemImage: "gearshape")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button { isShowingHistory = true } label: {
+                    Label("History", systemImage: "clock.arrow.circlepath")
+                }
+                .disabled(store.weighIns.isEmpty)
+            }
+            #endif
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     isAdding = true
@@ -136,6 +174,14 @@ public struct WeightLogView: View {
                 .accessibilityLabel("Log a weigh-in")
             }
         }
+        #if !os(watchOS)
+        .navigationDestination(isPresented: $isShowingHistory) {
+            WeightHistoryView(store: store, unitSystem: unitSystem)
+        }
+        .navigationDestination(isPresented: $isShowingSettings) {
+            WeightSettingsView(reminding: $isReminding)
+        }
+        #endif
         .sheet(isPresented: $isAdding) {
             // Seeded from the last weigh-in, not the day's mean: logging 307
             // then 350 and being offered 328 next time is the app averaging
@@ -156,48 +202,15 @@ public struct WeightLogView: View {
         VStack(spacing: Senku.Metrics.stackSpacing) {
             if series.isEmpty {
                 empty
-                reminderCard
             } else {
                 chartCard
                 figuresCard
                 profileNudge
-                reminderCard
-                historyCard
             }
         }
         .padding()
         .frame(maxWidth: 620)
         .frame(maxWidth: .infinity)
-    }
-
-    /// One switch, one time. A daily reminder at ten in the morning.
-    @ViewBuilder
-    private var reminderCard: some View {
-        #if canImport(UserNotifications) && !os(macOS)
-        Card {
-            Toggle(isOn: $isReminding) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Remind me to weigh in")
-                        .font(.subheadline.weight(.semibold))
-                    Text("Every day at 10:00")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .onChange(of: isReminding) { _, wanted in
-                Task {
-                    if wanted {
-                        // Put back if permission is refused, rather than left on
-                        // and silent — a switch that lies is worse than no switch.
-                        let granted = await WeightReminder.enable()
-                        if !granted { isReminding = false }
-                    } else {
-                        WeightReminder.disable()
-                    }
-                }
-            }
-        }
-        #endif
     }
 
     // MARK: - Chart
@@ -472,64 +485,6 @@ public struct WeightLogView: View {
     /// The chart is the history; this list is for finding and fixing the one
     /// you mistyped. Rendering years of mornings to scroll past would be a
     /// scroll, not a feature — so it grows only when asked.
-    private var paged: [WeighIn] { Array(store.weighIns.prefix(shown)) }
-
-    private var historyCard: some View {
-        Card("History") {
-            ForEach(paged) { weighIn in
-                HStack {
-                    Text(weighIn.date.formatted(date: .abbreviated, time: .shortened))
-                        .font(.subheadline)
-                    Spacer(minLength: 8)
-                    Text(Display.mass(weighIn.weightKG, in: unitSystem))
-                        .font(.subheadline.weight(.semibold))
-                        .monospacedDigit()
-                    Button {
-                        store.delete(weighIn)
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.tertiary)
-                    .accessibilityLabel("Delete this weigh-in")
-                }
-
-                if weighIn.id != paged.last?.id {
-                    Divider()
-                }
-            }
-
-            if store.weighIns.count > paged.count {
-                Divider()
-                HStack {
-                    Text("\(paged.count) of \(store.weighIns.count)")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-
-                    Spacer(minLength: 8)
-
-                    Button("Show \(min(Window.pageSize, store.weighIns.count - paged.count)) more") {
-                        withAnimation(.snappy(duration: 0.2)) {
-                            shown += Window.pageSize
-                        }
-                    }
-                    .font(.caption.weight(.semibold))
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Senku.Palette.protein)
-                }
-            } else if shown > Window.pageSize {
-                Divider()
-                Button("Show fewer") {
-                    withAnimation(.snappy(duration: 0.2)) { shown = Window.pageSize }
-                }
-                .font(.caption.weight(.semibold))
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-        }
-    }
 
     private var empty: some View {
         ContentUnavailableView {

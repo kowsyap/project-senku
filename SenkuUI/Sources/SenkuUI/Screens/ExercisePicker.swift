@@ -187,14 +187,9 @@ public struct ExercisePicker: View {
                     .frame(width: 44, height: 44)
                     .background(candidate.tint.opacity(0.16), in: .circle)
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(candidate.title)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                    Text("Conditioning, not a muscle group")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Text(candidate.title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
 
                 Spacer()
 

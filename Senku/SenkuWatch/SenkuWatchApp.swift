@@ -29,7 +29,17 @@ struct SenkuWatchApp: App {
     /// an empty one that fills in the moment the two are together.
     @State private var weight = WeightSummary()
 
-    private enum Tab: Hashable { case rest, plan, weight }
+    /// The phone's water figures, and what has been logged here since.
+    ///
+    /// The pending total is the watch being honest about what it knows: a drink
+    /// sent to a sleeping phone is real, and the bottle should show it, but the
+    /// phone's own total is the one that counts — so the two are kept apart and
+    /// added for display, and the pending figure is dropped the moment a fresh
+    /// summary arrives.
+    @State private var water = WaterSummary()
+    @State private var pendingWaterML: Double = 0
+
+    private enum Tab: Hashable { case rest, plan, weight, water }
 
     init() {
         // Before anything can schedule a rest. Without it the alert is
@@ -62,6 +72,15 @@ struct SenkuWatchApp: App {
                     }
                 }
                 .tag(Tab.weight)
+
+                NavigationStack {
+                    WatchWaterView(summary: water, pendingML: pendingWaterML) { millilitres in
+                        guard let drink = try? WaterEntry(millilitres: millilitres) else { return }
+                        ProfileSync.shared.send(drink: drink)
+                        pendingWaterML += millilitres
+                    }
+                }
+                .tag(Tab.water)
             }
             .tabViewStyle(.verticalPage)
             .task {
@@ -70,6 +89,19 @@ struct SenkuWatchApp: App {
                 ProfileSync.shared.start(applying: store)
                 ProfileSync.shared.onWeightSummaryReceived { summary in
                     if let summary { weight = summary }
+                }
+                ProfileSync.shared.onWaterSummaryReceived { summary in
+                    guard let summary else { return }
+                    water = summary
+                    // The phone has counted everything sent so far, so anything
+                    // held here would now be counted twice. A summary from an
+                    // earlier day is a different matter: it says nothing about
+                    // today, so today's total starts at zero.
+                    pendingWaterML = 0
+                    if !summary.isCurrent() {
+                        water.totalML = 0
+                        water.date = .now
+                    }
                 }
 
                 // And ask, rather than only wait. A profile edited on the phone
@@ -85,7 +117,7 @@ struct SenkuWatchApp: App {
             .onChange(of: selection) { _, tab in
                 // Opening the tab that shows the phone's numbers is the moment
                 // to make sure they are the phone's current ones.
-                if tab == .plan || tab == .weight {
+                if tab == .plan || tab == .weight || tab == .water {
                     ProfileSync.shared.requestRefresh()
                 }
             }

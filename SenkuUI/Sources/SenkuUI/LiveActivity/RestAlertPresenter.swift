@@ -37,6 +37,23 @@ final class RestAlertPresenter: NSObject, @preconcurrency UNUserNotificationCent
         UNUserNotificationCenter.current().delegate = self
     }
 
+    /// "Log a glass", tapped on a water reminder.
+    ///
+    /// The action carries no `.foreground` option, so iOS wakes the app in the
+    /// background to run this and never brings it to the screen — which is the
+    /// whole point: the common case is one tap from the lock screen while
+    /// walking away from a tap.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        guard response.actionIdentifier == WaterReminders.logActionID else { return }
+
+        let store = WaterStore()
+        let container = store.settings.containers.first
+        store.add(millilitres: container?.millilitres ?? 250, container: container)
+    }
+
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification

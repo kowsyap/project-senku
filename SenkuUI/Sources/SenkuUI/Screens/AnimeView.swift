@@ -12,8 +12,11 @@ public struct AnimeView: View {
     @Bindable private var store: AnimeStore
 
     @State private var search = ""
-    @State private var status: AnimeStatus?
+    /// Opens on what is airing — the handful of shows with an episode out this
+    /// week is the reason to look at a list of 179.
+    @State private var status: AnimeStatus? = .airing
     @State private var sort: AnimeSort = .status
+    @State private var reversed = false
     @State private var editing: AnimeEntry?
     @State private var isAdding = false
     @State private var deleting: AnimeEntry?
@@ -23,7 +26,7 @@ public struct AnimeView: View {
     }
 
     private var shown: [AnimeEntry] {
-        store.list(search: search, status: status, sort: sort)
+        store.list(search: search, status: status, sort: sort, reversed: reversed)
     }
 
     public var body: some View {
@@ -234,8 +237,18 @@ public struct AnimeView: View {
                     Text(option.title).tag(option)
                 }
             }
+
+            Divider()
+
+            // Direction as its own switch rather than by tapping the chosen
+            // field again: a `Picker` cannot tell you that the current
+            // selection was picked a second time, so "press it twice to
+            // reverse" is a gesture that silently does nothing.
+            Toggle(isOn: $reversed) {
+                Label("Reverse order", systemImage: "arrow.up.arrow.down")
+            }
         } label: {
-            Label("Sort", systemImage: "arrow.up.arrow.down")
+            Label("Sort", systemImage: reversed ? "arrow.up" : "arrow.down")
         }
     }
 
@@ -338,8 +351,6 @@ struct AnimeEditor: View {
                     #endif
             } header: {
                 Text("What it is")
-            } footer: {
-                Text("Genres are optional.")
             }
 
             Section {
@@ -410,6 +421,7 @@ struct AnimeEditor: View {
                 }
             }
         }
+        .dismissableKeyboard()
         .navigationTitle(isNew ? "Add a series" : entry.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -484,13 +496,10 @@ struct AnimeEditor: View {
                 }
             }
         } header: {
-            Text("How much of it there is")
+            Text("How much you have watched")
         } footer: {
-            if entry.isComplete {
+            if entry.isComplete, !entry.countSummary.isEmpty {
                 Text(entry.countSummary)
-            } else {
-                Text("A series you have watched needs at least one season and one episode. Airing and pending ones do not — nobody knows yet.")
-                    .foregroundStyle(Senku.Palette.caution)
             }
         }
         }

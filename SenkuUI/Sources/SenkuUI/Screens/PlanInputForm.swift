@@ -203,7 +203,6 @@ public struct PlanInputForm: View {
                 }
                 .labelsHidden()
             }
-            caption(draft.goal.detail)
 
             Divider()
 

@@ -67,12 +67,12 @@ public struct ProfileDashboardView: View {
             StatRow("Height", value: Display.height(profile.metrics.heightCM, in: profile.unitSystem))
             StatRow("Weight", value: Display.mass(profile.metrics.weightKG, in: profile.unitSystem))
 
+            // No "estimated" note: the advisory card above already says the
+            // figure is a BMI estimate and what measuring it would buy, and
+            // saying it twice on one screen reads as two different warnings.
             StatRow(
                 "Body fat",
-                value: Display.percent(profile.metrics.effectiveBodyFatPercentage),
-                detail: profile.metrics.bodyFatPercentage == nil
-                    ? "Estimated from BMI — measure it to sharpen your protein target"
-                    : "Measured"
+                value: Display.percent(profile.metrics.effectiveBodyFatPercentage)
             )
 
             Divider()

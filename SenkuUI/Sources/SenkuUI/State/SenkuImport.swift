@@ -54,6 +54,54 @@ public struct SenkuImportDocument: Codable, Sendable {
     public var cardioRecords: [CardioRecord]?
     public var cardioPlans: [CardioProtocol]?
     public var anime: [AnimeEntry]?
+    public var water: [DrinkEntry]?
+
+    /// A drink, as somebody would actually type it.
+    ///
+    /// `WaterEntry` itself is not the import shape: it carries a UUID and an
+    /// exact timestamp, and demanding either of a file written by hand would
+    /// mean nobody writes one. An id is generated where it is missing, the
+    /// amount can be called `ml` or `millilitres`, and a drink with no date is
+    /// one you are logging now.
+    ///
+    /// An export still writes all three fields, so a backup round-trips
+    /// exactly — including the ids, which is what lets a re-import skip what is
+    /// already there instead of doubling it.
+    public struct DrinkEntry: Codable, Sendable {
+        public var id: UUID?
+        public var date: Date?
+        public var ml: Double?
+        public var millilitres: Double?
+        public var containerID: UUID?
+
+        public var amount: Double? { ml ?? millilitres }
+
+        public init(
+            id: UUID? = nil,
+            date: Date? = nil,
+            ml: Double? = nil,
+            millilitres: Double? = nil,
+            containerID: UUID? = nil
+        ) {
+            self.id = id
+            self.date = date
+            self.ml = ml
+            self.millilitres = millilitres
+            self.containerID = containerID
+        }
+
+        /// Nil where the amount is missing or out of range — a drink the app
+        /// would refuse to log is a drink it refuses to import.
+        public var entry: WaterEntry? {
+            guard let amount else { return nil }
+            return try? WaterEntry(
+                id: id ?? UUID(),
+                date: date ?? .now,
+                millilitres: amount,
+                containerID: containerID
+            )
+        }
+    }
 
     /// Weights may be given in either unit.
     ///
@@ -107,7 +155,8 @@ public struct SenkuImportDocument: Codable, Sendable {
         workouts: WorkoutStore,
         cardioRecords: CardioRecordStore,
         cardioPlans: CardioProtocolStore,
-        anime: AnimeStore
+        anime: AnimeStore,
+        water: WaterStore
     ) -> SenkuImportDocument {
         var document = SenkuImportDocument()
         document.schemaVersion = 1
@@ -141,6 +190,9 @@ public struct SenkuImportDocument: Codable, Sendable {
         document.cardioRecords = cardioRecords.records
         document.cardioPlans = cardioPlans.protocols
         document.anime = anime.entries
+        document.water = water.entries.map {
+            DrinkEntry(id: $0.id, date: $0.date, millilitres: $0.millilitres, containerID: $0.containerID)
+        }
 
         return document
     }
@@ -221,6 +273,8 @@ public struct ImportSummary: Sendable {
     public var cardioSkipped = 0
     public var animeAdded = 0
     public var animeSkipped = 0
+    public var waterAdded = 0
+    public var waterSkipped = 0
     /// Entries the app could not make sense of, named so they can be fixed.
     public var problems: [String] = []
 
@@ -228,6 +282,7 @@ public struct ImportSummary: Sendable {
         !profileReplaced && !planReplaced
             && weighInsAdded == 0 && recordsAdded == 0 && exercisesAdded == 0
             && workoutsAdded == 0 && cardioAdded == 0 && animeAdded == 0
+            && waterAdded == 0
     }
 
     public var headline: String {
@@ -243,6 +298,7 @@ public struct ImportSummary: Sendable {
         if workoutsAdded > 0 { parts.append("\(workoutsAdded) workout\(workoutsAdded == 1 ? "" : "s")") }
         if cardioAdded > 0 { parts.append("\(cardioAdded) cardio entr\(cardioAdded == 1 ? "y" : "ies")") }
         if animeAdded > 0 { parts.append("\(animeAdded) anime") }
+        if waterAdded > 0 { parts.append("\(waterAdded) drink\(waterAdded == 1 ? "" : "s")") }
         return "Imported " + parts.formatted(.list(type: .and))
     }
 
@@ -250,7 +306,7 @@ public struct ImportSummary: Sendable {
         var lines: [String] = []
 
         let skipped = weighInsSkipped + recordsSkipped + exercisesSkipped
-            + workoutsSkipped + cardioSkipped + animeSkipped
+            + workoutsSkipped + cardioSkipped + animeSkipped + waterSkipped
         if skipped > 0 {
             lines.append("\(skipped) already there, left alone.")
         }
@@ -284,7 +340,8 @@ public enum SenkuImporter {
         workouts: WorkoutStore,
         cardioRecords: CardioRecordStore,
         cardioPlans: CardioProtocolStore,
-        anime: AnimeStore
+        anime: AnimeStore,
+        water: WaterStore
     ) -> ImportSummary {
         var summary = ImportSummary()
 
@@ -429,6 +486,17 @@ public enum SenkuImporter {
             }
             anime.restore(series)
             summary.animeAdded += 1
+        }
+
+        for drink in document.water ?? [] {
+            guard let entry = drink.entry,
+                  !water.entries.contains(where: { $0.id == entry.id })
+            else {
+                summary.waterSkipped += 1
+                continue
+            }
+            water.restore(entry)
+            summary.waterAdded += 1
         }
 
         return summary

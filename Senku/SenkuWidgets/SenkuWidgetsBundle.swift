@@ -10,6 +10,8 @@ struct SenkuWidgetsBundle: WidgetBundle {
         // profile, so it was removed rather than left showing an empty state
         // forever. It can see the profile now.
         TargetsWidget()
+        WaterWidget()
+        WeightWidget()
         RestLiveActivity()
         if #available(iOS 18.0, *) {
             RestControl()

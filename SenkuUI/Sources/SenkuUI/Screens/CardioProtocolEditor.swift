@@ -74,6 +74,7 @@ struct CardioProtocolEditor: View {
                 }
             }
         }
+        .dismissableKeyboard()
         .navigationTitle(exerciseName)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -486,6 +487,7 @@ struct CardioValueEditor: View {
                 DatePicker("When", selection: $date, displayedComponents: .date)
             }
         }
+        .dismissableKeyboard()
         .navigationTitle(exercise?.name ?? "Session")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

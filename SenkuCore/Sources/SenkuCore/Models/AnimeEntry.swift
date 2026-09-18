@@ -259,6 +259,15 @@ public enum AnimeSort: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Each sort has an obvious first direction — A to Z, newest first, most
+    /// episodes first — and `reversed` flips it. Kept as a separate flag rather
+    /// than as five more cases, so the menu can offer one list of fields and
+    /// one direction rather than ten entries.
+    public func sort(_ entries: [AnimeEntry], reversed: Bool) -> [AnimeEntry] {
+        let sorted = sort(entries)
+        return reversed ? sorted.reversed() : sorted
+    }
+
     public func sort(_ entries: [AnimeEntry]) -> [AnimeEntry] {
         switch self {
         case .status:

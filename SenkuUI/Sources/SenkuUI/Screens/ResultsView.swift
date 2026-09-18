@@ -130,15 +130,12 @@ public struct ResultsView: View {
 
     private var bodyCard: some View {
         let metrics = plan.metrics
-        let isEstimated = metrics.bodyFatPercentage == nil
 
         return Card("Body") {
             StatRow("BMI", value: String(format: "%.1f", metrics.bmi))
-            StatRow(
-                "Body fat",
-                value: Display.percent(metrics.effectiveBodyFatPercentage),
-                detail: isEstimated ? "Estimated from BMI" : "As measured"
-            )
+            // The advisory above already says the body-fat figure is estimated
+            // and what measuring it would buy. This is the same screen.
+            StatRow("Body fat", value: Display.percent(metrics.effectiveBodyFatPercentage))
             StatRow("Lean mass", value: Display.mass(metrics.leanBodyMassKG, in: unitSystem))
             StatRow("Fat mass", value: Display.mass(metrics.fatMassKG, in: unitSystem))
             StatRow(

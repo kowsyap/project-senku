@@ -534,7 +534,7 @@ public struct RestTimerView: View {
 
     #if !os(watchOS)
     private var intervalPicker: some View {
-        Card("Rest interval", footnote: "Tapping an interval starts it straight away.") {
+        Card("Rest interval") {
             VStack(spacing: 12) {
                 presetRow
 
