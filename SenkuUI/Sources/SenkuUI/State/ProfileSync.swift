@@ -47,6 +47,8 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     private static let refreshKey = "senku.refresh"
     private static let waterKey = "senku.waterSummary"
     private static let drinkKey = "senku.waterDrink"
+    private static let intakeKey = "senku.intakeSummary"
+    private static let mealKey = "senku.intakeMeal"
 
     /// Called on the main actor with whatever the counterpart last had:
     /// a profile, or nil where it has none.
@@ -74,6 +76,14 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
 
     private var latestWater: WaterSummary?
 
+    /// Called on the watch with the phone's food figures for today.
+    private var onIntakeSummary: (@MainActor (IntakeSummary?) -> Void)?
+
+    /// Called on the phone when the watch logs food.
+    private var onMeal: (@MainActor (IntakeEntry) -> Void)?
+
+    private var latestIntake: IntakeSummary?
+
     /// Records that arrived before anything was listening for them.
     ///
     /// A queued transfer launches the phone app in the background, and the
@@ -84,6 +94,7 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     /// over the moment a handler appears.
     private var undeliveredDrinks: [WaterEntry] = []
     private var undeliveredWeighIns: [WeighIn] = []
+    private var undeliveredMeals: [IntakeEntry] = []
 
     private override init() { super.init() }
 
@@ -136,6 +147,46 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         let waiting = undeliveredDrinks
         undeliveredDrinks = []
         waiting.forEach(handler)
+    }
+
+    /// Watch side: what to do when the phone's food figures arrive.
+    @MainActor
+    public func onIntakeSummaryReceived(_ handler: @escaping @MainActor (IntakeSummary?) -> Void) {
+        onIntakeSummary = handler
+    }
+
+    /// Phone side: what to do when the watch logs food.
+    @MainActor
+    public func onMealReceived(_ handler: @escaping @MainActor (IntakeEntry) -> Void) {
+        onMeal = handler
+
+        let waiting = undeliveredMeals
+        undeliveredMeals = []
+        waiting.forEach(handler)
+    }
+
+    public func send(intake summary: IntakeSummary?) {
+        latestIntake = summary
+        sendIfSender()
+    }
+
+    /// Watch → phone. Food is a record like a drink or a weigh-in, and goes the
+    /// same way: a message when the phone is awake, a queued transfer when it
+    /// is not.
+    public func send(meal: IntakeEntry) {
+        guard let session,
+              session.activationState == .activated,
+              let data = try? JSONEncoder().encode(meal)
+        else { return }
+
+        let payload = [Self.mealKey: data]
+        if session.isReachable {
+            session.sendMessage(payload, replyHandler: nil) { _ in
+                session.transferUserInfo(payload)
+            }
+        } else {
+            session.transferUserInfo(payload)
+        }
     }
 
     /// Phone → watch, in the same context as everything else.
@@ -252,6 +303,10 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
             context[Self.waterKey] = data
         }
 
+        if let latestIntake, let data = try? JSONEncoder().encode(latestIntake) {
+            context[Self.intakeKey] = data
+        }
+
         // Throws only when the payload is not property-list encodable, which
         // `Data` always is, or when the session is not activated, which is
         // checked above. Nothing useful to do with the error either way.
@@ -263,6 +318,22 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     private func sendIfSender() {
         #if os(iOS)
         send(latest)
+        #endif
+    }
+
+    private func receiveMeal(_ payload: [String: Any]) {
+        #if os(iOS)
+        guard let data = payload[Self.mealKey] as? Data,
+              let meal = try? JSONDecoder().decode(IntakeEntry.self, from: data)
+        else { return }
+
+        Task { @MainActor in
+            if let onMeal {
+                onMeal(meal)
+            } else {
+                undeliveredMeals.append(meal)
+            }
+        }
         #endif
     }
 
@@ -328,6 +399,13 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
             }
         }
 
+        if let intakeData = context[Self.intakeKey] as? Data,
+           let summary = try? JSONDecoder().decode(IntakeSummary.self, from: intakeData) {
+            Task { @MainActor [onIntakeSummary] in
+                onIntakeSummary?(summary)
+            }
+        }
+
         guard let data = context[Self.profileKey] as? Data else { return }
 
         let profile = data.isEmpty
@@ -363,6 +441,7 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     public func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         receiveWeighIn(message)
         receiveDrink(message)
+        receiveMeal(message)
 
         #if os(iOS)
         if message[Self.refreshKey] != nil {
@@ -376,6 +455,7 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     public func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
         receiveWeighIn(userInfo)
         receiveDrink(userInfo)
+        receiveMeal(userInfo)
 
         #if os(iOS)
         if userInfo[Self.refreshKey] != nil { sendIfSender() }

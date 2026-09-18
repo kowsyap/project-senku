@@ -32,6 +32,8 @@ public enum ReportPDF {
         plans: TrainingPlanStore,
         workouts: WorkoutStore,
         anime: AnimeStore,
+        water: WaterStore,
+        intake: IntakeStore,
         unitSystem: UnitSystem
     ) -> URL? {
         let text = compose(
@@ -42,6 +44,8 @@ public enum ReportPDF {
             plans: plans,
             workouts: workouts,
             anime: anime,
+            water: water,
+            intake: intake,
             unitSystem: unitSystem
         )
 
@@ -113,6 +117,8 @@ public enum ReportPDF {
         plans: TrainingPlanStore,
         workouts: WorkoutStore,
         anime: AnimeStore,
+        water: WaterStore,
+        intake: IntakeStore,
         unitSystem: UnitSystem
     ) -> NSAttributedString {
         let out = NSMutableAttributedString()
@@ -262,6 +268,92 @@ public enum ReportPDF {
                             .joined(separator: "  ")
                     }
                     out.append(body("   \(library.name(of: entry.exerciseID))   \(detail)\n"))
+                }
+                out.append(body("\n"))
+            }
+        }
+
+        // MARK: Water
+        //
+        // Thirty days rather than every drink ever logged. A glass at 11:04 is
+        // data the app needs and nobody reads; the day's total against the
+        // day's goal is the thing a person — or a coach — can act on.
+        if !water.entries.isEmpty {
+            out.append(heading("Water"))
+
+            let days = water.log.recentTotals(days: 30)
+            let goalToday = water.goal(profile: profile, workouts: workouts)
+            out.append(row("Today's goal", "\(Int(goalToday.totalML)) ml — \(goalToday.explanation)"))
+
+            let logged = days.filter { $0.totalML > 0 }
+            if !logged.isEmpty {
+                let mean = logged.reduce(0) { $0 + $1.totalML } / Double(logged.count)
+                out.append(row("Average, days logged", "\(Int(mean.rounded())) ml"))
+                out.append(row("Days logged", "\(logged.count) of 30"))
+            }
+
+            if water.settings.takesCreatine {
+                let streak = Streak.of(water.creatineDays)
+                out.append(row("Creatine", "\(streak.current) day streak, best \(streak.longest), \(streak.total) days in all"))
+            }
+            out.append(body("\n"))
+
+            out.append(subheading("Last 30 days"))
+            for day in days where day.totalML > 0 {
+                let goal = water.goal(profile: profile, workouts: workouts, on: day.date)
+                let met = goal.totalML > 0 && day.totalML >= goal.totalML ? "met" : ""
+                out.append(body("\(day.date.formatted(date: .abbreviated, time: .omitted))   \(Int(day.totalML)) of \(Int(goal.totalML)) ml   \(met)\n"))
+            }
+            out.append(body("\n"))
+        }
+
+        // MARK: Food
+        if !intake.entries.isEmpty {
+            out.append(heading("Food"))
+
+            if let targets = intake.targets(profile: profile) {
+                out.append(row("Target", "\(Int(targets.calories.rounded())) kcal"))
+                out.append(row(
+                    "Macro targets",
+                    "\(Int(targets.proteinGrams))P · \(Int(targets.carbGrams))C · \(Int(targets.fatGrams))F"
+                ))
+
+                // The figure the maintenance estimate is built from, and the
+                // count beside it — an average over four logged days out of
+                // thirty is not the same claim as one over thirty, and a report
+                // that printed only the number would hide the difference.
+                if let average = intake.log.averageCalories(days: 30) {
+                    out.append(row(
+                        "Average intake",
+                        "\(Int(average.calories.rounded())) kcal over \(average.loggedDays) logged day\(average.loggedDays == 1 ? "" : "s")"
+                    ))
+                }
+
+                let days = intake.log.recentDays(30, targets: targets).filter { !$0.isUnlogged }
+                let proteinMet = days.filter(\.isProteinMet).count
+                let caloriesMet = days.filter(\.isCaloriesMet).count
+                out.append(row("Protein target met", "\(proteinMet) of \(days.count) logged days"))
+                out.append(row("Calories within 10%", "\(caloriesMet) of \(days.count) logged days"))
+                out.append(body("\n"))
+
+                out.append(subheading("Last 30 days"))
+                for day in days {
+                    out.append(body(
+                        "\(day.date.formatted(date: .abbreviated, time: .omitted))   "
+                        + "\(Display.gramsValue(day.proteinG))/\(Int(day.targets.proteinGrams))g P   "
+                        + "\(Int(day.calories.rounded()))/\(Int(day.targets.calories.rounded())) kcal\n"
+                    ))
+                }
+                out.append(body("\n"))
+            }
+
+            if !intake.favourites.isEmpty {
+                out.append(subheading("Quick adds"))
+                for favourite in intake.orderedFavourites {
+                    let detail = favourite.isCaloriesOnly
+                        ? "\(Int(favourite.calories.rounded())) kcal"
+                        : "\(Display.gramsValue(favourite.proteinG))P · \(Display.gramsValue(favourite.carbsG))C · \(Display.gramsValue(favourite.fatG))F · \(Int(favourite.calories.rounded())) kcal"
+                    out.append(body("\(favourite.name)   \(detail)\n"))
                 }
                 out.append(body("\n"))
             }

@@ -39,7 +39,13 @@ struct SenkuWatchApp: App {
     @State private var water = WaterSummary()
     @State private var pendingWaterML: Double = 0
 
-    private enum Tab: Hashable { case rest, plan, weight, water }
+    /// The phone's food figures, and what has been logged here since — the same
+    /// arrangement as water, for the same reason.
+    @State private var intake = IntakeSummary()
+    @State private var pendingProteinG: Double = 0
+    @State private var pendingCalories: Double = 0
+
+    private enum Tab: Hashable { case rest, plan, weight, water, food }
 
     init() {
         // Before anything can schedule a rest. Without it the alert is
@@ -81,6 +87,24 @@ struct SenkuWatchApp: App {
                     }
                 }
                 .tag(Tab.water)
+
+                NavigationStack {
+                    WatchFoodView(
+                        summary: intake,
+                        pendingProteinG: pendingProteinG,
+                        pendingCalories: pendingCalories
+                    ) { proteinG, calories in
+                        guard let meal = try? IntakeEntry(
+                            proteinG: proteinG,
+                            enteredCalories: calories > 0 ? calories : nil
+                        ), !meal.isEmpty else { return }
+
+                        ProfileSync.shared.send(meal: meal)
+                        pendingProteinG += proteinG
+                        pendingCalories += calories > 0 ? calories : proteinG * CaloriesPerGram.protein
+                    }
+                }
+                .tag(Tab.food)
             }
             .tabViewStyle(.verticalPage)
             .task {
@@ -89,6 +113,19 @@ struct SenkuWatchApp: App {
                 ProfileSync.shared.start(applying: store)
                 ProfileSync.shared.onWeightSummaryReceived { summary in
                     if let summary { weight = summary }
+                }
+                ProfileSync.shared.onIntakeSummaryReceived { summary in
+                    guard let summary else { return }
+                    intake = summary
+                    // Everything sent so far is now counted on the phone, so
+                    // anything still held here would be counted twice.
+                    pendingProteinG = 0
+                    pendingCalories = 0
+                    if !summary.isCurrent() {
+                        intake.proteinG = 0
+                        intake.calories = 0
+                        intake.date = .now
+                    }
                 }
                 ProfileSync.shared.onWaterSummaryReceived { summary in
                     guard let summary else { return }
@@ -117,7 +154,7 @@ struct SenkuWatchApp: App {
             .onChange(of: selection) { _, tab in
                 // Opening the tab that shows the phone's numbers is the moment
                 // to make sure they are the phone's current ones.
-                if tab == .plan || tab == .weight || tab == .water {
+                if tab == .plan || tab == .weight || tab == .water || tab == .food {
                     ProfileSync.shared.requestRefresh()
                 }
             }

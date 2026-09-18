@@ -205,8 +205,16 @@ public struct RootView: View {
                 publishWater()
             }
 
+            // Protein or calories typed on the wrist. The phone owns the log,
+            // so it lands here and goes back out as a new summary.
+            ProfileSync.shared.onMealReceived { meal in
+                intake.restore(meal)
+                publishIntake()
+            }
+
             publishWeight()
             publishWater()
+            publishIntake()
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
@@ -226,12 +234,19 @@ public struct RootView: View {
             if phase == .active {
                 publishWeight()
                 publishWater()
+                publishIntake()
             }
             #endif
         }
         .onChange(of: weightLog.weighIns) { _, _ in publishWeight() }
         .onChange(of: water.entries) { _, _ in publishWater() }
-        .onChange(of: profileEditionID) { _, _ in publishWeight() }
+        .onChange(of: intake.entries) { _, _ in publishIntake() }
+        .onChange(of: profileEditionID) { _, _ in
+            publishWeight()
+            // A new profile is new targets, and the watch draws its rings
+            // against them.
+            publishIntake()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .senkuImportRequested)) { _ in
             isShowingDataMenu = true
         }
@@ -388,6 +403,8 @@ public struct RootView: View {
             plans: plans,
             workouts: workouts,
             anime: anime,
+            water: water,
+            intake: intake,
             unitSystem: store.profile?.unitSystem ?? UnitPreference.current
         ) else {
             importFailure = "The report could not be written."
@@ -451,6 +468,18 @@ public struct RootView: View {
 
         ProfileSync.shared.send(
             water: WaterSummary(store: water, profile: store.profile, workouts: workouts)
+        )
+        #endif
+    }
+
+    /// The watch's two rings, as four numbers.
+    private func publishIntake() {
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        // Read before publishing, for the same reason water does — see there.
+        intake.reload()
+
+        ProfileSync.shared.send(
+            intake: IntakeSummary(store: intake, profile: store.profile)
         )
         #endif
     }
