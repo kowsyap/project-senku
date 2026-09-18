@@ -9,20 +9,36 @@ import SwiftUI
 /// The **name** stays as type rather than as part of the image — the artwork's
 /// own "SENKU" is pale, which would be invisible on a light background and
 /// frozen against Dynamic Type. Type follows the theme; a PNG cannot.
+extension Notification.Name {
+    /// Posted by a long press on the wordmark. Picked up by ``RootView``.
+    ///
+    /// A notification rather than a binding threaded through every screen: the
+    /// mark is in the toolbar of all of them, and the importer belongs to the
+    /// one place that holds every store. Wiring each screen to pass a flag
+    /// upwards would put a parameter on views that have nothing to do with it.
+    static let senkuImportRequested = Notification.Name("senku.importRequested")
+}
+
+/// A long press on the mark opens the data importer.
+///
+/// Hidden on purpose. It is not a feature you need at the squat rack, it would
+/// cost a permanent button on every screen to advertise, and the mark is the
+/// one control present on all of them. Held for a full second so that nobody
+/// finds it by resting a thumb on the logo.
 struct SenkuWordmark: View {
     /// Tied to the text size beside it, so the pair scale together.
-    @ScaledMetric(relativeTo: .headline) private var markHeight: CGFloat = 22
+    @ScaledMetric(relativeTo: .headline) private var markHeight: CGFloat = 30
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             Image("SenkuMark", bundle: .module)
                 .resizable()
                 .scaledToFit()
                 .frame(height: markHeight)
 
             Text("SENKU")
-                .font(.system(size: 13, weight: .black, design: .rounded))
-                .tracking(1.2)
+                .font(.system(size: 17, weight: .black, design: .rounded))
+                .tracking(1.4)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
         }
@@ -30,9 +46,18 @@ struct SenkuWordmark: View {
         // needs, which truncated the mark to "S(". This takes the width the
         // word actually measures.
         .fixedSize()
+        .contentShape(Rectangle())
+        .onLongPressGesture(minimumDuration: 1.0) {
+            Feedback.control()
+            NotificationCenter.default.post(name: .senkuImportRequested, object: nil)
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Senku")
         .accessibilityAddTraits(.isHeader)
+        // VoiceOver has no long press, so the same door is a rotor action.
+        .accessibilityAction(named: "Import data") {
+            NotificationCenter.default.post(name: .senkuImportRequested, object: nil)
+        }
     }
 }
 

@@ -1,6 +1,10 @@
 #if !os(watchOS)
 import SwiftUI
 import SenkuCore
+import UniformTypeIdentifiers
+#if os(iOS)
+import UIKit
+#endif
 
 /// The app's entry screen.
 ///
@@ -22,9 +26,17 @@ import SenkuCore
 /// feature behind a button until someone went looking for it.
 public struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     @State private var store: ProfileStore
     @State private var weightLog = WeightLogStore()
+    @State private var plans = TrainingPlanStore()
+    @State private var workouts = WorkoutStore()
+    @State private var cardioPlans = CardioProtocolStore()
+    @State private var cardioRecords = CardioRecordStore()
+    @State private var anime = AnimeStore()
     @State private var records = RecordStore()
     @State private var library = ExerciseLibrary()
     @State private var selection: Tab
@@ -33,12 +45,94 @@ public struct RootView: View {
     /// draft from the new state instead of holding a stale one.
     @State private var profileEditionID = UUID()
 
+    /// The hidden importer, opened by a long press on the wordmark.
+    @State private var isImporting = false
+    @State private var importSummary: ImportSummary?
+    @State private var importFailure: String?
+    @State private var isShowingDataMenu = false
+    @State private var isConfirmingReset = false
+    @State private var isConfirmingResetAgain = false
+    #if os(iOS)
+    @State private var exportedReport: ExportedReport?
+    #endif
+
+    /// How much room the scrolling bar needs at the bottom of every page.
+    @State private var tabBarHeight: CGFloat = 62
+
+    /// Bumped by a hard reset, and used as the identity of the whole tree.
+    ///
+    /// ## Why replacing the stores was not enough
+    ///
+    /// Several screens take a store as an init parameter and keep it in
+    /// `@State`. That is the right thing for a screen that owns its store —
+    /// but `@State` captures its initial value *once*, when the view is first
+    /// created, and ignores anything the parent passes afterwards. So a reset
+    /// that built fresh stores up here left the records screen holding the old
+    /// object, still full of the records that had just been deleted from disk.
+    ///
+    /// Changing this id makes SwiftUI treat the whole tree as a different view
+    /// and build it again from scratch, which re-runs every one of those
+    /// initialisers. It is a blunt instrument and exactly right for the one
+    /// action in the app that means "forget everything".
+    @State private var generation = UUID()
+
     enum Tab: String, Hashable {
         case me
         case quickCalc
         case rest
+        case workout
         case weight
         case records
+        case anime
+
+        /// The colour the tab bar takes while this tab is showing.
+        ///
+        /// One accent for the whole app makes five destinations look like one
+        /// place; a colour each gives the bar a second signal beside the icon,
+        /// so you know where you are from the corner of your eye. Each is the
+        /// colour that screen already uses — the rest timer's blue, the weight
+        /// trend's blue-green, the PR headline's violet — rather than a palette
+        /// invented for the bar.
+        var title: String {
+            switch self {
+            case .me: "Me"
+            case .quickCalc: "Quick calc"
+            case .rest: "Rest"
+            case .workout: "Workout"
+            case .weight: "Weight"
+            case .records: "PRs"
+            case .anime: "Anime"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .me: "person.fill"
+            case .quickCalc: "function"
+            case .rest: "timer"
+            case .workout: "figure.strengthtraining.traditional"
+            case .weight: "scalemass"
+            case .records: "trophy"
+            case .anime: "sparkles.tv"
+            }
+        }
+
+        /// Left to right, as they appear in the bar.
+        static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .records, .anime]
+
+        var tint: Color {
+            switch self {
+            case .me: Senku.Palette.protein
+            // Violet for the calculator, gold for the trophy — the obvious
+            // pairing, and the one the icons were arguing for.
+            case .quickCalc: Color(red: 0.62, green: 0.45, blue: 0.92)
+            case .rest: Senku.Palette.warning
+            case .workout: Senku.Palette.fat
+            case .weight: Senku.Palette.surplus
+            case .records: Senku.Palette.carbs
+            case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)
+            }
+        }
     }
 
     public init(store: ProfileStore = ProfileStore()) {
@@ -48,22 +142,23 @@ public struct RootView: View {
 
     public var body: some View {
         Group {
-            if #available(iOS 18.0, macOS 15.0, *) {
-                AdaptiveTabs(selection: $selection) {
-                    meTab
-                } quickCalc: {
-                    quickCalcTab
-                } rest: {
-                    restTab
-                } weight: {
-                    weightTab
-                } records: {
-                    recordsTab
-                }
+            #if os(iOS)
+            // On a phone the bar scrolls; on an iPad it is the system sidebar,
+            // which has the width to show every destination at once and gains
+            // nothing from scrolling. `horizontalSizeClass` is the same test
+            // `sidebarAdaptable` itself uses to decide between the two.
+            if horizontalSizeClass == .compact {
+                scrollingTabs
             } else {
-                legacyTabs
+                systemTabs
             }
+            #else
+            systemTabs
+            #endif
         }
+        .id(generation)
+        .tint(selection.tint)
+        .animation(.easeInOut(duration: 0.2), value: selection)
         .onOpenURL { url in
             if RestDeepLink.handle(url) != nil {
                 selection = .rest
@@ -98,7 +193,197 @@ public struct RootView: View {
         }
         .onChange(of: weightLog.weighIns) { _, _ in publishWeight() }
         .onChange(of: profileEditionID) { _, _ in publishWeight() }
+        .onReceive(NotificationCenter.default.publisher(for: .senkuImportRequested)) { _ in
+            isShowingDataMenu = true
+        }
+        // The hidden door behind the wordmark. Three things that all concern
+        // the app's data as a whole rather than any one screen — and all three
+        // rare enough that a permanent control for them would be clutter on
+        // every screen in the app.
+        .confirmationDialog("Senku data", isPresented: $isShowingDataMenu, titleVisibility: .visible) {
+            Button("Import Data") { isImporting = true }
+            #if os(iOS)
+            Button("Export PDF") { exportReport() }
+            #endif
+            Button("Hard Reset", role: .destructive) { isConfirmingReset = true }
+            Button("Cancel", role: .cancel) {}
+        }
+        // Two alerts, not one. The first says what goes; the second is asked
+        // after that has been read, and offers the way out that actually helps
+        // — taking a copy — rather than only a Cancel. A single tap-through on
+        // a destructive action this total is too cheap for what it costs.
+        .alert("Delete everything?", isPresented: $isConfirmingReset) {
+            Button("Continue", role: .destructive) { isConfirmingResetAgain = true }
+            Button("Keep my data", role: .cancel) {}
+        } message: {
+            Text("Your profile, weight log, records, cardio plans, training plan and every logged workout are erased from this iPhone, and the watch stops being sent them.")
+        }
+        .alert("This cannot be undone", isPresented: $isConfirmingResetAgain) {
+            Button("Yes", role: .destructive) { resetEverything() }
+            Button("No", role: .cancel) {}
+        } message: {
+            Text("There is no backup and no undo. Export a report first if you want a copy.")
+        }
+        #if os(iOS)
+        .sheet(item: $exportedReport) { report in
+            ShareSheet(urls: report.urls)
+        }
+        #endif
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            importFile(result)
+        }
+        .alert(
+            importSummary?.headline ?? "Could not read that file",
+            isPresented: Binding(
+                get: { importSummary != nil || importFailure != nil },
+                set: { if !$0 { importSummary = nil; importFailure = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let detail = importSummary?.detail {
+                Text(detail)
+            } else if let importFailure {
+                Text(importFailure)
+            }
+        }
     }
+
+    /// Reads the chosen file and hands it to the importer.
+    ///
+    /// The security-scoped dance is not optional: a file picked from Files or
+    /// iCloud Drive lives outside the app's container, and the URL is readable
+    /// only between `start` and `stop`. Skipping it works in the simulator with
+    /// a file on the desktop and fails on the device, which is the worst shape
+    /// a bug can have.
+    private func importFile(_ result: Result<[URL], Error>) {
+        do {
+            guard let url = try result.get().first else { return }
+
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+            let document = try SenkuImportDocument.decode(try Data(contentsOf: url))
+            let summary = SenkuImporter.apply(
+                document,
+                profiles: store,
+                weights: weightLog,
+                records: records,
+                library: library,
+                plans: plans,
+                workouts: workouts,
+                cardioRecords: cardioRecords,
+                cardioPlans: cardioPlans,
+                anime: anime
+            )
+
+            if summary.profileReplaced {
+                // The same nudge every other profile edit gives: the watch is
+                // told, and the screens that cache an edition redraw.
+                profileEditionID = UUID()
+            }
+            publishWeight()
+            importSummary = summary
+        } catch is CancellationError {
+            return
+        } catch {
+            importFailure = error.localizedDescription
+        }
+    }
+
+    /// Everything, gone — and the screens rebuilt around the absence.
+    ///
+    /// The stores each hold their contents in memory, so wiping the defaults
+    /// underneath them would leave every screen showing data that no longer
+    /// exists until the app was relaunched. Replacing the store objects is what
+    /// makes the reset visible: each one re-reads on construction and finds
+    /// nothing.
+    private func resetEverything() {
+        DataReset.wipe()
+
+        store = ProfileStore()
+        weightLog = WeightLogStore()
+        records = RecordStore()
+        library = ExerciseLibrary()
+        plans = TrainingPlanStore()
+        workouts = WorkoutStore()
+        cardioPlans = CardioProtocolStore()
+        cardioRecords = CardioRecordStore()
+        anime = AnimeStore()
+        profileEditionID = UUID()
+        generation = UUID()
+        selection = .quickCalc
+
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        // The watch holds its own copy of the profile and the weight summary.
+        // Told explicitly, rather than left to drift: a wiped phone and a watch
+        // still showing yesterday's plan is worse than either.
+        ProfileSync.shared.start(applying: store)
+        publishWeight()
+        #endif
+    }
+
+    /// Two files, shared together: the report to read and the backup to restore.
+    ///
+    /// The PDF is for a person — printable, sendable, readable in ten years by
+    /// something that has never heard of Senku. The JSON is for the app, and it
+    /// is what "Import Data" takes back: profile, weight log, records, custom
+    /// exercises, training plan, every workout, cardio records and cardio
+    /// plans. Neither can do the other's job, so the export offers both rather
+    /// than asking which you meant.
+    #if os(iOS)
+    private func exportReport() {
+        guard let pdf = ReportPDF.build(
+            profile: store.profile,
+            weights: weightLog,
+            records: records,
+            library: library,
+            plans: plans,
+            workouts: workouts,
+            anime: anime,
+            unitSystem: store.profile?.unitSystem ?? UnitPreference.current
+        ) else {
+            importFailure = "The report could not be written."
+            return
+        }
+
+        var files = [pdf]
+        if let backup = writeBackup() { files.append(backup) }
+
+        exportedReport = ExportedReport(urls: files)
+    }
+
+    private func writeBackup() -> URL? {
+        let document = SenkuImportDocument.snapshot(
+            profile: store.profile,
+            weights: weightLog,
+            records: records,
+            library: library,
+            plans: plans,
+            workouts: workouts,
+            cardioRecords: cardioRecords,
+            cardioPlans: cardioPlans,
+            anime: anime
+        )
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Senku backup \(formatter.string(from: .now)).json")
+
+        do {
+            try document.encoded().write(to: url)
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    #endif
 
     /// Sends the watch the two figures it shows. Cheap enough to call freely:
     /// an application context replaces the one before it, so calling this three
@@ -114,6 +399,7 @@ public struct RootView: View {
     private var meTab: some View {
         NavigationStack {
             profileTab
+                .senkuBottomBarInset()
                 .navigationTitle(store.hasProfile ? "My plan" : "Senku")
                 .senkuWordmark()
         }
@@ -134,7 +420,8 @@ public struct RootView: View {
                 profileEditionID = UUID()
                 selection = .me
             }
-            .navigationTitle("Quick calc")
+            .senkuBottomBarInset()
+                .navigationTitle("Quick calc")
             .senkuWordmark()
         }
     }
@@ -142,6 +429,7 @@ public struct RootView: View {
     private var restTab: some View {
         NavigationStack {
             RestTimerView()
+                .senkuBottomBarInset()
                 .navigationTitle("Rest")
                 .senkuWordmark()
         }
@@ -165,8 +453,35 @@ public struct RootView: View {
                 store.save(updated)
                 profileEditionID = UUID()
             }
-            .navigationTitle("Weight")
+            .senkuBottomBarInset()
+                .navigationTitle("Weight")
             .senkuWordmark()
+        }
+    }
+
+    /// The workout tab: today's checklist, and the plan behind it.
+    private var workoutTab: some View {
+        NavigationStack {
+            WorkoutView(
+                plans: plans,
+                workouts: workouts,
+                records: records,
+                cardioRecords: cardioRecords,
+                library: library,
+                unitSystem: store.profile?.unitSystem ?? UnitPreference.current
+            )
+            .senkuBottomBarInset()
+                .navigationTitle("Workout")
+            .senkuWordmark()
+        }
+    }
+
+    /// Nothing to do with training, and deliberately so — see F6.
+    private var animeTab: some View {
+        NavigationStack {
+            AnimeView(store: anime)
+                .navigationTitle("Anime")
+                .senkuWordmark()
         }
     }
 
@@ -175,12 +490,97 @@ public struct RootView: View {
             RecordsView(
                 store: records,
                 library: library,
-                unitSystem: store.profile?.unitSystem ?? .metric
+                protocols: cardioPlans,
+                cardioRecords: cardioRecords,
+                unitSystem: store.profile?.unitSystem ?? UnitPreference.current
             )
-                .navigationTitle("PRs")
+                // Spelled out where there is room for it. The tab keeps "PRs",
+                // which is both what lifters say and all a tab bar slot will
+                // hold without truncating.
+                .senkuBottomBarInset()
+                .navigationTitle("Personal Records")
                 .senkuWordmark()
         }
     }
+
+    /// The system arrangement: a sidebar on iPad and Mac, a tab bar elsewhere.
+    @ViewBuilder
+    private var systemTabs: some View {
+        if #available(iOS 18.0, macOS 15.0, *) {
+            AdaptiveTabs(selection: $selection) {
+                meTab
+            } quickCalc: {
+                quickCalcTab
+            } rest: {
+                restTab
+            } workout: {
+                workoutTab
+            } weight: {
+                weightTab
+            } records: {
+                recordsTab
+            } anime: {
+                animeTab
+            }
+        } else {
+            legacyTabs
+        }
+    }
+
+    #if os(iOS)
+    /// Every tab kept alive, one shown, above a bar that scrolls.
+    ///
+    /// A `ZStack` rather than a `switch`, and that is the whole trick: a switch
+    /// would build the chosen screen and throw away the others, so every tab
+    /// change would reset the one you left — its navigation stack popped, its
+    /// scroll position lost, a half-typed weight gone. Keeping them all
+    /// mounted and hiding five is what `TabView` does, and what makes leaving a
+    /// tab and coming back feel like returning rather than starting again.
+    private var scrollingTabs: some View {
+        ZStack {
+            page(.me) { meTab }
+            page(.quickCalc) { quickCalcTab }
+            page(.rest) { restTab }
+            page(.workout) { workoutTab }
+            page(.weight) { weightTab }
+            page(.records) { recordsTab }
+            page(.anime) { animeTab }
+        }
+        // The bar floats over the pages, and each page reserves room for it
+        // from the inside — see `page(_:content:)`. A `safeAreaInset` out here
+        // insets the stack, and the stack is not what scrolls: the lists are,
+        // several layers down inside their own navigation stacks, and they went
+        // on ending underneath the bar with their last rows unreachable.
+        .overlay(alignment: .bottom) {
+            SenkuTabBar(selection: $selection)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.size.height
+                } action: { height in
+                    tabBarHeight = height
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func page<Content: View>(
+        _ tab: Tab,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        let isOn = tab == selection
+
+        content()
+            // Published, not applied. The screens inside each navigation stack
+            // read it and pad themselves — see `senkuBottomBarInset()`, which
+            // explains why an inset out here does nothing.
+            .environment(\.senkuBottomInset, tabBarHeight)
+            .opacity(isOn ? 1 : 0)
+            // A hidden page must not answer taps or be read out by VoiceOver;
+            // opacity alone leaves it doing both.
+            .allowsHitTesting(isOn)
+            .accessibilityHidden(!isOn)
+            .zIndex(isOn ? 1 : 0)
+    }
+    #endif
 
     /// The pre-iOS 18 arrangement: a plain tab bar, no sidebar and no pinning.
     private var legacyTabs: some View {
@@ -197,6 +597,10 @@ public struct RootView: View {
                 .tabItem { Label("Rest", systemImage: "timer") }
                 .tag(Tab.rest)
 
+            workoutTab
+                .tabItem { Label("Workout", systemImage: "figure.strengthtraining.traditional") }
+                .tag(Tab.workout)
+
             weightTab
                 .tabItem { Label("Weight", systemImage: "scalemass") }
                 .tag(Tab.weight)
@@ -204,6 +608,10 @@ public struct RootView: View {
             recordsTab
                 .tabItem { Label("PRs", systemImage: "trophy") }
                 .tag(Tab.records)
+
+            animeTab
+                .tabItem { Label("Anime", systemImage: "sparkles.tv") }
+                .tag(Tab.anime)
         }
     }
 
@@ -240,14 +648,24 @@ public struct RootView: View {
 /// across launches — is an iOS 18 type, and a stored property cannot be marked
 /// available only from a later system the way a view can.
 @available(iOS 18.0, macOS 15.0, *)
-private struct AdaptiveTabs<Me: View, QuickCalc: View, Rest: View, Weight: View, Records: View>: View {
+private struct AdaptiveTabs<
+    Me: View,
+    QuickCalc: View,
+    Rest: View,
+    Workout: View,
+    Weight: View,
+    Records: View,
+    Anime: View
+>: View {
     @Binding var selection: RootView.Tab
 
     @ViewBuilder var me: Me
     @ViewBuilder var quickCalc: QuickCalc
     @ViewBuilder var rest: Rest
+    @ViewBuilder var workout: Workout
     @ViewBuilder var weight: Weight
     @ViewBuilder var records: Records
+    @ViewBuilder var anime: Anime
 
     /// What the user has moved, pinned or hidden. Versioned, because a stored
     /// customization is keyed by the identifiers below: renaming one silently
@@ -271,11 +689,21 @@ private struct AdaptiveTabs<Me: View, QuickCalc: View, Rest: View, Weight: View,
                 .customizationBehavior(.disabled, for: .sidebar, .tabBar)
                 #endif
 
+            Tab(
+                "Workout",
+                systemImage: "figure.strengthtraining.traditional",
+                value: RootView.Tab.workout
+            ) { workout }
+                .customizationID("senku.tab.workout")
+
             Tab("Weight", systemImage: "scalemass", value: RootView.Tab.weight) { weight }
                 .customizationID("senku.tab.weight")
 
             Tab("PRs", systemImage: "trophy", value: RootView.Tab.records) { records }
                 .customizationID("senku.tab.records")
+
+            Tab("Anime", systemImage: "sparkles.tv", value: RootView.Tab.anime) { anime }
+                .customizationID("senku.tab.anime")
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabViewCustomization($customization)
@@ -285,4 +713,24 @@ private struct AdaptiveTabs<Me: View, QuickCalc: View, Rest: View, Weight: View,
 #Preview("Root") {
     RootView(store: ProfileStore(defaults: UserDefaults(suiteName: "senku.preview")!))
 }
+
+#if os(iOS)
+/// A generated report, waiting to be shared.
+struct ExportedReport: Identifiable {
+    let urls: [URL]
+    var id: String { urls.map(\.path).joined(separator: "|") }
+}
+
+/// The system share sheet, which SwiftUI has no native presentation for when
+/// the thing being shared is produced on demand rather than known up front.
+struct ShareSheet: UIViewControllerRepresentable {
+    let urls: [URL]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: urls, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+}
+#endif
 #endif
