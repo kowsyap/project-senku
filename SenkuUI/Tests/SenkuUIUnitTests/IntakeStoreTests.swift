@@ -75,6 +75,23 @@ import SenkuCore
         #expect(store().favourites.map(\.name) == ["Banana", "Apple", "Egg"])
     }
 
+    /// The bug the v2 flag exists for: a store that already had one food of its
+    /// own got none of the three, because seeding only ran on an empty list.
+    @Test func aStoreWithItsOwnFoodStillGetsTheStarters() {
+        let suite = UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        let seeded = IntakeStore(defaults: defaults)
+        seeded.favourites.forEach(seeded.delete)
+        seeded.save(FoodFavourite(name: "Shake", proteinG: 30))
+
+        // A second store on the same container seeds only if the flag is clear.
+        defaults.removeObject(forKey: IntakeStore.seededKey)
+
+        let names = IntakeStore(defaults: defaults).favourites.map(\.name)
+        #expect(names.contains("Banana"))
+        #expect(names.contains("Shake"))
+    }
+
     /// Deleting them is an opinion, and the app should not argue with it on the
     /// next launch.
     @Test func deletedDefaultsDoNotComeBack() {

@@ -16,7 +16,11 @@ import WidgetKit
 public final class IntakeStore {
     static let entriesKey = "senku.intake.entries.v1"
     static let favouritesKey = "senku.intake.favourites.v1"
-    static let seededKey = "senku.intake.seeded.v1"
+    /// Version two: the first attempt seeded only a store with no favourites
+    /// at all, so anyone who had already saved one got none of the three and
+    /// the flag was set regardless. Bumping the key lets those installs have
+    /// the top-up they missed, once.
+    static let seededKey = "senku.intake.seeded.v2"
 
     private let defaults: UserDefaults
     private let calendar: Calendar
@@ -31,17 +35,21 @@ public final class IntakeStore {
         seedIfNeeded()
     }
 
-    /// Puts three foods in the menu on a fresh install.
+    /// Puts the three starter foods in the menu.
     ///
-    /// Once, and tracked by its own flag rather than by the list being empty:
-    /// somebody who deletes all three has said what they think of them, and
-    /// having them reappear on next launch would be the app arguing.
+    /// Added by name rather than only into an empty list: somebody who has
+    /// already saved a shake should still get the banana. Run once and tracked
+    /// by its own flag — deleting all three is an opinion, and having them
+    /// reappear on the next launch would be the app arguing with it.
     private func seedIfNeeded() {
         guard !defaults.bool(forKey: Self.seededKey) else { return }
         defaults.set(true, forKey: Self.seededKey)
 
-        guard favourites.isEmpty else { return }
-        favourites = FoodFavourite.defaults
+        let existing = Set(favourites.map { $0.name.lowercased() })
+        let missing = FoodFavourite.defaults.filter { !existing.contains($0.name.lowercased()) }
+
+        guard !missing.isEmpty else { return }
+        favourites.append(contentsOf: missing)
         persistFavourites()
     }
 
