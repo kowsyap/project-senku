@@ -1,6 +1,6 @@
 import SwiftUI
 import SenkuCore
-#if os(watchOS)
+    #if os(watchOS)
 import WatchKit
 #endif
 #if os(iOS) && !targetEnvironment(macCatalyst)
@@ -62,6 +62,9 @@ public struct RestTimerView: View {
         now = instant
         #if os(iOS) && !targetEnvironment(macCatalyst)
         RestActivityController.shared.sync(with: timer, at: instant)
+        // The chime, booked on the audio clock so it still sounds with the
+        // phone locked and silenced.
+        RestChime.sync(with: timer, at: instant)
         #endif
         #if canImport(UserNotifications) && !os(macOS)
         RestNotifications.sync(with: timer, at: instant)
@@ -76,19 +79,7 @@ public struct RestTimerView: View {
         UIApplication.shared.isIdleTimerDisabled = timer.isRunning && !timer.hasFinished(at: instant)
         #endif
         RestTimerStore.save(timer)
-
-        // Mirrored to the other device unless this change *came* from it, which
-        // would bounce straight back and, worse, restart its countdown.
-        #if (os(iOS) && !targetEnvironment(macCatalyst)) || os(watchOS)
-        if !isAdopting {
-            ProfileSync.shared.send(rest: timer.isIdle ? nil : timer)
-        }
-        #endif
     }
-
-    /// True while applying a rest that arrived from the other device, so the
-    /// mirror does not echo it back.
-    @State private var isAdopting = false
 
     /// nil until asked. Whether an alert would reach the user when a rest ends
     /// with the app off screen — which is the only case that matters, because
@@ -104,10 +95,8 @@ public struct RestTimerView: View {
         #endif
         #if os(iOS) && !targetEnvironment(macCatalyst)
         RestActivityController.shared.end(dismissing: .immediate)
+        RestChime.cancel()
         UIApplication.shared.isIdleTimerDisabled = false
-        #endif
-        #if (os(iOS) && !targetEnvironment(macCatalyst)) || os(watchOS)
-        ProfileSync.shared.send(rest: nil)
         #endif
     }
 
@@ -117,7 +106,14 @@ public struct RestTimerView: View {
     public var body: some View {
         Group {
             if scrolls {
+                #if os(watchOS)
+                // No scroll view. The ring, the three controls and the three
+                // intervals are the whole screen, and a timer whose start
+                // buttons are below the fold is a timer you fight with mid-set.
+                content
+                #else
                 ScrollView { content }
+                #endif
             } else {
                 content
             }
@@ -160,20 +156,6 @@ public struct RestTimerView: View {
         }
         #endif
         .task {
-            // A rest started on the other device shows here, and vice versa. It
-            // carries an absolute deadline, so one that arrives late is still
-            // counting down to the right instant.
-            #if (os(iOS) && !targetEnvironment(macCatalyst)) || os(watchOS)
-            ProfileSync.shared.onRestReceived { incoming in
-                isAdopting = true
-                defer { isAdopting = false }
-
-                timer = incoming ?? RestTimer(preset: RestPreset.matching(timer.duration) ?? .ninetySeconds)
-                now = .now
-                changed(at: now)
-            }
-            #endif
-
             // Asked up front rather than at the moment a rest is scheduled: a
             // permission prompt that appears as you start a set is a prompt
             // nobody reads, and dismissing it silently disables every alert.
@@ -214,13 +196,46 @@ public struct RestTimerView: View {
 
             now = instant
             if timer.refresh(at: instant) {
-                Feedback.restFinished()
-                #if os(watchOS)
-                // The haptic above only lands if the app is on screen. This one
-                // reaches a wrist that is down, which is the case the rest timer
-                // exists for.
-                RestRuntimeSession.shared.alert()
-                #endif
+                // Two very different things reach this line. One is a rest
+                // ending while you are watching it. The other is the app
+                // waking up to a rest that ended while it was suspended, and
+                // noticing only now — the crossing is detected on the first
+                // tick after the app comes back, however long after the fact
+                // that is.
+                //
+                // Only the first is worth making a noise about. Firing the
+                // chime and the haptics for the second means reopening Senku
+                // ten minutes later announces a rest you finished, walked away
+                // from, and already know about. The state still has to be
+                // brought up to date either way, which is what `changed` does
+                // below; it is the alert that is conditional.
+                if timer.overrun(at: instant) < 3 {
+                    #if !os(watchOS)
+                    Feedback.restFinished()
+                    #endif
+
+                    #if canImport(UserNotifications) && !os(macOS) && !os(watchOS)
+                    // Sweep the notification the app has just made redundant.
+                    //
+                    // `changed` below cancels it too, but it loses a race it
+                    // cannot win: the crossing is noticed a moment *before* the
+                    // trigger fires, so the cancel lands first and the system
+                    // then delivers anyway. The delivered copy sits there
+                    // silently while the app is in front — and reappears with
+                    // its own haptic the instant the app leaves, which on the
+                    // watch is fifteen seconds later when the runtime session
+                    // winds down. That is the mystery alert a quarter of a
+                    // minute after a rest you have already been told about.
+                    Task {
+                        // Inside the grace period above, so the notification is
+                        // cancelled before it is ever delivered: with the app on
+                        // screen the chime has already said it, and the alert
+                        // would be the same news twice.
+                        try? await Task.sleep(for: .seconds(2))
+                        RestNotifications.cancel()
+                    }
+                    #endif
+                }
                 // The crossing is a state change, so the lock screen needs it;
                 // the ticks either side of it do not.
                 changed(at: instant)
@@ -228,43 +243,100 @@ public struct RestTimerView: View {
         }
     }
 
+    #if os(watchOS)
+    /// The watch screen, measured rather than guessed.
+    ///
+    /// The ring used to be `.frame(maxWidth:)` plus `aspectRatio(.fit)`, which
+    /// in a column resolves the square against whichever of the two proposals
+    /// is smaller — the *height* the stack was willing to hand it, not the
+    /// width of the case. That is how a 148pt ring drew at about 55. Here the
+    /// diameter is worked out from the space that is actually left once the
+    /// controls, the divider and the three intervals have taken theirs, so the
+    /// ring is as big as the case allows and the column ends at the bottom
+    /// edge instead of leaving a black band under the buttons.
     private var content: some View {
-        VStack(spacing: Senku.Metrics.stackSpacing) {
+        GeometryReader { proxy in
+            let diameter = ringDiameter(in: proxy.size)
+
+            VStack(spacing: watchSpacing) {
                 TimerRing(
                     remaining: remaining,
                     progress: timer.progress(at: now),
                     overrun: timer.overrun(at: now),
                     isFinished: isFinished,
-                    isPaused: timer.isPaused
+                    isPaused: timer.isPaused,
+                    deadline: timer.endsAt
+                )
+                .frame(width: diameter, height: diameter)
+                .padding(.bottom, ringGap)
+
+                alertWarning
+                watchControls
+
+                Divider()
+                watchQuickStarts
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+        }
+        .padding(.horizontal)
+    }
+
+    /// Height taken by everything under the ring, so the ring can have the rest.
+    ///
+    /// Every term here is a number this file also draws with, rather than an
+    /// estimate of one. `.bordered` was the reason an earlier budget came up
+    /// short and the ring grew over the buttons: the style adds its own
+    /// padding around the glyph, so a 26pt image became a control nearly 50pt
+    /// tall and nothing in the arithmetic knew. The controls are drawn plain
+    /// now, at exactly ``controlHeight``.
+    private func ringDiameter(in size: CGSize) -> CGFloat {
+        let divider: CGFloat = 1
+        let spacing: CGFloat = watchSpacing * 3
+        let alert: CGFloat = canAlert == false ? 34 : 0
+        // The ring is a circle in a square: at the bottom of that square the
+        // stroke is at its widest, so a gap that would be generous beside text
+        // reads as touching here. The gap itself is the whole allowance now —
+        // the extra cushion that was here as well was simply diameter the
+        // countdown could have had.
+        let slack: CGFloat = ringGap
+
+        let below = controlHeight + divider + spacing + alert + quickStartDiameter + slack
+        return max(88, min(size.width, size.height - below))
+    }
+
+    private var watchSpacing: CGFloat { 4 }
+
+    /// Air between the countdown and the controls.
+    private var ringGap: CGFloat { 10 }
+
+    /// Small enough to leave the ring the screen, tall enough to hit mid-set.
+    private var controlHeight: CGFloat { 30 }
+    #else
+    private var content: some View {
+        let stackSpacing = Senku.Metrics.stackSpacing
+
+        return VStack(spacing: stackSpacing) {
+                TimerRing(
+                    remaining: remaining,
+                    progress: timer.progress(at: now),
+                    overrun: timer.overrun(at: now),
+                    isFinished: isFinished,
+                    isPaused: timer.isPaused,
+                    deadline: timer.endsAt
                 )
                 .frame(maxWidth: Senku.Metrics.timerRingMaxWidth)
                 .aspectRatio(1, contentMode: .fit)
-                #if os(watchOS)
-                .padding(.vertical, 2)
-                #else
                 .padding(.vertical, 8)
-                #endif
 
-            #if os(watchOS)
-            alertWarning
-            holdIndicator
-            watchControls
-
-            Divider()
-            watchQuickStarts
-
-            Divider()
-            watchCustom
-            #else
             controls
             intervalPicker
-            #endif
         }
         .padding(.horizontal)
         .padding(.bottom, 24)
         .frame(maxWidth: 520)
         .frame(maxWidth: .infinity)
     }
+    #endif
 
     // MARK: - Controls, watch
 
@@ -291,35 +363,13 @@ public struct RestTimerView: View {
         }
     }
 
-    /// Whether the watch is being kept awake for this rest.
-    ///
-    /// Only while one is running, and only as one small symbol: a filled bolt
-    /// when the system granted an extended runtime session — the app stays in
-    /// front, the screen stays on, and the wrist tap at the end is guaranteed —
-    /// and a struck-through one when it refused, which is the state in which
-    /// the rest ends quietly.
-    @ViewBuilder
-    private var holdIndicator: some View {
-        if timer.isRunning, !isFinished {
-            Label(
-                RestRuntimeSession.shared.isHolding ? "Awake" : "Not held",
-                systemImage: RestRuntimeSession.shared.isHolding ? "bolt.fill" : "bolt.slash.fill"
-            )
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(
-                RestRuntimeSession.shared.isHolding ? Senku.Palette.surplus : Senku.Palette.caution
-            )
-            .frame(maxWidth: .infinity)
-        }
-    }
-
     /// Three buttons on one line, icons only.
     ///
     /// A 40 mm screen has no room to spend on the word "Start" beside a play
     /// triangle that already says it, and mid-set you are aiming a finger at a
     /// shape rather than reading. The labels survive for VoiceOver.
     private var watchControls: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             watchControl(primarySymbol, label: primaryTitle, tint: Senku.Palette.protein) {
                 timer.toggle(at: .now)
                 changed(at: .now)
@@ -349,11 +399,15 @@ public struct RestTimerView: View {
             action()
         } label: {
             Image(systemName: symbol)
-                .font(.system(size: 17, weight: .semibold))
-                .frame(maxWidth: .infinity, minHeight: 34)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(tint ?? .primary)
+                .frame(width: 46, height: controlHeight)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill((tint ?? .gray).opacity(tint == nil ? 0.24 : 0.22))
+                )
         }
-        .buttonStyle(.bordered)
-        .tint(tint)
+        .buttonStyle(.plain)
         .accessibilityLabel(label)
     }
 
@@ -367,7 +421,7 @@ public struct RestTimerView: View {
     /// across the screen, minus the gaps, is the number actually wanted.
     private var quickStartDiameter: CGFloat {
         let width = WKInterfaceDevice.current().screenBounds.width
-        return max(40, (width - 2 * quickStartSpacing - 4) / 3)
+        return min(42, max(34, (width - 2 * quickStartSpacing - 30) / 3))
     }
 
     private var quickStartSpacing: CGFloat { 6 }
@@ -385,11 +439,11 @@ public struct RestTimerView: View {
                 } label: {
                     VStack(spacing: -2) {
                         Text("\(preset.minutes)")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .font(.system(size: 21, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .minimumScaleFactor(0.6)
                         Text("MIN")
-                            .font(.system(size: 11, weight: .heavy))
+                            .font(.system(size: 9, weight: .heavy))
                             .tracking(0.5)
                             .opacity(0.75)
                     }
@@ -408,19 +462,6 @@ public struct RestTimerView: View {
         .padding(.horizontal, -12)
     }
 
-    /// Anything the three circles do not cover, in fifteen-second steps.
-    private var watchCustom: some View {
-        HStack {
-            stepperButton("minus", by: -15)
-            Text(Display.clock(timer.duration))
-                .font(.body.weight(.semibold))
-                .monospacedDigit()
-                .frame(maxWidth: .infinity)
-                .accessibilityLabel("Rest interval")
-                .accessibilityValue(Display.spokenClock(timer.duration))
-            stepperButton("plus", by: 15)
-        }
-    }
     #endif
 
     // MARK: - Controls, phone and Mac

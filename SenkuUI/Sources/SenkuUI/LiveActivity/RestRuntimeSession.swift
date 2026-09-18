@@ -69,7 +69,13 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// taken away first. It is the watch's counterpart to the phone's alert
     /// being three triplets rather than one polite chime.
     public func alert() {
-        guard let session, session.state == .running else { return }
+        guard let session, session.state == .running else {
+            // No session — the system refused one, or took it back. The wrist
+            // still deserves telling, so fall back to the device's own haptic,
+            // repeated, which works whenever the app is executing at all.
+            playFallbackHaptics()
+            return
+        }
 
         let stop = Date.now.addingTimeInterval(10)
         session.notifyUser(hapticType: .notification) { _ in
@@ -78,6 +84,22 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
             // so a throttled callback cannot stretch it into a nuisance.
             Date.now < stop ? 1.2 : 0
         }
+    }
+
+    /// Six taps, a second and a bit apart. The same shape as the session's
+    /// repeat, without the session.
+    private func playFallbackHaptics() {
+        var left = 6
+        WKInterfaceDevice.current().play(.notification)
+
+        let repeater = Timer(timeInterval: 1.2, repeats: true) { fired in
+            Task { @MainActor in
+                WKInterfaceDevice.current().play(.notification)
+            }
+            left -= 1
+            if left <= 0 { fired.invalidate() }
+        }
+        RunLoop.main.add(repeater, forMode: .common)
     }
 
     public func end() {
@@ -116,25 +138,88 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         scheduleAlarm(at: endsAt)
     }
 
-    /// Lets the alert play out, then gives the session back.
-    private func windDown() {
+    /// The rest lands: make the noise, then hand the screen back.
+    ///
+    /// This is the session earning its keep. It is awake at the deadline
+    /// whether or not the screen is on, which the countdown view is not — so
+    /// the alert belongs here rather than in a tick that stops being delivered
+    /// the moment the wrist drops.
+    ///
+    /// The app holds on afterwards rather than getting out of the way, because
+    /// it is now the thing alerting you: the chime plays, the haptic repeats,
+    /// and fifteen seconds is long enough for both to finish and be noticed.
+    private func land() {
+        alert()
+
+        Feedback.chime { [weak self] sounded in
+            Task { @MainActor in self?.soundLanded(sounded) }
+        }
+
+        windDown(after: 15)
+    }
+
+    /// Whether the notification is still needed.
+    ///
+    /// Only a chime that actually played earns the right to suppress it. If the
+    /// audio route was refused — headphones mid-handoff, a session the system
+    /// would not activate — the notification is left exactly where it is, and
+    /// surfaces when this session ends. The alternative is an app that assumes
+    /// it made a sound and leaves you with none.
+    private func soundLanded(_ sounded: Bool) {
+        guard sounded else { return }
+
+        Task {
+            // After the delivery it is racing, not before it.
+            try? await Task.sleep(for: .seconds(2))
+            #if canImport(UserNotifications)
+            RestNotifications.cancel()
+            #endif
+        }
+    }
+
+    /// Gives the session back, a moment after the rest lands.
+    ///
+    /// It was fifteen seconds while the session was the thing alerting you and
+    /// needed to outlive its own repeating haptic. The notification does that
+    /// job now, so the only reason to hold on at all is to let the last tick
+    /// settle — and holding longer was actively wrong: the app stays in front
+    /// until the session ends, and the alert waiting behind it only appears
+    /// once it does.
+    private func windDown(after seconds: TimeInterval = 2) {
         alarm?.invalidate()
 
-        let closing = Timer(timeInterval: 15, repeats: false) { [weak self] _ in
+        let closing = Timer(timeInterval: seconds, repeats: false) { [weak self] _ in
             Task { @MainActor in self?.end() }
         }
         RunLoop.main.add(closing, forMode: .common)
         alarm = closing
     }
 
+    /// At the deadline, the session's job is done — so it gets out of the way.
+    ///
+    /// This used to fire ``alert()``, and that was the last thing standing
+    /// between a finished rest and the alert for it. `notifyUser` keeps the app
+    /// in front for as long as it repeats — about ten seconds — and a
+    /// notification cannot be shown over the app that is frontmost, so it waited
+    /// there until the repetition ended and the session let go. The alert
+    /// arriving a quarter of a minute late was the session alerting *instead*
+    /// of it, silently, and then finally standing aside.
+    ///
+    /// Fires ``land()`` on the deadline itself.
+    ///
+    /// Not a second early and not a second late: ending the session at the
+    /// deadline suspended the app mid-count and froze the display on 0:01, and
+    /// anything later is an alert that arrives after the rest it is announcing.
+    private static let handoverDelay: TimeInterval = 0
+
     private func scheduleAlarm(at date: Date) {
         alarm?.invalidate()
 
         let fireTimer = Timer(
-            timeInterval: max(0.1, date.timeIntervalSinceNow),
+            timeInterval: max(0.1, date.timeIntervalSinceNow + Self.handoverDelay),
             repeats: false
         ) { [weak self] _ in
-            Task { @MainActor in self?.alert() }
+            Task { @MainActor in self?.land() }
         }
         // `.common` so it still fires while the watch is scrolling or the app
         // is not the thing on screen.

@@ -79,6 +79,18 @@ public enum RestNotifications {
     /// had granted anything and iOS dropped it silently — and nothing ever
     /// rescheduled it. That first rest was the one most likely to be tested.
     public static func sync(with timer: RestTimer, at now: Date = .now) {
+        // A finished timer keeps its alert. This is the whole bug that made a
+        // rest land in silence: `endsAt` is nil the moment the crossing is
+        // recorded, so a sync at zero fell straight through the guard below —
+        // but not before `cancel()` had already deleted the pending request
+        // that was about to fire, a fraction of a second early. The app was
+        // reliably destroying its own alert in the act of noticing it was due.
+        //
+        // Nothing needs cancelling there in any case: a notification that has
+        // already been delivered is cleared when the app is next opened, and
+        // the next `start` cancels before scheduling.
+        guard !timer.hasFinished(at: now) else { return }
+
         cancel()
         guard let endsAt = timer.endsAt, endsAt > now else { return }
 
@@ -98,10 +110,28 @@ public enum RestNotifications {
         }
     }
 
+    /// How long after the deadline the notification arrives, on the phone.
+    ///
+    /// The app sounds its own chime at zero through a held audio session, and a
+    /// notification landing in the same instant cuts it off — iOS gives the
+    /// alert the audio route and the chime stops mid-ring. Three seconds is
+    /// enough for the chime to finish and short enough that nobody reads it as
+    /// a late timer.
+    ///
+    /// None on the watch, where the notification *is* the alert and a delay
+    /// would be a delay in being told.
+    private static var chimeGrace: TimeInterval {
+        #if os(watchOS)
+        0
+        #else
+        3
+        #endif
+    }
+
     private static func schedule(endsAt: Date) {
         // Measured fresh rather than from the caller's `now`: asking for
         // permission can sit on screen for a while first.
-        let seconds = endsAt.timeIntervalSinceNow
+        let seconds = endsAt.timeIntervalSinceNow + chimeGrace
         guard seconds > 0 else { return }
 
         let content = UNMutableNotificationContent()

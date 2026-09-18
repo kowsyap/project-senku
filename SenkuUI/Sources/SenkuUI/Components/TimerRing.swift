@@ -14,6 +14,7 @@ public struct TimerRing: View {
     private let isFinished: Bool
     private let isPaused: Bool
     private let lineWidth: CGFloat
+    private let deadline: Date?
 
     public init(
         remaining: TimeInterval,
@@ -21,8 +22,10 @@ public struct TimerRing: View {
         overrun: TimeInterval = 0,
         isFinished: Bool = false,
         isPaused: Bool = false,
+        deadline: Date? = nil,
         lineWidth: CGFloat = Senku.Metrics.ringWidth
     ) {
+        self.deadline = deadline
         self.remaining = remaining
         self.progress = progress
         self.overrun = overrun
@@ -51,7 +54,7 @@ public struct TimerRing: View {
                 .animation(.linear(duration: 0.25), value: progress)
 
             VStack(spacing: 2) {
-                Text(Display.clock(remaining))
+                digits
                     .font(.system(size: Senku.Metrics.timerDigitSize, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .minimumScaleFactor(0.5)
@@ -75,6 +78,26 @@ public struct TimerRing: View {
         .accessibilityIdentifier("rest.remaining")
         .accessibilityLabel("Rest remaining")
         .accessibilityValue(accessibilityValue)
+    }
+
+    /// The countdown, drawn by the system where the system will do it.
+    ///
+    /// `Text(timerInterval:)` is handed a deadline and animates to it on its
+    /// own, with no timer of ours behind it. That matters on the watch, where a
+    /// view stops being driven the moment the screen goes dark: the last
+    /// second never arrived, and the count sat on 0:01 looking like a timer
+    /// that had hung. A deadline the system owns cannot stall that way.
+    ///
+    /// Only while running. A finished or paused timer is showing a number that
+    /// is not moving, which is exactly what plain text is for.
+    @ViewBuilder
+    private var digits: some View {
+        if let deadline, deadline > .now, !isFinished, !isPaused {
+            Text(timerInterval: Date.now...deadline, countsDown: true)
+                .multilineTextAlignment(.center)
+        } else {
+            Text(Display.clock(remaining))
+        }
     }
 
     private var accessibilityValue: String {

@@ -8,6 +8,10 @@ import SenkuUI
 /// and be built and tested without an Xcode project.
 @main
 struct SenkuApp: App {
+    init() {
+        RestAlerts.installPresenter()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
