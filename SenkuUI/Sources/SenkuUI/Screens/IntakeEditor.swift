@@ -138,7 +138,7 @@ struct IntakeEditor: View {
 
     private func row(_ title: String, value: Binding<Double?>, tint: Color) -> some View {
         LabeledContent {
-            NumericField(value: value, range: 0 ... 1000, unit: "g")
+            NumericField(value: value, range: 0 ... 1000, decimals: 1, unit: "g")
         } label: {
             HStack(spacing: 8) {
                 Circle().fill(tint).frame(width: 8, height: 8)
@@ -209,7 +209,7 @@ struct IntakeSettingsView: View {
                                         .foregroundStyle(Color.primary)
                                     Text(favourite.isCaloriesOnly
                                          ? "\(Int(favourite.calories.rounded())) kcal"
-                                         : "\(Int(favourite.proteinG.rounded())) g protein · \(Int(favourite.calories.rounded())) kcal")
+                                         : "\(Display.tidyGrams(favourite.proteinG)) protein · \(Int(favourite.calories.rounded())) kcal")
                                         .font(.caption)
                                         .foregroundStyle(Color.secondary)
                                 }
@@ -289,16 +289,16 @@ private struct FavouriteEditor: View {
 
                 Section {
                     LabeledContent("Protein") {
-                        NumericField(value: $protein, range: 0 ... 1000, unit: "g")
+                        NumericField(value: $protein, range: 0 ... 1000, decimals: 1, unit: "g")
                     }
                     LabeledContent("Carbs") {
-                        NumericField(value: $carbs, range: 0 ... 1000, unit: "g")
+                        NumericField(value: $carbs, range: 0 ... 1000, decimals: 1, unit: "g")
                     }
                     LabeledContent("Fat") {
-                        NumericField(value: $fat, range: 0 ... 1000, unit: "g")
+                        NumericField(value: $fat, range: 0 ... 1000, decimals: 1, unit: "g")
                     }
                     LabeledContent("Fibre") {
-                        NumericField(value: $fibre, range: 0 ... 1000, unit: "g")
+                        NumericField(value: $fibre, range: 0 ... 1000, decimals: 1, unit: "g")
                     }
                 } header: {
                     Text("Macros")

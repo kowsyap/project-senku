@@ -116,7 +116,7 @@ public struct IntakeView: View {
                     innerTint: day.isProteinMet ? Senku.Palette.surplus : Senku.Palette.protein
                 ) {
                     VStack(spacing: -2) {
-                        Text("\(Int(day.proteinG.rounded()))")
+                        Text(Display.gramsValue(day.proteinG))
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .minimumScaleFactor(0.6)
@@ -133,7 +133,7 @@ public struct IntakeView: View {
                     legend("Protein", Senku.Palette.protein,
                            day.isProteinMet
                            ? "Target met"
-                           : "\(Int(day.proteinRemainingG.rounded())) g to go",
+                           : "\(Display.tidyGrams(day.proteinRemainingG)) to go",
                            met: day.isProteinMet)
 
                     legend("Calories", Senku.Palette.carbs,
@@ -266,7 +266,7 @@ public struct IntakeView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.secondary)
                 Spacer()
-                Text("\(Int(value.rounded())) / \(Int(target.rounded())) g")
+                Text("\(Display.gramsValue(value)) / \(Int(target.rounded())) g")
                     .font(.caption)
                     .monospacedDigit()
                     .foregroundStyle(Color.secondary)
@@ -285,7 +285,7 @@ public struct IntakeView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
-        .accessibilityValue("\(Int(value.rounded())) of \(Int(target.rounded())) grams")
+        .accessibilityValue("\(Display.gramsValue(value)) of \(Int(target.rounded())) grams")
     }
 
     // MARK: - Logging
@@ -378,7 +378,8 @@ public struct IntakeView: View {
                     unit: "g",
                     tint: Senku.Palette.protein,
                     value: $quickProtein,
-                    range: 0 ... 300
+                    range: 0 ... 300,
+                    decimals: 1
                 ) {
                     guard let grams = quickProtein, grams > 0 else { return }
                     store.addProtein(grams)
@@ -414,7 +415,7 @@ public struct IntakeView: View {
 
         return favourite.isCaloriesOnly
             ? "\(calories) kcal"
-            : "\(Int((favourite.proteinG * multiplier).rounded())) g protein · \(calories) kcal"
+            : "\(Display.tidyGrams(favourite.proteinG * multiplier)) protein · \(calories) kcal"
     }
 
     /// A number and a button to commit it. The field clears on add, so the next
@@ -425,6 +426,7 @@ public struct IntakeView: View {
         tint: Color,
         value: Binding<Double?>,
         range: ClosedRange<Double>,
+        decimals: Int = 0,
         add: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -433,7 +435,7 @@ public struct IntakeView: View {
                 .foregroundStyle(Color.secondary)
 
             HStack(spacing: 6) {
-                NumericField(value: value, range: range, unit: unit, width: 52)
+                NumericField(value: value, range: range, decimals: decimals, unit: unit, width: 52)
 
                 Spacer(minLength: 0)
 
@@ -479,7 +481,7 @@ public struct IntakeView: View {
                         Spacer(minLength: 0)
 
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(Int(entry.proteinG.rounded())) g")
+                            Text(Display.tidyGrams(entry.proteinG))
                                 .font(.subheadline.weight(.semibold))
                                 .monospacedDigit()
                                 .foregroundStyle(Senku.Palette.protein)

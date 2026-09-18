@@ -45,6 +45,17 @@ import SenkuCore
         #expect(store.entries.isEmpty)
     }
 
+    /// Tenths matter here: an egg is 6.3 g and a banana 1.3 g, and whole
+    /// numbers lose a fifth of the banana before anything is added up.
+    @Test func tenthsOfAGramSurviveTheRoundTrip() throws {
+        let suite = UUID().uuidString
+        let store = store(suite)
+
+        store.addProtein(6.3)
+        #expect(store.entries[0].proteinG == 6.3)
+        #expect(IntakeStore(defaults: UserDefaults(suiteName: suite)!).entries[0].proteinG == 6.3)
+    }
+
     @Test func anEmptyEntryIsRefused() throws {
         let store = store()
 

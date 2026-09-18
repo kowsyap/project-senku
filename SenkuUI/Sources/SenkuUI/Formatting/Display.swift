@@ -11,6 +11,22 @@ public enum Display {
         "\(Int(value.rounded())) g"
     }
 
+    /// Grams with a decimal only when there is one: "30 g", but "1.3 g".
+    ///
+    /// Food is the one place in the app where a tenth of a gram is real — an
+    /// egg is 6.3 g of protein and a banana 1.3 g, and rounding those to whole
+    /// numbers loses a fifth of the banana before anything is even added up.
+    /// Lifts and body weights have no such problem, which is why this is not
+    /// the default everywhere.
+    public static func gramsValue(_ value: Double) -> String {
+        let rounded = (value * 10).rounded() / 10
+        return rounded == rounded.rounded()
+            ? "\(Int(rounded))"
+            : String(format: "%.1f", rounded)
+    }
+
+    public static func tidyGrams(_ value: Double) -> String { "\(gramsValue(value)) g" }
+
     public static func percent(_ value: Double) -> String {
         "\(Int(value.rounded()))%"
     }
