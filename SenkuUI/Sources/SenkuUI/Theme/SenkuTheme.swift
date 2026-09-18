@@ -32,9 +32,9 @@ public enum Senku {
         // A 40 mm screen is about 160 pt across. At phone proportions the ring
         // fills it entirely and pushes Start below the fold, which is the one
         // control you need without scrolling between sets.
-        public static let ringWidth: CGFloat = 9
-        public static let timerRingMaxWidth: CGFloat = 96
-        public static let timerDigitSize: CGFloat = 26
+        public static let ringWidth: CGFloat = 11
+        public static let timerRingMaxWidth: CGFloat = 148
+        public static let timerDigitSize: CGFloat = 42
         public static let presetColumns = 2
         #else
         public static let ringWidth: CGFloat = 18
@@ -81,22 +81,43 @@ extension RestPreset {
 }
 
 extension WorkoutGroup {
-    /// A glyph for the group, so a list of six headings can be scanned by shape
-    /// before it is read.
+    /// A glyph for the group, so six headings can be told apart by shape before
+    /// they are read.
     ///
-    /// SF Symbols has no chest or lat icon, and picking a vaguely athletic
-    /// figure for each would be decoration pretending to be information. These
-    /// are chosen for what they suggest about the movement instead: a press, a
-    /// row, a raise, a curl, an extension, a stride.
+    /// SF Symbols has no chest, lat or delt icon, and dressing six rows in
+    /// near-identical athletic figures would be decoration pretending to be
+    /// information. These are picked for the movement each group is trained by
+    /// — a press, a row, an overhead raise, a curl, an extension, a step — and
+    /// carry a colour each, which is what actually does the telling apart at a
+    /// glance.
     public var symbol: String {
         switch self {
         case .chest: "figure.strengthtraining.traditional"
         case .back: "figure.rower"
         case .shoulder: "figure.arms.open"
         case .bicep: "dumbbell.fill"
-        case .tricep: "figure.strengthtraining.functional"
-        case .legs: "figure.walk"
-        default: "figure.strengthtraining.traditional"
+        case .tricep: "figure.cooldown"
+        case .legs: "figure.stair.stepper"
+        case .abs: "figure.core.training"
+        case .cardio: "heart.fill"
+        default: "figure.strengthtraining.functional"
+        }
+    }
+
+    public var tint: Color {
+        switch self {
+        // Coral rather than the palette's red, which cardio now owns: two
+        // groups in the same red is the one confusion a colour-coded list
+        // cannot survive.
+        case .chest: Color(red: 0.98, green: 0.51, blue: 0.35)
+        case .back: Senku.Palette.protein
+        case .shoulder: Senku.Palette.carbs
+        case .bicep: Color(red: 0.62, green: 0.45, blue: 0.92)
+        case .tricep: Color(red: 0.25, green: 0.72, blue: 0.75)
+        case .legs: Senku.Palette.fat
+        case .abs: Color(red: 0.95, green: 0.55, blue: 0.62)
+        case .cardio: Color(red: 0.91, green: 0.19, blue: 0.24)
+        default: Senku.Palette.info
         }
     }
 }

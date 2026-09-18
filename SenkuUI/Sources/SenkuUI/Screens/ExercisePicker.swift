@@ -30,6 +30,10 @@ public struct ExercisePicker: View {
     /// attempts rather than a list of lifts.
     private let hidden: Set<String>
 
+    /// The group the caller fixed, if it fixed one. Distinct from ``group``,
+    /// which is where the user currently is.
+    private let pinnedGroup: WorkoutGroup?
+
     @State private var group: WorkoutGroup?
     @State private var search = ""
     @State private var info: Exercise?
@@ -38,6 +42,10 @@ public struct ExercisePicker: View {
     public init(
         library: ExerciseLibrary,
         hidden: Set<String> = [],
+        /// Opens straight into one group, for a caller that already knows which
+        /// muscle is being filled — "add to chest" should not begin by asking
+        /// which muscle you meant.
+        startingIn group: WorkoutGroup? = nil,
         deletionRefusal: @escaping (Exercise) -> String? = { _ in nil },
         onPick: @escaping (Exercise) -> Void
     ) {
@@ -45,6 +53,8 @@ public struct ExercisePicker: View {
         self.hidden = hidden
         self.deletionRefusal = deletionRefusal
         self.onPick = onPick
+        self.pinnedGroup = group
+        _group = State(initialValue: group)
     }
 
     private func available(in group: WorkoutGroup) -> [Exercise] {
@@ -59,87 +69,37 @@ public struct ExercisePicker: View {
     }
 
     public var body: some View {
-        List {
-            if !search.isEmpty {
-                Section("Matches") {
-                    ForEach(searchResults) { row($0) }
-                }
-            } else if let group {
-                Section(group.title) {
-                    if available(in: group).isEmpty {
-                        Text("Every \(group.title.lowercased()) exercise already has a record. Open it from the list to add another.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(available(in: group)) { row($0) }
-                    }
-                }
-                Section {
-                    Button {
-                        isCreating = true
-                    } label: {
-                        Label("Add your own to \(group.title)", systemImage: "plus.circle")
-                            .font(.subheadline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
+        Group {
+            if search.isEmpty, group == nil {
+                groupPicker
             } else {
-                Section("Muscle group") {
-                    ForEach(library.catalogue.workoutGroups) { candidate in
-                        Button {
-                            withAnimation(.snappy(duration: 0.2)) { group = candidate }
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: candidate.symbol)
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(Senku.Palette.protein)
-                                    .frame(width: 22)
-                                Text(candidate.title)
-                                    .font(.body)
-                                Spacer(minLength: 8)
-                                Text("\(available(in: candidate).count)")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                                Image(systemName: "chevron.right")
-                                    .font(.caption2)
-                                    .foregroundStyle(.tertiary)
-                            }
-                            // The gap between the name and the count is most of
-                            // the row, and without a shape to hit it is dead
-                            // space: taps there fell through and nothing
-                            // happened.
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                Section {
-                    Button {
-                        isCreating = true
-                    } label: {
-                        Label("Add your own", systemImage: "plus.circle")
-                            .font(.subheadline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
+                exerciseList
             }
         }
         .searchable(text: $search, prompt: "Search all exercises")
-        .navigationTitle(group?.title ?? "Muscle group")
+        .navigationTitle(group == nil ? "Muscle group" : "")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
-            if group != nil, search.isEmpty {
+            // Only when there is somewhere to go back *to*. Opened from a
+            // workout day the group is the caller's, not a step the user took,
+            // and a chevron there would offer to undo something they never did
+            // — landing them in a group picker they did not ask for, with no
+            // way back to the day.
+            if group != nil, pinnedGroup == nil, search.isEmpty {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Groups") {
-                        withAnimation(.snappy(duration: 0.2)) { group = nil }
+                    // A chevron, as a pushed screen would have. The word
+                    // "Groups" named where the tap goes, but this is the one
+                    // control on iOS that needs no naming — and it stops the
+                    // row reading as two competing labels beside the title.
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { self.group = nil }
+                    } label: {
+                        Image(systemName: "chevron.backward")
+                            .font(.body.weight(.semibold))
                     }
+                    .accessibilityLabel("Back to muscle groups")
                 }
             }
         }
@@ -178,6 +138,184 @@ public struct ExercisePicker: View {
         }
     }
 
+    /// The groups, arranged as a ring around one.
+    ///
+    /// Seven is the number that makes this work: six around one, at sixty
+    /// degrees apart, which is the only tidy arrangement of seven things and
+    /// happens to be what the body offers.
+    ///
+    /// Chest is the centre, and the ring runs clockwise from noon —
+    /// shoulders, biceps, abs, legs, back, triceps. It reads as a body rather
+    /// than a list: shoulders on top, abs low on the front, legs at the bottom,
+    /// and back and triceps up the left where the posterior work belongs.
+    ///
+    /// The ring is not load-bearing: a catalogue with any other number of
+    /// groups falls back to a grid rather than a broken circle.
+    private var groupPicker: some View {
+        // Cardio is not a muscle and does not belong in a ring of them. It sits
+        // below, as a bar rather than a disc, so the shape itself says "this is
+        // a different kind of thing" before the heart on it is even read.
+        let muscles = library.catalogue.workoutGroups.filter(\.isMuscle)
+        let others = library.catalogue.workoutGroups.filter { !$0.isMuscle }
+        let ringOrder: [WorkoutGroup] = [.shoulder, .bicep, .abs, .legs, .back, .tricep]
+        let canRing = muscles.count == 7 && Set(muscles) == Set(ringOrder + [.chest])
+
+        return ScrollView {
+            VStack(spacing: 14) {
+                if canRing {
+                    ring(around: .chest, others: ringOrder)
+                } else {
+                    grid(muscles)
+                }
+
+                ForEach(others) { other in
+                    wideButton(other)
+                }
+            }
+            .padding(.bottom, 12)
+        }
+        .background(.background)
+    }
+
+    /// A group that is not a muscle: full width, a heart, its own colour.
+    private func wideButton(_ candidate: WorkoutGroup) -> some View {
+        Button {
+            withAnimation(.snappy(duration: 0.2)) { group = candidate }
+        } label: {
+            HStack(spacing: 12) {
+                GroupGlyph(group: candidate, size: 26)
+                    .frame(width: 44, height: 44)
+                    .background(candidate.tint.opacity(0.16), in: .circle)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(candidate.title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    Text("Conditioning, not a muscle group")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(candidate.tint.opacity(0.10))
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
+        .accessibilityLabel(candidate.title)
+    }
+
+    private func ring(around centre: WorkoutGroup, others: [WorkoutGroup]) -> some View {
+        let radius: CGFloat = 108
+        let tile: CGFloat = 86
+
+        return ZStack {
+            tileButton(centre, diameter: tile)
+
+            ForEach(Array(others.enumerated()), id: \.element) { index, candidate in
+                // Clockwise from noon: shoulders at the top, arms down the
+                // right, legs at the bottom, back and abs up the left.
+                let angle = Angle.degrees(Double(index) * 60 - 90)
+                tileButton(candidate, diameter: tile)
+                    .offset(
+                        x: radius * cos(angle.radians),
+                        y: radius * sin(angle.radians)
+                    )
+            }
+        }
+        .frame(width: 2 * radius + tile + 20, height: 2 * radius + tile + 20)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
+    }
+
+    private func grid(_ groups: [WorkoutGroup]) -> some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 12)], spacing: 12) {
+            ForEach(groups) { tileButton($0, diameter: 92) }
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+
+    /// One group: the mark on a tinted disc, its name beneath.
+    private func tileButton(_ candidate: WorkoutGroup, diameter: CGFloat) -> some View {
+        Button {
+            withAnimation(.snappy(duration: 0.2)) { group = candidate }
+        } label: {
+            VStack(spacing: 3) {
+                GroupGlyph(group: candidate, size: diameter * 0.62)
+                    .frame(width: diameter, height: diameter)
+                    .background(candidate.tint.opacity(0.12), in: .circle)
+
+                Text(candidate.title)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(.circle)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var exerciseList: some View {
+        List {
+            if !search.isEmpty {
+                Section("Matches") {
+                    ForEach(searchResults) { row($0) }
+                }
+            } else if let group {
+                Section {
+                    VStack(spacing: 4) {
+                        GroupGlyph(group: group, size: 54)
+                            .frame(height: 54)
+                        Text(group.title)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                // A list row carries its own insets, and a section its own gap
+                // above and below. Both were padding this header out to twice
+                // its content — the space was the list's, not the view's.
+                .listRowInsets(EdgeInsets())
+
+                Section {
+                    if available(in: group).isEmpty {
+                        Text("Every \(group.title.lowercased()) exercise already has a record. Open it from the list to add another.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(available(in: group)) { row($0) }
+                    }
+                }
+
+                Section {
+                    Button {
+                        isCreating = true
+                    } label: {
+                        Label("Add your own to \(group.title)", systemImage: "plus.circle")
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        #if os(iOS)
+        .listSectionSpacing(.compact)
+        #endif
+    }
+
     /// Equipment and the muscles it trains, in one line — what you need to
     /// tell two similar names apart without opening either.
     private func subtitle(for exercise: Exercise) -> String {
@@ -197,11 +335,16 @@ public struct ExercisePicker: View {
                 onPick(exercise)
             } label: {
                 VStack(alignment: .leading, spacing: 1) {
+                    // Said explicitly, because a button's label otherwise takes
+                    // the accent colour of wherever the picker was opened from
+                    // — green inside the workout tab, violet from the PR page —
+                    // and an exercise's name is content, not a link.
                     Text(exercise.name)
-                        .font(.subheadline)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.primary)
                         .multilineTextAlignment(.leading)
                     Text(subtitle(for: exercise))
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.leading)
                 }
@@ -214,7 +357,7 @@ public struct ExercisePicker: View {
                 info = exercise
             } label: {
                 Image(systemName: "info.circle")
-                    .font(.system(size: 17))
+                    .font(.system(size: 20))
                     .foregroundStyle(Senku.Palette.protein)
             }
             .buttonStyle(.plain)
