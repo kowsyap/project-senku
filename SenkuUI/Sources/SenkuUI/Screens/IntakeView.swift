@@ -33,6 +33,7 @@ public struct IntakeView: View {
     @State private var quickProtein: Double?
     @State private var quickCalories: Double?
     @State private var picked: UUID?
+    @State private var servings = 1
 
     public init(
         store: IntakeStore,
@@ -296,12 +297,11 @@ public struct IntakeView: View {
         Card("Quick add") {
             HStack(spacing: 10) {
                 Menu {
+                    // Names alone. The macros are on the line below once
+                    // something is picked, and a menu that repeats them is a
+                    // wall of numbers to read before you can find "Shake".
                     ForEach(store.orderedFavourites) { favourite in
-                        Button {
-                            picked = favourite.id
-                        } label: {
-                            Text("\(favourite.name) — \(favouriteDetail(favourite))")
-                        }
+                        Button(favourite.name) { picked = favourite.id }
                     }
                 } label: {
                     HStack(spacing: 6) {
@@ -326,17 +326,37 @@ public struct IntakeView: View {
 
                 addButton(tint: Senku.Palette.protein, enabled: pickedFavourite != nil) {
                     guard let favourite = pickedFavourite else { return }
-                    store.log(favourite)
+                    store.log(favourite, servings: servings)
                     picked = nil
+                    servings = 1
                     Feedback.control()
                 }
                 .accessibilityLabel("Add the picked food")
             }
 
             if let favourite = pickedFavourite {
-                Text(favouriteDetail(favourite))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    // Servings, because two of something is the common case and
+                    // pressing add twice makes two rows out of one thing you
+                    // ate. Starts at one every time: it is the answer nine
+                    // times in ten, and a count left over from the last food is
+                    // a silent way to log twice what you had.
+                    Stepper(value: $servings, in: 1 ... 20) {
+                        Text("\(servings) serving\(servings == 1 ? "" : "s")")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.secondary)
+                            .monospacedDigit()
+                    }
+                    .fixedSize()
+
+                    Spacer(minLength: 0)
+
+                    Text(favouriteDetail(favourite, servings: servings))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
             } else if store.favourites.isEmpty {
                 Text("Save the things you eat often — in the editor, or behind the gear — and they appear here.")
                     .font(.caption)
@@ -383,10 +403,15 @@ public struct IntakeView: View {
         picked.flatMap { id in store.favourites.first { $0.id == id } }
     }
 
-    private func favouriteDetail(_ favourite: FoodFavourite) -> String {
-        favourite.isCaloriesOnly
-            ? "\(Int(favourite.calories.rounded())) kcal"
-            : "\(Int(favourite.proteinG.rounded())) g protein · \(Int(favourite.calories.rounded())) kcal"
+    /// What one press will actually log, servings included — the figures the
+    /// menu no longer carries.
+    private func favouriteDetail(_ favourite: FoodFavourite, servings: Int = 1) -> String {
+        let multiplier = Double(max(1, servings))
+        let calories = Int((favourite.calories * multiplier).rounded())
+
+        return favourite.isCaloriesOnly
+            ? "\(calories) kcal"
+            : "\(Int((favourite.proteinG * multiplier).rounded())) g protein · \(calories) kcal"
     }
 
     /// A number and a button to commit it. The field clears on add, so the next

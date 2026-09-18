@@ -74,10 +74,34 @@ public final class IntakeStore {
         return true
     }
 
-    /// Logs a favourite and counts the use, which is what orders the row.
+    /// Logs a favourite, however many of them you had.
+    ///
+    /// One entry rather than one per serving: two shakes at eight in the
+    /// morning is one thing you did, and a day's list broken into identical
+    /// rows is harder to read back and no more true. The name carries the
+    /// count — "Shake ×2" — so the list still says what happened.
+    ///
+    /// The use is counted once for the same reason: `timesUsed` orders the menu
+    /// by how often you reach for something, and a double serving is not two
+    /// reaches.
     @discardableResult
-    public func log(_ favourite: FoodFavourite, at date: Date = .now) -> Bool {
-        guard let entry = favourite.entry(at: date) else { return false }
+    public func log(
+        _ favourite: FoodFavourite,
+        servings: Int = 1,
+        at date: Date = .now
+    ) -> Bool {
+        let count = max(1, servings)
+        let multiplier = Double(count)
+
+        guard let entry = try? IntakeEntry(
+            date: date,
+            name: count == 1 ? favourite.name : "\(favourite.name) ×\(count)",
+            proteinG: favourite.proteinG * multiplier,
+            carbsG: favourite.carbsG * multiplier,
+            fatG: favourite.fatG * multiplier,
+            fiberG: favourite.fiberG.map { $0 * multiplier },
+            enteredCalories: favourite.enteredCalories.map { $0 * multiplier }
+        ) else { return false }
 
         reload()
         if let index = favourites.firstIndex(where: { $0.id == favourite.id }) {

@@ -84,6 +84,31 @@ import SenkuCore
         #expect(store.entries.allSatisfy { $0.name == "Shake" })
     }
 
+    /// Two shakes is one thing you did, logged once with the count in the name.
+    @Test func servingsMultiplyTheMacrosIntoOneEntry() throws {
+        let store = store()
+        let shake = FoodFavourite(name: "Shake", proteinG: 30, carbsG: 5, fatG: 2)
+        store.save(shake)
+
+        #expect(store.log(shake, servings: 2))
+
+        #expect(store.entries.count == 1)
+        #expect(store.entries[0].proteinG == 60)
+        #expect(store.entries[0].name == "Shake ×2")
+        // A double serving is one reach for the menu, not two.
+        #expect(store.favourites.first?.timesUsed == 1)
+    }
+
+    @Test func aCaloriesOnlyFavouriteScalesToo() throws {
+        let store = store()
+        let takeaway = FoodFavourite(name: "Takeaway", enteredCalories: 900)
+        store.save(takeaway)
+
+        #expect(store.log(takeaway, servings: 2))
+        #expect(store.entries[0].calories == 1800)
+        #expect(store.entries[0].proteinG == 0)
+    }
+
     /// Most-used first, so the four things you actually eat rise to the top
     /// without a sorting screen.
     @Test func favouritesAreOrderedByUse() {
