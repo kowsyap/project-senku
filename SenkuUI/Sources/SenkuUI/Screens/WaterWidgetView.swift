@@ -113,9 +113,18 @@ public struct WaterWidgetView: View {
         #if canImport(AppIntents)
         if #available(iOS 17.0, *) {
             Button(intent: LogWaterIntent(millilitres: millilitres)) {
-                Text("\(millilitres)")
-                    .font(.system(size: size == .medium ? 14 : 12, weight: .bold, design: .rounded))
-                    .monospacedDigit()
+                // The unit, at two thirds the size and a little faded: a bare
+                // "250" on a Home Screen is a number with no subject, and the
+                // widget has no title bar to supply one. Baseline-aligned so
+                // the digits stay on the line they would be on alone.
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text("\(millilitres)")
+                        .font(.system(size: size == .medium ? 14 : 12, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    Text("ml")
+                        .font(.system(size: size == .medium ? 9 : 8, weight: .semibold))
+                        .opacity(0.7)
+                }
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, minHeight: buttonHeight)
