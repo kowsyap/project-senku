@@ -56,6 +56,8 @@ public struct RootView: View {
     @State private var isConfirmingResetAgain = false
     #if os(iOS)
     @State private var exportedReport: ExportedReport?
+    @State private var isChoosingExport = false
+    @State private var reportSelection = ReportSelection.load()
     #endif
 
     /// How much room the scrolling bar needs at the bottom of every page.
@@ -257,7 +259,7 @@ public struct RootView: View {
         .confirmationDialog("Senku data", isPresented: $isShowingDataMenu, titleVisibility: .visible) {
             Button("Import Data") { isImporting = true }
             #if os(iOS)
-            Button("Export PDF") { exportReport() }
+            Button("Export PDF") { isChoosingExport = true }
             #endif
             Button("Hard Reset", role: .destructive) { isConfirmingReset = true }
             Button("Cancel", role: .cancel) {}
@@ -279,6 +281,17 @@ public struct RootView: View {
             Text("There is no backup and no undo. Export a report first if you want a copy.")
         }
         #if os(iOS)
+        .sheet(isPresented: $isChoosingExport) {
+            ReportOptionsView(selection: $reportSelection) {
+                isChoosingExport = false
+                // After the sheet is gone: two sheets cannot be presented from
+                // the same view at once, and the share sheet is the one that
+                // needs to be here.
+                DispatchQueue.main.async { exportReport() }
+            } onCancel: {
+                isChoosingExport = false
+            }
+        }
         .sheet(item: $exportedReport) { report in
             ShareSheet(urls: report.urls)
         }
@@ -395,7 +408,9 @@ public struct RootView: View {
     /// than asking which you meant.
     #if os(iOS)
     private func exportReport() {
-        guard let pdf = ReportPDF.build(
+        reportSelection.save()
+
+        let pdf = reportSelection.isEmpty ? nil : ReportPDF.build(
             profile: store.profile,
             weights: weightLog,
             records: records,
@@ -405,14 +420,22 @@ public struct RootView: View {
             anime: anime,
             water: water,
             intake: intake,
-            unitSystem: store.profile?.unitSystem ?? UnitPreference.current
-        ) else {
+            unitSystem: store.profile?.unitSystem ?? UnitPreference.current,
+            selection: reportSelection
+        )
+
+        if !reportSelection.isEmpty, pdf == nil {
             importFailure = "The report could not be written."
             return
         }
 
-        var files = [pdf]
-        if let backup = writeBackup() { files.append(backup) }
+        var files = [pdf].compactMap { $0 }
+        if reportSelection.backup, let backup = writeBackup() { files.append(backup) }
+
+        guard !files.isEmpty else {
+            importFailure = "Nothing was selected to export."
+            return
+        }
 
         exportedReport = ExportedReport(urls: files)
     }

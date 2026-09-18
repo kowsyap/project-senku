@@ -34,9 +34,10 @@ public enum ReportPDF {
         anime: AnimeStore,
         water: WaterStore,
         intake: IntakeStore,
-        unitSystem: UnitSystem
+        unitSystem: UnitSystem,
+        selection: ReportSelection = ReportSelection()
     ) -> URL? {
-        let text = compose(
+        let blocks = compose(
             profile: profile,
             weights: weights,
             records: records,
@@ -46,7 +47,8 @@ public enum ReportPDF {
             anime: anime,
             water: water,
             intake: intake,
-            unitSystem: unitSystem
+            unitSystem: unitSystem,
+            selection: selection
         )
 
         let url = FileManager.default.temporaryDirectory
@@ -59,47 +61,7 @@ public enum ReportPDF {
 
         do {
             try renderer.writePDF(to: url) { context in
-                let framesetter = CTFramesetterCreateWithAttributedString(text)
-                let column = CGRect(
-                    x: margin,
-                    y: margin,
-                    width: pageSize.width - 2 * margin,
-                    height: pageSize.height - 2 * margin
-                )
-
-                var start = 0
-                var page = 0
-                let total = text.length
-
-                while start < total {
-                    context.beginPage()
-                    page += 1
-
-                    guard let cgContext = UIGraphicsGetCurrentContext() else { break }
-
-                    // Core Text draws bottom-up; the flip puts the origin back
-                    // at the top left where the rest of the layout assumes it.
-                    cgContext.textMatrix = .identity
-                    cgContext.translateBy(x: 0, y: pageSize.height)
-                    cgContext.scaleBy(x: 1, y: -1)
-
-                    let path = CGPath(rect: column, transform: nil)
-                    let frame = CTFramesetterCreateFrame(
-                        framesetter,
-                        CFRangeMake(start, 0),
-                        path,
-                        nil
-                    )
-                    CTFrameDraw(frame, cgContext)
-
-                    let consumed = CTFrameGetVisibleStringRange(frame)
-                    // A page that fits nothing would loop for ever — a single
-                    // word longer than the column, say. Stop rather than hang.
-                    guard consumed.length > 0 else { break }
-                    start += consumed.length
-
-                    drawFooter(page: page, in: cgContext)
-                }
+                draw(blocks, into: context)
             }
             return url
         } catch {
@@ -107,7 +69,165 @@ public enum ReportPDF {
         }
     }
 
+    /// One thing on a page: a run of text, or a chart.
+    ///
+    /// The report used to be a single attributed string flowed through Core
+    /// Text, which paginates beautifully and cannot hold a picture. Splitting it
+    /// into blocks keeps that flow for the text — a workout history of any
+    /// length still cannot run off the bottom — while letting a chart say "I am
+    /// 150 points tall, give me a page that has room".
+    private enum Block {
+        case text(NSAttributedString)
+        case chart(ReportChart)
+    }
+
+    private static func draw(_ blocks: [Block], into context: UIGraphicsPDFRendererContext) {
+        let columnWidth = pageSize.width - 2 * margin
+        let bottom = pageSize.height - margin
+
+        var page = 0
+        var cursor = pageSize.height   // forces the first page
+        var cgContext: CGContext?
+
+        func newPage() {
+            if cgContext != nil { drawFooter(page: page, in: cgContext!) }
+            context.beginPage()
+            page += 1
+            cursor = margin
+
+            guard let fresh = UIGraphicsGetCurrentContext() else { return }
+            // Core Text draws bottom-up; the flip puts the origin back at the
+            // top left where the rest of the layout assumes it.
+            fresh.textMatrix = .identity
+            fresh.translateBy(x: 0, y: pageSize.height)
+            fresh.scaleBy(x: 1, y: -1)
+            cgContext = fresh
+        }
+
+        for block in blocks {
+            switch block {
+            case .text(let text):
+                let framesetter = CTFramesetterCreateWithAttributedString(text)
+                var start = 0
+
+                while start < text.length {
+                    // A sliver at the foot of a page fits nothing and would
+                    // loop; start the next page instead.
+                    if cursor > bottom - 40 { newPage() }
+                    guard let cg = cgContext else { return }
+
+                    // `cursor` is measured down from the top of the page, but
+                    // the flipped context measures up from the bottom — so a
+                    // column that starts `cursor` below the top is one that
+                    // ends `cursor` below the top edge and runs to the bottom
+                    // margin. Core Text then fills it from its top downwards,
+                    // which is where the text belongs.
+                    let column = CGRect(
+                        x: margin,
+                        y: margin,
+                        width: columnWidth,
+                        height: pageSize.height - margin - cursor
+                    )
+                    let frame = CTFramesetterCreateFrame(
+                        framesetter,
+                        CFRangeMake(start, 0),
+                        CGPath(rect: column, transform: nil),
+                        nil
+                    )
+                    CTFrameDraw(frame, cg)
+
+                    let consumed = CTFrameGetVisibleStringRange(frame)
+                    guard consumed.length > 0 else {
+                        // Nothing fits even on a fresh page — a single
+                        // unbreakable line taller than the column. Stop rather
+                        // than spin.
+                        if cursor <= margin { return }
+                        newPage()
+                        continue
+                    }
+
+                    start += consumed.length
+
+                    // How far down the page the text actually reached, so the
+                    // next block starts under it rather than over it.
+                    let used = CTFrameGetLines(frame) as? [CTLine] ?? []
+                    if start >= text.length, !used.isEmpty {
+                        var origins = [CGPoint](repeating: .zero, count: used.count)
+                        CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), &origins)
+
+                        var descent: CGFloat = 0
+                        CTLineGetTypographicBounds(used[used.count - 1], nil, &descent, nil)
+
+                        // Origins come back in the page's bottom-up space, so
+                        // the foot of the last line converts straight into a
+                        // distance from the top.
+                        let foot = origins[origins.count - 1].y - descent
+                        cursor = pageSize.height - foot + 4
+                    } else {
+                        cursor = bottom
+                    }
+                }
+
+            case .chart(let chart):
+                guard chart.isDrawable else { continue }
+
+                if cursor + ReportChart.height > bottom { newPage() }
+                guard let cg = cgContext else { return }
+
+                // The chart is drawn with UIKit text, which wants the unflipped
+                // page — so the flip is undone for the duration and the chart's
+                // rectangle converted into that space.
+                cg.saveGState()
+                cg.translateBy(x: 0, y: pageSize.height)
+                cg.scaleBy(x: 1, y: -1)
+
+                chart.draw(
+                    in: CGRect(
+                        x: margin,
+                        y: cursor,
+                        width: columnWidth,
+                        height: ReportChart.height
+                    ),
+                    context: cg
+                )
+                cg.restoreGState()
+
+                cursor += ReportChart.height + 10
+            }
+        }
+
+        if let cgContext { drawFooter(page: page, in: cgContext) }
+    }
+
     // MARK: - Content
+
+    /// Collects text and charts in the order they are written.
+    ///
+    /// A class with an `append` of its own, so every line of the composition
+    /// below reads exactly as it did when the report was one long string — the
+    /// only new verb is `chart`.
+    private final class Composer {
+        private var blocks: [Block] = []
+        private var current = NSMutableAttributedString()
+
+        func append(_ text: NSAttributedString) { current.append(text) }
+
+        func chart(_ chart: ReportChart) {
+            flush()
+            blocks.append(.chart(chart))
+        }
+
+        private func flush() {
+            guard current.length > 0 else { return }
+            blocks.append(.text(current))
+            current = NSMutableAttributedString()
+        }
+
+        func finish() -> [Block] {
+            flush()
+            return blocks
+        }
+    }
 
     private static func compose(
         profile: ProfileStore.Profile?,
@@ -119,15 +239,16 @@ public enum ReportPDF {
         anime: AnimeStore,
         water: WaterStore,
         intake: IntakeStore,
-        unitSystem: UnitSystem
-    ) -> NSAttributedString {
-        let out = NSMutableAttributedString()
+        unitSystem: UnitSystem,
+        selection: ReportSelection
+    ) -> [Block] {
+        let out = Composer()
 
         out.append(title("Senku"))
         out.append(body(Date.now.formatted(date: .complete, time: .shortened) + "\n\n"))
 
         // MARK: Profile
-        if let profile {
+        if let profile, selection.profile {
             out.append(heading("Profile"))
             if let name = profile.name, !name.isEmpty {
                 out.append(row("Name", name))
@@ -154,7 +275,7 @@ public enum ReportPDF {
 
         // MARK: Weight
         let series = weights.series
-        if !weights.weighIns.isEmpty {
+        if !weights.weighIns.isEmpty, selection.weight {
             out.append(heading("Weight"))
             if let last = weights.weighIns.first {
                 out.append(row("Last reading", "\(Display.mass(last.weightKG, in: unitSystem)) on \(last.date.formatted(date: .abbreviated, time: .omitted))"))
@@ -168,6 +289,32 @@ public enum ReportPDF {
             out.append(row("Readings", "\(weights.weighIns.count)"))
             out.append(body("\n"))
 
+            if selection.charts {
+                // Oldest to newest, which is the direction a trend is read in —
+                // the list below is newest first, because that is the direction
+                // a log is read in. They disagree on purpose.
+                let readings = weights.weighIns.reversed().map {
+                    ReportChart.Point(
+                        label: $0.date.formatted(date: .abbreviated, time: .omitted),
+                        value: unitSystem == .metric ? $0.weightKG : Convert.pounds(fromKilograms: $0.weightKG)
+                    )
+                }
+                out.chart(
+                    ReportChart(
+                        title: "Weight",
+                        kind: .line,
+                        points: readings,
+                        reference: profile?.goalWeightKG.map {
+                            unitSystem == .metric ? $0 : Convert.pounds(fromKilograms: $0)
+                        },
+                        referenceLabel: "goal",
+                        tint: UIColor(red: 0.42, green: 0.75, blue: 0.50, alpha: 1)
+                    ) { value in
+                        String(format: "%.1f %@", value, unitSystem.massLabel)
+                    }
+                )
+            }
+
             out.append(subheading("Every reading"))
             for weighIn in weights.weighIns {
                 out.append(body("\(weighIn.date.formatted(date: .abbreviated, time: .omitted))   \(Display.mass(weighIn.weightKG, in: unitSystem))\n"))
@@ -177,7 +324,7 @@ public enum ReportPDF {
 
         // MARK: Records
         let book = records.book
-        if !records.records.isEmpty {
+        if !records.records.isEmpty, selection.records {
             out.append(heading("Personal records"))
             for group in library.catalogue.workoutGroups {
                 let ids = Set(library.exercises(in: group).map(\.id))
@@ -202,7 +349,7 @@ public enum ReportPDF {
         }
 
         // MARK: Plan
-        if plans.hasPlan {
+        if plans.hasPlan, selection.plan {
             out.append(heading("Training plan"))
             for day in plans.days {
                 out.append(subheading(day.name))
@@ -252,7 +399,7 @@ public enum ReportPDF {
         }
 
         // MARK: Workouts
-        if !workouts.history.isEmpty {
+        if !workouts.history.isEmpty, selection.workouts {
             out.append(heading("Workouts"))
             for session in workouts.history {
                 out.append(subheading("\(session.dayName) — \(session.date.formatted(date: .abbreviated, time: .omitted))"))
@@ -278,7 +425,7 @@ public enum ReportPDF {
         // Thirty days rather than every drink ever logged. A glass at 11:04 is
         // data the app needs and nobody reads; the day's total against the
         // day's goal is the thing a person — or a coach — can act on.
-        if !water.entries.isEmpty {
+        if !water.entries.isEmpty, selection.water {
             out.append(heading("Water"))
 
             let days = water.log.recentTotals(days: 30)
@@ -298,6 +445,24 @@ public enum ReportPDF {
             }
             out.append(body("\n"))
 
+            if selection.charts {
+                out.chart(
+                    ReportChart(
+                        title: "Water, last 30 days",
+                        kind: .bars,
+                        points: days.reversed().map {
+                            ReportChart.Point(
+                                label: $0.date.formatted(.dateTime.day().month(.abbreviated)),
+                                value: $0.totalML
+                            )
+                        },
+                        reference: goalToday.totalML > 0 ? goalToday.totalML : nil,
+                        referenceLabel: "goal",
+                        tint: UIColor(red: 0.35, green: 0.62, blue: 0.92, alpha: 1)
+                    ) { "\(Int($0.rounded())) ml" }
+                )
+            }
+
             out.append(subheading("Last 30 days"))
             for day in days where day.totalML > 0 {
                 let goal = water.goal(profile: profile, workouts: workouts, on: day.date)
@@ -308,7 +473,7 @@ public enum ReportPDF {
         }
 
         // MARK: Food
-        if !intake.entries.isEmpty {
+        if !intake.entries.isEmpty, selection.food {
             out.append(heading("Food"))
 
             if let targets = intake.targets(profile: profile) {
@@ -332,9 +497,42 @@ public enum ReportPDF {
                 let days = intake.log.recentDays(30, targets: targets).filter { !$0.isUnlogged }
                 let proteinMet = days.filter(\.isProteinMet).count
                 let caloriesMet = days.filter(\.isCaloriesMet).count
-                out.append(row("Protein target met", "\(proteinMet) of \(days.count) logged days"))
-                out.append(row("Calories within 10%", "\(caloriesMet) of \(days.count) logged days"))
+                out.append(row("Protein met", "\(proteinMet) of \(days.count) logged days"))
+                out.append(row("Calories in band", "\(caloriesMet) of \(days.count) logged days"))
                 out.append(body("\n"))
+
+                if selection.charts {
+                    let window = intake.log.recentDays(30, targets: targets).reversed()
+                    let labels = window.map {
+                        $0.date.formatted(.dateTime.day().month(.abbreviated))
+                    }
+
+                    out.chart(
+                        ReportChart(
+                            title: "Protein, last 30 days",
+                            kind: .bars,
+                            points: zip(labels, window).map {
+                                ReportChart.Point(label: $0, value: $1.proteinG)
+                            },
+                            reference: targets.proteinGrams,
+                            referenceLabel: "target",
+                            tint: UIColor(red: 0.35, green: 0.55, blue: 0.95, alpha: 1)
+                        ) { "\(Int($0.rounded())) g" }
+                    )
+
+                    out.chart(
+                        ReportChart(
+                            title: "Calories, last 30 days",
+                            kind: .bars,
+                            points: zip(labels, window).map {
+                                ReportChart.Point(label: $0, value: $1.calories)
+                            },
+                            reference: targets.calories,
+                            referenceLabel: "target",
+                            tint: UIColor(red: 0.98, green: 0.68, blue: 0.24, alpha: 1)
+                        ) { "\(Int($0.rounded())) kcal" }
+                    )
+                }
 
                 out.append(subheading("Last 30 days"))
                 for day in days {
@@ -360,7 +558,7 @@ public enum ReportPDF {
         }
 
         // MARK: Anime
-        if !anime.entries.isEmpty {
+        if !anime.entries.isEmpty, selection.anime {
             out.append(heading("Anime"))
             for status in AnimeStatus.allCases {
                 let shown = anime.list(status: status, sort: .title)
@@ -368,16 +566,18 @@ public enum ReportPDF {
 
                 out.append(subheading("\(status.title) (\(shown.count))"))
                 for series in shown {
+                    // Title and counts only. Genres are how the list is
+                    // searched in the app, not something anyone reads down a
+                    // column on paper.
                     var line = series.title
                     if !series.countSummary.isEmpty { line += "   \(series.countSummary)" }
-                    if !series.genres.isEmpty { line += "   \(series.genres.joined(separator: ", "))" }
                     out.append(body(line + "\n"))
                 }
                 out.append(body("\n"))
             }
         }
 
-        return out
+        return out.finish()
     }
 
     // MARK: - Type
@@ -398,8 +598,14 @@ public enum ReportPDF {
         attributed(text, font: .monospacedSystemFont(ofSize: 10, weight: .regular), spacing: 2)
     }
 
+    /// A label and its value, in a monospaced column.
+    ///
+    /// The pad is `label.count + 2` rather than `label.count`: a label longer
+    /// than the column got no padding at all, so "Protein target met" and "4 of
+    /// 26 logged days" printed as one run-on word. Two spaces is the least that
+    /// still reads as two things.
     private static func row(_ label: String, _ value: String) -> NSAttributedString {
-        body("\(label.padding(toLength: max(label.count, 16), withPad: " ", startingAt: 0))\(value)\n")
+        body("\(label.padding(toLength: max(label.count + 2, 16), withPad: " ", startingAt: 0))\(value)\n")
     }
 
     private static func attributed(
