@@ -10,6 +10,13 @@ import SenkuUI
 struct SenkuApp: App {
     init() {
         RestAlerts.installPresenter()
+
+        // Before any scene exists. The watch can wake this app in the
+        // background, and everything it asks for has to work with no window —
+        // see PhoneSync for the two days of stale figures that proved it.
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        MainActor.assumeIsolated { PhoneSync.start() }
+        #endif
     }
 
     var body: some Scene {

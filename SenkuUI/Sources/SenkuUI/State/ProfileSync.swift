@@ -84,6 +84,13 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
 
     private var latestIntake: IntakeSummary?
 
+    /// Phone side: how to answer "send me what you have".
+    ///
+    /// Without this a refresh replayed whatever was last held in memory, which
+    /// in a background launch — the case a refresh request *creates* — was
+    /// nothing at all. See ``PhoneSync``.
+    private var onRefreshRequest: (@MainActor () -> Void)?
+
     /// Records that arrived before anything was listening for them.
     ///
     /// A queued transfer launches the phone app in the background, and the
@@ -147,6 +154,12 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         let waiting = undeliveredDrinks
         undeliveredDrinks = []
         waiting.forEach(handler)
+    }
+
+    /// Phone side: what to publish when the watch asks for a refresh.
+    @MainActor
+    public func onRefreshRequested(_ handler: @escaping @MainActor () -> Void) {
+        onRefreshRequest = handler
     }
 
     /// Watch side: what to do when the phone's food figures arrive.
@@ -314,6 +327,20 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         #endif
     }
 
+    /// Rebuild from storage if anyone knows how; otherwise re-send what is
+    /// held, which is all an older build could do.
+    private func answerRefresh() {
+        #if os(iOS)
+        Task { @MainActor [onRefreshRequest] in
+            if let onRefreshRequest {
+                onRefreshRequest()
+            } else {
+                self.sendIfSender()
+            }
+        }
+        #endif
+    }
+
     /// The phone is the only side that publishes.
     private func sendIfSender() {
         #if os(iOS)
@@ -431,7 +458,18 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         // activation, so a watch that was off when the profile changed still
         // catches up the moment it comes back.
         receive(session.receivedApplicationContext)
-        sendIfSender()
+        #if os(iOS)
+        answerRefresh()
+        #else
+        // Ask, now that asking is possible.
+        //
+        // The watch requests a refresh as its first screen appears, which is
+        // usually *before* activation finishes — and `requestRefresh` quietly
+        // does nothing when the session is not activated yet. So the opening
+        // request was routinely thrown away, and the watch relied on a later
+        // tab change to try again. This is the retry that was missing.
+        requestRefresh()
+        #endif
     }
 
     public func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
@@ -447,7 +485,7 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         if message[Self.refreshKey] != nil {
             // Re-publishing costs one delivery: an application context replaces
             // whatever was queued rather than adding to it.
-            sendIfSender()
+            answerRefresh()
         }
         #endif
     }
@@ -458,7 +496,7 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         receiveMeal(userInfo)
 
         #if os(iOS)
-        if userInfo[Self.refreshKey] != nil { sendIfSender() }
+        if userInfo[Self.refreshKey] != nil { answerRefresh() }
         #endif
     }
 
@@ -470,10 +508,21 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     public func sessionDidDeactivate(_ session: WCSession) {
         session.activate()
     }
+    #endif
 
+    #if os(iOS)
     /// A newly paired or freshly installed watch has nothing. Push to it.
     public func sessionWatchStateDidChange(_ session: WCSession) {
-        sendIfSender()
+        answerRefresh()
+    }
+    #endif
+
+    #if os(watchOS)
+    /// The phone came back into range. Whatever changed while the two were
+    /// apart is worth asking for now, rather than at the next tab change.
+    public func sessionReachabilityDidChange(_ session: WCSession) {
+        guard session.isReachable else { return }
+        requestRefresh()
     }
     #endif
 }
