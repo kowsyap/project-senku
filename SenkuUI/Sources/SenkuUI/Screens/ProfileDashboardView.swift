@@ -81,7 +81,6 @@ public struct ProfileDashboardView: View {
             StatRow("Goal", value: profile.goal.title)
             goalWeightRow
             StatRow("Formula", value: profile.plan.energy.formulaUsed.title)
-            StatRow("Units", value: profile.unitSystem.title)
         }
     }
 

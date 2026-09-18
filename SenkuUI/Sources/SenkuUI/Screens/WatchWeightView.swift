@@ -28,7 +28,7 @@ public struct WatchWeightView: View {
 
     public var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 6) {
                 headline
 
                 if let goal = summary.goalWeightKG {
@@ -85,10 +85,10 @@ public struct WatchWeightView: View {
     private func figure(_ label: String, value: String, tint: Color, detail: String?) -> some View {
         VStack(spacing: 0) {
             Text(label)
-                .font(.system(size: 9, weight: .heavy))
+                .font(.system(size: 8, weight: .heavy))
                 .foregroundStyle(.secondary)
             Text(value)
-                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .font(.system(size: 22, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)

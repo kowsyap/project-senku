@@ -27,7 +27,7 @@ public struct TargetsView: View {
         self.size = size
     }
 
-    private var unitSystem: UnitSystem { profile?.unitSystem ?? .metric }
+    private var unitSystem: UnitSystem { profile?.unitSystem ?? UnitPreference.current }
 
     public var body: some View {
         if let plan = profile?.plan {

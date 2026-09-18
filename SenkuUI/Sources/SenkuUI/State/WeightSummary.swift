@@ -31,9 +31,13 @@ public struct WeightSummary: Codable, Hashable, Sendable {
 
     /// Built from what the phone holds, so the watch is never computing a trend
     /// from a slice of the history and quietly disagreeing with the phone.
+    ///
+    /// `lastWeightKG` is the newest weigh-in itself rather than its day's mean.
+    /// The watch shows it as LAST and seeds its dial from it, and both of those
+    /// are claims about the last number you entered.
     public init(log: WeightLogStore, profile: ProfileStore.Profile?) {
         let series = log.series
-        self.lastWeightKG = series.latest?.weightKG
+        self.lastWeightKG = log.weighIns.first?.weightKG
         self.lastLoggedAt = log.weighIns.first?.date
         self.trendKG = series.trendKG
         self.goalWeightKG = profile?.goalWeightKG

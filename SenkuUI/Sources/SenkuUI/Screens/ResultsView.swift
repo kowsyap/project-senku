@@ -64,8 +64,8 @@ public struct ResultsView: View {
             StatRow("Fiber", value: Display.grams(macros.fiberGrams))
             StatRow(
                 "Water",
-                value: Display.volume(macros.waterML, in: unitSystem),
-                detail: "+\(Display.volume(macros.trainingDayExtraWaterML, in: unitSystem)) on training days"
+                value: Display.millilitres(macros.waterML),
+                detail: "+\(Display.millilitres(macros.trainingDayExtraWaterML)) on training days"
             )
         }
     }

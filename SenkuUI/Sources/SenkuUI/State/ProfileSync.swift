@@ -30,20 +30,21 @@ import WatchConnectivity
 /// reachable at the moment of saving, which is not a condition the phone should
 /// have to meet to save your own numbers.
 ///
-/// ## One direction, on purpose
+/// ## What travels, and what does not
 ///
-/// The phone owns the profile; the watch displays it. That is the watch app's
-/// stated design — "the watch reads the profile; it does not edit it" — and it
-/// means there is no merge to get wrong. When the watch gains something of its
-/// own worth keeping, it gets its own key and its own direction rather than a
-/// two-way sync of the same one.
+/// The profile goes phone to watch, and weigh-ins come back the other way. The
+/// **rest timer is deliberately not synced**: it was, briefly, and a mirrored
+/// countdown turns out to be the wrong idea — the two devices are for two
+/// different moments, and a rest you started on your wrist appearing on a phone
+/// in your bag (or worse, a phone tap resetting the watch mid-set) is
+/// interference dressed as a feature. Each device runs its own.
 public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable {
     public static let shared = ProfileSync()
 
     private static let profileKey = "senku.profile"
-    private static let restKey = "senku.rest"
     private static let weightKey = "senku.weightSummary"
     private static let weighInKey = "senku.weighIn"
+    private static let refreshKey = "senku.refresh"
 
     /// Called on the main actor with whatever the counterpart last had:
     /// a profile, or nil where it has none.
@@ -63,48 +64,35 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     /// back or the watch asks.
     private var latestWeight: WeightSummary?
 
-    /// Called on the main actor when the other device starts, changes or ends a
-    /// rest. Both devices send and both receive: unlike the profile, a rest has
-    /// no owner — you start it on whichever is nearer to hand.
-    private var onRest: (@MainActor (RestTimer?) -> Void)?
-
     private override init() { super.init() }
 
     private var session: WCSession? {
         WCSession.isSupported() ? .default : nil
     }
 
-    /// Mirrors a rest to the other device.
+    /// Watch → phone: "send me what you have."
     ///
-    /// `sendMessage` when the counterpart is awake, because a rest is only
-    /// interesting while it runs and a queued copy that lands after it ends is
-    /// noise. `transferUserInfo` otherwise, so a timer started on the watch is
-    /// still waiting on the phone when you pick it up — it carries an absolute
-    /// deadline, so a late arrival is still correct.
-    public func send(rest timer: RestTimer?) {
+    /// The application context is delivered when the system feels like it, and
+    /// a profile saved while the watch app was closed can sit unread for longer
+    /// than anyone watching the two screens will believe. A message from the
+    /// watch wakes the phone app in the background — the one direction that can
+    /// — so asking is both possible and immediate.
+    public func requestRefresh() {
+        #if os(watchOS)
         guard let session, session.activationState == .activated else { return }
-        #if os(iOS)
-        guard session.isPaired, session.isWatchAppInstalled else { return }
+
+        // Not gated on `isReachable`. That flag is false whenever the phone app
+        // is not already running, which is most of the time — and a message is
+        // precisely what wakes it. Asking and letting it fail costs nothing;
+        // refusing to ask because it *might* fail is how a profile saved on the
+        // phone stayed invisible on the watch.
+        let request = [Self.refreshKey: true]
+        session.sendMessage(request, replyHandler: nil) { _ in
+            // Out of range or the phone is off. Queue it instead, so the next
+            // time the two are together the watch still gets an answer.
+            session.transferUserInfo(request)
+        }
         #endif
-
-        let payload: [String: Any]
-        if let timer, let data = try? JSONEncoder().encode(timer) {
-            payload = [Self.restKey: data]
-        } else {
-            payload = [Self.restKey: Data()]
-        }
-
-        if session.isReachable {
-            session.sendMessage(payload, replyHandler: nil) { _ in }
-        } else {
-            session.transferUserInfo(payload)
-        }
-    }
-
-    /// Registers what to do with a rest the other device sent.
-    @MainActor
-    public func onRestReceived(_ handler: @escaping @MainActor (RestTimer?) -> Void) {
-        onRest = handler
     }
 
     /// Watch side: what to do when the phone sends its weight figures.
@@ -219,18 +207,6 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         #endif
     }
 
-    private func receiveRest(_ payload: [String: Any]) {
-        guard let data = payload[Self.restKey] as? Data else { return }
-
-        // An empty value is "there is no rest any more" — a reset on the other
-        // device — and has to be distinguishable from no news at all.
-        let timer = data.isEmpty ? nil : try? JSONDecoder().decode(RestTimer.self, from: data)
-
-        Task { @MainActor [onRest] in
-            onRest?(timer)
-        }
-    }
-
     /// Applies an incoming profile — on the watch only.
     ///
     /// ## The bug this guard exists for
@@ -287,13 +263,23 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     }
 
     public func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        receiveRest(message)
         receiveWeighIn(message)
+
+        #if os(iOS)
+        if message[Self.refreshKey] != nil {
+            // Re-publishing costs one delivery: an application context replaces
+            // whatever was queued rather than adding to it.
+            sendIfSender()
+        }
+        #endif
     }
 
     public func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
-        receiveRest(userInfo)
         receiveWeighIn(userInfo)
+
+        #if os(iOS)
+        if userInfo[Self.refreshKey] != nil { sendIfSender() }
+        #endif
     }
 
     #if os(iOS)

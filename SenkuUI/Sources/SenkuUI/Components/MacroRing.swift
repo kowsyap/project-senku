@@ -52,7 +52,14 @@ public struct MacroRing: View {
 
             VStack(spacing: 0) {
                 Text(Display.calories(macros.calories))
+                    // A watch is not a small phone: `.title` inside a 78-point
+                    // ring leaves no room for the ring itself, and the figure is
+                    // read from a wrist at arm's length, not across a room.
+                    #if os(watchOS)
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    #else
                     .font(.system(.title, design: .rounded).weight(.bold))
+                    #endif
                     .monospacedDigit()
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
@@ -84,34 +91,56 @@ public struct MacroLegend: View {
     }
 
     public var body: some View {
+        #if os(watchOS)
+        VStack(alignment: .leading, spacing: 3) {
+            row("Protein", Senku.Palette.protein, macros.proteinGrams, macros.proteinPercentage)
+            row("Carbs", Senku.Palette.carbs, macros.carbGrams, macros.carbPercentage)
+            row("Fat", Senku.Palette.fat, macros.fatGrams, macros.fatPercentage)
+        }
+        #else
         VStack(alignment: .leading, spacing: 8) {
             row("Protein", Senku.Palette.protein, macros.proteinGrams, macros.proteinPercentage)
             row("Carbs", Senku.Palette.carbs, macros.carbGrams, macros.carbPercentage)
             row("Fat", Senku.Palette.fat, macros.fatGrams, macros.fatPercentage)
         }
+        #endif
     }
 
     private func row(_ label: String, _ color: Color, _ grams: Double, _ percent: Double) -> some View {
-        HStack(spacing: 8) {
+        #if os(watchOS)
+        let swatch: CGFloat = 7
+        let nameFont = Font.system(size: 12)
+        let valueFont = Font.system(size: 12, weight: .semibold)
+        let percentFont = Font.system(size: 10)
+        let percentWidth: CGFloat = 28
+        #else
+        let swatch: CGFloat = 10
+        let nameFont = Font.subheadline
+        let valueFont = Font.subheadline.weight(.semibold)
+        let percentFont = Font.caption
+        let percentWidth: CGFloat = 34
+        #endif
+
+        return HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 2, style: .continuous)
                 .fill(color)
-                .frame(width: 10, height: 10)
+                .frame(width: swatch, height: swatch)
                 .accessibilityHidden(true)
 
             Text(label)
-                .font(.subheadline)
+                .font(nameFont)
 
-            Spacer(minLength: 6)
+            Spacer(minLength: 4)
 
             Text(Display.grams(grams))
-                .font(.subheadline.weight(.semibold))
+                .font(valueFont)
                 .monospacedDigit()
 
             Text(Display.percent(percent))
-                .font(.caption)
+                .font(percentFont)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
-                .frame(width: 34, alignment: .trailing)
+                .frame(width: percentWidth, alignment: .trailing)
         }
         .accessibilityElement(children: .combine)
     }

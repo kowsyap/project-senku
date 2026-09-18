@@ -4,9 +4,14 @@ import SenkuUI
 
 /// The watchOS entry point.
 ///
-/// Two tabs, and the order is deliberate: Rest comes first because it is the
-/// only reason to raise your wrist mid-set. The plan is the reference you check
-/// occasionally; the timer is the thing you came for.
+/// Three pages: the plan, the timer, the scale. Rest sits in the middle and is
+/// what the app opens on — the page you came for is one you land on, not one
+/// you scroll to, and being in the middle means either neighbour is a single
+/// swipe away.
+///
+/// None of them carry a title. A page heading on a watch names what you are
+/// already looking at and costs a fifth of the screen to do it — and with the
+/// vertical page style, the dots at the edge already say where you are.
 ///
 /// The watch reads the profile; it does not edit it. Until WatchConnectivity
 /// lands in Phase 3 this reads the watch's own storage, so the plan tab stays
@@ -14,6 +19,8 @@ import SenkuUI
 /// profile, which is why it is useful on day one.
 @main
 struct SenkuWatchApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var store = ProfileStore()
     @State private var selection = Tab.rest
 
@@ -24,20 +31,25 @@ struct SenkuWatchApp: App {
 
     private enum Tab: Hashable { case rest, plan, weight }
 
+    init() {
+        // Before anything can schedule a rest. Without it the alert is
+        // suppressed for arriving while the app is on screen — which, with the
+        // runtime session holding the app in front, is every time.
+        RestAlerts.installPresenter()
+    }
+
     var body: some Scene {
         WindowGroup {
             TabView(selection: $selection) {
                 NavigationStack {
-                    RestTimerView()
-                        .navigationTitle("Rest")
-                }
-                .tag(Tab.rest)
-
-                NavigationStack {
                     planTab
-                        .navigationTitle("Plan")
                 }
                 .tag(Tab.plan)
+
+                NavigationStack {
+                    RestTimerView()
+                }
+                .tag(Tab.rest)
 
                 NavigationStack {
                     WatchWeightView(summary: weight) { weightKG in
@@ -48,7 +60,6 @@ struct SenkuWatchApp: App {
                         weight.lastWeightKG = weightKG
                         weight.lastLoggedAt = .now
                     }
-                    .navigationTitle("Weight")
                 }
                 .tag(Tab.weight)
             }
@@ -59,6 +70,23 @@ struct SenkuWatchApp: App {
                 ProfileSync.shared.start(applying: store)
                 ProfileSync.shared.onWeightSummaryReceived { summary in
                     if let summary { weight = summary }
+                }
+
+                // And ask, rather than only wait. A profile edited on the phone
+                // while this app was closed would otherwise arrive whenever the
+                // system got round to it.
+                ProfileSync.shared.requestRefresh()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                // Coming back to the app is the moment its numbers are most
+                // likely to be out of date.
+                if phase == .active { ProfileSync.shared.requestRefresh() }
+            }
+            .onChange(of: selection) { _, tab in
+                // Opening the tab that shows the phone's numbers is the moment
+                // to make sure they are the phone's current ones.
+                if tab == .plan || tab == .weight {
+                    ProfileSync.shared.requestRefresh()
                 }
             }
             .onOpenURL { url in
