@@ -2,6 +2,13 @@
 import SwiftUI
 import SenkuCore
 
+/// An exercise id, for `sheet(item:)`.
+private struct ExerciseID: Identifiable, Hashable {
+    let id: String
+
+    init(_ id: String) { self.id = id }
+}
+
 /// Every lift you have a record on.
 ///
 /// A record, not a plan: this outlives whatever split you are running, and
@@ -10,18 +17,33 @@ import SenkuCore
 public struct RecordsView: View {
     @State private var store: RecordStore
     @State private var isAdding = false
-    @State private var detail: ExerciseRecords?
+    /// Which exercise's history is open, by id.
+    ///
+    /// Not the `ExerciseRecords` value itself: that is a snapshot computed from
+    /// the store, so a sheet holding one went on showing the records as they
+    /// were when it opened while adding and deleting changed the store behind
+    /// it. An id is the only part that does not go stale.
+    @State private var detailID: ExerciseID?
 
     @State private var library: ExerciseLibrary
+    @State private var protocols: CardioProtocolStore
+    @State private var cardioRecords: CardioRecordStore
     private let unitSystem: UnitSystem
+
+    /// Which cardio plan is open for editing.
+    @State private var editingProtocol: ExerciseID?
 
     public init(
         store: RecordStore = RecordStore(),
         library: ExerciseLibrary = ExerciseLibrary(),
+        protocols: CardioProtocolStore = CardioProtocolStore(),
+        cardioRecords: CardioRecordStore = CardioRecordStore(),
         unitSystem: UnitSystem = .metric
     ) {
         _store = State(initialValue: store)
         _library = State(initialValue: library)
+        _protocols = State(initialValue: protocols)
+        _cardioRecords = State(initialValue: cardioRecords)
         self.unitSystem = unitSystem
     }
 
@@ -47,23 +69,119 @@ public struct RecordsView: View {
         }
     }
 
+    /// Cardio, in the same shape as the rest of the page: one card per
+    /// exercise, headlined by the figure that exercise is measured in.
+    ///
+    /// That figure is **time**. There is no single "best" on a machine — a hard
+    /// twenty minutes beats a gentle forty — so the card leads with the longest
+    /// session and names the other bests underneath, and a session counts as a
+    /// record when it beats the time *or* any figure the machine reports.
+    @ViewBuilder
+    private var cardioSection: some View {
+        let entries = cardioRecords.book.byExercise
+
+        if !entries.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    GroupGlyph(group: .cardio, size: 16)
+                    Text(WorkoutGroup.cardio.title)
+                        .font(.footnote.weight(.semibold))
+                        .textCase(.uppercase)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.leading, 4)
+
+                ForEach(entries) { entry in
+                    Button {
+                        editingProtocol = ExerciseID(entry.exerciseID)
+                    } label: {
+                        cardioCard(entry)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func cardioCard(_ entry: CardioExerciseRecords) -> some View {
+        let exercise = library.exercise(entry.exerciseID)
+        let longest = entry.longest
+
+        // Built to the same shape as `recordCard` rather than to its own: the
+        // first version aligned on the first text baseline and glued the unit
+        // on with `Text + Text`, which floated the number away from the middle
+        // of the row and left a gap above the title. Two cards in one list have
+        // to be one card with different contents.
+        return Card {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name(of: entry.exerciseID))
+                        .font(.subheadline.weight(.semibold))
+                        .multilineTextAlignment(.leading)
+
+                    if let bests = cardioBests(entry, exercise: exercise) {
+                        Text(bests)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .multilineTextAlignment(.leading)
+                    }
+
+                    if let date = entry.mostRecent?.date {
+                        Text(date.formatted(.relative(presentation: .named)))
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text(longest.map { "\(Int(($0.seconds / 60).rounded()))" } ?? "—")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    Text("min")
+                        .font(.caption.weight(.semibold))
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .foregroundStyle(WorkoutGroup.cardio.tint)
+                .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+    }
+
+    /// "Best 8.0 km/h · 12%" — the other figures, if the machine reports any.
+    private func cardioBests(_ entry: CardioExerciseRecords, exercise: Exercise?) -> String? {
+        let parts = (exercise?.cardioMetrics ?? []).compactMap { metric -> String? in
+            guard let best = entry.best(metric) else { return nil }
+            let unit = metric.unit(metric: unitSystem == .metric)
+            let number = best.formatted(.number.precision(.fractionLength(0...metric.decimals)))
+            return unit.isEmpty ? "\(number) \(metric.title.lowercased())" : "\(number) \(unit)"
+        }
+        return parts.isEmpty ? nil : "Best " + parts.joined(separator: " · ")
+    }
+
     public var body: some View {
         ScrollView {
             VStack(spacing: Senku.Metrics.stackSpacing) {
-                if store.records.isEmpty {
+                if store.records.isEmpty, cardioRecords.records.isEmpty {
                     empty
                 } else {
+                    cardioSection
+
                     ForEach(sections, id: \.group) { section in
                         VStack(alignment: .leading, spacing: 6) {
-                            Label(section.group.title, systemImage: section.group.symbol)
-                                .font(.footnote.weight(.semibold))
-                                .textCase(.uppercase)
-                                .foregroundStyle(.secondary)
-                                .padding(.leading, 4)
+                            HStack(spacing: 6) {
+                                GroupGlyph(group: section.group, size: 16)
+                                Text(section.group.title)
+                                    .font(.footnote.weight(.semibold))
+                                    .textCase(.uppercase)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.leading, 4)
 
                             ForEach(section.entries) { record in
                                 Button {
-                                    detail = record
+                                    detailID = ExerciseID(record.exerciseID)
                                 } label: {
                                     recordCard(record)
                                 }
@@ -86,8 +204,23 @@ public struct RecordsView: View {
                 .accessibilityLabel("Add a personal record")
             }
         }
+        .sheet(item: $editingProtocol) { opened in
+            NavigationStack {
+                CardioDetailSheet(
+                    exerciseID: opened.id,
+                    name: name(of: opened.id),
+                    exercise: library.exercise(opened.id),
+                    records: cardioRecords,
+                    protocols: protocols,
+                    unitSystem: unitSystem
+                )
+            }
+        }
         .sheet(isPresented: $isAdding) {
             RecordEditor(
+                protocols: protocols,
+                cardioRecords: cardioRecords,
+                onCardioSaved: { isAdding = false },
                 unitSystem: unitSystem,
                 library: library,
                 // Already has a record: the next one goes inside it, dated.
@@ -109,27 +242,23 @@ public struct RecordsView: View {
                 isAdding = false
             }
         }
-        .sheet(item: $detail) { entry in
+        .sheet(item: $detailID) { opened in
             RecordDetailSheet(
-                entry: entry,
-                name: name(of: entry.exerciseID),
-                isBodyweight: library.exercise(entry.exerciseID)?.equipment == .bodyweight,
+                store: store,
+                exerciseID: opened.id,
+                name: name(of: opened.id),
+                isBodyweight: library.exercise(opened.id)?.equipment == .bodyweight,
+                isTimed: library.exercise(opened.id)?.isTimed == true,
                 unitSystem: unitSystem,
-                onDelete: { store.delete($0) },
-                onAdd: { store.add($0) },
-                onDeleteExercise: {
-                    store.deleteAll(forExercise: entry.exerciseID)
-                    detail = nil
-                },
-                onClose: { detail = nil }
+                onClose: { detailID = nil }
             )
         }
     }
 
     private func recordCard(_ entry: ExerciseRecords) -> some View {
         Card {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 1) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(name(of: entry.exerciseID))
                         .font(.subheadline.weight(.semibold))
                         .multilineTextAlignment(.leading)
@@ -139,31 +268,25 @@ public struct RecordsView: View {
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.leading)
 
-                    if let heaviest = entry.heaviest {
-                        Text("\(heaviest.date.formatted(.relative(presentation: .named)))\(heaviest.source.isLogged ? "" : " · typed in")")
+                    if let best = entry.best {
+                        Text(best.date.formatted(.relative(presentation: .named)))
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer(minLength: 8)
-
-                if let heaviest = entry.heaviest {
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text(lift(heaviest))
-                            .font(.headline)
-                            .monospacedDigit()
-                            .foregroundStyle(Senku.Palette.protein)
-
-                        if let best = entry.bestEstimated {
-                            // Named, because it is a formula's answer rather
-                            // than a lift that happened.
-                            Text("~\(Display.mass(best.estimatedOneRepMax, in: unitSystem, decimals: 0)) est. 1RM")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                    }
+                if let best = entry.best {
+                    // Right of the name, and as tall as it: the number is what
+                    // the row is for, so it is sized to the block beside it
+                    // rather than to the text it sits next to.
+                    Text(headline(best))
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
+                        .foregroundStyle(Senku.Palette.protein)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
             }
         }
@@ -183,18 +306,24 @@ public struct RecordsView: View {
         return ([exercise.equipment.title] + muscles).joined(separator: " · ")
     }
 
-    /// How a lift reads. A pull-up is not "0.0 kg × 12" — it is twelve
-    /// pull-ups, and added weight is written as the addition it is.
-    private func lift(_ record: PersonalRecord) -> String {
+    /// The one figure a row shows: what was on the bar.
+    ///
+    /// A pull-up has nothing on it, so it reads as bodyweight and the rep count
+    /// carries the record instead — the only thing that can change when the
+    /// load never does.
+    private func headline(_ record: PersonalRecord) -> String {
         let isBodyweight = library.exercise(record.exerciseID)?.equipment == .bodyweight
 
-        if record.isBodyweightOnly {
-            return "Bodyweight × \(record.reps)"
+        // A hold leads with the clock. It is the only figure that moves: the
+        // weight is usually nothing and the rep count is always one.
+        if let seconds = record.seconds {
+            return Display.hold(seconds)
         }
-        let weight = Display.mass(record.weightKG, in: unitSystem)
-        return isBodyweight
-            ? "+\(weight) × \(record.reps)"
-            : "\(weight) × \(record.reps)"
+        if record.isBodyweightOnly {
+            return "× \(record.reps)"
+        }
+        let weight = Display.tidyMass(record.weightKG, in: unitSystem)
+        return isBodyweight ? "+\(weight)" : weight
     }
 
     private var empty: some View {
@@ -212,14 +341,17 @@ public struct RecordsView: View {
 // MARK: - One exercise
 
 private struct RecordDetailSheet: View {
-    let entry: ExerciseRecords
+    @Bindable var store: RecordStore
+    let exerciseID: String
     let name: String
     let isBodyweight: Bool
+    let isTimed: Bool
     let unitSystem: UnitSystem
-    let onDelete: (PersonalRecord) -> Void
-    let onAdd: (PersonalRecord) -> Void
-    let onDeleteExercise: () -> Void
     let onClose: () -> Void
+
+    /// Recomputed on every change to the store rather than passed in, which is
+    /// what makes a record added or deleted here appear here.
+    private var entry: ExerciseRecords { store.book.records(for: exerciseID) }
 
     @State private var isAdding = false
     @State private var deleting: PersonalRecord?
@@ -231,7 +363,7 @@ private struct RecordDetailSheet: View {
                 Text(lift(record))
                     .font(.subheadline.weight(.medium))
                     .monospacedDigit()
-                Text(record.source.isLogged ? "From a logged set" : "Typed in")
+                Text(estimateNote(record))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -253,9 +385,39 @@ private struct RecordDetailSheet: View {
         }
     }
 
+    /// What one record implies as a single, said per row.
+    ///
+    /// Without this the "Estimated 1RM" above looks stuck: a heavier lift for
+    /// fewer reps can imply a *lower* single than a lighter set for eight, so
+    /// adding a record legitimately leaves the figure where it was. Showing
+    /// each row's own estimate makes it obvious which set the headline came
+    /// from, and why a new one did not take it.
+    private func estimateNote(_ record: PersonalRecord) -> String {
+        let logged = record.source.isLogged ? "From a logged set · " : ""
+
+        if record.isTimed {
+            return logged + "Held"
+        }
+        guard !record.isBodyweightOnly else {
+            return logged + "No weight to estimate from"
+        }
+        guard record.isReliableEstimate else {
+            return logged + "Past 10 reps — no estimate"
+        }
+        guard let estimate = record.estimatedOneRepMax else {
+            return logged + "No estimate for this"
+        }
+        return logged + "≈ \(Display.tidyMass(estimate, in: unitSystem)) single"
+    }
+
     private func lift(_ record: PersonalRecord) -> String {
+        if let seconds = record.seconds {
+            return record.isBodyweightOnly
+                ? Display.hold(seconds)
+                : "+\(Display.tidyMass(record.weightKG, in: unitSystem)) · \(Display.hold(seconds))"
+        }
         if record.isBodyweightOnly { return "Bodyweight × \(record.reps)" }
-        let weight = Display.mass(record.weightKG, in: unitSystem)
+        let weight = Display.tidyMass(record.weightKG, in: unitSystem)
         return isBodyweight ? "+\(weight) × \(record.reps)" : "\(weight) × \(record.reps)"
     }
 
@@ -264,22 +426,23 @@ private struct RecordDetailSheet: View {
             ScrollView {
                 VStack(spacing: Senku.Metrics.stackSpacing) {
                     Card("Best") {
-                        if let heaviest = entry.heaviest {
+                        if let best = entry.best {
                             StatRow(
-                                "Heaviest",
-                                value: lift(heaviest),
-                                detail: heaviest.date.formatted(date: .abbreviated, time: .omitted),
+                                entry.isTimed ? "Longest" : "Heaviest",
+                                value: lift(best),
+                                detail: best.date.formatted(date: .abbreviated, time: .omitted),
                                 isProminent: true,
                                 tint: Senku.Palette.protein
                             )
                         }
-                        if let best = entry.bestEstimated {
+                        if let best = entry.bestEstimated, let estimate = best.estimatedOneRepMax {
                             StatRow(
                                 "Estimated 1RM",
-                                value: Display.mass(best.estimatedOneRepMax, in: unitSystem),
+                                value: Display.tidyMass(estimate, in: unitSystem),
                                 detail: "Epley, from \(lift(best))"
                             )
                         }
+
                     }
 
                     Card("Every record") {
@@ -327,7 +490,8 @@ private struct RecordDetailSheet: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete \(entry.records.count) records", role: .destructive) {
-                    onDeleteExercise()
+                    store.deleteAll(forExercise: exerciseID)
+                    onClose()
                 }
                 Button("Keep them", role: .cancel) {}
             } message: {
@@ -339,8 +503,10 @@ private struct RecordDetailSheet: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete", role: .destructive) {
-                    if let deleting { onDelete(deleting) }
+                    if let deleting { store.delete(deleting) }
                     deleting = nil
+                    // The last one gone means there is nothing left to look at.
+                    if entry.records.isEmpty { onClose() }
                 }
                 Button("Keep it", role: .cancel) { deleting = nil }
             } message: {
@@ -350,12 +516,14 @@ private struct RecordDetailSheet: View {
             }
             .sheet(isPresented: $isAdding) {
                 RecordValueEditor(
-                    exerciseID: entry.exerciseID,
-                    previous: entry.heaviest,
+                    exerciseID: exerciseID,
+                    existing: entry.records,
+                    previous: entry.best,
                     isBodyweight: isBodyweight,
+                    isTimed: isTimed,
                     unitSystem: unitSystem
                 ) { added in
-                    onAdd(added)
+                    store.add(added)
                     isAdding = false
                 } onCancel: {
                     isAdding = false
@@ -374,29 +542,38 @@ private struct RecordDetailSheet: View {
 /// rather than only the best one.
 private struct RecordValueEditor: View {
     let exerciseID: String
+    /// Every record already on this lift, so the same one cannot be logged
+    /// twice.
+    let existing: [PersonalRecord]
     /// Your best so far, which the fields start at: the next record is nearly
     /// always a small step from the last.
     let previous: PersonalRecord?
     let isBodyweight: Bool
+    let isTimed: Bool
     let unitSystem: UnitSystem
     let onSave: (PersonalRecord) -> Void
     let onCancel: () -> Void
 
     @State private var weight: Double?
     @State private var reps: Double?
+    @State private var seconds: TimeInterval
     @State private var date = Date.now
 
     init(
         exerciseID: String,
+        existing: [PersonalRecord] = [],
         previous: PersonalRecord?,
         isBodyweight: Bool,
+        isTimed: Bool = false,
         unitSystem: UnitSystem,
         onSave: @escaping (PersonalRecord) -> Void,
         onCancel: @escaping () -> Void
     ) {
         self.exerciseID = exerciseID
+        self.existing = existing
         self.previous = previous
         self.isBodyweight = isBodyweight
+        self.isTimed = isTimed
         self.unitSystem = unitSystem
         self.onSave = onSave
         self.onCancel = onCancel
@@ -407,6 +584,7 @@ private struct RecordValueEditor: View {
             }
         )
         _reps = State(initialValue: previous.map { Double($0.reps) })
+        _seconds = State(initialValue: previous?.seconds ?? (isTimed ? 60 : 60))
     }
 
     private var weightKG: Double? {
@@ -414,8 +592,29 @@ private struct RecordValueEditor: View {
         return unitSystem == .metric ? weight : Convert.kilograms(fromPounds: weight)
     }
 
+    /// The record this would duplicate, if it would.
+    private var duplicate: PersonalRecord? {
+        guard let weightKG else { return nil }
+        if isTimed {
+            return RecordBook(existing).existingRecord(
+                exerciseID: exerciseID,
+                weightKG: weightKG,
+                reps: 0,
+                seconds: seconds
+            )
+        }
+        guard let reps else { return nil }
+        return RecordBook(existing).existingRecord(
+            exerciseID: exerciseID,
+            weightKG: weightKG,
+            reps: Int(reps)
+        )
+    }
+
     private var canSave: Bool {
-        reps != nil && (weightKG != nil || isBodyweight)
+        guard duplicate == nil else { return false }
+        guard weightKG != nil || isBodyweight else { return false }
+        return isTimed || reps != nil
     }
 
     var body: some View {
@@ -441,30 +640,51 @@ private struct RecordValueEditor: View {
     private var fields: some View {
         VStack(spacing: Senku.Metrics.stackSpacing) {
             Card("What you lifted") {
-                HStack {
-                    Text(isBodyweight ? "Added weight" : "Weight").font(.subheadline)
-                    Spacer(minLength: 8)
-                    NumericField(
-                        value: $weight,
-                        range: weightRange,
-                        decimals: 1,
-                        unit: unitSystem.massLabel,
-                        placeholder: isBodyweight ? "0" : "—",
-                        identifier: "field.newRecordWeight"
-                    )
+                // A bodyweight exercise is reps and nothing else. The field was
+                // there for the belt-and-plate case, and it earned its place by
+                // making every pull-up entry a decision about a number that is
+                // nearly always zero — so it is gone, and a weighted variation
+                // is what a custom exercise is for.
+                if !isBodyweight {
+                    HStack {
+                        Text("Weight").font(.subheadline)
+                        Spacer(minLength: 8)
+                        NumericField(
+                            value: $weight,
+                            range: weightRange,
+                            decimals: 1,
+                            unit: unitSystem.massLabel,
+                            placeholder: "—",
+                            identifier: "field.newRecordWeight"
+                        )
+                    }
+
+                    Divider()
                 }
 
-                Divider()
-
-                HStack {
-                    Text("Reps").font(.subheadline)
-                    Spacer(minLength: 8)
-                    NumericField(
-                        value: $reps,
-                        range: 1...100,
-                        unit: "reps",
-                        identifier: "field.newRecordReps"
-                    )
+                if isTimed {
+                    // Held, so the figure that moves is the clock. Five-second
+                    // steps for the same reason the session logger uses them.
+                    Stepper(value: $seconds, in: 5...600, step: 5) {
+                        HStack {
+                            Text("Hold").font(.subheadline)
+                            Spacer()
+                            Text(Display.hold(seconds))
+                                .font(.headline)
+                                .monospacedDigit()
+                        }
+                    }
+                } else {
+                    HStack {
+                        Text("Reps").font(.subheadline)
+                        Spacer(minLength: 8)
+                        NumericField(
+                            value: $reps,
+                            range: 1...100,
+                            unit: "reps",
+                            identifier: "field.newRecordReps"
+                        )
+                    }
                 }
 
                 Divider()
@@ -473,8 +693,23 @@ private struct RecordValueEditor: View {
                     .font(.subheadline)
             }
 
-            if let previous {
-                Text("Your best so far: \(Display.mass(previous.weightKG, in: unitSystem)) × \(previous.reps).")
+            if let duplicate {
+                // Said plainly, with the date, rather than leaving Save dead
+                // and the reason to be guessed at.
+                Label(
+                    "You already have this one, from \(duplicate.date.formatted(date: .abbreviated, time: .omitted)). Change the weight or the reps.",
+                    systemImage: "exclamationmark.circle"
+                )
+                .font(.caption)
+                .foregroundStyle(Senku.Palette.caution)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else if let previous {
+                Text("Your best so far: " + Display.set(
+                    weightKG: previous.weightKG,
+                    reps: previous.reps,
+                    seconds: previous.seconds,
+                    in: unitSystem
+                ) + ".")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -491,15 +726,17 @@ private struct RecordValueEditor: View {
     }
 
     private func save() {
-        guard let weightKG, let reps,
-              let record = try? PersonalRecord(
-                  exerciseID: exerciseID,
-                  weightKG: weightKG,
-                  reps: Int(reps),
-                  date: date,
-                  source: .manual
-              )
-        else { return }
+        guard let weightKG else { return }
+
+        let record = try? PersonalRecord(
+            exerciseID: exerciseID,
+            weightKG: weightKG,
+            reps: isTimed ? 0 : Int(reps ?? 0),
+            seconds: isTimed ? seconds : nil,
+            date: date,
+            source: .manual
+        )
+        guard let record else { return }
         onSave(record)
     }
 }
@@ -511,6 +748,10 @@ private struct RecordValueEditor: View {
 /// Exercises you already have a record on are not offered here — the next
 /// record on those is a dated line inside the exercise itself.
 private struct RecordEditor: View {
+    @Bindable var protocols: CardioProtocolStore
+    @Bindable var cardioRecords: CardioRecordStore
+    let onCardioSaved: () -> Void
+
     let unitSystem: UnitSystem
     @Bindable var library: ExerciseLibrary
     let hidden: Set<String>
@@ -524,11 +765,24 @@ private struct RecordEditor: View {
     var body: some View {
         NavigationStack {
             Group {
-                if let chosen {
+                if let chosen, chosen.isCardio {
+                    // Weight and reps mean nothing on a treadmill, so a cardio
+                    // record is a time and whatever that machine reports.
+                    CardioValueEditor(
+                        exercise: chosen,
+                        unitSystem: unitSystem,
+                        onSave: { record in
+                            cardioRecords.add(record)
+                            onCardioSaved()
+                        },
+                        onCancel: { self.chosen = nil }
+                    )
+                } else if let chosen {
                     RecordValueEditor(
                         exerciseID: chosen.id,
                         previous: nil,
                         isBodyweight: chosen.equipment == .bodyweight,
+                        isTimed: chosen.isTimed,
                         unitSystem: unitSystem,
                         onSave: onSave,
                         onCancel: { self.chosen = nil }

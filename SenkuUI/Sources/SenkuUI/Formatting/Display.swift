@@ -20,6 +20,48 @@ public enum Display {
         return rounded > 0 ? "+\(rounded)" : "\(rounded)"
     }
 
+    /// "60s" or "1:30" — a held set.
+    public static func hold(_ seconds: TimeInterval) -> String {
+        seconds < 60
+            ? "\(Int(seconds.rounded()))s"
+            : clock(seconds)
+    }
+
+    /// One set, however it was measured: "60 kg×8", "60s", "+10 kg · 60s".
+    public static func set(
+        weightKG: Double,
+        reps: Int,
+        seconds: TimeInterval?,
+        in system: UnitSystem
+    ) -> String {
+        guard let seconds else {
+            return "\(mass(weightKG, in: system, decimals: 0))×\(reps)"
+        }
+        guard weightKG > 0 else { return hold(seconds) }
+        return "+\(mass(weightKG, in: system, decimals: 0)) · \(hold(seconds))"
+    }
+
+    /// "22 min · 7.0 km/h · 12%" — a cardio session in one line.
+    ///
+    /// Time always, then whatever that machine reported, in the order the
+    /// exercise lists them. Nothing is padded out with zeroes for the figures
+    /// that were left blank.
+    public static func cardio(
+        _ effort: CardioEffort,
+        for exercise: Exercise?,
+        in system: UnitSystem
+    ) -> String {
+        var parts = ["\(Int((effort.seconds / 60).rounded())) min"]
+
+        for metric in exercise?.cardioMetrics ?? [] {
+            guard let value = effort.value(metric) else { continue }
+            let unit = metric.unit(metric: system == .metric)
+            let number = value.formatted(.number.precision(.fractionLength(0...metric.decimals)))
+            parts.append(unit.isEmpty ? "\(number) \(metric.title.lowercased())" : "\(number) \(unit)")
+        }
+        return parts.joined(separator: " · ")
+    }
+
     public static func mass(_ kilograms: Double, in system: UnitSystem, decimals: Int = 1) -> String {
         let value = system == .metric ? kilograms : Convert.pounds(fromKilograms: kilograms)
         return String(format: "%.\(decimals)f %@", value, system.massLabel)
@@ -48,6 +90,31 @@ public enum Display {
         case .imperial:
             return String(format: "%.0f fl oz", Convert.fluidOunces(fromMillilitres: millilitres))
         }
+    }
+
+    /// Water, in millilitres, whatever the unit system says.
+    ///
+    /// The one measure the app keeps metric on purpose. Nobody fills a bottle
+    /// in fluid ounces — bottles are sold in millilitres and litres the world
+    /// over — and "66 fl oz" is a number you would have to convert before it
+    /// meant anything at the tap.
+    public static func millilitres(_ value: Double) -> String {
+        "\(Int(value.rounded())) ml"
+    }
+
+    /// A weight with the decimal only when there is one.
+    ///
+    /// `mass` always prints a tenth, which is right for a body weight — 78.4
+    /// and 78.0 are different readings and the trailing zero says the scale was
+    /// read to that precision. A lift is not like that: the bar is 100 kg, not
+    /// "100.0 kg", and a column of false decimals is harder to scan for no
+    /// added truth. Plates that genuinely land on a half still show it.
+    public static func tidyMass(_ kilograms: Double, in system: UnitSystem) -> String {
+        let value = system == .metric ? kilograms : Convert.pounds(fromKilograms: kilograms)
+        let rounded = (value * 10).rounded() / 10
+        return rounded == rounded.rounded()
+            ? "\(Int(rounded)) \(system.massLabel)"
+            : String(format: "%.1f %@", rounded, system.massLabel)
     }
 
     /// Grams where a quarter of a small widget is all the room there is.
