@@ -15,6 +15,9 @@ import SenkuCore
 public struct WeightLogView: View {
     @State private var store: WeightLogStore
     @State private var isAdding = false
+    #if canImport(UserNotifications) && !os(macOS)
+    @State private var isReminding = WeightReminder.isOn
+    #endif
     @State private var window: Window = .threeMonths
     @State private var shown = Window.pageSize
 
@@ -64,7 +67,7 @@ public struct WeightLogView: View {
         }
     }
 
-    private var unitSystem: UnitSystem { profile?.unitSystem ?? .metric }
+    private var unitSystem: UnitSystem { profile?.unitSystem ?? UnitPreference.current }
     private var series: WeightSeries { store.series }
 
     private var cutoff: Date? {
@@ -115,6 +118,13 @@ public struct WeightLogView: View {
             // The chart begins where the profile does, so the first reading you
             // log is a second point on a line rather than a lone dot.
             store.seedFromProfileIfNeeded(profile)
+
+            #if canImport(UserNotifications) && !os(macOS)
+            // Re-booked on every visit: a pending request can be lost to a
+            // restore or to notifications being switched off and on in
+            // Settings, while this screen still says it is on.
+            await WeightReminder.refresh()
+            #endif
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -127,7 +137,13 @@ public struct WeightLogView: View {
             }
         }
         .sheet(isPresented: $isAdding) {
-            WeighInEditor(unitSystem: unitSystem, suggested: series.latest?.weightKG ?? profile?.metrics.weightKG) {
+            // Seeded from the last weigh-in, not the day's mean: logging 307
+            // then 350 and being offered 328 next time is the app averaging
+            // behind your back and calling it a suggestion.
+            WeighInEditor(
+                unitSystem: unitSystem,
+                suggested: store.weighIns.first?.weightKG ?? profile?.metrics.weightKG
+            ) {
                 store.add($0)
                 isAdding = false
             } onCancel: {
@@ -140,16 +156,48 @@ public struct WeightLogView: View {
         VStack(spacing: Senku.Metrics.stackSpacing) {
             if series.isEmpty {
                 empty
+                reminderCard
             } else {
                 chartCard
                 figuresCard
                 profileNudge
+                reminderCard
                 historyCard
             }
         }
         .padding()
         .frame(maxWidth: 620)
         .frame(maxWidth: .infinity)
+    }
+
+    /// One switch, one time. A daily reminder at ten in the morning.
+    @ViewBuilder
+    private var reminderCard: some View {
+        #if canImport(UserNotifications) && !os(macOS)
+        Card {
+            Toggle(isOn: $isReminding) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Remind me to weigh in")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Every day at 10:00")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .onChange(of: isReminding) { _, wanted in
+                Task {
+                    if wanted {
+                        // Put back if permission is refused, rather than left on
+                        // and silent — a switch that lies is worse than no switch.
+                        let granted = await WeightReminder.enable()
+                        if !granted { isReminding = false }
+                    } else {
+                        WeightReminder.disable()
+                    }
+                }
+            }
+        }
+        #endif
     }
 
     // MARK: - Chart
@@ -193,6 +241,19 @@ public struct WeightLogView: View {
                                 .font(.caption2)
                                 .foregroundStyle(Senku.Palette.surplus)
                         }
+                } else if let offChart = goalOffChart {
+                    // The goal is too far away to plot without flattening the
+                    // readings, so it is marked at the edge it lies beyond
+                    // rather than left out. Knowing it is down there, and how
+                    // far, is most of what a goal line is for.
+                    RuleMark(y: .value("Goal", offChart.edge))
+                        .foregroundStyle(Senku.Palette.surplus.opacity(0.45))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                        .annotation(position: offChart.isBelow ? .bottom : .top, alignment: .leading) {
+                            Text("\(offChart.isBelow ? "↓" : "↑") Goal \(Display.tidyMass(offChart.goal, in: unitSystem))")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(Senku.Palette.surplus)
+                        }
                 }
             }
             .chartYScale(domain: yDomain)
@@ -206,7 +267,7 @@ public struct WeightLogView: View {
     }
 
     private var chartFootnote: String {
-        let base = "Line is a 7-day half-life moving average. Dots are what the scale said."
+        let base = "Line is a 7-day half-life moving average. Each dot is a day — the average, where you weighed more than once."
         return trendSegments.count > 1
             ? base + " It breaks where you went more than ten days without weighing in."
             : base
@@ -233,6 +294,21 @@ public struct WeightLogView: View {
             upper = max(upper, goal + 0.3)
         }
         return lower ... upper
+    }
+
+    /// The goal when it lies outside the plotted range: which edge it is past,
+    /// and where to draw the marker so the annotation stays inside the chart.
+    private var goalOffChart: (goal: Double, edge: Double, isBelow: Bool)? {
+        guard let goal = profile?.goalWeightKG, goalWithinView == nil else { return nil }
+
+        let domain = yDomain
+        let inset = (domain.upperBound - domain.lowerBound) * 0.04
+        let isBelow = display(goal) < domain.lowerBound
+        return (
+            goal: goal,
+            edge: isBelow ? domain.lowerBound + inset : domain.upperBound - inset,
+            isBelow: isBelow
+        )
     }
 
     /// The goal, but only when it is close enough to belong on this chart.
@@ -262,11 +338,15 @@ public struct WeightLogView: View {
                 )
             }
 
-            if let latest = series.latest {
+            if let newest = store.weighIns.first {
+                // The literal last thing the scale said, not that day's mean.
+                // The two differ whenever you weigh twice in a day, and a row
+                // labelled "last reading" showing an average of two is the kind
+                // of small lie that makes someone distrust the rest of it.
                 StatRow(
                     "Last reading",
-                    value: Display.mass(latest.weightKG, in: unitSystem),
-                    detail: latest.day.formatted(.relative(presentation: .named))
+                    value: Display.mass(newest.weightKG, in: unitSystem),
+                    detail: lastReadingDetail(newest)
                 )
             }
 
@@ -293,6 +373,20 @@ public struct WeightLogView: View {
                 )
             }
         }
+    }
+
+    /// When a day holds more than one weigh-in, says so and gives the figure
+    /// the trend actually used.
+    private func lastReadingDetail(_ newest: WeighIn) -> String {
+        let when = newest.date.formatted(.relative(presentation: .named))
+        let sameDay = store.weighIns.filter {
+            Calendar.current.isDate($0.date, inSameDayAs: newest.date)
+        }
+        guard sameDay.count > 1,
+              let dayValue = series.dailyValues.last?.weightKG
+        else { return when }
+
+        return "\(when) · \(sameDay.count) that day, averaged \(Display.mass(dayValue, in: unitSystem))"
     }
 
     /// Says what the observed rate means against the plan's own projection,
@@ -327,8 +421,14 @@ public struct WeightLogView: View {
     private var profileNudge: some View {
         if let profile,
            let trend = series.trendKG,
-           abs(trend - profile.metrics.weightKG) >= 0.5,
            let onAdoptWeight {
+            // Shown whenever the two differ at all, rather than only past half
+            // a kilo. The trend moves slowly by design — one new reading shifts
+            // it a tenth — so a threshold big enough to be "worth mentioning"
+            // meant the button was missing exactly when someone had just
+            // weighed in and gone looking for it.
+            let difference = trend - profile.metrics.weightKG
+
             Card {
                 HStack(spacing: 10) {
                     // Both numbers and the action on one line. Spelled out in a
@@ -344,16 +444,22 @@ public struct WeightLogView: View {
 
                     Spacer(minLength: 8)
 
-                    Button {
-                        onAdoptWeight(trend)
-                    } label: {
-                        StackedActionLabel("Update", symbol: "arrow.up.circle")
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
+                    if abs(difference) < 0.05 {
+                        Text("In step")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    } else {
+                        Button {
+                            onAdoptWeight(trend)
+                        } label: {
+                            StackedActionLabel("Update", symbol: "arrow.up.circle")
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(Senku.Palette.protein)
+                        .accessibilityLabel("Update profile weight to \(Display.mass(trend, in: unitSystem))")
                     }
-                    .buttonStyle(.bordered)
-                    .tint(Senku.Palette.protein)
-                    .accessibilityLabel("Update profile weight to \(Display.mass(trend, in: unitSystem))")
                 }
             }
         }

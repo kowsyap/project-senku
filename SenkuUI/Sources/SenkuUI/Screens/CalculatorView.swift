@@ -27,6 +27,7 @@ public struct CalculatorView: View {
     /// opened already showing a complete plan for a person who did not exist.
     /// An answer should be something you asked for.
     @State private var hasCalculated = false
+    @State private var isConfirmingSave = false
 
     /// The inputs as they stood when the answer on screen was worked out.
     /// Anything different means the answer is stale and Calculate comes back.
@@ -77,6 +78,12 @@ public struct CalculatorView: View {
         .background(.background)
         .dismissableKeyboard()
         .toolbar { actionItem }
+        .alert(saveTitle, isPresented: $isConfirmingSave) {
+            Button("Save", role: .destructive) { commitSave() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This replaces your profile — the plan on the Me tab, the targets on your watch, and the weight the chart starts from.")
+        }
         .animation(.snappy(duration: 0.28), value: action)
         .animation(.snappy(duration: 0.2), value: draft.goal)
         .animation(.snappy(duration: 0.2), value: draft.activityLevel)
@@ -136,8 +143,16 @@ public struct CalculatorView: View {
             hasCalculated = true
             answeredInputs = draft.inputs
         case .save:
-            if let snapshot = draft.profileSnapshot { onSave?(snapshot) }
+            // Asked first. Saving overwrites the profile the whole app reads
+            // from — the plan on the Me tab, the targets on the watch, the
+            // figure the weight chart starts from — and the button sits in a
+            // toolbar next to Calculate, which is a tap away from a mis-tap.
+            isConfirmingSave = true
         }
+    }
+
+    private func commitSave() {
+        if let snapshot = draft.profileSnapshot { onSave?(snapshot) }
     }
 
     private var title: String {
