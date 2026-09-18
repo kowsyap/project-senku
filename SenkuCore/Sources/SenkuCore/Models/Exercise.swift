@@ -4,9 +4,9 @@ import Foundation
 ///
 /// A wrapper around a string rather than an enum, because the catalogue is
 /// data. A group added to the JSON should appear in the app without a Swift
-/// change, and — more importantly — an unknown group must not fail the decode
-/// of the whole file. The six that exist today are named as constants for call
-/// sites that legitimately know them.
+/// change — abs were added exactly that way — and, more importantly, an unknown
+/// group must not fail the decode of the whole file. The seven that exist today
+/// are named as constants for call sites that legitimately know them.
 public struct WorkoutGroup: RawRepresentable, Hashable, Codable, Sendable, Identifiable {
     public let rawValue: String
 
@@ -21,6 +21,16 @@ public struct WorkoutGroup: RawRepresentable, Hashable, Codable, Sendable, Ident
     public static let bicep = WorkoutGroup("bicep")
     public static let tricep = WorkoutGroup("tricep")
     public static let legs = WorkoutGroup("legs")
+    public static let abs = WorkoutGroup("abs")
+
+    /// Conditioning. A group by the app's reckoning and not by anatomy, which
+    /// is why it is kept out of the muscle ring and given its own place: what
+    /// it trains is a heart, and putting it in a circle of silhouettes would
+    /// claim otherwise.
+    public static let cardio = WorkoutGroup("cardio")
+
+    /// Whether this is a muscle group at all.
+    public var isMuscle: Bool { self != .cardio }
 
     /// "Upper chest" from "chest.upper" — for a heading, when the catalogue has
     /// no prettier name to offer.
@@ -84,6 +94,27 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
     public let workoutGroup: WorkoutGroup
     public let contributions: [String: Double]
 
+    /// What a cardio machine reports, beyond the clock.
+    ///
+    /// Empty for everything that is lifted: a bench press has no speed. For
+    /// cardio it is the short list of figures that exercise can actually tell
+    /// you — speed and incline on a treadmill, distance and split on a rower —
+    /// so the logger asks for those and not for a generic set of fields that
+    /// are blank three times out of four.
+    ///
+    /// Time is not in the list. Every cardio session has a duration, so it is
+    /// asked for always and named nowhere.
+    public let cardioMetrics: [CardioMetric]
+
+    /// Held rather than repeated: a plank, a wall sit, a hollow hold.
+    ///
+    /// The unit of work is seconds, not reps, and everything downstream needs
+    /// to know — the logger asks for a duration, the record page ranks by the
+    /// longest hold, and the estimated one-rep max is suppressed, because Epley
+    /// is a rep-count formula and applying it to a hold produces a confident
+    /// number that means nothing.
+    public let isTimed: Bool
+
     /// Whether the user made this up. Kept because a custom exercise's
     /// contributions are derived from muscles *they* picked, so anything
     /// computed from them is an estimate resting on their classification — and
@@ -98,6 +129,8 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
         targetMuscles: [String] = [],
         workoutGroup: WorkoutGroup,
         contributions: [String: Double],
+        cardioMetrics: [CardioMetric] = [],
+        isTimed: Bool = false,
         isCustom: Bool = false
     ) {
         self.id = id
@@ -107,8 +140,26 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
         self.targetMuscles = targetMuscles
         self.workoutGroup = workoutGroup
         self.contributions = contributions
+        self.cardioMetrics = cardioMetrics
+        self.isTimed = isTimed
         self.isCustom = isCustom
     }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        equipment = try container.decode(Equipment.self, forKey: .equipment)
+        targetMuscles = try container.decodeIfPresent([String].self, forKey: .targetMuscles) ?? []
+        workoutGroup = try container.decode(WorkoutGroup.self, forKey: .workoutGroup)
+        contributions = try container.decode([String: Double].self, forKey: .contributions)
+        cardioMetrics = try container.decodeIfPresent([CardioMetric].self, forKey: .cardioMetrics) ?? []
+        isTimed = try container.decodeIfPresent(Bool.self, forKey: .isTimed) ?? false
+        isCustom = try container.decodeIfPresent(Bool.self, forKey: .isCustom) ?? false
+    }
+
+    public var isCardio: Bool { workoutGroup == .cardio }
 
     /// Builds one from muscles the user chose.
     ///

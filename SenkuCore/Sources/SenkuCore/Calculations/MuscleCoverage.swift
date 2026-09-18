@@ -83,6 +83,31 @@ public struct MuscleCoverage: Hashable, Sendable {
         return MuscleCoverage(group: group, regions: regions)
     }
 
+    /// Which of these exercises train a group, and how much of it each covers.
+    ///
+    /// The basis for showing a day's work *under the muscle it trains* rather
+    /// than under the muscle it is filed as. A close-grip bench is a triceps
+    /// exercise in the catalogue and a substantial chest exercise in fact, and
+    /// a push day that listed it only under triceps would leave someone
+    /// wondering why their chest reads higher than the exercises shown for it.
+    ///
+    /// The figure is what the exercise covers of that group *on its own*, not
+    /// its marginal contribution — "this is 45% of a chest" is a property of
+    /// the movement and stays put as the rest of the day changes around it.
+    /// The marginal number answers a different question and lives in
+    /// ``marginalValue(of:within:for:in:)``.
+    public static func contributors(
+        among exercises: [Exercise],
+        to group: WorkoutGroup,
+        in catalogue: ExerciseCatalogue = .bundled,
+        threshold: Double = 0.005
+    ) -> [(exercise: Exercise, fraction: Double)] {
+        exercises
+            .map { (exercise: $0, fraction: of([$0], for: group, in: catalogue).fraction) }
+            .filter { $0.fraction > threshold }
+            .sorted { $0.fraction > $1.fraction }
+    }
+
     /// What dropping one exercise would cost.
     ///
     /// The marginal figure, not the exercise's own contribution — those differ

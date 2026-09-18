@@ -33,7 +33,7 @@ struct PersonalRecordTests {
     @Test("Epley is what the estimate uses")
     func estimateUsesEpley() throws {
         // 100 × 5 → 100 × (1 + 5/30) ≈ 116.7
-        let estimate = try record(100, 5).estimatedOneRepMax
+        let estimate = try #require(record(100, 5).estimatedOneRepMax)
         #expect(abs(estimate - 116.667) < 0.01)
     }
 
@@ -77,6 +77,28 @@ struct PersonalRecordTests {
         #expect(records.bestEstimated?.id == single.id)
     }
 
+    @Test("A heavier lift does not always raise the estimated single")
+    func aHeavierLiftNeedNotRaiseTheEstimate() throws {
+        // 100 × 8 estimates ~126.7. A new 110 × 3 estimates ~121 — a heavier
+        // bar, a *lower* implied single, so the estimate legitimately stays
+        // where it was. The screen showing an unchanged figure after a new
+        // record is this, not a stale view.
+        let volume = try record(100, 8)
+        let heavier = try record(110, 3)
+        let records = ExerciseRecords(exerciseID: "catalogue.bench.flat", records: [volume, heavier])
+
+        #expect(records.heaviest?.id == heavier.id)
+        #expect(records.bestEstimated?.id == volume.id)
+
+        // And a set that does beat it moves the figure.
+        let better = try record(120, 3)  // ≈ 132
+        let updated = ExerciseRecords(
+            exerciseID: "catalogue.bench.flat",
+            records: [volume, heavier, better]
+        )
+        #expect(updated.bestEstimated?.id == better.id)
+    }
+
     // MARK: - Beating a record
 
     @Test("Anything is a record when there is nothing to beat")
@@ -101,6 +123,19 @@ struct PersonalRecordTests {
     func lighterSetIsNotARecord() throws {
         let book = RecordBook([try record(100, 5)])
         #expect(!book.wouldBeRecord(exerciseID: "catalogue.bench.flat", weightKG: 90, reps: 3))
+    }
+
+    @Test("The same weight for the same reps is already recorded")
+    func duplicateLiftsAreRecognised() throws {
+        let book = RecordBook([try record(100, 5)])
+
+        #expect(book.existingRecord(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5) != nil)
+        // A hair either side is the same lift after a trip through pounds.
+        #expect(book.existingRecord(exerciseID: "catalogue.bench.flat", weightKG: 100.005, reps: 5) != nil)
+
+        #expect(book.existingRecord(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 6) == nil)
+        #expect(book.existingRecord(exerciseID: "catalogue.bench.flat", weightKG: 102.5, reps: 5) == nil)
+        #expect(book.existingRecord(exerciseID: "catalogue.squat.back", weightKG: 100, reps: 5) == nil)
     }
 
     @Test("A record on one exercise says nothing about another")
