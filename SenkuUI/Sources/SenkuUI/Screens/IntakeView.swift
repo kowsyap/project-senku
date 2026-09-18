@@ -78,6 +78,9 @@ public struct IntakeView: View {
         .sheet(item: $editing) { entry in
             IntakeEditor(store: store, editing: entry) { editing = nil }
         }
+        // A count left over from the last food is a silent way to log twice
+        // what you had.
+        .onChange(of: picked) { _, _ in servings = 1 }
         .navigationDestination(isPresented: $isShowingStreaks) {
             StreaksView(tracks: tracks)
         }

@@ -130,6 +130,22 @@ public struct FoodFavourite: Identifiable, Codable, Hashable, Sendable {
         enteredCalories != nil && proteinG == 0 && carbsG == 0 && fatG == 0
     }
 
+    /// What a new install starts with.
+    ///
+    /// Three things that are the same everywhere, need no weighing, and are
+    /// eaten by the piece rather than by the gram — which is what makes them
+    /// safe to ship as figures. Anything cooked varies too much between two
+    /// kitchens to put a number on somebody else's behalf.
+    ///
+    /// Sizes are the usual ones: a medium banana, a medium apple, a large egg.
+    /// Macros rather than calorie figures, so the protein ring gets the egg's
+    /// six grams instead of nothing.
+    public static let defaults: [FoodFavourite] = [
+        FoodFavourite(name: "Banana", proteinG: 1.3, carbsG: 27, fatG: 0.4, fiberG: 3.1),
+        FoodFavourite(name: "Apple", proteinG: 0.5, carbsG: 25, fatG: 0.3, fiberG: 4.4),
+        FoodFavourite(name: "Egg", proteinG: 6.3, carbsG: 0.4, fatG: 4.8),
+    ]
+
     /// A fresh entry, as of now.
     public func entry(at date: Date = .now) -> IntakeEntry? {
         try? IntakeEntry(

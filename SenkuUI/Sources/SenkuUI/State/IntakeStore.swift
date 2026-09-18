@@ -16,6 +16,7 @@ import WidgetKit
 public final class IntakeStore {
     static let entriesKey = "senku.intake.entries.v1"
     static let favouritesKey = "senku.intake.favourites.v1"
+    static let seededKey = "senku.intake.seeded.v1"
 
     private let defaults: UserDefaults
     private let calendar: Calendar
@@ -27,6 +28,21 @@ public final class IntakeStore {
         self.defaults = defaults
         self.calendar = calendar
         reload()
+        seedIfNeeded()
+    }
+
+    /// Puts three foods in the menu on a fresh install.
+    ///
+    /// Once, and tracked by its own flag rather than by the list being empty:
+    /// somebody who deletes all three has said what they think of them, and
+    /// having them reappear on next launch would be the app arguing.
+    private func seedIfNeeded() {
+        guard !defaults.bool(forKey: Self.seededKey) else { return }
+        defaults.set(true, forKey: Self.seededKey)
+
+        guard favourites.isEmpty else { return }
+        favourites = FoodFavourite.defaults
+        persistFavourites()
     }
 
     /// Re-reads from the shared container.

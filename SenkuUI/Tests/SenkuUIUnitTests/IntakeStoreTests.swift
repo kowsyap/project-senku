@@ -71,16 +71,31 @@ import SenkuCore
 
     // MARK: - Favourites
 
+    @Test func aFreshInstallStartsWithThreeFoods() {
+        #expect(store().favourites.map(\.name) == ["Banana", "Apple", "Egg"])
+    }
+
+    /// Deleting them is an opinion, and the app should not argue with it on the
+    /// next launch.
+    @Test func deletedDefaultsDoNotComeBack() {
+        let suite = UUID().uuidString
+        let first = store(suite)
+        first.favourites.forEach(first.delete)
+
+        #expect(store(suite).favourites.isEmpty)
+    }
+
     @Test func loggingAFavouriteCountsTheUse() throws {
         let store = store()
         let shake = FoodFavourite(name: "Shake", proteinG: 30, carbsG: 5, fatG: 2)
         store.save(shake)
+        func saved() -> FoodFavourite? { store.favourites.first { $0.id == shake.id } }
 
         #expect(store.log(shake))
         #expect(store.log(shake))
 
         #expect(store.entries.count == 2)
-        #expect(store.favourites.first?.timesUsed == 2)
+        #expect(saved()?.timesUsed == 2)
         #expect(store.entries.allSatisfy { $0.name == "Shake" })
     }
 
@@ -96,7 +111,7 @@ import SenkuCore
         #expect(store.entries[0].proteinG == 60)
         #expect(store.entries[0].name == "Shake ×2")
         // A double serving is one reach for the menu, not two.
-        #expect(store.favourites.first?.timesUsed == 1)
+        #expect(store.favourites.first { $0.id == shake.id }?.timesUsed == 1)
     }
 
     @Test func aCaloriesOnlyFavouriteScalesToo() throws {
@@ -118,7 +133,7 @@ import SenkuCore
         store.save(rice)
         store.save(eggs)
 
-        #expect(store.orderedFavourites.map(\.name) == ["Eggs", "Rice"])
+        #expect(store.orderedFavourites.prefix(2).map(\.name) == ["Eggs", "Rice"])
     }
 
     // MARK: - Streaks
