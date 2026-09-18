@@ -368,15 +368,11 @@ public struct IntakeView: View {
 
             Divider()
 
-            // The two bare cases. Somebody who knows their shake is 30 g of
-            // protein, or that dinner was about 700 kcal, should not have to
-            // open a form to say so — and should not have to invent the half
-            // they do not know either.
-            //
-            // A row each rather than side by side: the calorie stepper needs
-            // the width, and two half-width columns put the number, the
-            // stepper and the button in about 170 points between them.
-            VStack(spacing: 8) {
+            // The two bare cases, side by side. Somebody who knows their shake
+            // is 30 g of protein, or that dinner was about 700 kcal, should not
+            // have to open a form to say so — and should not have to invent the
+            // half they do not know either.
+            HStack(spacing: 10) {
                 quickField(
                     "Protein",
                     unit: "g",
@@ -396,8 +392,7 @@ public struct IntakeView: View {
                     unit: "kcal",
                     tint: Senku.Palette.carbs,
                     value: $quickCalories,
-                    range: 0 ... 5000,
-                    step: 5
+                    range: 0 ... 5000
                 ) {
                     guard let calories = quickCalories, calories > 0 else { return }
                     store.addCalories(calories)
@@ -425,13 +420,6 @@ public struct IntakeView: View {
 
     /// A number and a button to commit it. The field clears on add, so the next
     /// thing you eat starts from empty rather than from what you last typed.
-    ///
-    /// `step` adds a stepper beside the field. Calories get one because a meal
-    /// is guessed rather than known — you land on "about 700" and then want it
-    /// a bit higher — and nudging is the natural way to do that, where retyping
-    /// three digits is not. Five at a time: one at a time would be a thousand
-    /// presses across a day's eating, and fifty would overshoot the guess it is
-    /// meant to refine.
     private func quickField(
         _ title: String,
         unit: String,
@@ -439,45 +427,30 @@ public struct IntakeView: View {
         value: Binding<Double?>,
         range: ClosedRange<Double>,
         decimals: Int = 0,
-        step: Double? = nil,
         add: @escaping () -> Void
     ) -> some View {
-        HStack(spacing: 8) {
-            Text(title)
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(title) only")
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(Color.secondary)
-                .lineLimit(1)
-                .fixedSize()
 
-            Spacer(minLength: 0)
-
-            if let step {
-                Stepper(
-                    "",
-                    value: Binding(
-                        get: { value.wrappedValue ?? 0 },
-                        set: { value.wrappedValue = $0 <= 0 ? nil : $0 }
-                    ),
-                    in: range,
-                    step: step
+            HStack(spacing: 6) {
+                // The unit gets its own width: "kcal" does not fit the
+                // 26-point column the rest of the app aligns to.
+                NumericField(
+                    value: value,
+                    range: range,
+                    decimals: decimals,
+                    unit: unit,
+                    unitWidth: unit.count > 2 ? 34 : 26,
+                    width: 50
                 )
-                .labelsHidden()
-                .accessibilityLabel("Adjust \(title.lowercased()) by \(Int(step))")
+
+                Spacer(minLength: 0)
+
+                addButton(tint: tint, enabled: (value.wrappedValue ?? 0) > 0, action: add)
+                    .accessibilityLabel("Log \(title.lowercased())")
             }
-
-            // The unit needs its own width here: "kcal" does not fit the
-            // 26-point column every other screen aligns to.
-            NumericField(
-                value: value,
-                range: range,
-                decimals: decimals,
-                unit: unit,
-                unitWidth: unit.count > 2 ? 34 : 26,
-                width: 50
-            )
-
-            addButton(tint: tint, enabled: (value.wrappedValue ?? 0) > 0, action: add)
-                .accessibilityLabel("Log \(title.lowercased())")
         }
         .frame(maxWidth: .infinity)
     }

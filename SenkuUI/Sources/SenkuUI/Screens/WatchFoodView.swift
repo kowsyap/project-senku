@@ -100,7 +100,7 @@ public struct WatchFoodView: View {
                 tint: field == .protein ? Senku.Palette.protein : Senku.Palette.carbs,
                 start: field == .protein ? 30 : 400,
                 range: field == .protein ? 0 ... 300 : 0 ... 3000,
-                step: field == .protein ? 1 : 10
+                step: 5
             ) { value in
                 onLog(
                     field == .protein ? value : 0,
@@ -222,9 +222,13 @@ public struct WatchFoodView: View {
 /// One number, turned in with the crown.
 ///
 /// The same decision as the weigh-in editor: typing on a watch is a chore, and
-/// every figure this asks for is a round one you already know. Protein turns in
-/// single grams, calories in tens — a crown that took 700 kcal one calorie at a
-/// time would be a joke.
+/// every figure this asks for is a round one you already know.
+///
+/// Five at a time, both of them. A meal is guessed rather than weighed — you
+/// land on "about 700" and then want it a little higher — and five is the step
+/// that refines a guess without overshooting it. One would be a hundred and
+/// forty clicks to reach seven hundred; fifty would jump past the number you
+/// meant.
 private struct WatchFoodEditor: View {
     let title: String
     let unit: String
