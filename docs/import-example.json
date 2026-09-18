@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+
+  "profile": {
+    "name": "Kowsyap",
+    "metrics": {
+      "sex": "male",
+      "age": 27,
+      "heightCM": 178,
+      "weightKG": 82.5
+    },
+    "activityLevel": "moderate",
+    "goal": "moderateCut",
+    "formula": "mifflinStJeor",
+    "unitSystem": "metric",
+    "goalWeightKG": 75,
+    "updatedAt": "2026-09-17T08:00:00Z"
+  },
+
+  "weighIns": [
+    { "date": "2026-09-14", "weightKG": 83.1 },
+    { "date": "2026-09-15", "weightKG": 82.8, "note": "after a rest day" },
+    { "date": "2026-09-16T07:20:00Z", "weightKG": 82.5 }
+  ],
+
+  "customExercises": [
+    {
+      "name": "Landmine press",
+      "equipment": "barbell",
+      "regionIDs": ["shoulder.frontDelts", "chest.upper"]
+    }
+  ],
+
+  "records": [
+    { "exerciseID": "catalogue.bench.flat", "weightKG": 100, "reps": 5, "date": "2026-08-30" },
+    { "exerciseID": "catalogue.squat.back", "weightKG": 140, "reps": 3, "date": "2026-09-05" }
+  ]
+}

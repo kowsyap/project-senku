@@ -85,6 +85,10 @@ public final class ProfileStore {
     ///   the save *came* from the watch link, which would otherwise echo
     ///   straight back to the sender.
     public func save(_ profile: Profile, broadcast: Bool = true) {
+        // Remembered outside the profile as well, so the screens that exist
+        // without one still show the right unit. See `UnitPreference`.
+        UnitPreference.current = profile.unitSystem
+
         var stamped = profile
         stamped.updatedAt = .now
         self.profile = stamped
