@@ -368,11 +368,15 @@ public struct IntakeView: View {
 
             Divider()
 
-            // The two bare cases, side by side. Somebody who knows their shake
-            // is 30 g of protein, or that dinner was about 700 kcal, should not
-            // have to open a form to say so — and should not have to invent the
-            // half they do not know either.
-            HStack(spacing: 10) {
+            // The two bare cases. Somebody who knows their shake is 30 g of
+            // protein, or that dinner was about 700 kcal, should not have to
+            // open a form to say so — and should not have to invent the half
+            // they do not know either.
+            //
+            // A row each rather than side by side: the calorie stepper needs
+            // the width, and two half-width columns put the number, the
+            // stepper and the button in about 170 points between them.
+            VStack(spacing: 8) {
                 quickField(
                     "Protein",
                     unit: "g",
@@ -392,7 +396,8 @@ public struct IntakeView: View {
                     unit: "kcal",
                     tint: Senku.Palette.carbs,
                     value: $quickCalories,
-                    range: 0 ... 5000
+                    range: 0 ... 5000,
+                    step: 5
                 ) {
                     guard let calories = quickCalories, calories > 0 else { return }
                     store.addCalories(calories)
@@ -420,6 +425,13 @@ public struct IntakeView: View {
 
     /// A number and a button to commit it. The field clears on add, so the next
     /// thing you eat starts from empty rather than from what you last typed.
+    ///
+    /// `step` adds a stepper beside the field. Calories get one because a meal
+    /// is guessed rather than known — you land on "about 700" and then want it
+    /// a bit higher — and nudging is the natural way to do that, where retyping
+    /// three digits is not. Five at a time: one at a time would be a thousand
+    /// presses across a day's eating, and fifty would overshoot the guess it is
+    /// meant to refine.
     private func quickField(
         _ title: String,
         unit: String,
@@ -427,21 +439,45 @@ public struct IntakeView: View {
         value: Binding<Double?>,
         range: ClosedRange<Double>,
         decimals: Int = 0,
+        step: Double? = nil,
         add: @escaping () -> Void
     ) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("\(title) only")
+        HStack(spacing: 8) {
+            Text(title)
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(Color.secondary)
+                .lineLimit(1)
+                .fixedSize()
 
-            HStack(spacing: 6) {
-                NumericField(value: value, range: range, decimals: decimals, unit: unit, width: 52)
+            Spacer(minLength: 0)
 
-                Spacer(minLength: 0)
-
-                addButton(tint: tint, enabled: (value.wrappedValue ?? 0) > 0, action: add)
-                    .accessibilityLabel("Log \(title.lowercased())")
+            if let step {
+                Stepper(
+                    "",
+                    value: Binding(
+                        get: { value.wrappedValue ?? 0 },
+                        set: { value.wrappedValue = $0 <= 0 ? nil : $0 }
+                    ),
+                    in: range,
+                    step: step
+                )
+                .labelsHidden()
+                .accessibilityLabel("Adjust \(title.lowercased()) by \(Int(step))")
             }
+
+            // The unit needs its own width here: "kcal" does not fit the
+            // 26-point column every other screen aligns to.
+            NumericField(
+                value: value,
+                range: range,
+                decimals: decimals,
+                unit: unit,
+                unitWidth: unit.count > 2 ? 34 : 26,
+                width: 50
+            )
+
+            addButton(tint: tint, enabled: (value.wrappedValue ?? 0) > 0, action: add)
+                .accessibilityLabel("Log \(title.lowercased())")
         }
         .frame(maxWidth: .infinity)
     }
@@ -481,14 +517,24 @@ public struct IntakeView: View {
                         Spacer(minLength: 0)
 
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(Display.tidyGrams(entry.proteinG))
-                                .font(.subheadline.weight(.semibold))
-                                .monospacedDigit()
-                                .foregroundStyle(Senku.Palette.protein)
-                            Text("\(Int(entry.calories.rounded())) kcal")
-                                .font(.caption2)
-                                .monospacedDigit()
-                                .foregroundStyle(Color.secondary)
+                            // "0 g" on something logged as calories alone is a
+                            // claim about its protein, and a false one — the
+                            // point of that entry is that nobody knows.
+                            if entry.proteinG > 0 {
+                                Text(Display.tidyGrams(entry.proteinG))
+                                    .font(.subheadline.weight(.semibold))
+                                    .monospacedDigit()
+                                    .foregroundStyle(Senku.Palette.protein)
+                                Text("\(Int(entry.calories.rounded())) kcal")
+                                    .font(.caption2)
+                                    .monospacedDigit()
+                                    .foregroundStyle(Color.secondary)
+                            } else {
+                                Text("\(Int(entry.calories.rounded())) kcal")
+                                    .font(.subheadline.weight(.semibold))
+                                    .monospacedDigit()
+                                    .foregroundStyle(Senku.Palette.carbs)
+                            }
                         }
                     }
                     .contentShape(Rectangle())

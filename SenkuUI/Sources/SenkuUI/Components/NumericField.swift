@@ -20,6 +20,7 @@ public struct NumericField: View {
     private let range: ClosedRange<Double>
     private let decimals: Int
     private let unit: String?
+    private let unitWidth: CGFloat
     private let width: CGFloat
     private let placeholder: String
     private let identifier: String?
@@ -35,6 +36,7 @@ public struct NumericField: View {
         range: ClosedRange<Double>,
         decimals: Int = 0,
         unit: String? = nil,
+        unitWidth: CGFloat = 26,
         width: CGFloat = 62,
         placeholder: String = "—",
         identifier: String? = nil
@@ -43,6 +45,7 @@ public struct NumericField: View {
         self.range = range
         self.decimals = decimals
         self.unit = unit
+        self.unitWidth = unitWidth
         self.width = width
         self.placeholder = placeholder
         self.identifier = identifier
@@ -107,7 +110,7 @@ public struct NumericField: View {
                     // put their fields at the same place down the form. Without
                     // it the widest unit drags its own row's box out of line
                     // with every other.
-                    .frame(width: 26, alignment: .leading)
+                    .frame(width: unitWidth, alignment: .leading)
                     .lineLimit(1)
             }
         }
