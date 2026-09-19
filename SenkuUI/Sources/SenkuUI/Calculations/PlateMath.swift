@@ -70,14 +70,13 @@ public struct PlateSet: Codable, Hashable, Sendable {
     public var smallestStep: Double { (plates.last ?? 0) * 2 }
 
     /// The most the calculator will take: the bar plus twelve of the heaviest
-    /// plate, six a side.
+    /// plate **on each side**.
     ///
-    /// Six a side is about what an Olympic sleeve holds, and twelve 45s or
-    /// twelve 25s comes to 585 lb or 320 kg — past any lift this app is likely
-    /// to be asked about and well past what a commercial rack owns. The point
-    /// of a ceiling is not to police anybody: it is that a fat-fingered 2250
-    /// should not draw fifty plates and report a number nobody meant.
-    public var maxWeight: Double { bar + (plates.first ?? 0) * 12 }
+    /// 1,125 lb or 620 kg on a standard rack — past any lift this app will be
+    /// asked about, and past what most sleeves physically hold. The point of a
+    /// ceiling is not to police anybody: it is that a fat-fingered 22,500
+    /// should not draw five hundred plates and report a number nobody meant.
+    public var maxWeight: Double { bar + (plates.first ?? 0) * 12 * 2 }
 
     /// The nearest weight this rack can actually build, rounding towards
     /// whichever side is closer.
