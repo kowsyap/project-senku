@@ -177,9 +177,20 @@ struct SenkuTabBar: View {
         // finger lifts: the drag moves a pill, and the page follows where it
         // was left — which is also why there is no tick at each crossing.
         // Ticking through six of them on the way to the sixth is a rattle.
-        .gesture(
-            DragGesture(minimumDistance: 6, coordinateSpace: .named(Self.space))
-                .onChanged { drag in dragX = drag.location.x }
+        // Simultaneous, not exclusive: the items are buttons, and a plain
+        // `gesture` here loses to them — the drag was only ever recognised at
+        // the end, which is why the pill appeared to wait for the finger to
+        // lift before moving.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 2, coordinateSpace: .named(Self.space))
+                .onChanged { drag in
+                    // Explicitly unanimated: an ancestor's implicit animation
+                    // would otherwise interpolate every position, which is the
+                    // pill chasing the finger rather than being held by it.
+                    var instant = Transaction()
+                    instant.disablesAnimations = true
+                    withTransaction(instant) { dragX = drag.location.x }
+                }
                 .onEnded { drag in
                     let landed = tab(atX: drag.location.x) ?? selection
                     dragX = nil
@@ -189,8 +200,7 @@ struct SenkuTabBar: View {
                     withAnimation(.snappy(duration: 0.28)) { selection = landed }
                 }
         )
-        // The pill tracks the finger exactly while it is down, and springs to
-        // the item it was left on afterwards.
+        // Springs to the item it was left on; follows exactly while held.
         .animation(dragX == nil ? .snappy(duration: 0.28) : nil, value: pill)
     }
 
