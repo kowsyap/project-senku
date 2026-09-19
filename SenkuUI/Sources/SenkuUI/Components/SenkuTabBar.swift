@@ -66,13 +66,16 @@ struct SenkuTabBar: View {
         return tab
     }
 
+    /// The tab nearest a point, by centre.
+    ///
+    /// Nearest rather than "the one containing it": there are four points of
+    /// gap between items, and a finger lifted in one of them belongs to
+    /// whichever is closer rather than to nobody. Running off either end lands
+    /// on the end item for the same reason.
     private func tab(atX x: CGFloat) -> RootView.Tab? {
-        // Past either end counts as the end item, so a finger that runs off the
-        // bar does not leave the pill behind.
-        if let first = tabs.first, let frame = frames[first], x < frame.minX { return first }
-        if let last = tabs.last, let frame = frames[last], x > frame.maxX { return last }
-
-        return frames.first { _, frame in x >= frame.minX && x <= frame.maxX }?.key
+        tabs
+            .compactMap { tab in frames[tab].map { (tab, abs($0.midX - x)) } }
+            .min { $0.1 < $1.1 }?.0
     }
 
     /// Where the pill is drawn: under the finger while dragging, and around the
@@ -189,12 +192,14 @@ struct SenkuTabBar: View {
         // finger lifts: the drag moves a pill, and the page follows where it
         // was left — which is also why there is no tick at each crossing.
         // Ticking through six of them on the way to the sixth is a rattle.
-        // Simultaneous, not exclusive: the items are buttons, and a plain
-        // `gesture` here loses to them — the drag was only ever recognised at
-        // the end, which is why the pill appeared to wait for the finger to
-        // lift before moving.
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 2, coordinateSpace: .named(Self.space))
+        // One gesture for both, because two of them cannot share a short
+        // distance. The items were buttons, and a drag to the tab *next door*
+        // ends inside the neighbouring button's slop — so the tap won and put
+        // the selection back where it started, while a drag two tabs over was
+        // far enough to escape and worked. A tap is now simply a drag that went
+        // nowhere, which is also what it is.
+        .gesture(
+            DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
                 .onChanged { drag in
                     // Explicitly unanimated: an ancestor's implicit animation
                     // would otherwise interpolate every position, which is the
@@ -205,6 +210,7 @@ struct SenkuTabBar: View {
                 }
                 .onEnded { drag in
                     let landed = tab(atX: drag.location.x) ?? selection
+
 
                     guard landed != selection else {
                         withAnimation(Self.settle) { dragX = nil }
@@ -228,15 +234,7 @@ struct SenkuTabBar: View {
     private func item(_ tab: RootView.Tab) -> some View {
         let isOn = tab == highlighted
 
-        return Button {
-            guard !isOn else { return }
-            Feedback.control()
-            // The same spring a released drag settles with, so tapping and
-            // dragging arrive the same way.
-            withAnimation(Self.settle) {
-                selection = tab
-            }
-        } label: {
+        return Group {
             VStack(spacing: 3) {
                 // "Me" wears a face rather than the system's anonymous
                 // silhouette — it is the one tab that is about a particular
@@ -281,9 +279,17 @@ struct SenkuTabBar: View {
             .padding(.horizontal, 4)
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        // The row handles the touching, so each item carries its own
+        // accessibility instead — VoiceOver has no drag to make, and needs
+        // something it can activate.
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(tab.title)
-        .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : [.isButton])
+        .accessibilityAction {
+            guard tab != selection else { return }
+            Feedback.control()
+            withAnimation(Self.settle) { selection = tab }
+        }
     }
 }
 #endif
