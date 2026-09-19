@@ -118,6 +118,14 @@ public struct RootView: View {
             self == .me ? "GokuMark" : nil
         }
 
+        /// Whether the selected pill goes black rather than taking the tab's
+        /// own colour. Only "Me": gold on white glass is a wash, and gold on
+        /// black is the thing it is quoting.
+        var wantsDarkPill: Bool { self == .me }
+
+        /// What the tab is drawn in while it is the one showing.
+        var activeTint: Color { self == .me ? Senku.Palette.saiyan : tint }
+
         var symbol: String {
             switch self {
             case .me: "person.fill"

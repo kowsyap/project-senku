@@ -60,7 +60,11 @@ struct SenkuTabBar: View {
                 item(tab)
                     .glassEffect(
                         selected(tab)
-                            ? .regular.tint(tab.tint.opacity(0.28)).interactive()
+                            ? .regular.tint(
+                                tab.wantsDarkPill
+                                    ? Color.black.opacity(0.88)
+                                    : tab.tint.opacity(0.28)
+                              ).interactive()
                             : .identity,
                         in: .capsule
                     )
@@ -136,16 +140,14 @@ struct SenkuTabBar: View {
                 // person. Full colour, so it is not tinted into the bar's
                 // accent and lost.
                 if let mark = tab.mark {
-                    // Drawn as a template and filled, so it takes a colour
-                    // rather than staying the ink it was drawn in — Super
-                    // Saiyan gold.
+                    // A template, so it takes the row's colour like every
+                    // other icon here: grey while it waits its turn, gold only
+                    // when it is the tab you are on.
                     Image(mark, bundle: .module)
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
                         .frame(height: 21)
-                        .foregroundStyle(Senku.Palette.saiyan)
-                        .opacity(isOn ? 1 : 0.6)
                 } else {
                     Image(systemName: tab.symbol)
                         .font(.system(size: 18, weight: isOn ? .semibold : .regular))
@@ -157,7 +159,7 @@ struct SenkuTabBar: View {
                     .lineLimit(1)
                     .fixedSize()
             }
-            .foregroundStyle(isOn ? AnyShapeStyle(tab.tint) : AnyShapeStyle(.secondary))
+            .foregroundStyle(isOn ? AnyShapeStyle(tab.activeTint) : AnyShapeStyle(.secondary))
             // Wide enough for the longest label, so the row reads as even
             // columns rather than as text of varying width.
             .frame(minWidth: 70)
