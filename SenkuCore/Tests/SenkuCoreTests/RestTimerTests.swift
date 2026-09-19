@@ -73,6 +73,30 @@ struct RestTimerTests {
         #expect(!again, "Firing twice would buzz twice")
     }
 
+    /// The distinction the phone's chime turns on. A finished rest and a
+    /// stopped one both stop being `isRunning` and both lose their `endsAt`,
+    /// so anything deciding what to do at the deadline has to ask
+    /// `hasFinished` — asking `isRunning` cannot tell the two apart, which is
+    /// how the chime came to be cut off at the instant it started.
+    @Test("A finished timer is distinguishable from a stopped one")
+    func aFinishedTimerIsDistinguishableFromAStoppedOne() {
+        var finished = RestTimer(preset: .sixtySeconds)
+        finished.start(at: start)
+        finished.refresh(at: at(60))
+
+        #expect(!finished.isRunning)
+        #expect(finished.endsAt == nil)
+        #expect(finished.hasFinished(at: at(60)))
+
+        var stopped = RestTimer(preset: .sixtySeconds)
+        stopped.start(at: start)
+        stopped.reset()
+
+        #expect(!stopped.isRunning)
+        #expect(stopped.endsAt == nil)
+        #expect(!stopped.hasFinished(at: at(60)), "A rest that was stopped never finished")
+    }
+
     @Test("The finish is stamped at the deadline, not at a late refresh")
     func finishIsStampedAtTheDeadlineNotAtALateRefresh() throws {
         var timer = RestTimer(preset: .sixtySeconds)
