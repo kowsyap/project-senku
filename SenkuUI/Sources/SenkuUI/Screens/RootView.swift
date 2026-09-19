@@ -181,8 +181,11 @@ public struct RootView: View {
             // sheet from here, because the sheet belongs to that screen — and a
             // widget that dropped you on the weight page with nothing to do
             // would be a link to a place you were already able to reach.
-            if url.host() == "weigh-in" || url.host() == "water" {
-                selection = url.host() == "water" ? .water : .weight
+            switch url.host() {
+            case "weigh-in": selection = .weight
+            case "water": selection = .water
+            case "food": selection = .food
+            default: break
             }
         }
         .task {

@@ -12,6 +12,7 @@ struct SenkuWidgetsBundle: WidgetBundle {
         TargetsWidget()
         WaterWidget()
         WeightWidget()
+        FoodWidget()
         RestLiveActivity()
         if #available(iOS 18.0, *) {
             RestControl()
