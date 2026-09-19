@@ -102,6 +102,24 @@ Both are `#if DEBUG`, read at launch, and set as environment variables:
 | --- | --- |
 | `SENKU_SAMPLE` | loads `Senku/Senku/sample-data.json` through the production importer — three weeks of workouts, weigh-ins, water, food and anime |
 | `SENKU_SCREEN` | opens the app directly on one screen (`water`, `food`, `records`…) |
+| `SENKU_REST` | watch only: starts a rest of N seconds at launch |
+
+### Watching a rest land on a real watch
+
+The end of a rest is the hardest thing in the app to observe — it happens on a
+device that cannot hold a debugger, seconds after you have stopped looking at
+it. `SENKU_REST` plus a bridged console makes it watchable:
+
+```sh
+xcrun devicectl device install app --device <watch udid> SenkuWatch.app
+xcrun devicectl device process launch --device <watch udid> --console \
+  --terminate-existing --environment-variables '{"SENKU_REST":"25"}' \
+  pk.Senku.watchkitapp
+```
+
+Everything the alert does is traced under `SENKU/rest` — the audio route, the
+landing, whether the chime actually played, and when the session is released.
+A crash shows as `App terminated due to signal 6`.
 
 ```sh
 SIMCTL_CHILD_SENKU_SAMPLE=1 xcrun simctl launch booted pk.Senku

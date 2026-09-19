@@ -56,7 +56,15 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// The landing — chime and haptic — happens exactly once, and this is what
     /// guarantees it. Two things notice a rest ending, the session's own alarm
     /// and the screen's tick, and they arrive in either order.
-    private enum Landing: Equatable {
+    private enum Landing: Equatable, CustomStringConvertible {
+        var description: String {
+            switch self {
+            case .none: "none"
+            case .booked(let at): "booked(\(at.timeIntervalSinceNow)s)"
+            case .done: "done"
+            }
+        }
+
         /// No rest, or one still running with no alarm booked yet.
         case none
         /// An alarm is booked for this deadline and has not fired.
@@ -98,32 +106,35 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// Taps the wrist, repeatedly.
     ///
     /// One tap is missable — a wrist at your side during a set, a bar in your
-    /// hands — so this repeats for about ten seconds unless the session is
-    /// taken away first. It is the watch's counterpart to the phone's alert
-    /// being three triplets rather than one polite chime.
+    /// hands — so this repeats for about ten seconds. It is the watch's
+    /// counterpart to the phone's alert being three triplets rather than one
+    /// polite chime.
+    ///
+    /// ## Why not `notifyUser(hapticType:)`
+    ///
+    /// Because it kills the app. It reads like exactly the right call — the
+    /// system's own "alert someone whose wrist is down", with a repeat handler
+    /// built in — and this code used it for months. But it is only legal during
+    /// a **smart alarm** session. Senku holds a *self-care* session, which is
+    /// the honest declaration for a rest between sets, and calling `notifyUser`
+    /// on one raises an Objective-C exception: `signal 6`, before the next line
+    /// runs.
+    ///
+    /// That was the whole mystery. Every rest that reached zero on the wrist
+    /// crashed the watch app on the spot — which is why it returned to the
+    /// watch face the instant the timer hit zero, why the chime queued on the
+    /// line below never played, and why the notification that used to exist
+    /// turned up twenty seconds later, once the system had cleaned up after the
+    /// process that was supposed to have handled it.
     public func alert() {
+        RestTrace.note("alert: session=\(session.map { String($0.state.rawValue) } ?? "none")")
         lastLanding = LandingReport(heldSession: session?.state == .running, chimeSounded: nil)
 
-        guard let session, session.state == .running else {
-            // No session — the system refused one, or took it back. The wrist
-            // still deserves telling, so fall back to the device's own haptic,
-            // repeated, which works whenever the app is executing at all.
-            playFallbackHaptics()
-            return
-        }
-
-        let stop = Date.now.addingTimeInterval(10)
-        session.notifyUser(hapticType: .notification) { _ in
-            // The returned interval is the wait before the next tap; zero ends
-            // the repetition. Bounded by wall clock rather than by a counter,
-            // so a throttled callback cannot stretch it into a nuisance.
-            Date.now < stop ? 1.2 : 0
-        }
+        playHaptics()
     }
 
-    /// Six taps, a second and a bit apart. The same shape as the session's
-    /// repeat, without the session.
-    private func playFallbackHaptics() {
+    /// Six taps, a second and a bit apart.
+    private func playHaptics() {
         // Bounded by wall clock rather than by a counter, for the same reason
         // the session's own repeat above is: a captured counter mutated inside
         // the timer's closure is a data race the compiler is right to warn
@@ -141,6 +152,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     }
 
     public func end() {
+        RestTrace.note("end: releasing session")
         alarm?.invalidate()
         alarm = nil
         landing = .none
@@ -177,6 +189,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         // So the crossing is not a cancellation. Whoever notices it first does
         // the landing, `land()` runs once, and nothing here cuts it short.
         if timer.hasFinished(at: now) {
+            RestTrace.note("sync: finished, landing=\(landing)")
             switch landing {
             case .booked: land()
             case .done: break
@@ -209,7 +222,11 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// it is now the thing alerting you: the chime plays, the haptic repeats,
     /// and fifteen seconds is long enough for both to finish and be noticed.
     private func land() {
-        guard landing != .done else { return }
+        guard landing != .done else {
+            RestTrace.note("land: already done, ignoring")
+            return
+        }
+        RestTrace.note("land: firing")
         landing = .done
 
         alert()
@@ -241,6 +258,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// surfaces when this session ends. The alternative is an app that assumes
     /// it made a sound and leaves you with none.
     private func soundLanded(_ sounded: Bool) {
+        RestTrace.note("soundLanded: \(sounded)")
         lastLanding?.chimeSounded = sounded
 
         guard sounded else {
@@ -259,6 +277,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// until the session ends, and the alert waiting behind it only appears
     /// once it does.
     private func windDown(after seconds: TimeInterval = 2) {
+        RestTrace.note("windDown: in \(seconds)s")
         alarm?.invalidate()
 
         let closing = Timer(timeInterval: seconds, repeats: false) { [weak self] _ in
@@ -287,6 +306,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
 
     private func scheduleAlarm(at date: Date) {
         guard landing != .booked(date) else { return }
+        RestTrace.note("scheduleAlarm: in \(date.timeIntervalSinceNow)s")
         alarm?.invalidate()
         landing = .booked(date)
         // A new rest: last time's outcome is not this rest's news.

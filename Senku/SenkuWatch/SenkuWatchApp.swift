@@ -68,6 +68,23 @@ struct SenkuWatchApp: App {
         // suppressed for arriving while the app is on screen — which, with the
         // runtime session holding the app in front, is every time.
         RestAlerts.installPresenter()
+
+        #if DEBUG
+        // Starts a rest of N seconds at launch, so the end of one can be
+        // watched from a Mac without a finger on the watch:
+        //
+        //     xcrun devicectl device process launch --device <watch> \
+        //       --console -e SENKU_REST=20 pk.Senku.watchkitapp
+        //
+        // The landing is the hardest part of this app to observe — it happens
+        // on a device you cannot attach a debugger to, seconds after you have
+        // stopped looking at it — and it is where a crash hid for months.
+        if let seconds = ProcessInfo.processInfo.environment["SENKU_REST"].flatMap(Double.init),
+           var timer = try? RestTimer(duration: seconds) {
+            timer.start(at: .now)
+            RestTimerStore.save(timer)
+        }
+        #endif
     }
 
     var body: some Scene {

@@ -94,6 +94,7 @@ private final class Chime {
     /// nothing at all.
     func play(completion: (@MainActor @Sendable (Bool) -> Void)? = nil) {
         guard let player else {
+            RestTrace.note("chime: no player — resource missing?")
             completion?(false)
             return
         }
@@ -105,17 +106,23 @@ private final class Chime {
         // with the audio system.
         if isRouted {
             player.currentTime = 0
-            completion?(player.play())
+            let played = player.play()
+            RestTrace.note("chime: route open, play()=\(played) vol=\(player.volume) dur=\(player.duration)")
+            completion?(played)
             return
         }
 
+        RestTrace.note("chime: route not open, opening now")
         openRoute { [weak self] opened in
             guard opened, let self, let player = self.player else {
+                RestTrace.note("chime: route refused, nothing played")
                 completion?(false)
                 return
             }
             player.currentTime = 0
-            completion?(player.play())
+            let played = player.play()
+            RestTrace.note("chime: late route, play()=\(played)")
+            completion?(played)
         }
         #else
         configureSession()
@@ -131,7 +138,11 @@ private final class Chime {
     /// it is one more thing for the activation to refuse over.
     #if os(watchOS)
     func prepare() {
-        guard !isRouted else { return }
+        guard !isRouted else {
+            RestTrace.note("prepare: already routed")
+            return
+        }
+        RestTrace.note("prepare: opening audio route")
         openRoute { _ in }
     }
 
@@ -143,8 +154,10 @@ private final class Chime {
         // here. That throw used to be swallowed by a `try?`, so the chime was
         // mute for as long as there had been one: the player was told to play
         // into a session that was never live.
-        session.activate(options: []) { activated, _ in
+        session.activate(options: []) { activated, error in
+            let complaint = error.map { String(describing: $0) } ?? "none"
             Task { @MainActor in
+                RestTrace.note("openRoute: activated=\(activated) error=\(complaint) route=\(session.currentRoute.outputs.map(\.portType.rawValue))")
                 Chime.shared.isRouted = activated
                 done(activated)
             }
