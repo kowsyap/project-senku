@@ -104,6 +104,26 @@ import SenkuCore
         #expect(PlateSet.kilograms.namedBar?.name == "Olympic")
     }
 
+    /// Twelve of the heaviest plate, six a side — the most either rack will
+    /// be asked to build.
+    @Test func theCeilingIsTwelvePlates() {
+        #expect(PlateSet.pounds.maxWeight == 45 + 45 * 12)        // 585 lb
+        #expect(PlateSet.kilograms.maxWeight == 20 + 25 * 12)     // 320 kg
+    }
+
+    @Test func snappingNeverExceedsTheCeiling() {
+        #expect(PlateSet.pounds.snapped(2250) == 585)
+        #expect(PlateSet.kilograms.snapped(1000) == 320)
+    }
+
+    /// A gym with lighter plates has a lower ceiling, which is the point of
+    /// hanging it off the heaviest one on the rack.
+    @Test func aLighterRackHasALowerCeiling() {
+        let light = PlateSet(unit: .imperial, bar: 45, plates: [25, 10, 5])
+
+        #expect(light.maxWeight == 45 + 25 * 12)
+    }
+
     @Test func aPlateSetIsSortedHeaviestFirstHoweverItIsGiven() {
         let set = PlateSet(unit: .imperial, bar: 45, plates: [10, 45, 2.5, 25])
 

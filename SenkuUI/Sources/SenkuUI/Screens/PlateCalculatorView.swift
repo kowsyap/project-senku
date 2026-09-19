@@ -47,6 +47,13 @@ struct PlateCalculatorView: View {
         // An empty bar, which is where every load starts — and one press of
         // "+" from there is the first warm-up set.
         .task { if target == nil { target = set.bar } }
+        // Twelve plates is the ceiling — see `PlateSet.maxWeight`. Clamped
+        // rather than refused, so a typed 2250 becomes the most you can load
+        // instead of sitting there as a number the bar cannot hold.
+        .onChange(of: target) { _, value in
+            guard let value, value > set.maxWeight else { return }
+            target = set.maxWeight
+        }
         // Switching units is switching gyms. Converting the number would carry
         // a weight from one rack to another, where it may not even be loadable;
         // the bar is the honest place to start again.
@@ -111,7 +118,7 @@ struct PlateCalculatorView: View {
                     stepButton("plus", by: set.smallestStep)
                 }
 
-                Text("\(set.namedBar.map { "\($0.name) bar" } ?? "Bar") \(PlateLoad.trim(set.bar)) \(unit.massLabel) · steps of \(PlateLoad.trim(set.smallestStep)) \(unit.massLabel)")
+                Text("\(set.namedBar.map { "\($0.name) bar" } ?? "Bar") \(PlateLoad.trim(set.bar)) \(unit.massLabel) · steps of \(PlateLoad.trim(set.smallestStep)) \(unit.massLabel) · up to \(PlateLoad.trim(set.maxWeight))")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -126,14 +133,14 @@ struct PlateCalculatorView: View {
     /// would just be a different unloadable number.
     private func stepButton(_ symbol: String, by amount: Double) -> some View {
         Button {
-            let current = target ?? set.bar
+            let current = min(target ?? set.bar, set.maxWeight)
             let base = set.snapped(current)
             // Snapping alone may already be the move: 227 up is 230, but 227
             // down is 225, and both are one press.
             let next = abs(base - current) > 0.001 && (base - current).sign == amount.sign
                 ? base
                 : base + amount
-            target = max(0, next)
+            target = min(set.maxWeight, max(0, next))
             Feedback.control()
         } label: {
             Image(systemName: symbol)

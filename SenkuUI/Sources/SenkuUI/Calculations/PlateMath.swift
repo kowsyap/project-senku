@@ -69,6 +69,16 @@ public struct PlateSet: Codable, Hashable, Sendable {
     /// whether a five-pound progression is even possible.
     public var smallestStep: Double { (plates.last ?? 0) * 2 }
 
+    /// The most the calculator will take: the bar plus twelve of the heaviest
+    /// plate, six a side.
+    ///
+    /// Six a side is about what an Olympic sleeve holds, and twelve 45s or
+    /// twelve 25s comes to 585 lb or 320 kg — past any lift this app is likely
+    /// to be asked about and well past what a commercial rack owns. The point
+    /// of a ceiling is not to police anybody: it is that a fat-fingered 2250
+    /// should not draw fifty plates and report a number nobody meant.
+    public var maxWeight: Double { bar + (plates.first ?? 0) * 12 }
+
     /// The nearest weight this rack can actually build, rounding towards
     /// whichever side is closer.
     ///
@@ -79,7 +89,7 @@ public struct PlateSet: Codable, Hashable, Sendable {
     public func snapped(_ weight: Double) -> Double {
         guard smallestStep > 0 else { return weight }
         let steps = ((weight - bar) / smallestStep).rounded()
-        return max(bar, bar + steps * smallestStep)
+        return min(maxWeight, max(bar, bar + steps * smallestStep))
     }
 }
 
