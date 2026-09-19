@@ -138,14 +138,13 @@ struct SenkuTabBar: View {
                 if let mark = tab.mark {
                     // Drawn as a template and filled, so it takes a colour
                     // rather than staying the ink it was drawn in — Super
-                    // Saiyan Blue, which is the one shade the character is
-                    // actually associated with.
+                    // Saiyan gold.
                     Image(mark, bundle: .module)
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
                         .frame(height: 21)
-                        .foregroundStyle(Senku.Palette.saiyanBlue)
+                        .foregroundStyle(Senku.Palette.saiyan)
                         .opacity(isOn ? 1 : 0.6)
                 } else {
                     Image(systemName: tab.symbol)

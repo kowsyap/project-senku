@@ -10,9 +10,10 @@ public enum Senku {
     public enum Palette {
         /// Protein — the macro the app pushes hardest on a cut.
         public static let protein = Color(red: 0.35, green: 0.55, blue: 0.95)
-        /// The blue the "Me" tab's mark is filled with. Brighter and cooler
-        /// than `protein`, so the face does not read as another blue glyph.
-        public static let saiyanBlue = Color(red: 0.18, green: 0.68, blue: 0.96)
+        /// The gold the "Me" tab's mark is filled with — Super Saiyan, not the
+        /// blue of its successor. Deep enough to hold its own against a white
+        /// bar, where a brighter yellow would wash out.
+        public static let saiyan = Color(red: 0.96, green: 0.72, blue: 0.09)
         /// Carbohydrate.
         public static let carbs = Color(red: 0.98, green: 0.68, blue: 0.24)
         /// Fat.
