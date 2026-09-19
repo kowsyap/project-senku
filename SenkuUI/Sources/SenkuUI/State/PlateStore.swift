@@ -11,13 +11,33 @@ import SenkuCore
 @Observable
 public final class PlateStore {
     static let storageKey = "senku.plates.v1"
+    static let unitKey = "senku.plates.unit.v1"
 
     private let defaults: UserDefaults
 
     private var sets: [String: PlateSet] = [:]
 
-    public init(defaults: UserDefaults = SenkuStorage.shared) {
+    /// Which rack the calculator is working in.
+    ///
+    /// Its own setting rather than the profile's: plates are stamped in
+    /// whatever the gym bought, and somebody who weighs themselves in pounds
+    /// can still walk into a gym with kilo plates on the rack. Remembered,
+    /// because that gym does not change between sessions.
+    public var unit: UnitSystem {
+        didSet {
+            guard unit != oldValue else { return }
+            defaults.set(unit.rawValue, forKey: Self.unitKey)
+        }
+    }
+
+    public init(
+        defaults: UserDefaults = SenkuStorage.shared,
+        unit: UnitSystem? = nil
+    ) {
         self.defaults = defaults
+        self.unit = unit
+            ?? (defaults.string(forKey: Self.unitKey).flatMap(UnitSystem.init(rawValue:)))
+            ?? UnitPreference.current
         reload()
     }
 

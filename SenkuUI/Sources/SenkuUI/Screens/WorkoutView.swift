@@ -18,6 +18,8 @@ public struct WorkoutView: View {
     private let unitSystem: UnitSystem
 
     @State private var isSettingUp = false
+    @State private var isCalculatingPlates = false
+    @State private var plates = PlateStore()
     @State private var isShowingHistory = false
     @State private var finished: WorkoutSession?
     @State private var reviewing: WorkoutSession?
@@ -57,6 +59,16 @@ public struct WorkoutView: View {
             }
         }
         .toolbar {
+            // Always there, live session or not: the bar is loaded before the
+            // first set and again between every one of them.
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    isCalculatingPlates = true
+                } label: {
+                    Label("Plates", systemImage: "circle.hexagongrid.fill")
+                }
+            }
+
             if workouts.live == nil, plans.hasPlan {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -74,6 +86,9 @@ public struct WorkoutView: View {
                     }
                 }
             }
+        }
+        .navigationDestination(isPresented: $isCalculatingPlates) {
+            PlateCalculatorView(plates: plates)
         }
         .navigationDestination(isPresented: $isSettingUp) {
             PlanSetupView(store: plans, library: library)

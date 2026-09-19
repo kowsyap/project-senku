@@ -413,8 +413,6 @@ private struct SetLogger: View {
     @State private var seconds: TimeInterval = 60
     @State private var newRecord: PersonalRecord?
     @State private var hasSeeded = false
-    @State private var plates = PlateStore()
-    @State private var isEditingPlates = false
 
     private var entry: WorkoutEntry? { workouts.live?.entry(exerciseID) }
 
@@ -494,11 +492,6 @@ private struct SetLogger: View {
                 Button("Done") { dismiss() }
             }
         }
-        .sheet(isPresented: $isEditingPlates) {
-            PlateRackEditor(plates: plates, unitSystem: unitSystem) {
-                isEditingPlates = false
-            }
-        }
         .task {
             guard !hasSeeded else { return }
             hasSeeded = true
@@ -525,8 +518,6 @@ private struct SetLogger: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-
-                plateRow
             }
 
             if isTimed {
@@ -550,58 +541,6 @@ private struct SetLogger: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(Senku.Palette.protein)
-        }
-    }
-
-    /// What to hang on each side of the bar for the weight in the field.
-    ///
-    /// Only for a barbell: a dumbbell has no sides and a machine has a pin, and
-    /// a row of plate arithmetic under either would be noise. Tapping it opens
-    /// the rack, because the first question anybody asks of a wrong answer is
-    /// "which plates does it think I have".
-    @ViewBuilder
-    private var plateRow: some View {
-        if exercise?.equipment == .barbell, weight > 0 {
-            let set = plates.set(for: unitSystem)
-            let load = PlateMath.load(
-                kilograms: unitSystem == .metric ? weight : Convert.kilograms(fromPounds: weight),
-                using: set
-            )
-
-            Button {
-                isEditingPlates = true
-            } label: {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("Per side")
-                        .font(.caption)
-                        .foregroundStyle(Color.secondary)
-
-                    Spacer(minLength: 0)
-
-                    if load.perSide.isEmpty {
-                        Text(load.isExact ? "bar only" : "under the bar")
-                            .font(.caption)
-                            .foregroundStyle(Color.secondary)
-                    } else {
-                        Text(load.description)
-                            .font(.subheadline.weight(.semibold))
-                            .monospacedDigit()
-                            .foregroundStyle(load.isExact ? Senku.Palette.protein : Senku.Palette.caution)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if !load.isExact, !load.perSide.isEmpty {
-                // The half of this worth having. Finding out at the rack beats
-                // finding out with the bar on your back.
-                Text("Your plates make \(PlateLoad.trim(load.total)) \(unitSystem.massLabel), not \(PlateLoad.trim(load.target)).")
-                    .font(.caption2)
-                    .foregroundStyle(Senku.Palette.caution)
-            }
         }
     }
 
