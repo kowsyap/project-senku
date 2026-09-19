@@ -43,6 +43,12 @@ struct SenkuTabBar: View {
 
     @Namespace private var glassNamespace
 
+    /// Where each item sits in the row, so a finger dragged across the bar can
+    /// be turned back into a tab.
+    @State private var frames: [RootView.Tab: CGRect] = [:]
+
+    private static let space = "senku.tabbar"
+
     var body: some View {
         Group {
             if #available(iOS 26.0, *) {
@@ -108,11 +114,41 @@ struct SenkuTabBar: View {
     ) -> some View {
         HStack(spacing: 4) {
             ForEach(tabs, id: \.self) { tab in
-                item(tab).id(tab)
+                item(tab)
+                    .id(tab)
+                    .onGeometryChange(for: CGRect.self) { proxy in
+                        proxy.frame(in: .named(Self.space))
+                    } action: { frame in
+                        frames[tab] = frame
+                    }
             }
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 6)
+        .coordinateSpace(name: Self.space)
+        // Put a finger on the bar and slide: the selection follows it, the way
+        // the pill itself suggests it might. A tap is unaffected — this only
+        // starts once the finger has actually travelled.
+        .gesture(
+            DragGesture(minimumDistance: 8, coordinateSpace: .named(Self.space))
+                .onChanged { drag in select(under: drag.location) }
+                .onEnded { drag in select(under: drag.location) }
+        )
+    }
+
+    /// The tab under a point, if the point is on one.
+    ///
+    /// Horizontal only: the row is a row, and a finger that wanders above or
+    /// below it on the way across is still pointing at the same thing.
+    private func select(under point: CGPoint) {
+        guard let tab = frames.first(where: { _, frame in
+            point.x >= frame.minX && point.x <= frame.maxX
+        })?.key, tab != selection else { return }
+
+        Feedback.control()
+        withAnimation(.snappy(duration: 0.25)) {
+            selection = tab
+        }
     }
 
     private func selected(_ tab: RootView.Tab) -> Bool { tab == selection }

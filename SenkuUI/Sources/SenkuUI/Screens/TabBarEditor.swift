@@ -28,10 +28,6 @@ struct TabBarEditor: View {
                 }
             } header: {
                 Text("In the bar")
-            } footer: {
-                Text(layout.isFull
-                     ? "\(layout.slots) at a time on this screen, plus Me and More. Turn one off to make room."
-                     : "Room for \(layout.slots - layout.chosen.count) more. Drag to reorder; the order here is the order in the bar.")
             }
 
             Section {
@@ -43,20 +39,17 @@ struct TabBarEditor: View {
                 }
             } header: {
                 Text("Under More")
-            } footer: {
-                Text("Reached in two taps instead of one. This order is the order of the More list.")
             }
 
             Section {
                 Button("Reset to default") { layout.reset() }
+            } footer: {
+                Text("Up to \(layout.slots) in the navbar on this screen. Drag to arrange.")
             }
         }
         .navigationTitle("Navbar settings")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) { EditButton() }
-        }
         #endif
         .senkuBottomBarInset()
     }
