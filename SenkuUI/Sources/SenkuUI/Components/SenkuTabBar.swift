@@ -58,7 +58,9 @@ struct SenkuTabBar: View {
 
     @Namespace private var glassNamespace
 
-    private static let space = "senku.tabbar"
+    // `nonisolated` because the geometry callbacks that name this space are
+    // `@Sendable`, and a constant string has nothing to protect.
+    nonisolated private static let space = "senku.tabbar"
 
     /// How the pill travels when it is not being held: a spring with a little
     /// give in it, which is the liquid-glass movement the bar had when it was

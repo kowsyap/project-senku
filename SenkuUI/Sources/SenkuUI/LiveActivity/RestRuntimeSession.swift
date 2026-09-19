@@ -89,15 +89,18 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// Six taps, a second and a bit apart. The same shape as the session's
     /// repeat, without the session.
     private func playFallbackHaptics() {
-        var left = 6
+        // Bounded by wall clock rather than by a counter, for the same reason
+        // the session's own repeat above is: a captured counter mutated inside
+        // the timer's closure is a data race the compiler is right to warn
+        // about, and a throttled tick cannot stretch a deadline.
+        let stop = Date.now.addingTimeInterval(6 * 1.2)
         WKInterfaceDevice.current().play(.notification)
 
         let repeater = Timer(timeInterval: 1.2, repeats: true) { fired in
+            guard Date.now < stop else { return fired.invalidate() }
             Task { @MainActor in
                 WKInterfaceDevice.current().play(.notification)
             }
-            left -= 1
-            if left <= 0 { fired.invalidate() }
         }
         RunLoop.main.add(repeater, forMode: .common)
     }

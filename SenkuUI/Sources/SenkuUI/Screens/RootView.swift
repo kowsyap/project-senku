@@ -301,6 +301,11 @@ public struct RootView: View {
             publishWater()
             publishIntake()
             #endif
+
+            // Also at launch: `scenePhase` does not announce the value it
+            // starts on, and the first run after a day the goal was met is
+            // exactly when the reminders need putting back.
+            restoreWaterReminders()
         }
         // Taking the current screen out of the bar would otherwise leave the
         // pager on a page that no longer exists — which looks like the app
@@ -317,10 +322,15 @@ public struct RootView: View {
         .onChange(of: scenePhase) { _, phase in
             // Drinks can be logged from the Home Screen widget, in another
             // process, while the app is in the background — so the water it
-            // read at launch is only true until you tap a glass out there.
+            // read at launch is only true until you tap a glass out there. The
+            // weight log is the same story with the watch as the other process:
+            // `PhoneSync` writes a weigh-in from the wrist without a screen
+            // existing to be told about it.
             if phase == .active {
                 water.reload()
                 intake.reload()
+                weightLog.reload()
+                restoreWaterReminders()
             }
 
             // Republished whenever the app comes forward, which is the cheapest
@@ -575,6 +585,29 @@ public struct RootView: View {
     }
 
     /// The watch's bottle, as two numbers.
+    /// Puts back the reminders that meeting yesterday's goal took away.
+    ///
+    /// ## The loop this closes
+    ///
+    /// Meeting the goal cancels the rest of the day's slots, and a repeating
+    /// trigger cannot skip one occurrence — so cancelling today cancels every
+    /// day after it until something books them again. That something used to be
+    /// logging a drink, which is the wrong way round: reminders exist to make
+    /// you drink, so a schedule that only comes back once you have drunk is one
+    /// good day away from being gone for good.
+    ///
+    /// Here instead, where it runs at launch and every time the app comes
+    /// forward, after the store has been re-read so today's total is the real
+    /// one.
+    private func restoreWaterReminders() {
+        #if canImport(UserNotifications) && !os(macOS)
+        WaterReminders.refresh(
+            settings: water.settings,
+            isMet: water.day(profile: store.profile, workouts: workouts).isMet
+        )
+        #endif
+    }
+
     private func publishWater() {
         #if os(iOS)
         // Read before publishing rather than trusting what is in memory. The

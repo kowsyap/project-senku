@@ -36,6 +36,24 @@ public final class WeightLogStore {
         self.weighIns = Self.load(from: defaults)
     }
 
+    /// Re-reads the log from the shared container.
+    ///
+    /// ## Why a store loaded once at launch is not enough
+    ///
+    /// The same reason `WaterStore` has one, arrived at later and by a
+    /// different route. A weigh-in taken on the watch reaches the phone through
+    /// `PhoneSync`, which writes it while the app is in the *background* — no
+    /// screen, no scene, and nothing to tell the store this screen is holding.
+    /// It would go on showing the readings it read at launch, and the next
+    /// weigh-in logged on the phone would write that stale array back over the
+    /// watch's, so the reading taken on the wrist would disappear.
+    ///
+    /// So every mutation starts by reading what is actually there, and the app
+    /// refreshes whenever it comes forward.
+    public func reload() {
+        weighIns = Self.load(from: defaults)
+    }
+
     /// Everything derived — trend, weekly rate, time to a goal — comes from
     /// here rather than from stored fields, so none of it can go stale.
     public var series: WeightSeries { WeightSeries(weighIns) }
@@ -69,18 +87,27 @@ public final class WeightLogStore {
     }
 
     public func add(_ weighIn: WeighIn) {
+        reload()
+        guard !weighIns.contains(where: { $0.id == weighIn.id }) else { return }
         weighIns.append(weighIn)
         weighIns.sort { $0.date > $1.date }
         persist()
     }
 
     public func delete(_ weighIn: WeighIn) {
+        reload()
         weighIns.removeAll { $0.id == weighIn.id }
         persist()
     }
 
     public func delete(atOffsets offsets: IndexSet) {
-        weighIns.remove(atOffsets: offsets)
+        // Resolved to ids *before* re-reading. The offsets come from the list
+        // on screen, and a weigh-in arriving from the watch in between would
+        // shift every row under them — deleting by position after a reload
+        // would delete the wrong readings.
+        let doomed = Set(offsets.compactMap { weighIns.indices.contains($0) ? weighIns[$0].id : nil })
+        reload()
+        weighIns.removeAll { doomed.contains($0.id) }
         persist()
     }
 

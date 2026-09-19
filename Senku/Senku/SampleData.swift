@@ -54,7 +54,7 @@ enum SampleData {
             intake: intake
         )
 
-        NSLog("SENKU_SAMPLE: \(summary.detail)")
+        NSLog("SENKU_SAMPLE: \(summary.detail ?? "nothing imported")")
     }
 }
 #endif

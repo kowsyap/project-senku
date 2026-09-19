@@ -131,10 +131,14 @@ public enum WaterReminders {
     /// are already past — to fire again tomorrow.
     ///
     /// A repeating request cannot skip one occurrence, so the only way to stop
-    /// today without stopping every day is to remove and re-add it. The re-add
-    /// happens the next time the app is opened; if it never is, tomorrow's
-    /// reminders are missing, which is the honest cost of this approach and the
-    /// reason `refresh` runs on every launch of the water screen.
+    /// today without stopping every day is to remove it and add it back.
+    ///
+    /// The adding back is the part that matters, and it used to be attached to
+    /// logging a drink — which meant a day you hit your goal took tomorrow's
+    /// afternoon reminders with it, and only drinking brought them back. A
+    /// reminder you have to already be doing the thing to receive is not a
+    /// reminder. `RootView.restoreWaterReminders()` now calls `refresh` at
+    /// launch and every time the app comes forward.
     private static func silenceRestOfToday(_ settings: WaterStore.Settings) {
         let calendar = Calendar.current
         let now = calendar.dateComponents([.hour, .minute], from: .now)

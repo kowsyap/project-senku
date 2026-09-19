@@ -251,7 +251,7 @@ an iPhone simulator, and press Run.
 ```sh
 # The logic, on the host — no simulator, ~0.01s
 cd SenkuCore && swift test        # 171 tests
-cd ../SenkuUI  && swift test      # 69 tests
+cd ../SenkuUI  && swift test      # 73 tests
 
 # The app. Note the *generic* destination — a named device breaks the
 # watch link; docs/XCODE_SETUP.md explains why.
@@ -325,10 +325,11 @@ senku/
 ### Three decisions worth knowing about
 
 **Every store mutation re-reads first.** The widget writes into the same array
-from its own process. A store holding its launch-time copy would miss those
-writes *and* overwrite them on the next one — a drink logged on the Home Screen
-would vanish. This was a real bug; the rule now lives in `WaterStore`,
-`IntakeStore` and `WeightLogStore`.
+from its own process, and so does the phone during a background launch woken by
+the watch. A store holding its launch-time copy would miss those writes *and*
+overwrite them on the next one — a drink logged on the Home Screen, or a weigh-in
+taken on the wrist, would vanish. Both were real bugs; the rule now lives in
+`WaterStore`, `IntakeStore` and `WeightLogStore`.
 
 **Sync starts at app launch, not on a screen.** `PhoneSync.start()` runs from
 `SenkuApp.init`, before any scene exists, because the watch can wake the phone in

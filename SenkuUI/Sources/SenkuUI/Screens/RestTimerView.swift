@@ -1,6 +1,10 @@
 import SwiftUI
 import SenkuCore
-    #if os(watchOS)
+// The tick below is a Combine publisher. SwiftUI re-exports enough of Combine
+// for `Timer.publish` to compile without this, but not enough to name its type
+// in a stored property — which is what four warnings on one line were saying.
+import Combine
+#if os(watchOS)
 import WatchKit
 #endif
 #if os(iOS)

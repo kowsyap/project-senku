@@ -36,7 +36,7 @@ public struct StopRestIntent: LiveActivityIntent {
 
         RestTimerStore.clear()
         RestActivityController.shared.end(dismissing: .immediate)
-        await RestChime.cancel()
+        RestChime.cancel()
         #if canImport(UserNotifications)
         RestNotifications.cancel()
         #endif
@@ -67,7 +67,7 @@ public struct ExtendRestIntent: LiveActivityIntent {
         timer.extend(by: 30, at: .now)
         RestTimerStore.save(timer)
         RestActivityController.shared.sync(with: timer)
-        await RestChime.sync(with: timer)
+        RestChime.sync(with: timer)
         #if canImport(UserNotifications)
         RestNotifications.sync(with: timer)
         #endif

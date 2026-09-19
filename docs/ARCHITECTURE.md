@@ -65,8 +65,11 @@ Each feature owns a store, and they all look the same:
 
 **Every mutation re-reads first.** A widget writes into the same array from its
 own process; a store that kept its launch-time copy would both miss those writes
-and overwrite them on the next one. This was a real bug, and the rule now exists
-in `WaterStore`, `IntakeStore` and `WeightLogStore`.
+and overwrite them on the next one. This was a real bug — twice. Water and food
+first, from the widgets; then the weight log, from the watch, where `PhoneSync`
+writes a weigh-in during a background launch with no screen to tell. The rule
+now exists in `WaterStore`, `IntakeStore` and `WeightLogStore`, and the app
+re-reads all three when it comes forward.
 
 ## How the pieces talk
 

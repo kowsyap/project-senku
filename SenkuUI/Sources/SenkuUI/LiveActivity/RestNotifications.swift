@@ -2,7 +2,10 @@ import Foundation
 import SenkuCore
 
 #if canImport(UserNotifications) && !os(macOS)
-import UserNotifications
+// `UNUserNotificationCenter` is thread-safe and documented as such, but is
+// not marked `Sendable`, so passing it into the completion handlers it hands
+// you is an error the module itself makes unavoidable.
+@preconcurrency import UserNotifications
 
 /// Fires a notification when a rest ends while Senku is not on screen.
 ///

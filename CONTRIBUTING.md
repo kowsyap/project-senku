@@ -59,7 +59,7 @@ of a second and need no simulator:
 
 ```sh
 cd SenkuCore && swift test     # 171 tests
-cd ../SenkuUI  && swift test   # 69 tests
+cd ../SenkuUI  && swift test   # 73 tests
 ```
 
 Then build the app before you open the PR:
