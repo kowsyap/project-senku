@@ -281,13 +281,23 @@ public struct WaterView: View {
 
     private var historyCard: some View {
         let week = store.log.recentTotals(days: 7).reversed()
+        // The tallest bar in view, so a week where nothing reached the target
+        // still has shape rather than seven stubs. The dashed goal line is what
+        // says where the target is.
         let goal = today.goal.totalML
+        let ceiling = max(goal, week.map(\.totalML).max() ?? 0)
 
         return Card("Water intake") {
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(Array(week), id: \.date) { day in
+                    // Each day against the goal it actually had — a training
+                    // day asks for more, and judging Tuesday by today's target
+                    // is the app marking a day it never set.
+                    let dayGoal = store.goal(profile: profile, workouts: workouts, on: day.date).totalML
+                    let met = dayGoal > 0 && day.totalML >= dayGoal
+
                     VStack(spacing: 4) {
-                        let fraction = goal > 0 ? min(1.4, day.totalML / goal) : 0
+                        let fraction = ceiling > 0 ? min(1, day.totalML / ceiling) : 0
 
                         ZStack(alignment: .bottom) {
                             RoundedRectangle(cornerRadius: 4)
@@ -295,10 +305,17 @@ public struct WaterView: View {
                                 .frame(height: 64)
 
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(day.totalML >= goal
-                                      ? Senku.Palette.surplus
-                                      : Senku.Palette.deficit)
-                                .frame(height: max(2, 64 * fraction / 1.4))
+                                .fill(met ? Senku.Palette.surplus : Senku.Palette.deficit)
+                                .frame(height: max(2, 64 * fraction))
+                        }
+                        .overlay(alignment: .bottom) {
+                            // Where the target sits on this scale.
+                            if ceiling > 0, dayGoal > 0, dayGoal <= ceiling {
+                                Rectangle()
+                                    .fill(Color.secondary.opacity(0.5))
+                                    .frame(height: 1)
+                                    .offset(y: -64 * (dayGoal / ceiling))
+                            }
                         }
 
                         Text(day.date.formatted(.dateTime.weekday(.narrow)))
@@ -314,7 +331,10 @@ public struct WaterView: View {
             if !today.entries.isEmpty {
                 Divider()
 
-                ForEach(today.entries.prefix(6)) { entry in
+                // Every drink today, not the last six. The cap made a long day
+                // look like a short one and put the list at odds with the
+                // bottle above it, which has always counted all of them.
+                ForEach(today.entries) { entry in
                     HStack {
                         Text("\(Int(entry.millilitres)) ml")
                             .font(.subheadline)
