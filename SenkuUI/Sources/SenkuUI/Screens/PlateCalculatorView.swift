@@ -35,12 +35,6 @@ struct PlateCalculatorView: View {
                 if let load {
                     barCard(load)
                     perSideCard(load)
-                } else {
-                    Text("Type what you want on the bar.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 30)
                 }
             }
             .padding()
@@ -50,6 +44,13 @@ struct PlateCalculatorView: View {
         .background(.background)
         .senkuBottomBarInset()
         .dismissableKeyboard()
+        // An empty bar, which is where every load starts — and one press of
+        // "+" from there is the first warm-up set.
+        .task { if target == nil { target = set.bar } }
+        // Switching units is switching gyms. Converting the number would carry
+        // a weight from one rack to another, where it may not even be loadable;
+        // the bar is the honest place to start again.
+        .onChange(of: plates.unit) { _, _ in target = set.bar }
         .navigationTitle("Plate calculator")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

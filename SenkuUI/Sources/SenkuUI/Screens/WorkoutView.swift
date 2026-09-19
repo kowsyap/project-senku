@@ -19,7 +19,7 @@ public struct WorkoutView: View {
 
     @State private var isSettingUp = false
     @State private var isCalculatingPlates = false
-    @State private var plates = PlateStore()
+    @State private var plates: PlateStore
     @State private var isShowingHistory = false
     @State private var finished: WorkoutSession?
     @State private var reviewing: WorkoutSession?
@@ -38,6 +38,9 @@ public struct WorkoutView: View {
         self.cardioRecords = cardioRecords
         self.library = library
         self.unitSystem = unitSystem
+        // The profile's unit is only the starting point; a choice made on the
+        // calculator itself is about a particular gym and outranks it.
+        _plates = State(initialValue: PlateStore(defaultUnit: unitSystem))
     }
 
     public var body: some View {

@@ -30,13 +30,17 @@ public final class PlateStore {
         }
     }
 
+    /// - Parameter defaultUnit: What to start in when the calculator has never
+    ///   been used — the profile's, normally. A unit chosen on the page itself
+    ///   outranks it: that choice was made about a gym, and this one is a guess
+    ///   from how you weigh yourself.
     public init(
         defaults: UserDefaults = SenkuStorage.shared,
-        unit: UnitSystem? = nil
+        defaultUnit: UnitSystem? = nil
     ) {
         self.defaults = defaults
-        self.unit = unit
-            ?? (defaults.string(forKey: Self.unitKey).flatMap(UnitSystem.init(rawValue:)))
+        self.unit = defaults.string(forKey: Self.unitKey).flatMap(UnitSystem.init(rawValue:))
+            ?? defaultUnit
             ?? UnitPreference.current
         reload()
     }
