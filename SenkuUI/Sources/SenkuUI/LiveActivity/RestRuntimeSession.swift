@@ -133,23 +133,59 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         playHaptics()
     }
 
-    /// Six taps, a second and a bit apart.
+    /// Six buzzes on the wrist, a second and a bit apart.
+    ///
+    /// ## Why clicks and not `.notification`
+    ///
+    /// `.notification` is the obvious haptic to reach for, and it is the wrong
+    /// one here: watchOS pairs it with the standard alert *sound*, and the two
+    /// cannot be separated. So every buzz came with a ding on top of Senku's
+    /// own chime — two different noises announcing the same thing, one of them
+    /// not even ours.
+    ///
+    /// `.click` is the silent one, the crown-detent tick. On its own it is far
+    /// too light to notice mid-set, so each buzz is a short burst of them,
+    /// which reads on the wrist as a vibration rather than a tap.
     private func playHaptics() {
-        // Bounded by wall clock rather than by a counter, for the same reason
-        // the session's own repeat above is: a captured counter mutated inside
-        // the timer's closure is a data race the compiler is right to warn
-        // about, and a throttled tick cannot stretch a deadline.
-        let stop = Date.now.addingTimeInterval(6 * 1.2)
-        WKInterfaceDevice.current().play(.notification)
+        // Bounded by wall clock rather than by a counter: a captured counter
+        // mutated inside a timer's closure is a data race the compiler is
+        // right to warn about, and a throttled tick cannot stretch a deadline.
+        let stop = Date.now.addingTimeInterval(Double(Self.pulses - 1) * Self.pulseGap)
+        buzz()
 
-        let repeater = Timer(timeInterval: 1.2, repeats: true) { fired in
+        let repeater = Timer(timeInterval: Self.pulseGap, repeats: true) { fired in
             guard Date.now < stop else { return fired.invalidate() }
-            Task { @MainActor in
-                WKInterfaceDevice.current().play(.notification)
-            }
+            Task { @MainActor in RestRuntimeSession.shared.buzz() }
         }
         RunLoop.main.add(repeater, forMode: .common)
     }
+
+    /// One buzz: several clicks close enough together to feel continuous.
+    private func buzz() {
+        let device = WKInterfaceDevice.current()
+        device.play(.click)
+
+        for step in 1..<Self.clicksPerBuzz {
+            let delay = Double(step) * Self.clickGap
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(delay))
+                device.play(.click)
+            }
+        }
+    }
+
+    /// How many times the wrist is buzzed, and how far apart.
+    ///
+    /// One is missable — a wrist at your side, a bar in your hands — which is
+    /// why it repeats at all.
+    private static let pulses = 6
+    private static let pulseGap: TimeInterval = 1.2
+
+    /// What one buzz is made of. Six clicks at 60 ms is a third of a second of
+    /// vibration, which is short enough not to be a nuisance and long enough
+    /// to be felt through a sleeve.
+    private static let clicksPerBuzz = 6
+    private static let clickGap: TimeInterval = 0.06
 
     public func end() {
         RestTrace.note("end: releasing session")
@@ -235,20 +271,22 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
             Task { @MainActor in self?.soundLanded(sounded) }
         }
 
-        // Long enough for a two-second chime to finish, and no longer.
-        //
-        // This was fifteen, from when the session was the thing alerting you
-        // and had to outlive its own repeating haptic. It is not any more — the
-        // notification is — and a notification cannot be delivered over the app
-        // that is holding the front, so fifteen seconds of holding on is
-        // fifteen seconds of the alert waiting in the wings. That is the rest
-        // that ends in silence and is announced twenty seconds later.
-        windDown(after: Self.chimeAllowance)
+        windDown(after: Self.alertDuration)
     }
 
-    /// How long the session is held after a rest lands, for the chime to play
-    /// out. The sound is a shade over two seconds.
-    private static let chimeAllowance: TimeInterval = 3
+    /// How long the session is held after a rest lands.
+    ///
+    /// Derived from the alert rather than chosen, because the two were set in
+    /// different places for different reasons and drifted apart: the haptics
+    /// ran for six seconds while the session was released after three, so the
+    /// app was suspended halfway through and half the buzzes never happened.
+    /// Releasing the session is what ends the alert, so it cannot be shorter
+    /// than the alert it is holding open for.
+    private static var alertDuration: TimeInterval {
+        // The last buzz, plus a moment to finish; the chime is two seconds and
+        // comfortably inside it.
+        Double(pulses - 1) * pulseGap + 1
+    }
 
     /// Whether the notification is still needed.
     ///
