@@ -130,9 +130,16 @@ public struct WaterDay: Hashable, Sendable, Identifiable {
     /// and approximate to everyone else, and this is the sentence that makes
     /// the picture accountable.
     public var spoken: String {
+        "\(written) · \(percentage)%"
+    }
+
+    /// The same sentence without the percentage, for where the bottle is
+    /// already showing it. Printing it twice a thumb's width apart is the app
+    /// filling space rather than saying anything.
+    public var written: String {
         let total = Int(totalML.rounded())
         let goalML = Int(goal.totalML.rounded())
-        return "\(total.formatted()) of \(goalML.formatted()) ml · \(percentage)%"
+        return "\(total.formatted()) of \(goalML.formatted()) ml"
     }
 }
 

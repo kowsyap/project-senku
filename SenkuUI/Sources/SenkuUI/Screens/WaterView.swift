@@ -103,7 +103,10 @@ public struct WaterView: View {
                         .foregroundStyle(.secondary)
 
                     // The sentence the shape cannot say. Never optional.
-                    Text(day.spoken)
+                    // Without the percentage — it is inside the bottle now.
+                    // The accessibility value below still carries it, because
+                    // VoiceOver cannot see the bottle at all.
+                    Text(day.written)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
