@@ -50,7 +50,14 @@ struct SenkuTabBar: View {
     /// than chasing it from position to position.
     @State private var dragX: CGFloat?
 
+    @Namespace private var glassNamespace
+
     private static let space = "senku.tabbar"
+
+    /// How the pill travels when it is not being held: a spring with a little
+    /// give in it, which is the liquid-glass movement the bar had when it was
+    /// morphing a tint from one item to the next.
+    private static let settle = Animation.spring(response: 0.34, dampingFraction: 0.72)
 
     /// The tab the pill is currently over: what a finger is pointing at while
     /// it drags, and the selection when it is not.
@@ -115,6 +122,11 @@ struct SenkuTabBar: View {
                                 ).interactive(),
                                 in: .capsule
                             )
+                            // One id for the life of the bar: the container
+                            // then treats this as a single piece of glass
+                            // moving, and gives it the stretch it used to have
+                            // morphing from item to item.
+                            .glassEffectID("senku.tabbar.pill", in: glassNamespace)
                             .offset(x: pill.minX, y: pill.minY)
                     }
                 }
@@ -193,15 +205,24 @@ struct SenkuTabBar: View {
                 }
                 .onEnded { drag in
                     let landed = tab(atX: drag.location.x) ?? selection
-                    dragX = nil
 
-                    guard landed != selection else { return }
+                    guard landed != selection else {
+                        withAnimation(Self.settle) { dragX = nil }
+                        return
+                    }
+
                     Feedback.control()
-                    withAnimation(.snappy(duration: 0.28)) { selection = landed }
+                    // Both in one transaction. Clearing the drag first puts the
+                    // pill back on the old tab for a frame, so it travelled
+                    // home and then out again — which is what it looked like.
+                    withAnimation(Self.settle) {
+                        selection = landed
+                        dragX = nil
+                    }
                 }
         )
         // Springs to the item it was left on; follows exactly while held.
-        .animation(dragX == nil ? .snappy(duration: 0.28) : nil, value: pill)
+        .animation(dragX == nil ? Self.settle : nil, value: pill)
     }
 
     private func item(_ tab: RootView.Tab) -> some View {
@@ -210,7 +231,9 @@ struct SenkuTabBar: View {
         return Button {
             guard !isOn else { return }
             Feedback.control()
-            withAnimation(.snappy(duration: 0.3)) {
+            // The same spring a released drag settles with, so tapping and
+            // dragging arrive the same way.
+            withAnimation(Self.settle) {
                 selection = tab
             }
         } label: {
