@@ -187,7 +187,21 @@ public struct RootView: View {
 
     public init(store: ProfileStore = ProfileStore()) {
         _store = State(initialValue: store)
-        _selection = State(initialValue: store.hasProfile ? .me : .quickCalc)
+
+        // Somebody with no profile belongs in the calculator — but the
+        // calculator may not be in their bar, and a pager asked for a page it
+        // does not have silently shows its first one instead. So an opening
+        // destination is routed exactly like any other: onto the bar if it is
+        // there, and under More if it is not.
+        let opening: Tab = store.hasProfile ? .me : .quickCalc
+        let bar = [Tab.me] + TabLayout().chosen + [Tab.more]
+
+        if bar.contains(opening) {
+            _selection = State(initialValue: opening)
+        } else {
+            _selection = State(initialValue: .more)
+            _moreDestination = State(initialValue: opening)
+        }
     }
 
     public var body: some View {
@@ -259,6 +273,12 @@ public struct RootView: View {
             publishWater()
             publishIntake()
             #endif
+        }
+        // Taking the current screen out of the bar would otherwise leave the
+        // pager on a page that no longer exists — which looks like the app
+        // jumping to "Me" of its own accord.
+        .onChange(of: layout.chosen) { _, _ in
+            if !barTabs.contains(selection) { show(selection) }
         }
         .onChange(of: scenePhase) { _, phase in
             // Drinks can be logged from the Home Screen widget, in another
@@ -783,10 +803,14 @@ public struct RootView: View {
         // on ending underneath the bar with their last rows unreachable.
         .overlay(alignment: .bottom) {
             SenkuTabBar(selection: $selection, tabs: barTabs)
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.size.height
-                } action: { height in
-                    tabBarHeight = height
+                .onGeometryChange(for: CGSize.self) { proxy in
+                    proxy.size
+                } action: { size in
+                    tabBarHeight = size.height
+                    // How many slots this screen can carry — four on a Max,
+                    // three on the rest. Asked of the bar rather than of the
+                    // device, because it is the bar that has to hold them.
+                    layout.fit(barWidth: size.width)
                 }
         }
     }

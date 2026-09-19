@@ -20,8 +20,23 @@ import Observation
 public final class TabLayout {
     static let storageKey = "senku.tabs.visible.v2"
 
-    /// How many the middle of the bar holds.
-    public static let slots = 3
+    /// How many the middle of the bar holds, before the bar has been measured.
+    public static let defaultSlots = 3
+
+    /// The widest a bar can be and still be worth another slot, per item.
+    /// Fifty-six is the minimum an item is allowed to be, plus its padding.
+    static let itemWidth: CGFloat = 64
+
+    /// How many middle slots a bar of this width can carry without scrolling.
+    ///
+    /// Four on a Max-sized phone, three on everything else, two on nothing that
+    /// exists — the clamp is there so a narrow window on iPad cannot ask for a
+    /// bar of one thing and More.
+    public static func slots(forBarWidth width: CGFloat) -> Int {
+        let usable = width - 12          // the row's own padding
+        let fits = Int((usable + 4) / (itemWidth + 4))
+        return min(4, max(2, fits - 2))  // less Me and More
+    }
 
     /// Everything that can go in a slot: the nine screens, less "Me" which is
     /// always first and "More" which is not a screen.
@@ -33,6 +48,9 @@ public final class TabLayout {
 
     public private(set) var chosen: [RootView.Tab]
 
+    /// How many the bar can carry, once it knows how wide it is.
+    public private(set) var slots: Int = TabLayout.defaultSlots
+
     public init(defaults: UserDefaults = SenkuStorage.shared) {
         self.defaults = defaults
 
@@ -40,7 +58,26 @@ public final class TabLayout {
             .compactMap(RootView.Tab.init(rawValue:))
             .filter { Self.selectable.contains($0) }
 
-        self.chosen = stored.isEmpty ? Self.fallback : Array(stored.prefix(Self.slots))
+        // Not trimmed here. The bar has not been measured yet, so trimming now
+        // would cut a fourth tab against a default of three and never put it
+        // back — `fit(barWidth:)` does the trimming once the width is known.
+        self.chosen = stored.isEmpty ? Self.fallback : stored
+    }
+
+    /// Told by the bar, once it has been laid out.
+    ///
+    /// Growing the bar does not fill the new slot — that is a choice, and the
+    /// app should not make it on your behalf. Shrinking it does drop the tail,
+    /// because the alternative is a tab you cannot see.
+    public func fit(barWidth: CGFloat) {
+        slots = Self.slots(forBarWidth: barWidth)
+
+        // Not guarded on the count having changed: a bar measured at three
+        // slots starts at three, so "no change" is exactly the case where a
+        // stored fourth tab is sitting off the end of it.
+        guard chosen.count > slots else { return }
+        chosen = Array(chosen.prefix(slots))
+        persist()
     }
 
     /// What a fresh install gets: the timer you reach for mid-set, the session
@@ -49,7 +86,7 @@ public final class TabLayout {
 
     public func contains(_ tab: RootView.Tab) -> Bool { chosen.contains(tab) }
 
-    public var isFull: Bool { chosen.count >= Self.slots }
+    public var isFull: Bool { chosen.count >= slots }
 
     /// Adds or removes one, keeping the canonical order so the bar does not
     /// rearrange itself around the order you happened to tick things in.

@@ -43,8 +43,8 @@ struct TabBarEditor: View {
                 Text("In the bar")
             } footer: {
                 Text(layout.isFull
-                     ? "Three at a time. Turn one off to make room."
-                     : "Choose \(TabLayout.slots - layout.chosen.count) more. Everything else stays under More.")
+                     ? "\(layout.slots) at a time on this screen. Turn one off to make room."
+                     : "Choose \(layout.slots - layout.chosen.count) more. Everything else stays under More.")
             }
 
             Section {
