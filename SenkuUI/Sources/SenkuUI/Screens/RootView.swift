@@ -123,8 +123,10 @@ public struct RootView: View {
         /// black is the thing it is quoting.
         var wantsDarkPill: Bool { self == .me }
 
-        /// What the tab is drawn in while it is the one showing.
-        var activeTint: Color { self == .me ? Senku.Palette.saiyan : tint }
+        /// What the tab is drawn in while it is the one showing. The same
+        /// colour it always was — kept as its own name because the dark pill
+        /// once needed a different one, and may again.
+        var activeTint: Color { tint }
 
         var symbol: String {
             switch self {
@@ -143,19 +145,29 @@ public struct RootView: View {
         /// Left to right, as they appear in the bar.
         static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime]
 
+        /// One hue each, spread around the wheel.
+        ///
+        /// Only the tab you are on is coloured — the rest of the bar is grey —
+        /// so the test is not whether nine colours look good together but
+        /// whether *switching* between two screens changes anything. It did
+        /// not: workout and weight were two greens a hair apart, and food and
+        /// water two blues, which made half the bar feel like one place.
+        ///
+        /// These are deliberately not the palette's macro colours. Those mean
+        /// something specific inside a screen — protein blue, carbs amber — and
+        /// borrowing them for navigation made a tab look like a claim about
+        /// nutrition.
         var tint: Color {
             switch self {
-            case .me: Senku.Palette.protein
-            // Violet for the calculator, gold for the trophy — the obvious
-            // pairing, and the one the icons were arguing for.
-            case .quickCalc: Color(red: 0.62, green: 0.45, blue: 0.92)
-            case .rest: Senku.Palette.warning
-            case .workout: Senku.Palette.fat
-            case .weight: Senku.Palette.surplus
-            case .water: Senku.Palette.deficit
-            case .food: Senku.Palette.protein
-            case .records: Senku.Palette.carbs
-            case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)
+            case .me: Senku.Palette.saiyan                              // gold
+            case .quickCalc: Color(red: 0.62, green: 0.45, blue: 0.92)  // violet
+            case .rest: Color(red: 0.90, green: 0.35, blue: 0.32)       // red
+            case .workout: Color(red: 0.94, green: 0.51, blue: 0.16)    // orange
+            case .weight: Color(red: 0.28, green: 0.72, blue: 0.43)     // green
+            case .food: Color(red: 0.09, green: 0.69, blue: 0.65)       // teal
+            case .water: Color(red: 0.25, green: 0.60, blue: 0.94)      // azure
+            case .records: Color(red: 0.35, green: 0.39, blue: 0.85)    // indigo
+            case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)      // pink
             }
         }
     }

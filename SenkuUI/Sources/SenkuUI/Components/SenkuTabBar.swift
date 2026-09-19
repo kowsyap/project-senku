@@ -60,9 +60,12 @@ struct SenkuTabBar: View {
                 item(tab)
                     .glassEffect(
                         selected(tab)
+                            // The same weight of tint as every other pill —
+                            // glass, not paint. A near-solid black read as a
+                            // sticker on top of the bar rather than part of it.
                             ? .regular.tint(
                                 tab.wantsDarkPill
-                                    ? Color.black.opacity(0.88)
+                                    ? Color.black.opacity(0.32)
                                     : tab.tint.opacity(0.28)
                               ).interactive()
                             : .identity,
@@ -158,6 +161,14 @@ struct SenkuTabBar: View {
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .lineLimit(1)
                     .fixedSize()
+                    // Gold reads on a dark pill at icon size and turns to mud
+                    // at ten points. The mark keeps the colour; the word takes
+                    // the contrast.
+                    .foregroundStyle(
+                        isOn && tab.wantsDarkPill
+                            ? AnyShapeStyle(.white)
+                            : AnyShapeStyle(.foreground)
+                    )
             }
             .foregroundStyle(isOn ? AnyShapeStyle(tab.activeTint) : AnyShapeStyle(.secondary))
             // Wide enough for the longest label, so the row reads as even
