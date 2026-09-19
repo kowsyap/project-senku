@@ -441,6 +441,15 @@ private struct Bottle: View {
                     .animation(.snappy(duration: 0.35), value: fraction)
 
                 shape.strokeBorder(.quaternary, lineWidth: 2)
+
+                // Inside the bottle, where the eye already is — and white on
+                // the water, plain on the empty part, so it stays readable as
+                // the level rises past it. The watch page does the same.
+                Text("\(Int((fraction * 100).rounded()))%")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(fraction > 0.55 ? Color.white : Color.secondary)
+                    .frame(maxHeight: .infinity)
             }
             .clipShape(shape)
         }
