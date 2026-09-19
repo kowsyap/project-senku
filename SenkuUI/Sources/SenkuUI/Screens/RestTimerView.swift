@@ -163,6 +163,14 @@ public struct RestTimerView: View {
         .task(id: isVisible) {
             guard isVisible else { return }
 
+            #if os(watchOS)
+            // A rest restored at launch has nothing booked for it: the runtime
+            // session's alarm is scheduled by `changed(at:)`, and nothing has
+            // changed — the rest was already running when the app came up. So
+            // the deadline would pass with no chime and no tap. Book it here.
+            if timer.isRunning { RestRuntimeSession.shared.sync(with: timer) }
+            #endif
+
             // Asked as the screen opens rather than at the moment a rest is
             // scheduled: a permission prompt that appears as you start a set is
             // a prompt nobody reads, and dismissing it silently disables every

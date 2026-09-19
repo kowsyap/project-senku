@@ -51,6 +51,22 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// Fires the haptic at the deadline, owned here rather than by the screen.
     private var alarm: Timer?
 
+    /// Where this session has got to with the rest it is holding.
+    ///
+    /// The landing — chime and haptic — happens exactly once, and this is what
+    /// guarantees it. Two things notice a rest ending, the session's own alarm
+    /// and the screen's tick, and they arrive in either order.
+    private enum Landing: Equatable {
+        /// No rest, or one still running with no alarm booked yet.
+        case none
+        /// An alarm is booked for this deadline and has not fired.
+        case booked(Date)
+        /// The chime and haptic have been fired for this rest.
+        case done
+    }
+
+    private var landing: Landing = .none
+
     private override init() { super.init() }
 
     /// Starts a session if one is not already running.
@@ -108,6 +124,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     public func end() {
         alarm?.invalidate()
         alarm = nil
+        landing = .none
         session?.invalidate()
         session = nil
         isHolding = false
@@ -127,8 +144,25 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         // microseconds earlier, which is exactly how a timer comes to run to
         // zero, blank the screen and say nothing. So the session is held open
         // for the alert and wound down afterwards.
+        //
+        // ## Why this is a switch and not a wind-down
+        //
+        // Two things notice the deadline: the alarm booked below, and the
+        // screen's tick, which reports the crossing through the view's
+        // `changed(at:)` and arrives here. Whichever is second used to find a
+        // session being wound down — and `windDown` invalidates `alarm`, which
+        // *is* the timer that calls `land()`. When the tick won that race the
+        // landing was cancelled before it ever fired, and a rest run to zero on
+        // the watch made no sound and no tap at all.
+        //
+        // So the crossing is not a cancellation. Whoever notices it first does
+        // the landing, `land()` runs once, and nothing here cuts it short.
         if timer.hasFinished(at: now) {
-            windDown()
+            switch landing {
+            case .booked: land()
+            case .done: break
+            case .none: end()
+            }
             return
         }
 
@@ -152,6 +186,9 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// it is now the thing alerting you: the chime plays, the haptic repeats,
     /// and fifteen seconds is long enough for both to finish and be noticed.
     private func land() {
+        guard landing != .done else { return }
+        landing = .done
+
         alert()
 
         Feedback.chime { [weak self] sounded in
@@ -216,7 +253,9 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     private static let handoverDelay: TimeInterval = 0
 
     private func scheduleAlarm(at date: Date) {
+        guard landing != .booked(date) else { return }
         alarm?.invalidate()
+        landing = .booked(date)
 
         let fireTimer = Timer(
             timeInterval: max(0.1, date.timeIntervalSinceNow + Self.handoverDelay),
