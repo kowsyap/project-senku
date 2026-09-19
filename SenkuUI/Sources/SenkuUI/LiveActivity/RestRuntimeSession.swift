@@ -67,6 +67,23 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
 
     private var landing: Landing = .none
 
+    /// What the last landing actually managed to do.
+    ///
+    /// Shown on the screen, because a rest that ends without a sound and one
+    /// that ends with a sound you did not hear look identical from the outside
+    /// — and the difference is whether the watch is muted or the app is broken.
+    /// Nothing else can tell you which.
+    public struct LandingReport: Sendable, Equatable {
+        /// Whether the wrist was tapped through the runtime session, rather
+        /// than through the fallback haptic.
+        public var heldSession: Bool
+        /// Whether the chime played. `nil` while the audio route is still
+        /// being decided — watchOS answers that asynchronously.
+        public var chimeSounded: Bool?
+    }
+
+    public private(set) var lastLanding: LandingReport?
+
     private override init() { super.init() }
 
     /// Starts a session if one is not already running.
@@ -85,6 +102,8 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// taken away first. It is the watch's counterpart to the phone's alert
     /// being three triplets rather than one polite chime.
     public func alert() {
+        lastLanding = LandingReport(heldSession: session?.state == .running, chimeSounded: nil)
+
         guard let session, session.state == .running else {
             // No session — the system refused one, or took it back. The wrist
             // still deserves telling, so fall back to the device's own haptic,
@@ -195,8 +214,20 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
             Task { @MainActor in self?.soundLanded(sounded) }
         }
 
-        windDown(after: 15)
+        // Long enough for a two-second chime to finish, and no longer.
+        //
+        // This was fifteen, from when the session was the thing alerting you
+        // and had to outlive its own repeating haptic. It is not any more — the
+        // notification is — and a notification cannot be delivered over the app
+        // that is holding the front, so fifteen seconds of holding on is
+        // fifteen seconds of the alert waiting in the wings. That is the rest
+        // that ends in silence and is announced twenty seconds later.
+        windDown(after: Self.chimeAllowance)
     }
+
+    /// How long the session is held after a rest lands, for the chime to play
+    /// out. The sound is a shade over two seconds.
+    private static let chimeAllowance: TimeInterval = 3
 
     /// Whether the notification is still needed.
     ///
@@ -206,7 +237,15 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// surfaces when this session ends. The alternative is an app that assumes
     /// it made a sound and leaves you with none.
     private func soundLanded(_ sounded: Bool) {
-        guard sounded else { return }
+        lastLanding?.chimeSounded = sounded
+
+        guard sounded else {
+            // Nothing to wait for. Stand aside now so the notification — which
+            // is the only alert left — is delivered rather than queued behind
+            // an app holding the front for a sound it never made.
+            windDown(after: 0.5)
+            return
+        }
 
         Task {
             // After the delivery it is racing, not before it.
@@ -256,6 +295,8 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         guard landing != .booked(date) else { return }
         alarm?.invalidate()
         landing = .booked(date)
+        // A new rest: last time's outcome is not this rest's news.
+        lastLanding = nil
 
         let fireTimer = Timer(
             timeInterval: max(0.1, date.timeIntervalSinceNow + Self.handoverDelay),

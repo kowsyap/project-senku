@@ -308,7 +308,8 @@ public struct RestTimerView: View {
     private func ringDiameter(in size: CGSize) -> CGFloat {
         let divider: CGFloat = 1
         let spacing: CGFloat = watchSpacing * 3
-        let alert: CGFloat = canAlert == false ? 34 : 0
+        let showingLanding = RestRuntimeSession.shared.lastLanding?.chimeSounded == false
+        let alert: CGFloat = (canAlert == false || showingLanding) ? 34 : 0
         // The ring is a circle in a square: at the bottom of that square the
         // stroke is at its widest, so a gap that would be generous beside text
         // reads as touching here. The gap itself is the whole allowance now —
@@ -376,6 +377,20 @@ public struct RestTimerView: View {
             .buttonStyle(.bordered)
             .tint(Senku.Palette.caution)
             .accessibilityHint("Senku cannot tell you when a rest ends unless notifications are allowed")
+        } else if let landing = RestRuntimeSession.shared.lastLanding,
+                  landing.chimeSounded == false {
+            // The rest landed and the chime did not play. Almost always the
+            // watch being muted — app audio obeys silent mode on the wrist in a
+            // way it does not on the phone — but it can also be an audio route
+            // the system refused. Either way the taps happened and the sound
+            // did not, and saying so is better than a rest that looks broken.
+            Label(
+                landing.heldSession ? "Muted — tapped only" : "Muted, no session",
+                systemImage: "speaker.slash.fill"
+            )
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity)
         }
     }
 
