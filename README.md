@@ -1,6 +1,6 @@
 <div align="center">
 
-# Senku
+# SENKU
 
 **S**ets · **E**nergy · **N**utrition · **K**ilos · **U**tility
 
