@@ -359,6 +359,7 @@ WaterSettings{ goalOverrideML?, containers, reminder: ReminderSettings }
 
 ### Acceptance
 
+- [x] A past day can be marked "never logged" but never filled in
 - [ ] Reminders stop once the goal is met and resume the next day
 - [ ] Pending requests never exceed a documented ceiling well under 64
 - [ ] The goal follows the profile when the profile changes
@@ -504,10 +505,18 @@ Each step ends with something usable, per the roadmap's own rule.
    reason it can wait — and the reason it can jump the queue on a slow evening
    without costing anything.
 
+All eight are built. F7 was considered and dropped; see its section.
+
 
 ---
 
-## F7 — Logging a workout from the watch
+## F7 — Logging a workout from the watch — **dropped**
+
+> **Not being built.** Decided 18 September 2026: the sync it needs is out of
+> proportion to the convenience it buys. Two devices writing into one live
+> session is the hardest problem in this app, and the phone is already in the
+> gym bag. The design below is kept as a record of what was considered, not as
+> a plan.
 
 ### Purpose
 
@@ -576,14 +585,17 @@ These need your answer before the features they touch are built.
 
 1. **HealthKit.** Read weight and write workouts, or stay self-contained? It
    changes F1's data model (dedupe, source of truth) and adds an entitlement.
-2. **iCloud sync.** The architecture doc names CloudKit as a future seam. If the
-   answer is yes, SwiftData's CloudKit support has to be designed in at S1, not
-   retrofitted — every model gains constraints (no unique indexes, all optionals
-   or defaults).
+2. ~~**iCloud sync.**~~ **Answered: no.** CloudKit is refused outright by a
+   personal development team, so it is not available to this build at any price
+   below a paid membership. The App Group plus the JSON export is the backup
+   story. Revisit only if the account changes.
 3. **Cutoff hour.** Is a 3 a.m. day boundary worth offering, or is midnight
    fine? (S3)
-4. **Deleting a workout session** — should the PRs it produced survive as manual
-   records, or vanish with it? My proposal is survive; it is your history.
+4. ~~**Deleting a workout session**~~ **Answered: PRs survive.** Already the
+   behaviour on both paths — deleting a session leaves `RecordStore` untouched,
+   and removing a single set calls `detachRecords(fromSets:)`, which keeps the
+   record and downgrades its provenance from "logged" to "manual". The lift was
+   still performed.
 5. **Sets-per-week volume guidance.** Out of scope here. Do you want it as a
    sixth feature, given it is the thing coverage percentages will make people
    ask for?

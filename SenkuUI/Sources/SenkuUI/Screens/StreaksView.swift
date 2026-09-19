@@ -16,7 +16,9 @@ struct StreakTrack: Identifiable {
     /// The days it was achieved, as start-of-day dates.
     let days: Set<Date>
 
-    var streak: Streak { Streak.of(days) }
+    func streak(forgiven: Set<Date>) -> Streak {
+        Streak.of(days, forgiven: forgiven)
+    }
 }
 
 /// Thirty days of every habit the app tracks, side by side.
@@ -29,6 +31,16 @@ struct StreakTrack: Identifiable {
 struct StreaksView: View {
     let tracks: [StreakTrack]
 
+    @State private var forgiven = ForgivenDayStore()
+    /// The day the sheet is asking about, and the habit it belongs to.
+    @State private var asking: Excuse?
+
+    private struct Excuse: Identifiable {
+        let track: StreakTrack
+        let date: Date
+        var id: String { "\(track.id)-\(date.timeIntervalSince1970)" }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: Senku.Metrics.stackSpacing) {
@@ -36,12 +48,18 @@ struct StreaksView: View {
                     Card {
                         VStack(alignment: .leading, spacing: 10) {
                             header(track)
-                            MonthGrid(days: track.days, tint: track.tint)
+                            MonthGrid(
+                                days: track.days,
+                                forgiven: forgiven.days(for: track.id),
+                                tint: track.tint
+                            ) { day in
+                                asking = Excuse(track: track, date: day)
+                            }
                         }
                     }
                 }
 
-                Text("The last 30 days. Days that have passed cannot be changed.")
+                Text("The last 30 days. A past day cannot be logged after the fact — but it can be marked as one you simply never logged, and the run steps over it.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -52,6 +70,25 @@ struct StreaksView: View {
         }
         .background(.background)
         .senkuBottomBarInset()
+        .confirmationDialog(
+            asking.map { $0.date.formatted(date: .abbreviated, time: .omitted) } ?? "",
+            isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } }),
+            titleVisibility: .visible,
+            presenting: asking
+        ) { excuse in
+            if forgiven.isForgiven(excuse.date, in: excuse.track.id) {
+                Button("Count it as missed") {
+                    forgiven.setForgiven(false, on: excuse.date, in: excuse.track.id)
+                }
+            } else {
+                Button("Never logged it") {
+                    forgiven.setForgiven(true, on: excuse.date, in: excuse.track.id)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { excuse in
+            Text("\(excuse.track.title): a day marked as never logged neither counts nor breaks the run. It cannot be filled in — only excused.")
+        }
         .navigationTitle("Streaks")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -59,7 +96,7 @@ struct StreaksView: View {
     }
 
     private func header(_ track: StreakTrack) -> some View {
-        let streak = track.streak
+        let streak = track.streak(forgiven: forgiven.days(for: track.id))
 
         return HStack(alignment: .center, spacing: 12) {
             Image(systemName: track.symbol)
@@ -98,7 +135,9 @@ struct StreaksView: View {
 /// Thirty-something days as whole weeks, filled where the habit was kept.
 private struct MonthGrid: View {
     let days: Set<Date>
+    let forgiven: Set<Date>
     let tint: Color
+    let onPick: (Date) -> Void
 
     private let weeks = 5
     private let calendar = Calendar.current
@@ -142,25 +181,51 @@ private struct MonthGrid: View {
 
     private func cell(_ day: Date) -> some View {
         let done = days.contains { calendar.isDate($0, inSameDayAs: day) }
+        let excused = !done && forgiven.contains { calendar.isDate($0, inSameDayAs: day) }
         let isToday = calendar.isDateInToday(day)
         let isFuture = day > calendar.startOfDay(for: .now)
+        // Only a finished day can be excused: today can still be logged, and
+        // tomorrow has not happened.
+        let pickable = !isFuture && !isToday
 
-        return Text("\(calendar.component(.day, from: day))")
-            .font(.system(size: 10, weight: done ? .bold : .regular))
-            .foregroundStyle(done ? Color.white : Color.secondary.opacity(isFuture ? 0.35 : 1))
-            .frame(maxWidth: .infinity)
-            .frame(height: 26)
-            .background(
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(done ? tint : Color.secondary.opacity(isFuture ? 0.04 : 0.12))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .strokeBorder(Senku.Palette.deficit, lineWidth: isToday ? 1.5 : 0)
-            )
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(day.formatted(date: .abbreviated, time: .omitted))
-            .accessibilityValue(done ? "Kept" : "Missed")
+        return Button {
+            onPick(day)
+        } label: {
+            Text("\(calendar.component(.day, from: day))")
+                .font(.system(size: 10, weight: done ? .bold : .regular))
+                .foregroundStyle(
+                    done
+                        ? Color.white
+                        : Color.secondary.opacity(isFuture ? 0.35 : (excused ? 0.55 : 1))
+                )
+                .frame(maxWidth: .infinity)
+                .frame(height: 26)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(done ? tint : Color.secondary.opacity(isFuture ? 0.04 : 0.12))
+                )
+                .overlay(
+                    // A dashed outline for a day that was never logged: present
+                    // but hollow, which is what the day itself is. Nothing like
+                    // the filled square of a day you kept, and nothing like the
+                    // blank of one you missed.
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .strokeBorder(
+                            excused ? Color.secondary : Senku.Palette.deficit,
+                            style: StrokeStyle(
+                                lineWidth: excused ? 1 : (isToday ? 1.5 : 0),
+                                dash: excused ? [2.5, 2.5] : []
+                            )
+                        )
+                )
+                .contentShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!pickable)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(day.formatted(date: .abbreviated, time: .omitted))
+        .accessibilityValue(done ? "Kept" : (excused ? "Never logged" : "Missed"))
+        .accessibilityHint(pickable ? "Mark as never logged" : "")
     }
 }
 #endif
