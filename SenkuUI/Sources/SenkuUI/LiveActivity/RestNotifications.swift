@@ -18,6 +18,16 @@ import SenkuCore
 /// firing and Senku can be suspended or killed in the meantime. Anything that
 /// moves the deadline — pause, reset, retarget, extend — reschedules, because a
 /// notification that outlives its timer is worse than none.
+///
+/// ## Not on the watch
+///
+/// The watch alerts with the chime and the wrist taps, and nothing else. A
+/// notification there was the wrong instrument twice over: it arrives on the
+/// system's terms rather than on the timer's, and it cannot be delivered over
+/// an app that is holding the front, so it queued behind the very rest it was
+/// announcing. `WKExtendedRuntimeSession` already keeps the app awake to its
+/// own deadline, which is what a wrist needs — so on watchOS everything below
+/// is inert, and the permission is never asked for.
 public enum RestNotifications {
     private static let identifier = "senku.rest.finished"
 
@@ -65,6 +75,11 @@ public enum RestNotifications {
     /// - Returns: whether alerts can now be delivered.
     @discardableResult
     public static func requestAuthorization() async -> Bool {
+        #if os(watchOS)
+        // Nothing to book, so nothing to ask for. This is also what keeps the
+        // watch from opening on a permission sheet nobody asked for.
+        return false
+        #else
         #if DEBUG
         // A screenshot run must not be interrupted by a permission sheet — see
         // `SENKU_SCREEN` in `RootView`. Only ever set by hand, in a debug build.
@@ -77,6 +92,7 @@ public enum RestNotifications {
         }
         return (try? await UNUserNotificationCenter.current()
             .requestAuthorization(options: [.alert, .sound])) ?? false
+        #endif
     }
 
     /// Brings the pending notification in line with `timer`. Safe to call on
@@ -88,6 +104,10 @@ public enum RestNotifications {
     /// had granted anything and iOS dropped it silently — and nothing ever
     /// rescheduled it. That first rest was the one most likely to be tested.
     public static func sync(with timer: RestTimer, at now: Date = .now) {
+        #if os(watchOS)
+        // The chime and the haptics are the watch's alert. See the note above.
+        return
+        #else
         // A finished timer keeps its alert. This is the whole bug that made a
         // rest land in silence: `endsAt` is nil the moment the crossing is
         // recorded, so a sync at zero fell straight through the guard below —
@@ -117,6 +137,7 @@ public enum RestNotifications {
                 break // Denied. Nothing useful to do but stay quiet.
             }
         }
+        #endif
     }
 
     /// How long after the deadline the notification arrives, on the phone.

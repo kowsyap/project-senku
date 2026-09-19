@@ -63,7 +63,7 @@ public struct RestTimerView: View {
         // phone locked and silenced.
         RestChime.sync(with: timer, at: instant)
         #endif
-        #if canImport(UserNotifications) && !os(macOS)
+        #if canImport(UserNotifications) && !os(macOS) && !os(watchOS)
         RestNotifications.sync(with: timer, at: instant)
         #endif
         #if os(watchOS)
@@ -95,7 +95,7 @@ public struct RestTimerView: View {
     private func endEverything() {
         timer.reset()
         RestTimerStore.clear()
-        #if canImport(UserNotifications) && !os(macOS)
+        #if canImport(UserNotifications) && !os(macOS) && !os(watchOS)
         RestNotifications.cancel()
         #endif
         #if os(iOS)
@@ -175,7 +175,9 @@ public struct RestTimerView: View {
             // scheduled: a permission prompt that appears as you start a set is
             // a prompt nobody reads, and dismissing it silently disables every
             // alert.
-            #if canImport(UserNotifications) && !os(macOS)
+            // Not on the watch: it alerts with the chime and the taps, books
+            // no notification, and so has nothing to ask permission for.
+            #if canImport(UserNotifications) && !os(macOS) && !os(watchOS)
             if await RestNotifications.canAlert() {
                 canAlert = true
             } else {
@@ -188,7 +190,7 @@ public struct RestTimerView: View {
             // Leaving it in Notification Center afterwards is pure litter — you
             // already know the rest ended, and it stays there until swiped.
             guard phase == .active else { return }
-            #if canImport(UserNotifications) && !os(macOS)
+            #if canImport(UserNotifications) && !os(macOS) && !os(watchOS)
             if !timer.isRunning { RestNotifications.clearDelivered() }
             #endif
         }
@@ -308,8 +310,7 @@ public struct RestTimerView: View {
     private func ringDiameter(in size: CGSize) -> CGFloat {
         let divider: CGFloat = 1
         let spacing: CGFloat = watchSpacing * 3
-        let showingLanding = RestRuntimeSession.shared.lastLanding?.chimeSounded == false
-        let alert: CGFloat = (canAlert == false || showingLanding) ? 34 : 0
+        let alert: CGFloat = RestRuntimeSession.shared.lastLanding?.chimeSounded == false ? 34 : 0
         // The ring is a circle in a square: at the bottom of that square the
         // stroke is at its widest, so a gap that would be generous beside text
         // reads as touching here. The gap itself is the whole allowance now —
@@ -363,22 +364,8 @@ public struct RestTimerView: View {
     /// interrupting for is the one where the timer cannot tell you.
     @ViewBuilder
     private var alertWarning: some View {
-        if canAlert == false {
-            Button {
-                Task {
-                    canAlert = await RestNotifications.requestAuthorization()
-                    if canAlert == true { RestNotifications.sync(with: timer) }
-                }
-            } label: {
-                Label("Alerts off — tap", systemImage: "bell.slash.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .tint(Senku.Palette.caution)
-            .accessibilityHint("Senku cannot tell you when a rest ends unless notifications are allowed")
-        } else if let landing = RestRuntimeSession.shared.lastLanding,
-                  landing.chimeSounded == false {
+        if let landing = RestRuntimeSession.shared.lastLanding,
+           landing.chimeSounded == false {
             // The rest landed and the chime did not play. Almost always the
             // watch being muted — app audio obeys silent mode on the wrist in a
             // way it does not on the phone — but it can also be an audio route

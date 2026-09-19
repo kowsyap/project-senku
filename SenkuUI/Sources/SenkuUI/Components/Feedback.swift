@@ -37,6 +37,21 @@ public enum Feedback {
         Chime.shared.play(completion: completion)
     }
 
+    /// Opens the audio route ahead of time, for a sound with a known deadline.
+    ///
+    /// The watch will not activate an audio session synchronously — it has to
+    /// decide where the sound is going, speaker or headphones, and that takes
+    /// long enough to matter. Doing it at the deadline means the chime waits on
+    /// a route that is still being chosen, which is the wrong moment to start
+    /// asking. The rest timer knows minutes in advance that it will want this,
+    /// so it says so, and the phone has always done the same thing through
+    /// `RestChime`.
+    ///
+    /// Safe to call more than once; an already-open route is left alone.
+    public static func prepareChime() {
+        Chime.shared.prepare()
+    }
+
     /// A light tick for starting, pausing and preset taps. Silent on purpose —
     /// a sound on every tap would be intolerable.
     public static func control() {
@@ -60,6 +75,9 @@ private final class Chime {
 
     private var player: AVAudioPlayer?
 
+    /// Whether the audio session is open and the route decided.
+    private var isRouted = false
+
     private init() {
         guard let url = Bundle.module.url(forResource: "rest-complete", withExtension: "wav") else {
             return
@@ -81,24 +99,23 @@ private final class Chime {
         }
 
         #if os(watchOS)
-        // watchOS will not activate an audio session synchronously. It has to
-        // route the audio first — to the speaker, or to whatever headphones are
-        // connected — and that is asynchronous, which is why `activate` takes a
-        // completion handler and `setActive(true)` simply throws here. The
-        // throw was being swallowed by a `try?`, so the chime had been mute on
-        // the watch for as long as there has been one: the player was told to
-        // play into a session that was never live.
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, mode: .default, options: [.duckOthers])
-        session.activate(options: []) { activated, _ in
-            Task { @MainActor in
-                guard activated else {
-                    completion?(false)
-                    return
-                }
-                player.currentTime = 0
-                completion?(player.play())
+        // The route is usually already open — `prepare()` is called when the
+        // rest starts. If it is, play immediately; the whole point of opening
+        // it early is that the deadline is not the moment to be negotiating
+        // with the audio system.
+        if isRouted {
+            player.currentTime = 0
+            completion?(player.play())
+            return
+        }
+
+        openRoute { [weak self] opened in
+            guard opened, let self, let player = self.player else {
+                completion?(false)
+                return
             }
+            player.currentTime = 0
+            completion?(player.play())
         }
         #else
         configureSession()
@@ -106,6 +123,36 @@ private final class Chime {
         completion?(player.play())
         #endif
     }
+
+    /// Opens the session, and remembers that it is open.
+    ///
+    /// `.playback` on the watch too, and deliberately without `.duckOthers`:
+    /// the option is an iPhone nicety about somebody's podcast, and on a watch
+    /// it is one more thing for the activation to refuse over.
+    #if os(watchOS)
+    func prepare() {
+        guard !isRouted else { return }
+        openRoute { _ in }
+    }
+
+    private func openRoute(_ done: @escaping @MainActor @Sendable (Bool) -> Void) {
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .default)
+
+        // watchOS answers asynchronously, and `setActive(true)` simply throws
+        // here. That throw used to be swallowed by a `try?`, so the chime was
+        // mute for as long as there had been one: the player was told to play
+        // into a session that was never live.
+        session.activate(options: []) { activated, _ in
+            Task { @MainActor in
+                Chime.shared.isRouted = activated
+                done(activated)
+            }
+        }
+    }
+    #else
+    func prepare() {}
+    #endif
 
     /// `.playback` so the chime is still heard with the ring switch set to
     /// silent, which is how a phone sits in a gym bag. `.duckOthers` drops the

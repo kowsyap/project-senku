@@ -191,6 +191,10 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         }
 
         begin()
+        // Open the audio route now rather than at the deadline. watchOS decides
+        // where a sound is going — speaker, or whatever is paired — and does it
+        // asynchronously, so asking as the chime is due is asking too late.
+        Feedback.prepareChime()
         scheduleAlarm(at: endsAt)
     }
 
@@ -240,19 +244,9 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         lastLanding?.chimeSounded = sounded
 
         guard sounded else {
-            // Nothing to wait for. Stand aside now so the notification — which
-            // is the only alert left — is delivered rather than queued behind
-            // an app holding the front for a sound it never made.
+            // Nothing to wait for, so nothing to hold the screen for.
             windDown(after: 0.5)
             return
-        }
-
-        Task {
-            // After the delivery it is racing, not before it.
-            try? await Task.sleep(for: .seconds(2))
-            #if canImport(UserNotifications)
-            RestNotifications.cancel()
-            #endif
         }
     }
 
