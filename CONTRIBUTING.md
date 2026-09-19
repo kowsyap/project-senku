@@ -18,10 +18,12 @@ Things that are especially welcome:
 
 **Open an issue and describe the use case**, not the implementation. "I train
 twice a day and the water goal only counts one session" is a better opening than
-"add a sessions array". Half the decisions in this codebase are recorded in
-[docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) with their reasoning attached, and
-it is worth a look — your idea may already be there, either answered or
-deliberately dropped with a reason you can argue with.
+"add a sessions array".
+
+Check [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) first — it carries the
+requirements and acceptance criteria for every feature, and your idea may
+already be specified there. Open criteria are listed at the end of it and in
+[docs/ROADMAP.md](docs/ROADMAP.md) under M9; those are the best place to start.
 
 ## The one rule
 
@@ -70,7 +72,7 @@ xcodebuild -project Senku.xcodeproj -scheme Senku \
   -destination 'generic/platform=iOS Simulator' build
 ```
 
-A **generic** destination, not a named device — [docs/XCODE_SETUP.md](docs/XCODE_SETUP.md)
+A **generic** destination, not a named device — [docs/BUILD.md](docs/BUILD.md)
 explains why a named one breaks the watch link.
 
 If your change touches a screen, run it with the sample data and look at it:
@@ -93,7 +95,7 @@ so check the widget and the watch too, not just the phone screen.
 
 ## Setting up
 
-[docs/XCODE_SETUP.md](docs/XCODE_SETUP.md) covers the targets, the App Group, the
+[docs/BUILD.md](docs/BUILD.md) covers the targets, the App Group, the
 signing (a free Apple ID is enough), the debug hooks, and the simulator pairing
 for the watch.
 

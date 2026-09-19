@@ -1,638 +1,398 @@
-# Requirements — training, intake, and one thing that is neither
+# Requirements
 
-Six features, specified before any of them was built, so that the arguments were
-had before the code was. **All six now exist**, and this document has been kept
-as the record: the rules each feature is held to, the acceptance criteria it is
-checked against, and — added as they were taken — the decisions that closed each
-open question, with the reasoning attached.
+Functional requirements and acceptance criteria for Senku.
 
-Two criteria below remain unticked on purpose. Both say why.
+**Conventions**
 
-| # | Feature | Depends on |
-|---|---|---|
-| F1 | [Weight log with reminders](#f1--weight-log) | Storage |
-| F2 | [PR page](#f2--pr-page) | Storage, exercise catalogue |
-| F3 | [Workout page and splits](#f3--workout-page-and-splits) | F2, exercise catalogue, muscle map |
-| F4 | [Water tracking](#f4--water-tracking) | Storage, notification scheduler |
-| F5 | [Protein and macro intake](#f5--protein-and-macro-intake) | Storage |
-| F6 | [Anime log](#f6--anime-log) | Storage |
-| F7 | ~~[Logging a workout from the watch](#f7--logging-a-workout-from-the-watch)~~ — dropped | F3, WatchConnectivity |
+- Requirements are identified as `<feature>-R<n>`, acceptance criteria as
+  checklist items under each feature.
+- "Must" is binding. Anything not stated is an implementation choice.
+- A checked box means the criterion is implemented and covered by a test or by
+  a named type in the source.
+
+**Status:** 6 of 6 features delivered. Two acceptance criteria remain open and
+are tracked in [ROADMAP.md](ROADMAP.md) M9.
+
+| ID | Feature | Depends on |
+| --- | --- | --- |
+| [F1](#f1--weight-log) | Weight log | S1 |
+| [F2](#f2--personal-records) | Personal records | S1, exercise catalogue |
+| [F3](#f3--workout-and-splits) | Workout and splits | F2, muscle map |
+| [F4](#f4--water-tracking) | Water tracking | S1, S2 |
+| [F5](#f5--protein-and-macro-intake) | Protein and macro intake | S1 |
+| [F6](#f6--anime-log) | Anime log | S1 |
 
 ---
 
-## The rule that governs them all
+## Cross-cutting requirements
 
-Senku's premise is that it **shows its work** — see [PROJECT.md](PROJECT.md).
-Every feature below inherits three obligations from it:
+Every feature inherits these.
 
-1. **Name the method.** A trend line says which smoothing it used. A coverage
-   percentage says what it counted. An estimated 1RM says Epley, and shows the
-   set it came from.
-2. **Distinguish measured from estimated.** A logged weigh-in is not a trend
-   value. A PR from a logged set is not a PR you typed in. A coverage figure for
-   a *custom* exercise rests on muscles the user picked, and must say so.
-3. **Refuse to be dangerous quietly.** A drop of more than 1% body weight a week
-   sustained, a protein intake far under target, a water goal never met — these
-   get advisories in the existing `Advisory` vocabulary, not silence.
+**X-R1 — Attribution.** Any derived figure must name its method where it is
+displayed: the smoothing behind a trend, the formula behind an estimated 1RM,
+the basis of a coverage percentage.
+
+**X-R2 — Provenance.** Measured values and estimated values must be
+distinguishable in the model and in the UI. A user-asserted classification must
+be labelled as such.
+
+**X-R3 — Advisories.** Unsafe or low-confidence conditions must raise an
+`Advisory` rather than be presented without comment.
+
+**X-R4 — Accessibility.** Any figure conveyed by a shape, a ring or a colour
+must have a text equivalent.
 
 ---
 
 ## Shared foundations
 
-These are not features. They are the things the rest need, and building any
-feature before them means building them badly twice.
-
 ### S1 — Storage
 
-`ProfileStore` holds one small value in `UserDefaults` as JSON. Every feature
-here stores **many rows, queried by date**, which that cannot do.
-
-- Move history onto **SwiftData**, which the roadmap has always named as the
-  point at which `ProfileStore` stops being enough.
-- `SenkuCore` stays pure and dependency-free. Models it owns (`BodyMetrics`,
-  `RestTimer`, and the new pure types below) must not gain a persistence
-  framework import. Persistence lives in a new layer — either the app target or
-  a `SenkuData` package that depends on `SenkuCore`.
-- Every screen reads through a repository protocol, so tests run against an
-  in-memory store and previews keep working without a container.
-- The single profile stays in `ProfileStore`. Do not migrate it for its own
-  sake.
-
-**Widget and watch consequence.** A widget cannot open the app's SwiftData
-container without the App Group, which the free build does not have — see
-[XCODE_SETUP.md](XCODE_SETUP.md). Anything a widget must show (today's water,
-today's protein) needs a small summary written to shared `UserDefaults`
-alongside the real store, exactly as `RestTimerStore` already does.
+- **S1-R1** All persistent data is held in the App Group `group.pk.Senku`, as
+  JSON under versioned keys, accessed through `SenkuStorage.shared`.
+- **S1-R2** `SenkuCore` must not import a persistence framework. Models are
+  plain `Codable` value types.
+- **S1-R3** Storage is shared by the app, its widgets and the watch app. Any
+  store that can be written from more than one process must re-read before
+  mutating.
+- **S1-R4** Timestamps are stored as absolute `Date` values and bucketed into
+  days at read time. Day strings are not stored.
+- **S1-R5** A storage handle must fall back to `.standard` where the entitlement
+  is unavailable, so previews and tests run without one.
 
 ### S2 — Notification scheduling
 
-Rest already owns one identifier and reschedules cleanly (`RestNotifications`).
-Two more repeating sources are coming, and iOS allows **64 pending requests per
-app**. That cap is a hard design constraint, not a footnote.
+- **S2-R1** iOS retains only the 64 soonest pending requests. The total booked
+  by the app must stay demonstrably below that ceiling.
+- **S2-R2** Identifiers are namespaced per source: `senku.rest.*`,
+  `senku.weighin.*`, `senku.water.*`, `senku.creatine.*`.
+- **S2-R3** Repeating triggers are used in preference to enumerating future
+  occurrences.
+- **S2-R4** Authorisation is requested before scheduling, not alongside it.
+- **S2-R5** Every reminder is individually switchable.
 
-- One scheduler owns all identifiers, namespaced: `senku.rest.*`,
-  `senku.weighin.*`, `senku.water.*`.
-- Water reminders are **rolling**: schedule only the remainder of today plus
-  tomorrow, and top up whenever the app comes to the foreground or a background
-  refresh fires. Never schedule a week of them.
-- Every reminder is individually switchable, and a global "pause reminders"
-  exists. A fitness app that cannot be told to be quiet gets deleted.
-- Permission is requested **before** scheduling, never alongside it. That bug is
-  already fixed once in this codebase; do not reintroduce it.
+Current budget: 12 water slots, 1 weigh-in, 1 creatine, 1 rest — 15 at worst.
 
-### S3 — What a day is
+### S3 — Day boundary
 
-These features aggregate by day. Define it once: a day runs from **local
-midnight to local midnight**, with a user-settable cutoff (default 00:00,
-typical alternative 03:00 for late trainers). Store every timestamp as an
-absolute `Date`; bucket at read time. Never store a "day string".
+- **S3-R1** A day runs from local midnight to local midnight.
+- **S3-R2** Aggregation is performed at read time against the current calendar.
 
 ### S4 — Units
 
-Unchanged from today: the core sees kilograms and centimetres only;
-`UnitSystem` converts at the presentation layer. Bar weights, plate maths and
-water volumes follow the same rule — SI in the model, user's choice on screen.
+- **S4-R1** The core operates in kilograms, centimetres and millilitres.
+- **S4-R2** Conversion happens in the presentation layer only, driven by the
+  profile's unit system.
+- **S4-R3** Water is always displayed in millilitres.
 
 ### S5 — Navigation
 
-The tab view is `sidebarAdaptable` with customisation stored under
-`senku.tabs.v1`, so new destinations are added as `Tab`s with stable
-`customizationID`s and the user can reorder or pin them. Rest keeps
-`.customizationBehavior(.disabled)`.
-
-Proposed destinations after all five ship: **Me**, **Quick calc**, **Rest**,
-**Workouts** (F3, with PRs inside it), **Intake** (F4 + F5 on one screen),
-**Weight** (F1). That is six, which is past the iPhone tab bar's comfortable
-five — expect the last to live in the overflow, and expect pinning to matter.
+- **S5-R1** The phone presents four navigation slots on a regular-width device
+  and three on a compact one, plus an overflow destination.
+- **S5-R2** The user selects which screens occupy the bar, and their order.
+- **S5-R3** Screens remain mounted across navigation, so returning to one
+  restores its state.
+- **S5-R4** A screen that performs work on appearing must not do so while it is
+  mounted but not visible.
 
 ---
 
 ## F1 — Weight log
 
-### Purpose
-
-Turn the profile's single weight into a series, so the plan can be checked
-against what actually happened rather than only projected forward.
+**Purpose.** Turn the profile's single weight into a series, so the plan can be
+checked against outcomes rather than only projected forward.
 
 ### Data
 
 ```
 WeighIn
   id: UUID
-  date: Date            // absolute; bucketed per S3
-  weightKG: Double      // SI, as everywhere
-  source: .manual | .healthKit | .imported
+  date: Date
+  weightKG: Double
+  source: .manual | .imported
   note: String?
 ```
 
-### Rules
+### Requirements
 
-- **Multiple entries in a day are allowed**; the day's value for trend purposes
-  is their mean. Discourage rather than forbid: weighing twice is noise, but
-  refusing the entry is worse than absorbing it.
-- The **trend** is an EWMA over daily values with a 7-day half-life
-  (α ≈ 0.095). The chart shows raw points and the trend line, labelled, in the
-  app's existing habit of saying which method ran.
-- **The profile does not silently follow the scale.** When the trend differs
-  from the profile weight by more than 0.5 kg, the Me tab offers a one-tap
-  "Update profile to 78.6 kg (your 7-day trend)". The user's saved profile stays
-  something they chose.
-- **Adaptive TDEE** becomes available once there are ≥ 14 days of history with
-  ≥ 8 weigh-ins. It compares observed weekly change against
-  `NutritionPlan.projectedWeeklyChangeKG` and proposes a maintenance correction,
-  **showing the arithmetic** — observed change, assumed 7,700 kcal/kg, implied
-  daily delta. It is a suggestion with an Accept button, never an automatic
-  rewrite of the plan.
-
-### Reminders
-
-- Frequency: daily, specific weekdays, or weekly, at a chosen time.
-- The notification carries a **Log weight** action that opens straight into the
-  entry field; ideally an `AppIntent` so the common case never needs the app on
-  screen. Follow the rest timer's `LiveActivityIntent` precedent — work in the
-  app's process, do not launch the UI for a single number.
-- Suppressed for the day once a weigh-in exists.
-
-### Screens
-
-- **Weight** — chart (Swift Charts, raw + trend), current vs trend vs goal
-  weight, weekly rate, and the goal-weight countdown the profile already
-  computes via `projectedWeeksTo`.
-- Entry sheet: number field, date, optional note. Swipe to delete, tap to edit.
+- **F1-R1** Multiple weigh-ins in one day are accepted; the day's value for
+  trend purposes is their mean.
+- **F1-R2** The trend is fitted by least-squares regression over daily values,
+  and the weekly rate is derived from its slope.
+- **F1-R3** The chart shows raw readings and the trend, distinguishable from one
+  another.
+- **F1-R4** The profile weight never changes without explicit user action.
+  Adopting the trend is an offered, single-purpose edit.
+- **F1-R5** Adaptive maintenance becomes available only when all of the
+  following hold: at least 8 weigh-ins across 14 days, food logged on at least
+  10 of the last 14 days, and a difference of at least 100 kcal from the
+  formula plan.
+- **F1-R6** Adaptive maintenance shows its arithmetic — observed change, the
+  7,700 kcal/kg assumption, the implied daily delta — and applies only on
+  acceptance.
+- **F1-R7** A daily reminder can be enabled, and survives relaunch and reboot.
 
 ### Acceptance
 
 - [x] Logging three days produces a trend that differs from the last reading —
       `WeightSeriesTests`
 - [x] Deleting the only weigh-in of a day removes it from the trend
-- [x] The profile weight never changes without an explicit tap. Adopting the
-      trend is a button, and it edits the one field it measures
-- [ ] Reminder does not fire on a day already logged. **Not built**: the reminder
-      repeats daily at 10:00 whether or not you have weighed in, because a
-      repeating request cannot skip one occurrence — cancelling and re-adding it
-      each morning would spend the app's notification budget to save one swipe
-- [x] Adaptive TDEE refuses to appear under the data threshold (8 weigh-ins
-      across 14 days, food logged on 10 of the last 14, and a difference of at
-      least 100 kcal). It shows nothing rather than a caveated number, because a
-      figure on screen gets believed regardless of the small print beside it.
+- [x] The profile weight changes only through the offered edit
+- [x] Adaptive maintenance does not appear below the data threshold —
+      `MaintenanceCheckTests`
+- [x] A weigh-in arriving from the watch is not overwritten by the next one
+      logged on the phone — `WeightLogSharingTests`
+- [ ] The reminder is suppressed on a day already logged — open, M9
 
 ---
 
-## F2 — PR page
+## F2 — Personal records
 
-### Purpose
-
-Every exercise you have ever loaded, with the most you have done on it. A
-record, not a plan — it outlives whatever split you are currently running.
+**Purpose.** Every exercise the user has loaded, with the best performance on
+it. A record that outlives whatever split is currently being run.
 
 ### Data
 
 ```
-ExerciseID = String      // "catalogue.bench.flat" or "custom.<uuid>"
+ExerciseID = String              // "catalogue.bench.flat" | "custom.<uuid>"
 
 PersonalRecord
   exerciseID: ExerciseID
   weightKG: Double
   reps: Int
   date: Date
-  source: .logged(setID)   // computed from a workout set
-        | .manual          // asserted by the user
+  source: .logged(setID) | .manual
 ```
 
-### Rules
+### Requirements
 
-- **Two kinds of PR, never blended.** A *logged* PR is derived from a set you
-  recorded; a *manual* PR is one you typed. Both are kept. The headline figure
-  is the better of the two, and the row says which it is. This is the measured/
-  estimated distinction again, applied to lifting.
-- **Heaviest and best e1RM are different questions**, so show both: heaviest
-  weight at any rep count, and the best estimated one-rep max by **Epley**
-  (`w × (1 + reps/30)`), naming the formula on screen.
-- **PR history is append-only in practice.** A PR entry is deleted only by the
-  user, from the PR page, with a confirmation.
-- **The PR page is a superset of the workout page.** It lists every exercise
-  with a record, whether or not any current split contains it. Editing a split
-  never removes a record. This is the hard guarantee the feature exists for.
-- Per-exercise detail: the PR timeline, the last few logged sets, and the
-  muscles it trains (from F3's catalogue).
-- Sort and filter: by muscle group, by recency, and a **stale** filter (no new
-  PR in 60 days) — useful, and honest about what it means.
+- **F2-R1** Logged and manual records are stored separately and never blended.
+  The headline is the better of the two, and states which it is.
+- **F2-R2** Heaviest weight and best estimated 1RM are reported separately. The
+  estimate uses Epley (`w × (1 + reps/30)`) and names it.
+- **F2-R3** The records list is a superset of the current splits. Editing a
+  split never removes a record.
+- **F2-R4** Deleting a workout session must not delete the records it produced.
+  Deleting an individual set detaches its record and downgrades its provenance
+  to manual.
+- **F2-R5** A record may be deleted only by explicit user action, with
+  confirmation.
+- **F2-R6** Deleting a custom exercise that a split or a record still references
+  is refused.
+- **F2-R7** Cardio records are held alongside, with reusable protocols.
+- **F2-R8** The list can be filtered by muscle group and by recency, including a
+  stale filter of no new record in 60 days.
 
 ### Acceptance
 
-- [x] Removing an exercise from every split leaves its PR untouched
-- [x] A logged set heavier than the stored PR updates it without asking —
+- [x] Removing an exercise from every split leaves its record untouched
+- [x] A logged set heavier than the stored record updates it —
       `WorkoutStore.log(_:for:records:)`
-- [x] A manual PR below a logged PR is kept but not shown as the headline —
-      `PersonalRecordTests`
-- [x] Deleting a workout session does not delete PRs it produced. Deleting a
-      single set detaches its record instead: `RecordStore.detachRecords(fromSets:)`
-      keeps it and downgrades its provenance to `.manual`, because the lift was
-      still performed
-- [x] Deleting a custom exercise the plan still names is refused, on both the PR
-      page and the split editor — otherwise a checklist comes up with a row
-      nothing can label
+- [x] A manual record below a logged record is kept but not shown as the
+      headline — `PersonalRecordTests`
+- [x] Deleting a session preserves its records; deleting one set detaches it —
+      `RecordStore.detachRecords(fromSets:)`
+- [x] Deleting a referenced custom exercise is refused on both screens
 
 ---
 
-## F3 — Workout page and splits
+## F3 — Workout and splits
 
-### Purpose
-
-Choose today's split, pick the exercises, log the weight. Everything else in
-this document exists to be fed by this screen.
+**Purpose.** Define a training week, run today's session, and log the work.
 
 ### Data
 
 ```
-Exercise                      // catalogue: bundled, read-only
-  id, name
-  equipment: .barbell | .dumbbell | .machine | .cable | .bodyweight
-  contributions: [MuscleRegion: Double]   // 0…1 per region
+Exercise                       // catalogue: bundled, read-only
+  id, name, equipment
+  contributions: [MuscleRegion: Double]     // 0…1 per region
   isCustom: Bool
 
-CustomExercise                // user-created, same shape
-  name, targetRegions: [MuscleRegion]     // picked from the list
-  // contributions derived, and flagged as user-asserted
-
-Split                         // user-defined, e.g. "Chest + triceps"
-  name
-  focus: [MuscleGroup]
-  exerciseIDs: [ExerciseID]   // ordered
+SplitDay                       // user-defined
+  name, groups: [WorkoutGroup], exerciseIDs: [ExerciseID]
 
 WorkoutSession
-  date, splitID
-  entries: [ (exerciseID, sets: [ (weightKG, reps, rpe?) ]) ]
+  date, groups
+  entries: [(exerciseID, sets: [LoggedSet])]
+
+LoggedSet
+  id, weightKG, reps, seconds?, completedAt
 ```
 
 ### The muscle map
 
-A two-level taxonomy, bundled as data in `SenkuCore` and testable without a UI:
+A two-level taxonomy, bundled as data in `SenkuCore`:
 
-- **Group** — chest, back, shoulders, biceps, triceps, legs, core.
-- **Region** — chest splits into upper (clavicular), mid (sternal), lower
-  (costal); back into lats, upper traps, mid traps/rhomboids, lower back; legs
-  into quads, hamstrings, glutes, calves; and so on.
-- Each region carries a **share** of its group, summing to 100% per group.
-- Each exercise carries a **contribution** per region, 0–1, where 1 is "this
-  exercise trains that region as its primary target".
+- **Group** — back, biceps, triceps, chest, legs, shoulders, abs, cardio.
+- **Region** — 25 in total; each carries a share of its group, summing to 100%
+  per group.
+- **Contribution** — each exercise contributes 0–1 per region, where 1 is a
+  primary target.
 
-### Coverage
+### Requirements
 
-For a given split, coverage answers: *if I do these exercises, how much of the
-muscle I am training today actually gets trained?*
-
-```
-regionCoverage(r)  = min(1, Σ contributions of the split's exercises to r)
-splitCoverage      = Σ over regions in focus: regionCoverage(r) × share(r)
-```
-
-- Shown as a percentage with a per-region breakdown, and — more usefully — the
-  **gap**: "No lower-chest work. Decline press or dips would add 18%."
-- The **ⓘ beside each exercise** shows: primary and secondary regions, that
-  exercise's contribution figures, and its *marginal* effect on today's coverage
-  (what you would lose by dropping it).
-- For a **custom exercise**, contributions are derived from the regions the user
-  picked (primary split evenly, capped at 1) and the info sheet says plainly
-  that the numbers rest on their own classification, not a catalogue entry.
-- **Coverage is not volume.** It says every region was touched, not that any of
-  them got enough sets. Say so in the sheet, and keep sets-per-week guidance out
-  of v1 — it is a separate, well-evidenced feature and deserves its own design.
+- **F3-R1** The catalogue ships as data and is read-only.
+- **F3-R2** Custom exercises derive contributions from the regions the user
+  selects, and are labelled as user-classified wherever they are counted.
+- **F3-R3** Coverage is computed as
+  `regionCoverage(r) = min(1, Σ contributions)` and
+  `splitCoverage = Σ regionCoverage(r) × share(r)` over the day's groups.
+- **F3-R4** Coverage is presented with a per-region breakdown and a named gap.
+- **F3-R5** Coverage represents breadth, not volume, and must say so.
+- **F3-R6** A session presents the day's exercises as a checklist grouped by
+  muscle.
+- **F3-R7** The set logger opens pre-filled with the previous session's values
+  for that exercise, and states when that was.
+- **F3-R8** Timed holds are stored as seconds and must not be recorded as reps.
+- **F3-R9** Logging a set starts the rest timer without a further action.
+- **F3-R10** Starting templates are offered for a new plan.
 
 ### Two-way behaviour with F2
 
-Stated exactly, because "two-way updatable" is the part most likely to be built
-wrong:
-
 | Action | Effect |
-|---|---|
-| Log a set heavier than the stored PR | PR updates, `source: .logged` |
-| Add an exercise to a split | Appears on the PR page with "no record yet" |
-| Remove an exercise from a split | **PR untouched.** Still on the PR page |
-| Add a manual PR for an exercise in no split | Allowed. Lives on the PR page alone |
-| Edit a manual PR | Never rewrites logged sets. History is immutable |
-| Delete a custom exercise still referenced by a PR | Refused, with an explanation |
-
-### Screens
-
-- **Workouts** — today's split (or pick one), its exercises with last-time
-  weight beside each, and the coverage bar for the day.
-- Logging a set **auto-starts the rest timer** at that exercise's preferred
-  interval. The timer already exists and is one tap away; this makes it zero.
-- Split editor: rename, reorder, add and remove exercises, pick from the
-  catalogue grouped by muscle, search, and "create custom exercise".
+| --- | --- |
+| Log a set above the stored record | Record updates, source `.logged` |
+| Add an exercise to a split | Appears in records as "no record yet" |
+| Remove an exercise from a split | Record unchanged |
+| Add a manual record for an unscheduled exercise | Permitted |
+| Edit a manual record | Logged sets unchanged |
+| Delete a referenced custom exercise | Refused |
 
 ### Acceptance
 
-- [x] A chest split of flat bench alone reads well under 100%, and names the gap
+- [x] A chest split of flat bench alone reads well under 100% and names the gap
       — `MuscleCoverageTests`
-- [x] Adding incline and decline raises it, and the ⓘ shows each one's share
-- [x] A custom exercise is visibly marked as user-classified wherever it counts
+- [x] Adding incline and decline raises it, with each contribution shown
+- [x] A custom exercise is marked as user-classified wherever it counts
 - [x] Logging a set starts the rest timer without a second tap
-- [x] Every rule in the coverage table has a test — 171 in `SenkuCore`
 - [x] Cardio is a group without muscles: always 100%, logged as time and the
-      machine's own metrics, with a protocol table you define
+      machine's own metrics
+- [x] Every rule above is covered by the `SenkuCore` suite
 
 ---
 
 ## F4 — Water tracking
 
-### Purpose
-
-The plan already computes a daily water target and a training-day bump. Nothing
-yet helps anyone hit it.
+**Purpose.** Help the user meet the daily water target the plan already
+computes.
 
 ### Data
 
 ```
-WaterEntry   { id, date, millilitres, containerID? }
-Container    { id, name, millilitres }      // user-defined; defaults provided
-WaterSettings{ goalOverrideML?, containers, reminder: ReminderSettings }
+WaterEntry    { id, date, millilitres, containerID? }
+WaterContainer{ id, name, millilitres }
+WaterSettings { containers, goalOverrideML?, takesCreatine, reminder settings }
 ```
 
-### Rules
+### Requirements
 
-- The goal comes from `plan.macros` — the existing daily target, plus the
-  existing +500 ml on training days. A **training day** is one with a logged
-  workout (F3); before F3 ships, it is a manual toggle.
-- A manual goal override is allowed and is shown as an override, not as the
-  computed number.
-- Containers are configurable; ship sensible defaults (250 ml glass, 500 ml
-  bottle, 750 ml bottle) and let the user edit them, in their own units.
-- The bottle visual fills to `consumed / goal`, capped at full with the overage
-  written out. It must have a **text equivalent** for VoiceOver and for anyone
-  who cannot read a shape at a glance: "1,450 of 2,450 ml — 59%".
-
-### Reminders
-
-- Frequency: every N minutes or hours, within an active window (default
-  08:00–22:00).
-- Stop for the day once the goal is met — nagging past success is how a reminder
-  gets switched off permanently.
-- Snooze, and a per-notification "log a glass" action via `AppIntent` so the
-  common case never opens the app.
-- Rolling schedule per **S2**. This is the feature that will breach the 64-request
-  cap if written naively.
+- **F4-R1** The goal is resolved on every read from the profile, whether a
+  workout was logged today, and whether creatine is enabled. It is never stored.
+- **F4-R2** A manual override is permitted and is displayed as an override.
+- **F4-R3** Three configurable containers are offered, each logging in one tap.
+- **F4-R4** The bottle visual fills to `consumed / goal`, caps at full, states
+  any overage, and carries a text equivalent (X-R4).
+- **F4-R5** Reminders repeat on a chosen interval within an active window.
+- **F4-R6** Reminders for the remainder of a day stop once the goal is met, and
+  are restored at the next launch or foreground.
+- **F4-R7** A notification action logs a drink without launching the app.
+- **F4-R8** Creatine tracking, when enabled, adds to the goal and maintains a
+  streak.
+- **F4-R9** A drink logged in the widget or on the watch reaches the app, and
+  cannot be overwritten by a subsequent write from another process.
 
 ### Acceptance
 
-- [x] A past day can be marked "never logged" but never filled in
-- [x] Reminders stop once the goal is met and resume the next day —
-      `WaterReminders.silenceRestOfToday`
-- [x] Pending requests never exceed a documented ceiling well under 64: twelve
-      water slots, one weigh-in, one creatine, one rest — fifteen at worst
-- [x] The goal follows the profile when the profile changes. It is resolved on
-      every read, never stored
-- [x] Logging from the notification adds without launching the app — the action
-      carries no `.foreground` option and runs `LogWaterIntent` in the background
-- [x] A drink logged on the watch reaches the phone, and a drink logged in the
-      widget reaches the app
+- [x] A past day can be marked "never logged" but not filled in
+- [x] Reminders stop once the goal is met and are restored on foreground —
+      `WaterReminders.refresh`, `RootView.restoreWaterReminders()`
+- [x] Pending requests stay within the S2-R1 budget: 15 at worst
+- [x] The goal follows the profile, being resolved on every read
+- [x] Logging from a notification does not launch the app — `LogWaterIntent`
+- [x] Drinks logged in the widget and on the watch reach the app —
+      `WaterStoreTests`
 
 ---
 
 ## F5 — Protein and macro intake
 
-### Purpose
-
-The app already says what to eat. This is whether you did.
+**Purpose.** Record what was eaten against the targets the plan sets.
 
 ### Data
 
 ```
-IntakeEntry { id, date, name?, proteinG, carbsG, fatG, fiberG?, calories? }
-Favourite   { id, name, macros }            // reusable quick-adds
+IntakeEntry   { id, date, name?, proteinG, carbsG, fatG, fiberG?, calories? }
+FoodFavourite { id, name, macros }
 ```
 
-### Rules
+### Requirements
 
-- Targets come from `plan.macros` — protein, carbs, fat, fiber and the calorie
-  total. No second source of truth.
-- **Calories are derived, not entered**: 4/4/9 per gram, computed from the
-  macros, unless the user supplies a calorie figure that disagrees, in which
-  case show both and say which is which.
-- **Protein gets top billing.** It is the macro the app pushes hardest on a cut,
-  it is what people actually track, and the request was "protein goal and intake
-  tracking **along with** macros" — so protein is the headline number and the
-  rest are secondary rings.
-- Quick-add: favourites, plus a bare "+30 g protein" field. **No food database
-  in v1** — that is a licensing and data problem, not an afternoon, and it is
-  explicitly out of scope here.
-- Advisories in the existing voice, e.g. protein under 80% of target for five
-  consecutive days.
-- Feeds F1's adaptive TDEE later: observed intake against observed weight change
-  is a far better maintenance estimate than any formula. Worth designing for,
-  not worth building until both halves exist.
+- **F5-R1** Targets come from `plan.macros`. No copy is kept.
+- **F5-R2** Calories are derived at 4/4/9 per gram. Where the user supplies a
+  figure that disagrees, both are shown and identified.
+- **F5-R3** Protein is the headline figure; calories are the secondary ring.
+- **F5-R4** Quick entry supports protein alone, calories alone, a saved food
+  with a servings multiplier, and full macro entry.
+- **F5-R5** Entries accept decimal grams.
+- **F5-R6** A day with no entries reads as "nothing logged", never as zero.
+- **F5-R7** Future days cannot be logged.
+- **F5-R8** Two streaks are maintained. Protein is a floor: at or above target
+  counts. Calories are a band of ±10% of target; either edge is a miss.
+- **F5-R9** Streaks are recomputed against current targets, and an unlogged day
+  belongs to neither.
+- **F5-R10** Intake feeds F1-R5's adaptive maintenance.
 
 ### Acceptance
 
 - [x] Targets change when the profile changes, with no copy kept
-- [x] Derived calories and entered calories are never silently reconciled
-- [x] A day with no entries reads as "nothing logged", not as "0 g — you failed"
+- [x] Derived and entered calories are never silently reconciled
+- [x] A day with no entries reads as "nothing logged" — `IntakeStoreTests`
 - [x] Tomorrow cannot be logged
-- [ ] Yesterday can be edited. **Not built** — see the open list in
-      [ROADMAP.md](ROADMAP.md). A past day can be marked "never logged" so a
-      streak survives, but a wrong figure cannot be corrected
-
-### Streaks
-
-Two of them, protein and calories, because they are different questions — you
-can hit protein on a day you ate 3,500 calories, and a single "nutrition" streak
-would hide whichever one you are failing.
-
-- **Protein is a floor.** At or above the target counts; over is not a failure.
-- **Calories are a band**, ±10% of the target. Both edges are a miss: 900 under
-  is not a better day than 100 under, it is the day that costs you the muscle the
-  protein was protecting. Ten per cent is about the error in eyeballing a portion
-  of rice — tighter and the streak measures your kitchen scales.
-- Both are recomputed against current targets rather than recorded at the time,
-  and an unlogged day is in neither streak.
+- [x] A meal logged on the watch reaches the phone
+- [ ] A past day can be corrected — open, M9. A day can currently be marked
+      "never logged" so a streak survives, but a wrong figure cannot be edited
 
 ---
 
 ## F6 — Anime log
 
-### Purpose
-
-What you are watching, where you are up to, and what you thought of it. Nothing
-to do with training, and that is fine: this is a personal app, and the thing a
-personal app can do that a product cannot is hold two unrelated parts of a life
-without either being a compromise.
-
-It is listed last on purpose. It shares the storage layer and nothing else, so
-it can be built whenever, without blocking or being blocked by F1–F5.
+**Purpose.** A personal watch list: what is in progress, where it is up to, and
+what the user thought of it. It shares the storage layer and nothing else.
 
 ### Data
 
 ```
-Series
-  id: UUID
-  title: String
-  totalEpisodes: Int?        // nil while airing, or unknown
+AnimeEntry
+  id, title
+  totalEpisodes: Int?
   status: .watching | .completed | .paused | .dropped | .planned
-  rating: Int?               // 1–10, only once there is an opinion
-  startedAt: Date?
-  finishedAt: Date?
+  rating: Int?
+  startedAt: Date?, finishedAt: Date?
   note: String?
-
-Progress
-  seriesID, episode: Int, watchedAt: Date
 ```
 
-### Rules
+### Requirements
 
-- **Episode count is the unit**, not a percentage. "19 of 24" is what someone
-  actually knows about where they are; a progress bar derived from it is
-  decoration.
-- A **series still airing has no total**, and the app must not invent one — the
-  count reads "19" rather than "19 of ?" dressed up as completion.
-- **Ratings are optional and never averaged into a score for the library.** A
-  personal log is not a review site; the number means "what I thought", and an
-  aggregate of your own opinions tells you nothing you did not already know.
-- Marking an episode watched stamps it. The **history is the log**: re-watches
-  append rather than overwrite, the same rule the PR page follows.
-- Status is explicit rather than inferred. An app deciding you have "dropped"
-  something because you have not opened it in a month is guessing at a feeling.
-
-### Open questions
-
-- **Where the metadata comes from.** Typing titles and episode counts by hand
-  is fine for a personal list and tedious past twenty. AniList and MyAnimeList
-  both publish APIs — AniList's is open GraphQL without a key, which makes it
-  the obvious first choice — but that turns a local feature into one with a
-  network dependency, a rate limit and a cache to invalidate.
-- **Whether it belongs in Senku at all**, or is a second app sharing the same
-  core. A training app with an anime tab is either charmingly personal or
-  confused, depending entirely on who is holding it.
+- **F6-R1** Progress is counted in episodes, not percentages.
+- **F6-R2** A series with no known total must not display a completion figure.
+- **F6-R3** Ratings are optional and are never aggregated into a library score.
+- **F6-R4** Re-watches append to the history rather than overwrite it.
+- **F6-R5** Status is set explicitly and is never inferred from inactivity.
+- **F6-R6** Metadata is entered by the user; no network service is required.
+- **F6-R7** Nothing from this feature appears on a training or nutrition screen.
 
 ### Acceptance
 
-- [x] A series airing weekly can be advanced one episode with one tap
-- [x] A series with no known total never displays a completion percentage —
-      `AnimeTests`
+- [x] A weekly series can be advanced one episode in one tap
+- [x] A series with no total never shows a completion percentage — `AnimeTests`
 - [x] A re-watch does not erase the first watch
-- [x] Nothing here appears anywhere near the training or nutrition screens
+- [x] Nothing appears on the training or nutrition screens
 
 ---
 
-## Suggested order
+## Open criteria
 
-Each step ends with something usable, per the roadmap's own rule.
-
-1. **S1 storage + S2 scheduler.** No UI. Unblocks everything.
-2. **F1 weight log.** Smallest feature, exercises the whole storage layer, and
-   pays off immediately against the goal weight already in the profile.
-3. **Exercise catalogue + muscle map** (data and coverage maths in `SenkuCore`,
-   with tests, no UI). The part most likely to be got wrong quietly.
-4. **F2 PR page.** Readable value from step 3 with one screen.
-5. **F3 workout page.** The big one. Splits, logging, coverage, rest-timer tie-in.
-6. **F4 water.** Independent; could slot in earlier if you want a quick win.
-7. **F5 macros.** Last of the training features, because it is most useful once
-   weight history exists to correlate it against.
-8. **F6 anime log.** Whenever. It touches nothing else, which is the whole
-   reason it can wait — and the reason it can jump the queue on a slow evening
-   without costing anything.
-
-All eight are built. F7 was considered and dropped; see its section.
-
-
----
-
-## F7 — Logging a workout from the watch — **dropped**
-
-> **Not being built.** Decided 18 September 2026: the sync it needs is out of
-> proportion to the convenience it buys. Two devices writing into one live
-> session is the hardest problem in this app, and the phone is already in the
-> gym bag. The design below is kept as a record of what was considered, not as
-> a plan.
-
-### Purpose
-
-Log a set at the rack, without reaching for the phone. The phone is in a bag two
-metres away, your hands are chalked, and the thing you want is one tap.
-
-### Scope
-
-- The watch shows **today's session** — the split already started on the phone,
-  as a checklist, in the same muscle blocks the phone uses.
-- Each exercise offers **one primary action: log a set**, pre-filled with the
-  weight and reps of the previous set (today's, or last session's).
-- **Reps are adjustable on the crown.** Weight is read-only.
-- **No deleting and no editing** on the watch. Corrections are a phone job.
-- Starting and finishing a session stay on the phone in v1. The watch logs into
-  a session that already exists; with none, it says so and offers nothing.
-
-### Why reps must be adjustable, though weight need not be
-
-The original sketch for this had no editing at all — one button, last set's
-numbers, done. Weight is genuinely stable within a session, so read-only there
-costs nothing. **Reps are not.** A working set runs 8, 7, 5, and that fade is
-the signal. A watch that could only repeat last time's figure would record 8, 8,
-8 — a log of intentions rather than of training.
-
-It is worse than inaccurate, because logged sets feed F2 automatically: a
-repeated rep count manufactures personal records that were never hit. The crown
-is already the watch's answer to "change a number", it is one gesture, and it
-keeps the log honest.
-
-### Sync: append-only, never shared mutable state
-
-"Synced all the time" is not on offer. WatchConnectivity is opportunistic: the
-phone app may be suspended, the watch may be off the wrist, and delivery is
-eventually. A live workout is the hardest shape to sync — two devices appending
-to one list — and it is exactly what the app has avoided so far (weigh-ins go
-one way; rest timers are deliberately independent).
-
-The shape that works is to treat **a logged set as an immutable event, not an
-edit**:
-
-- Every `LoggedSet` already carries a `UUID`.
-- The watch sends *"this set was added to this exercise in this session"* with
-  `transferUserInfo`, which is queued, ordered, and survives both apps being
-  closed.
-- The phone merges by **union of ids**. Re-delivery is harmless; ordering does
-  not matter; no conflict is possible, because nothing is ever modified.
-- Deletes stay phone-only for the same reason: a delete *is* a mutation, and
-  allowing it from both ends brings back every problem this design avoids.
-
-The phone stays the owner of the session and the only thing that writes history.
-
-### Open questions
-
-- Should the watch be able to **start** a session (pick today's split) as well
-  as log into one? It is a small addition to this design and a large addition to
-  the sync, since two devices could then start different sessions at once.
-- What should the watch show when the phone has **no live session** — the day
-  list read-only, or nothing?
-
----
-
-## Open questions
-
-These need your answer before the features they touch are built.
-
-1. ~~**HealthKit.**~~ **Answered: no.** Stay self-contained. The payoff was
-   weight arriving from a connected scale, workouts closing the Move ring, and
-   real expenditure feeding the calorie target — and the cost was two sources of
-   truth for weight, with the dedupe and provenance that implies, plus an
-   entitlement a personal team may not even grant. Revisit only if a scale
-   turns up.
-2. ~~**iCloud sync.**~~ **Answered: no.** CloudKit is refused outright by a
-   personal development team, so it is not available to this build at any price
-   below a paid membership. The App Group plus the JSON export is the backup
-   story. Revisit only if the account changes.
-3. **Cutoff hour.** Is a 3 a.m. day boundary worth offering, or is midnight
-   fine? (S3)
-4. ~~**Deleting a workout session**~~ **Answered: PRs survive.** Already the
-   behaviour on both paths — deleting a session leaves `RecordStore` untouched,
-   and removing a single set calls `detachRecords(fromSets:)`, which keeps the
-   record and downgrades its provenance from "logged" to "manual". The lift was
-   still performed.
-5. **Sets-per-week volume guidance.** Out of scope here. Do you want it as a
-   sixth feature, given it is the thing coverage percentages will make people
-   ask for?
-6. ~~**Plate calculator**~~ **Built.** A page of its own, reached from the
-   workout screen: type a weight and it draws the bar, plates sized and
-   coloured by where they sit in your rack, with the per-side list counted
-   ("45 ×2 · 25"). It began as a row inside the set logger and moved, because
-   the logger is opened *after* a set — by which point the bar is loaded and
-   the arithmetic is a fact rather than a question.
+| Criterion | Feature | Tracked as |
+| --- | --- | --- |
+| Reminder suppressed on a day already logged | F1 | M9 |
+| A past day can be corrected | F5 | M9 |

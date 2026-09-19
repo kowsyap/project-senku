@@ -254,7 +254,7 @@ cd SenkuCore && swift test        # 171 tests
 cd ../SenkuUI  && swift test      # 73 tests
 
 # The app. Note the *generic* destination — a named device breaks the
-# watch link; docs/XCODE_SETUP.md explains why.
+# watch link; docs/BUILD.md explains why.
 cd ../Senku
 xcodebuild -project Senku.xcodeproj -scheme Senku \
   -destination 'generic/platform=iOS Simulator' build
@@ -270,7 +270,7 @@ SIMCTL_CHILD_SENKU_SAMPLE=1 xcrun simctl launch booted pk.Senku
 ```
 
 More — the watch pairing, the debug hooks, the entitlement notes — is in
-[docs/XCODE_SETUP.md](docs/XCODE_SETUP.md).
+[docs/BUILD.md](docs/BUILD.md).
 
 ---
 
@@ -345,13 +345,13 @@ that were tried and removed.
 
 ### Read further
 
-- [docs/PROJECT.md](docs/PROJECT.md) — the idea, and the rules the code is held to
-- [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — every feature specified before it
-  was built, with the acceptance criteria ticked and each decision's reasoning
-  attached
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — targets, storage, sync, testing
-- [docs/ROADMAP.md](docs/ROADMAP.md) — what shipped, what was dropped and why
-- [docs/XCODE_SETUP.md](docs/XCODE_SETUP.md) — the project's sharp edges
+| Document | Contents |
+| --- | --- |
+| [docs/PROJECT.md](docs/PROJECT.md) | Goals, non-goals, principles, scope |
+| [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | Functional requirements and acceptance criteria |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Structure, storage, sync, testing |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Milestones and backlog |
+| [docs/BUILD.md](docs/BUILD.md) | Build, signing and simulator setup |
 
 ---
 
