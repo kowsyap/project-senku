@@ -1,0 +1,81 @@
+import Foundation
+import Testing
+import SenkuCore
+@testable import SenkuUI
+
+/// The stops everyone knows, and the ones nobody does.
+@Suite struct PlateMathTests {
+    @Test func theFamiliarPoundStops() {
+        #expect(PlateMath.load(target: 135, using: .pounds).perSide == [45])
+        #expect(PlateMath.load(target: 225, using: .pounds).perSide == [45, 45])
+        #expect(PlateMath.load(target: 315, using: .pounds).perSide == [45, 45, 45])
+    }
+
+    /// The ones people actually stop and count.
+    @Test func theAwkwardOnesInBetween() {
+        #expect(PlateMath.load(target: 185, using: .pounds).perSide == [45, 25])
+        // 45 + 35, not 45 + 25 + 10: the 35s are on the rack, and fewer plates
+        // is fewer things to load.
+        #expect(PlateMath.load(target: 205, using: .pounds).perSide == [45, 35])
+        #expect(PlateMath.load(target: 245, using: .pounds).perSide == [45, 45, 10])
+        #expect(PlateMath.load(target: 255, using: .pounds).perSide == [45, 45, 10, 5])
+    }
+
+    @Test func kilogramsToo() {
+        let load = PlateMath.load(target: 102.5, using: .kilograms)
+
+        #expect(load.perSide == [25, 15, 1.25])
+        #expect(load.isExact)
+    }
+
+    @Test func anEmptyBarIsAnEmptyBar() {
+        let load = PlateMath.load(target: 45, using: .pounds)
+
+        #expect(load.perSide.isEmpty)
+        #expect(load.total == 45)
+        #expect(load.isExact)
+        #expect(load.description == "")
+    }
+
+    /// Asking for less than the bar weighs is not a loading problem.
+    @Test func belowTheBarLoadsNothing() {
+        let load = PlateMath.load(target: 30, using: .pounds)
+
+        #expect(load.perSide.isEmpty)
+        #expect(load.total == 45)
+        #expect(!load.isExact)
+    }
+
+    /// The half of this worth having: a gym without small plates cannot build
+    /// every number, and the app should say so before the bar is on your back.
+    @Test func anUnbuildableTargetReportsWhatItCanReach() {
+        let noSmallPlates = PlateSet(unit: .imperial, bar: 45, plates: [45, 25, 10])
+        let load = PlateMath.load(target: 190, using: noSmallPlates)
+
+        #expect(!load.isExact)
+        #expect(load.total == 185)
+        #expect(load.perSide == [45, 25])
+    }
+
+    @Test func theSmallestStepIsTwiceTheSmallestPlate() {
+        #expect(PlateSet.pounds.smallestStep == 5)
+        #expect(PlateSet.kilograms.smallestStep == 2.5)
+        #expect(PlateSet(unit: .imperial, bar: 45, plates: [45, 25, 10]).smallestStep == 20)
+    }
+
+    /// The app stores kilograms whatever the plates say, so the round trip has
+    /// to land on the number the bar can actually be built to.
+    @Test func poundPlatesFromAKilogramWeight() {
+        let kilos = Convert.kilograms(fromPounds: 225)
+        let load = PlateMath.load(kilograms: kilos, using: .pounds)
+
+        #expect(load.perSide == [45, 45])
+        #expect(load.isExact)
+    }
+
+    @Test func aPlateSetIsSortedHeaviestFirstHoweverItIsGiven() {
+        let set = PlateSet(unit: .imperial, bar: 45, plates: [10, 45, 2.5, 25])
+
+        #expect(set.plates == [45, 25, 10, 2.5])
+    }
+}

@@ -602,5 +602,6 @@ These need your answer before the features they touch are built.
 5. **Sets-per-week volume guidance.** Out of scope here. Do you want it as a
    sixth feature, given it is the thing coverage percentages will make people
    ask for?
-6. **Plate calculator** is already on the roadmap for Phase 5 and belongs beside
-   F3's logging screen. Pull it forward?
+6. ~~**Plate calculator**~~ **Built.** A per-side row inside the set logger,
+   barbell lifts only, with a rack editor behind it. Pounds by default, since
+   that is what the plates say.
