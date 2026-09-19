@@ -70,31 +70,75 @@ struct StreaksView: View {
         }
         .background(.background)
         .senkuBottomBarInset()
-        // An alert rather than an action sheet: this is one question with one
-        // answer, and it belongs over the day it is about instead of sliding up
-        // from the bottom of the screen.
-        .alert(
-            asking.map { $0.date.formatted(date: .abbreviated, time: .omitted) } ?? "",
-            isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } }),
-            presenting: asking
-        ) { excuse in
-            if forgiven.isForgiven(excuse.date, in: excuse.track.id) {
-                Button("Count as missed") {
-                    forgiven.setForgiven(false, on: excuse.date, in: excuse.track.id)
-                }
-            } else {
-                Button("Never logged") {
-                    forgiven.setForgiven(true, on: excuse.date, in: excuse.track.id)
-                }
+        // A dialog of its own rather than the system alert. Two buttons on one
+        // line, and the one that does something wears the habit's colour —
+        // neither of which a `.alert` will do.
+        .overlay {
+            if let excuse = asking {
+                excuseDialog(excuse)
             }
-            Button("Cancel", role: .cancel) {}
-        } message: { excuse in
-            Text("\(excuse.track.title): keeps the streak. It cannot be filled in.")
         }
+        .animation(.snappy(duration: 0.2), value: asking?.id)
         .navigationTitle("Streaks")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+
+    private func excuseDialog(_ excuse: Excuse) -> some View {
+        let isForgiven = forgiven.isForgiven(excuse.date, in: excuse.track.id)
+
+        return ZStack {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+                .onTapGesture { asking = nil }
+
+            VStack(spacing: 12) {
+                Text(excuse.date.formatted(date: .abbreviated, time: .omitted))
+                    .font(.headline)
+
+                Text("Unlogged days cannot be edited, but can be marked as forgotten to keep the streak.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 10) {
+                    Button {
+                        asking = nil
+                    } label: {
+                        Text("Cancel")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: 40)
+                            .background(Color.secondary.opacity(0.15), in: .rect(cornerRadius: 11))
+                            .foregroundStyle(Color.primary)
+                    }
+                    .buttonStyle(.plain)
+
+                    // Filled in the habit's own colour: the one button here
+                    // that changes anything should look like it.
+                    Button {
+                        forgiven.setForgiven(!isForgiven, on: excuse.date, in: excuse.track.id)
+                        asking = nil
+                    } label: {
+                        Text(isForgiven ? "Count as missed" : "Forgotten")
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity, minHeight: 40)
+                            .background(excuse.track.tint, in: .rect(cornerRadius: 11))
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: 300)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: .black.opacity(0.2), radius: 20, y: 8)
+            .padding(24)
+        }
+        .transition(.opacity)
     }
 
     private func header(_ track: StreakTrack) -> some View {
