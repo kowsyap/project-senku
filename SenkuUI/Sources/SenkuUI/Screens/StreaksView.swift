@@ -59,7 +59,7 @@ struct StreaksView: View {
                     }
                 }
 
-                Text("The last 30 days. A past day cannot be logged after the fact — but it can be marked as one you simply never logged, and the run steps over it.")
+                Text("The last 30 days. Tap a past day you never logged.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -70,24 +70,26 @@ struct StreaksView: View {
         }
         .background(.background)
         .senkuBottomBarInset()
-        .confirmationDialog(
+        // An alert rather than an action sheet: this is one question with one
+        // answer, and it belongs over the day it is about instead of sliding up
+        // from the bottom of the screen.
+        .alert(
             asking.map { $0.date.formatted(date: .abbreviated, time: .omitted) } ?? "",
             isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } }),
-            titleVisibility: .visible,
             presenting: asking
         ) { excuse in
             if forgiven.isForgiven(excuse.date, in: excuse.track.id) {
-                Button("Count it as missed") {
+                Button("Count as missed") {
                     forgiven.setForgiven(false, on: excuse.date, in: excuse.track.id)
                 }
             } else {
-                Button("Never logged it") {
+                Button("Never logged") {
                     forgiven.setForgiven(true, on: excuse.date, in: excuse.track.id)
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: { excuse in
-            Text("\(excuse.track.title): a day marked as never logged neither counts nor breaks the run. It cannot be filled in — only excused.")
+            Text("\(excuse.track.title): keeps the streak. It cannot be filled in.")
         }
         .navigationTitle("Streaks")
         #if os(iOS)
