@@ -842,7 +842,10 @@ public struct RootView: View {
         NavigationStack {
             List {
                 Section {
-                    ForEach(Tab.ordered.filter { !barTabs.contains($0) }) { tab in
+                    // In the order set in Navbar settings, not the canonical
+                    // one — the list is arrangeable for the same reason the bar
+                    // is.
+                    ForEach(layout.others.filter { !barTabs.contains($0) }) { tab in
                         Button {
                             moreDestination = tab
                         } label: {

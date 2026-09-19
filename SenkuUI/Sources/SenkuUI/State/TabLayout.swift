@@ -19,6 +19,7 @@ import Observation
 @Observable
 public final class TabLayout {
     static let storageKey = "senku.tabs.visible.v2"
+    static let restKey = "senku.tabs.hidden.v1"
 
     /// How many the middle of the bar holds, before the bar has been measured.
     public static let defaultSlots = 3
@@ -58,6 +59,10 @@ public final class TabLayout {
 
     public private(set) var chosen: [RootView.Tab]
 
+    /// Everything else, in the order it appears under More. Kept rather than
+    /// derived, because that order is also yours to set.
+    public private(set) var others: [RootView.Tab]
+
     /// How many the bar can carry, once it knows how wide it is.
     public private(set) var slots: Int = TabLayout.defaultSlots
 
@@ -70,8 +75,18 @@ public final class TabLayout {
 
         // Not trimmed here. The bar has not been measured yet, so trimming now
         // would cut a fourth tab against a default of three and never put it
-        // back — `fit(barWidth:)` does the trimming once the width is known.
-        self.chosen = stored.isEmpty ? Self.fallback : stored
+        // back — `fit(screenWidth:)` does the trimming once the width is known.
+        let inBar = stored.isEmpty ? Self.fallback : stored
+        self.chosen = inBar
+
+        let storedRest = (defaults.array(forKey: Self.restKey) as? [String] ?? [])
+            .compactMap(RootView.Tab.init(rawValue:))
+            .filter { Self.selectable.contains($0) && !inBar.contains($0) }
+
+        // Anything neither list mentions — a screen added in a later version —
+        // joins the end of More rather than vanishing.
+        let missing = Self.selectable.filter { !inBar.contains($0) && !storedRest.contains($0) }
+        self.others = storedRest + missing
     }
 
     /// Told by the window, once its width is known.
@@ -86,7 +101,13 @@ public final class TabLayout {
         // slots starts at three, so "no change" is exactly the case where a
         // stored fourth tab is sitting off the end of it.
         guard chosen.count > slots else { return }
+
+        // Pushed to the front of More rather than dropped: it was your fourth
+        // choice on a wider screen, and it is the likeliest thing you are
+        // reaching for on this one.
+        let overflow = chosen.suffix(from: slots)
         chosen = Array(chosen.prefix(slots))
+        others.insert(contentsOf: overflow, at: 0)
         persist()
     }
 
@@ -98,8 +119,11 @@ public final class TabLayout {
 
     public var isFull: Bool { chosen.count >= slots }
 
-    /// Adds or removes one, keeping the canonical order so the bar does not
-    /// rearrange itself around the order you happened to tick things in.
+    /// Moves one between the bar and More.
+    ///
+    /// Added at the end of wherever it lands rather than sorted back into a
+    /// canonical order — the order is yours now, and re-sorting would undo a
+    /// rearrangement every time something was ticked.
     public func toggle(_ tab: RootView.Tab) {
         guard Self.selectable.contains(tab) else { return }
 
@@ -107,22 +131,37 @@ public final class TabLayout {
             // Never empty: a bar of "Me" and "More" is a menu with extra steps.
             guard chosen.count > 1 else { return }
             chosen.removeAll { $0 == tab }
+            others.insert(tab, at: 0)
         } else {
             guard !isFull else { return }
+            others.removeAll { $0 == tab }
             chosen.append(tab)
-            chosen = RootView.Tab.ordered.filter { chosen.contains($0) }
         }
 
         persist()
     }
 
+    /// Drag-to-reorder, within the bar.
+    public func moveInBar(from offsets: IndexSet, to destination: Int) {
+        chosen.move(fromOffsets: offsets, toOffset: destination)
+        persist()
+    }
+
+    /// Drag-to-reorder, within More.
+    public func moveInMore(from offsets: IndexSet, to destination: Int) {
+        others.move(fromOffsets: offsets, toOffset: destination)
+        persist()
+    }
+
     public func reset() {
-        chosen = Self.fallback
+        chosen = Array(Self.fallback.prefix(slots))
+        others = Self.selectable.filter { !chosen.contains($0) }
         persist()
     }
 
     private func persist() {
         defaults.set(chosen.map(\.rawValue), forKey: Self.storageKey)
+        defaults.set(others.map(\.rawValue), forKey: Self.restKey)
     }
 }
 #endif
