@@ -41,13 +41,47 @@ struct SenkuTabBar: View {
     /// which only ever hands over as many as this can hold.
     let tabs: [RootView.Tab]
 
-    @Namespace private var glassNamespace
-
     /// Where each item sits in the row, so a finger dragged across the bar can
     /// be turned back into a tab.
     @State private var frames: [RootView.Tab: CGRect] = [:]
 
+    /// Where the finger is, while it is down. The pill follows this rather than
+    /// the selection, which is what makes it feel attached to the finger rather
+    /// than chasing it from position to position.
+    @State private var dragX: CGFloat?
+
     private static let space = "senku.tabbar"
+
+    /// The tab the pill is currently over: what a finger is pointing at while
+    /// it drags, and the selection when it is not.
+    private var highlighted: RootView.Tab {
+        guard let dragX, let tab = tab(atX: dragX) else { return selection }
+        return tab
+    }
+
+    private func tab(atX x: CGFloat) -> RootView.Tab? {
+        // Past either end counts as the end item, so a finger that runs off the
+        // bar does not leave the pill behind.
+        if let first = tabs.first, let frame = frames[first], x < frame.minX { return first }
+        if let last = tabs.last, let frame = frames[last], x > frame.maxX { return last }
+
+        return frames.first { _, frame in x >= frame.minX && x <= frame.maxX }?.key
+    }
+
+    /// Where the pill is drawn: under the finger while dragging, and around the
+    /// selected item when not.
+    private var pill: CGRect? {
+        guard let frame = frames[highlighted] else { return nil }
+        guard let dragX else { return frame }
+
+        // Centred on the finger, but never further out than the row's own ends.
+        let half = frame.width / 2
+        let low = (tabs.first.flatMap { frames[$0] }?.minX ?? frame.minX) + half
+        let high = (tabs.last.flatMap { frames[$0] }?.maxX ?? frame.maxX) - half
+        let centre = min(max(dragX, low), high)
+
+        return CGRect(x: centre - half, y: frame.minY, width: frame.width, height: frame.height)
+    }
 
     var body: some View {
         Group {
@@ -64,24 +98,27 @@ struct SenkuTabBar: View {
     @available(iOS 26.0, *)
     private var glassBar: some View {
         GlassEffectContainer(spacing: 18) {
-            scroller { tab in
-                item(tab)
-                    .glassEffect(
-                        selected(tab)
-                            // The same weight of tint as every other pill —
-                            // glass, not paint. A near-solid black read as a
-                            // sticker on top of the bar rather than part of it.
-                            ? .regular.tint(
-                                tab.wantsDarkPill
-                                    ? Color.black.opacity(0.32)
-                                    : tab.tint.opacity(0.28)
-                              ).interactive()
-                            : .identity,
-                        in: .capsule
-                    )
-                    .glassEffectID(tab, in: glassNamespace)
-            }
-            .glassEffect(.regular, in: .capsule)
+            scroller { item($0) }
+                .background(alignment: .topLeading) {
+                    // One pill that moves, rather than a tint that jumps from
+                    // item to item. It is what lets a finger drag it: a
+                    // highlight belonging to an item can only ever be on one
+                    // item or another, and this belongs to the bar.
+                    if let pill {
+                        Color.clear
+                            .frame(width: pill.width, height: pill.height)
+                            .glassEffect(
+                                .regular.tint(
+                                    highlighted.wantsDarkPill
+                                        ? Color.black.opacity(0.32)
+                                        : highlighted.tint.opacity(0.28)
+                                ).interactive(),
+                                in: .capsule
+                            )
+                            .offset(x: pill.minX, y: pill.minY)
+                    }
+                }
+                .glassEffect(.regular, in: .capsule)
         }
         .frame(maxWidth: .infinity)          // centres the capsule, does not stretch it
         .padding(.horizontal, 12)
@@ -92,6 +129,16 @@ struct SenkuTabBar: View {
 
     private var legacyBar: some View {
         scroller { item($0) }
+            .background(alignment: .topLeading) {
+                if let pill {
+                    Capsule()
+                        .fill(highlighted.wantsDarkPill
+                              ? Color.black.opacity(0.18)
+                              : highlighted.tint.opacity(0.18))
+                        .frame(width: pill.width, height: pill.height)
+                        .offset(x: pill.minX, y: pill.minY)
+                }
+            }
             .background(.bar, in: .capsule)
             .overlay(Capsule().strokeBorder(.separator, lineWidth: 0.5))
             .frame(maxWidth: .infinity)
@@ -126,35 +173,29 @@ struct SenkuTabBar: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 6)
         .coordinateSpace(name: Self.space)
-        // Put a finger on the bar and slide: the selection follows it, the way
-        // the pill itself suggests it might. A tap is unaffected — this only
-        // starts once the finger has actually travelled.
+        // Put a finger on the pill and slide. Nothing changes page until the
+        // finger lifts: the drag moves a pill, and the page follows where it
+        // was left — which is also why there is no tick at each crossing.
+        // Ticking through six of them on the way to the sixth is a rattle.
         .gesture(
-            DragGesture(minimumDistance: 8, coordinateSpace: .named(Self.space))
-                .onChanged { drag in select(under: drag.location) }
-                .onEnded { drag in select(under: drag.location) }
+            DragGesture(minimumDistance: 6, coordinateSpace: .named(Self.space))
+                .onChanged { drag in dragX = drag.location.x }
+                .onEnded { drag in
+                    let landed = tab(atX: drag.location.x) ?? selection
+                    dragX = nil
+
+                    guard landed != selection else { return }
+                    Feedback.control()
+                    withAnimation(.snappy(duration: 0.28)) { selection = landed }
+                }
         )
+        // The pill tracks the finger exactly while it is down, and springs to
+        // the item it was left on afterwards.
+        .animation(dragX == nil ? .snappy(duration: 0.28) : nil, value: pill)
     }
-
-    /// The tab under a point, if the point is on one.
-    ///
-    /// Horizontal only: the row is a row, and a finger that wanders above or
-    /// below it on the way across is still pointing at the same thing.
-    private func select(under point: CGPoint) {
-        guard let tab = frames.first(where: { _, frame in
-            point.x >= frame.minX && point.x <= frame.maxX
-        })?.key, tab != selection else { return }
-
-        Feedback.control()
-        withAnimation(.snappy(duration: 0.25)) {
-            selection = tab
-        }
-    }
-
-    private func selected(_ tab: RootView.Tab) -> Bool { tab == selection }
 
     private func item(_ tab: RootView.Tab) -> some View {
-        let isOn = selected(tab)
+        let isOn = tab == highlighted
 
         return Button {
             guard !isOn else { return }
@@ -196,6 +237,8 @@ struct SenkuTabBar: View {
                             : AnyShapeStyle(.foreground)
                     )
             }
+            // Coloured by what the pill is over, not by what is selected, so
+            // the colour arrives with the pill rather than after it.
             .foregroundStyle(isOn ? AnyShapeStyle(tab.activeTint) : AnyShapeStyle(.secondary))
             // Wide enough to read as a column, narrow enough that five of them
             // fit a phone without the row scrolling. Seventy was sized for a
