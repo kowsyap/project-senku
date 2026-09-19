@@ -50,7 +50,7 @@ struct PlateCalculatorView: View {
         .background(.background)
         .senkuBottomBarInset()
         .dismissableKeyboard()
-        .navigationTitle("Plates")
+        .navigationTitle("Plate calculator")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -84,28 +84,65 @@ struct PlateCalculatorView: View {
                 }
                 .pickerStyle(.segmented)
 
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    TextField("0", value: $target, format: .number.precision(.fractionLength(0...1)))
-                        #if os(iOS)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .focused($isTyping)
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: 170)
+                HStack(spacing: 10) {
+                    stepButton("minus", by: -set.smallestStep)
 
-                    Text(unit.massLabel)
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                    // Centred, with the unit hung off the number rather than
+                    // sharing the row's width — otherwise the digits drift left
+                    // as the unit's label changes length.
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        TextField("0", value: $target, format: .number.precision(.fractionLength(0...1)))
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                            .focused($isTyping)
+                            .font(.system(size: 42, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .multilineTextAlignment(.center)
+                            .fixedSize()
+
+                        Text(unit.massLabel)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    stepButton("plus", by: set.smallestStep)
                 }
-                .frame(maxWidth: .infinity)
 
-                Text("Bar \(PlateLoad.trim(set.bar)) \(unit.massLabel) · smallest step \(PlateLoad.trim(set.smallestStep)) \(unit.massLabel)")
+                Text("\(set.namedBar.map { "\($0.name) bar" } ?? "Bar") \(PlateLoad.trim(set.bar)) \(unit.massLabel) · steps of \(PlateLoad.trim(set.smallestStep)) \(unit.massLabel)")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
         }
+    }
+
+    /// One step up or down the ladder of weights this rack can build.
+    ///
+    /// A number that is not on the ladder is snapped onto it first, so pressing
+    /// "+" on 227 gives 230 rather than 232 — the point of the button is to
+    /// land on something loadable, and stepping away from an unloadable number
+    /// would just be a different unloadable number.
+    private func stepButton(_ symbol: String, by amount: Double) -> some View {
+        Button {
+            let current = target ?? set.bar
+            let base = set.snapped(current)
+            // Snapping alone may already be the move: 227 up is 230, but 227
+            // down is 225, and both are one press.
+            let next = abs(base - current) > 0.001 && (base - current).sign == amount.sign
+                ? base
+                : base + amount
+            target = max(0, next)
+            Feedback.control()
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .bold))
+                .frame(width: 46, height: 46)
+                .background(Senku.Palette.protein.opacity(0.15), in: .circle)
+                .foregroundStyle(Senku.Palette.protein)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(symbol == "plus" ? "Heavier" : "Lighter")
     }
 
     // MARK: - The bar

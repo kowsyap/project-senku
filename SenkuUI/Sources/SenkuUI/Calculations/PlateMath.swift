@@ -24,6 +24,38 @@ public struct PlateSet: Codable, Hashable, Sendable {
         self.plates = plates.sorted(by: >)
     }
 
+    /// The bars a gym actually has, with what they weigh.
+    ///
+    /// Named rather than typed, because nobody thinks "twenty kilograms" —
+    /// they think "the women's bar". The weights are the standard ones; a gym
+    /// with something odd can still type a number.
+    public struct Bar: Hashable, Sendable, Identifiable {
+        public let name: String
+        public let pounds: Double
+        public let kilograms: Double
+
+        public var id: String { name }
+
+        public func weight(in unit: UnitSystem) -> Double {
+            unit == .imperial ? pounds : kilograms
+        }
+    }
+
+    public static let bars: [Bar] = [
+        Bar(name: "Olympic", pounds: 45, kilograms: 20),
+        Bar(name: "Women's Olympic", pounds: 35, kilograms: 15),
+        Bar(name: "Trap / hex", pounds: 60, kilograms: 25),
+        Bar(name: "Safety squat", pounds: 65, kilograms: 30),
+        Bar(name: "EZ curl", pounds: 25, kilograms: 10),
+        Bar(name: "Technique", pounds: 15, kilograms: 7),
+        Bar(name: "Smith machine", pounds: 15, kilograms: 7),
+    ]
+
+    /// The named bar this set's weight matches, if any.
+    public var namedBar: Bar? {
+        Self.bars.first { abs($0.weight(in: unit) - bar) < 0.01 }
+    }
+
     /// An Olympic bar and the plates a commercial gym stocks.
     public static let pounds = PlateSet(unit: .imperial, bar: 45, plates: [45, 35, 25, 10, 5, 2.5])
     public static let kilograms = PlateSet(unit: .metric, bar: 20, plates: [25, 20, 15, 10, 5, 2.5, 1.25])
@@ -36,6 +68,19 @@ public struct PlateSet: Codable, Hashable, Sendable {
     /// plate, because plates go on in pairs. This is the figure that decides
     /// whether a five-pound progression is even possible.
     public var smallestStep: Double { (plates.last ?? 0) * 2 }
+
+    /// The nearest weight this rack can actually build, rounding towards
+    /// whichever side is closer.
+    ///
+    /// Everything loadable is the bar plus some multiple of the smallest step,
+    /// since every plate a gym stocks is a multiple of its smallest — so
+    /// snapping is arithmetic rather than a search. 227 on a pound rack is 225,
+    /// and stepping up from there gives 230 rather than 232.
+    public func snapped(_ weight: Double) -> Double {
+        guard smallestStep > 0 else { return weight }
+        let steps = ((weight - bar) / smallestStep).rounded()
+        return max(bar, bar + steps * smallestStep)
+    }
 }
 
 /// What to hang on one side, and what that actually comes to.

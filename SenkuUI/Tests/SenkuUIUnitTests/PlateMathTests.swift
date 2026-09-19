@@ -73,6 +73,37 @@ import SenkuCore
         #expect(load.isExact)
     }
 
+    /// The stepper's rule: a number off the ladder is snapped onto it, so "+"
+    /// from 227 lands on a weight the rack can build.
+    @Test func snappingLandsOnSomethingLoadable() {
+        let rack = PlateSet.pounds   // 45 lb bar, 5 lb steps
+
+        #expect(rack.snapped(227) == 225)
+        #expect(rack.snapped(228) == 230)
+        #expect(rack.snapped(225) == 225)
+    }
+
+    @Test func snappingNeverGoesBelowTheBar() {
+        #expect(PlateSet.pounds.snapped(10) == 45)
+        #expect(PlateSet.kilograms.snapped(0) == 20)
+    }
+
+    @Test func aRackWithoutSmallPlatesSnapsFurther() {
+        let coarse = PlateSet(unit: .imperial, bar: 45, plates: [45, 25, 10])
+
+        #expect(coarse.smallestStep == 20)
+        #expect(coarse.snapped(190) == 185)   // 45 + 7 × 20 = 185
+    }
+
+    @Test func everyNamedBarKnowsBothUnits() {
+        let olympic = PlateSet.bars.first { $0.name == "Olympic" }
+
+        #expect(olympic?.weight(in: .imperial) == 45)
+        #expect(olympic?.weight(in: .metric) == 20)
+        #expect(PlateSet.pounds.namedBar?.name == "Olympic")
+        #expect(PlateSet.kilograms.namedBar?.name == "Olympic")
+    }
+
     @Test func aPlateSetIsSortedHeaviestFirstHoweverItIsGiven() {
         let set = PlateSet(unit: .imperial, bar: 45, plates: [10, 45, 2.5, 25])
 

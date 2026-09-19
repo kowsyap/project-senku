@@ -27,7 +27,38 @@ struct PlateRackEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    LabeledContent("Bar") {
+                    // Named, because nobody thinks "twenty kilograms" — they
+                    // think "the women's bar". Typing a number is still there
+                    // underneath for a gym with something odd.
+                    ForEach(PlateSet.bars) { bar in
+                        Button {
+                            plates.setBar(bar.weight(in: unitSystem), in: unitSystem)
+                            Feedback.control()
+                        } label: {
+                            HStack {
+                                Image(systemName: abs(set.bar - bar.weight(in: unitSystem)) < 0.01
+                                      ? "largecircle.fill.circle"
+                                      : "circle")
+                                    .foregroundStyle(abs(set.bar - bar.weight(in: unitSystem)) < 0.01
+                                                     ? Senku.Palette.protein
+                                                     : Color.secondary)
+
+                                Text(bar.name)
+                                    .foregroundStyle(Color.primary)
+
+                                Spacer()
+
+                                Text("\(PlateLoad.trim(bar.weight(in: unitSystem))) \(unitSystem.massLabel)")
+                                    .font(.subheadline)
+                                    .monospacedDigit()
+                                    .foregroundStyle(Color.secondary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    LabeledContent("Anything else") {
                         HStack(spacing: 6) {
                             TextField(
                                 "Bar",
@@ -47,8 +78,10 @@ struct PlateRackEditor: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                } header: {
+                    Text("Bar")
                 } footer: {
-                    Text("An Olympic bar is \(unitSystem == .imperial ? "45 lb" : "20 kg"). A fixed or technique bar is lighter, and everything below is worked out from whatever you put here.")
+                    Text("Everything below is worked out from whatever is selected here.")
                 }
 
                 Section {
