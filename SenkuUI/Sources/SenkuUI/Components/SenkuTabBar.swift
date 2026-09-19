@@ -124,15 +124,29 @@ struct SenkuTabBar: View {
 
         return Button {
             guard !isOn else { return }
-            Feedback.control()
+            // No haptic here: the pager ticks on every landing, however the
+            // page was reached, and two taps for one press feels like a stutter.
             withAnimation(.snappy(duration: 0.3)) {
                 selection = tab
             }
         } label: {
             VStack(spacing: 3) {
-                Image(systemName: tab.symbol)
-                    .font(.system(size: 18, weight: isOn ? .semibold : .regular))
-                    .frame(height: 21)
+                // "Me" wears a face rather than the system's anonymous
+                // silhouette — it is the one tab that is about a particular
+                // person. Full colour, so it is not tinted into the bar's
+                // accent and lost.
+                if let mark = tab.mark {
+                    Image(mark, bundle: .module)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 21)
+                        .saturation(isOn ? 1 : 0.55)
+                        .opacity(isOn ? 1 : 0.75)
+                } else {
+                    Image(systemName: tab.symbol)
+                        .font(.system(size: 18, weight: isOn ? .semibold : .regular))
+                        .frame(height: 21)
+                }
 
                 Text(tab.title)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))

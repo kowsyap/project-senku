@@ -113,6 +113,11 @@ public struct RootView: View {
             }
         }
 
+        /// An image from the package's assets, where a glyph will not do.
+        var mark: String? {
+            self == .me ? "GokuMark" : nil
+        }
+
         var symbol: String {
             switch self {
             case .me: "person.fill"
@@ -687,7 +692,11 @@ public struct RootView: View {
     /// mounted and hiding five is what `TabView` does, and what makes leaving a
     /// tab and coming back feel like returning rather than starting again.
     private var scrollingTabs: some View {
-        ZStack {
+        // A paging `TabView` rather than the stack it was: the same pages, kept
+        // alive the same way, but reachable by swiping as well as by tapping
+        // the bar. Every screen here scrolls vertically, so a horizontal drag
+        // has nothing to argue with.
+        TabView(selection: $selection) {
             page(.me) { meTab }
             page(.quickCalc) { quickCalcTab }
             page(.rest) { restTab }
@@ -698,6 +707,12 @@ public struct RootView: View {
             page(.records) { recordsTab }
             page(.anime) { animeTab }
         }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        // The bar is the index; two of them would be one too many.
+        .ignoresSafeArea(.keyboard)
+        // A tick as each page lands, which is what makes a swipe feel like it
+        // moved something rather than just animating.
+        .onChange(of: selection) { _, _ in Feedback.control() }
         // The bar floats over the pages, and each page reserves room for it
         // from the inside — see `page(_:content:)`. A `safeAreaInset` out here
         // insets the stack, and the stack is not what scrolls: the lists are,
@@ -718,19 +733,12 @@ public struct RootView: View {
         _ tab: Tab,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        let isOn = tab == selection
-
         content()
             // Published, not applied. The screens inside each navigation stack
             // read it and pad themselves — see `senkuBottomBarInset()`, which
             // explains why an inset out here does nothing.
             .environment(\.senkuBottomInset, tabBarHeight)
-            .opacity(isOn ? 1 : 0)
-            // A hidden page must not answer taps or be read out by VoiceOver;
-            // opacity alone leaves it doing both.
-            .allowsHitTesting(isOn)
-            .accessibilityHidden(!isOn)
-            .zIndex(isOn ? 1 : 0)
+            .tag(tab)
     }
     #endif
 
