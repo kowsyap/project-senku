@@ -15,7 +15,7 @@ final class RestTimerUITests: XCTestCase {
     private func launchOnRestTab() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
-        app.tabBars.buttons["Rest"].tap()
+        app.open("Rest")
         return app
     }
 
@@ -98,7 +98,7 @@ final class RestTimerUITests: XCTestCase {
         app.terminate()
 
         app.launch()
-        app.tabBars.buttons["Rest"].tap()
+        app.open("Rest")
 
         XCTAssertTrue(
             app.buttons["Pause"].waitForExistence(timeout: 5),

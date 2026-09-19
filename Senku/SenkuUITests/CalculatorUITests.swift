@@ -12,7 +12,7 @@ final class CalculatorUITests: XCTestCase {
     private func launchOnCalculator() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
-        app.tabBars.buttons["Quick calc"].tap()
+        app.open("Quick calc")
         return app
     }
 

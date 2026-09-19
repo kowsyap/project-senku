@@ -34,7 +34,7 @@ public struct StartRestIntent: AppIntent {
         timer.start(at: .now)
         RestTimerStore.save(timer)
 
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         RestActivityController.shared.sync(with: timer)
         // A rest started from the widget or the Dynamic Island still has to
         // chime on a silenced phone, so it holds the audio session too.

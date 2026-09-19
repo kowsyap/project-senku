@@ -83,7 +83,7 @@ public struct RestWidgetView: View {
     /// same work there.
     @ViewBuilder
     private func tile(_ preset: RestPreset, tint: Color) -> some View {
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         if #available(iOS 17.0, *) {
             Button(intent: StartRestFromWidgetIntent(seconds: preset.duration)) {
                 face(preset, tint: tint)

@@ -4,7 +4,7 @@ import SenkuCore
 // ActivityKit exists on macOS as a module but every type in it is unavailable
 // there, so `canImport` is not a strong enough guard. Mac Catalyst reports
 // `os(iOS)` and has no Live Activities either.
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
 import ActivityKit
 
 /// Keeps a Live Activity in step with the on-screen timer.

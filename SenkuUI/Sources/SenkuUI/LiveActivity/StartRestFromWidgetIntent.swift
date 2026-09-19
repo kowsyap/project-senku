@@ -4,7 +4,7 @@ import SenkuCore
 // ActivityKit is iOS-only and absent on Mac Catalyst, and so is the guarantee
 // this intent depends on. Everywhere else the widget falls back to its deep
 // link, which opens the app and does the same work there.
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
 import AppIntents
 
 /// Starts a rest from the Home Screen widget, without opening the app.

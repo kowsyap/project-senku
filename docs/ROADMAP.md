@@ -1,92 +1,51 @@
 # Roadmap
 
-Phases are ordered so that each one ends with something usable, rather than
-saving all the value for the end.
+Everything planned is built. This is the record of what shipped, what was
+dropped and why, and what is still open — kept because the *why* is the part
+that gets lost.
 
-## Phase 0 — Foundations ✅
+## Built
 
-- [x] Git repository
-- [x] `SenkuCore` package: models, BMR formulas, energy, macros, advisories
-- [x] Input validation with typed errors
-- [x] Verification suite — 61 checks, runs without Xcode
-- [x] `senku` CLI for exercising the core
-- [x] Project, architecture and roadmap docs
+| | Feature | Notes |
+| --- | --- | --- |
+| ✅ | **Quick calc** | BMR, maintenance at every activity level, macros, advisories |
+| ✅ | **Profile** | The same plan, kept, and everything else derived from it |
+| ✅ | **F1 — Weight log** | Trend line, rate by regression, adaptive maintenance, reminder, history, widget |
+| ✅ | **F2 — PR page** | Records per exercise, cardio records, cardio protocols, group filters |
+| ✅ | **F3 — Workout** | Splits, coverage per muscle group, checklist, set logger, cardio, rest tie-in |
+| ✅ | **F4 — Water** | Bottle, three containers, goal from profile, reminders, creatine, streaks, widget, watch |
+| ✅ | **F5 — Food** | Protein and calorie rings, quick-adds, servings, streaks, widget, watch, adaptive maintenance |
+| ✅ | **F6 — Anime** | Seasons or totals, statuses, search, sorting, posters, totals |
+| ✅ | **Rest timer** | Presets, Live Activity, Control Center, chime on a locked phone, watch haptics |
+| ✅ | **Plate calculator** | Per-side breakdown drawn to scale, rack editor, both units |
+| ✅ | **Export** | PDF with charts and a section picker, plus a JSON backup that restores |
+| ✅ | **Import** | Hand-writable JSON; the same path the sample data uses |
 
-## Phase 1 — Calculator that ships
+## Dropped, with reasons
 
-- [x] `SenkuUI` package, building for iOS, macOS and watchOS
-- [x] Input form: sex, age, height, weight, body fat, activity, goal, formula
-- [x] Unit switching (metric ↔ imperial) at the presentation layer only
-- [x] Results screen: macro ring, energy ladder, advisories, body composition
-- [x] Adaptive layout — side by side on wide windows, stacked on phones
-- [x] Guest mode and saved profile, split across two tabs
-- [x] Profile tab is a dashboard, not a second copy of the calculator
-- [x] Profile persistence via `ProfileStore`
-- [x] Offscreen PNG renderer for reviewing layout without a simulator
-- [x] Xcode project with packages linked — see [XCODE_SETUP.md](XCODE_SETUP.md)
-- [x] Runs on the iOS simulator
-- [x] Enable Mac Catalyst
-- [ ] Run on a physical device
-- [x] Migrate `SenkuCoreTests` to Swift Testing
-- [ ] Move `ProfileStore` onto SwiftData once history needs storing
+| | Idea | Why not |
+| --- | --- | --- |
+| ❌ | **F7 — Logging a workout from the watch** | Two devices writing into one live session is the hardest problem in the app, and the phone is already in the gym bag. Design kept in REQUIREMENTS for the record. |
+| ❌ | **iCloud / CloudKit sync** | Refused outright to a personal development team. The App Group plus the JSON export is the backup story. |
+| ❌ | **HealthKit** | Two sources of truth for weight, with the dedupe and provenance that implies, for a payoff that depends on owning a connected scale. |
+| ❌ | **Food database** | A licence and a subscription, or somebody else's scraped data. Quick-adds cover the eight things people actually eat. |
 
-## Phase 2 — Rest timer
+## Open
 
-- [x] Timer engine with presets and a custom value
-- [x] Timer screen: countdown ring, presets, pause/resume, add-30s
-- [x] Third tab, reachable in one tap from anywhere
-- [x] Live Activity with Dynamic Island
-- [x] Home Screen widget
-- [x] Control Center control (iOS 18+)
-- [x] Watch app with completion haptics
-- [x] Local notification so it fires with the screen off
+Small, and none of them blocking daily use.
 
-## Phase 3 — Watch and Mac
+- **Editing a past day.** Food and water are today-only. A past day can be marked
+  "never logged" so a streak survives, but a wrong figure cannot be corrected.
+- **3 a.m. day boundary.** Midnight currently. A late meal after a late session
+  counts to the next day, which is not how anybody thinks about it.
+- **Sets-per-week volume guidance.** The thing coverage percentages make people
+  ask for next.
+- **A watch complication for water or food.** The rest timer has one; nothing
+  else does.
 
-- [ ] Watch: today's targets at a glance
-- [ ] Watch complications
-- [ ] WatchConnectivity session sync
-- [ ] Mac layout pass — the Catalyst default will not be good enough as-is
+## How this project is built
 
-## Phase 4 — Logging and trends
-
-Specified in full in [REQUIREMENTS.md](REQUIREMENTS.md), which supersedes this
-list: five features, their data models, the rules they have to obey, and the
-questions still open.
-
-- [ ] Storage and notification-scheduler foundations (S1, S2)
-- [ ] Weight log with reminders and EWMA trend (F1)
-- [ ] Exercise catalogue and muscle-coverage maths
-- [ ] PR page (F2)
-- [ ] Workout page, splits and coverage, with the rest timer auto-starting (F3)
-- [ ] Water tracking with rolling reminders (F4)
-- [ ] Protein and macro intake (F5)
-- [ ] Adaptive TDEE from observed change
-- [ ] HealthKit read/write — open question 1
-
-## Phase 5 — Polish and ship
-
-- [ ] Plate calculator, 1RM estimator
-- [ ] App Intents / Siri
-- [ ] Onboarding
-- [ ] Accessibility pass: Dynamic Type, VoiceOver, contrast
-- [ ] App Store listing, screenshots, privacy nutrition label
-
-## Immediate next step
-
-Phase 2 is done. All four targets now exist — app, widget extension, watch app,
-and the test bundles — so nothing further is blocked on project surgery.
-
-Two things remain from Phase 1, and both need hardware or a decision rather
-than code:
-
-- **Run on a physical device.** Everything so far is simulator-verified. The
-  haptics in particular *cannot* be checked any other way: the simulator has no
-  haptic engine, so `Feedback.restFinished()` is a silent no-op there. The
-  signing team is set; the App Group is off by default so a free account can
-  build — see [XCODE_SETUP.md](XCODE_SETUP.md).
-- **SwiftData.** The roadmap has always said "once history needs storing", and
-  nothing stores history yet. `ProfileStore` is still the seam.
-
-After that, Phase 3: the watch layout is a fitting pass, not the rewrite the
-architecture doc calls for, and the Mac is still running the iPad layout.
+In sessions, by one person, with a coding agent, in the order the app was
+actually needed — not front-loaded design. The requirements document was written
+first and has been amended as decisions were taken; every "Answered:" line in it
+is a real decision with its reasoning attached.

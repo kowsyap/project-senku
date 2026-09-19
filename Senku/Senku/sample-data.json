@@ -1,0 +1,3618 @@
+{
+  "schemaVersion": 1,
+  "unitSystem": "imperial",
+  "profile": {
+    "name": "Alex",
+    "metrics": {
+      "sex": "male",
+      "age": 29,
+      "heightCM": 178,
+      "weightKG": 84.2,
+      "bodyFatPercentage": 18
+    },
+    "activityLevel": "moderate",
+    "goal": "moderateCut",
+    "formula": "automatic",
+    "unitSystem": "imperial",
+    "goalWeightKG": 78,
+    "updatedAt": "2026-08-05T08:00:00-04:00"
+  },
+  "weighIns": [
+    {
+      "date": "2026-08-06T07:12:00-04:00",
+      "weightKG": 86.1
+    },
+    {
+      "date": "2026-08-07T07:12:00-04:00",
+      "weightKG": 86.1
+    },
+    {
+      "date": "2026-08-08T07:12:00-04:00",
+      "weightKG": 86.3
+    },
+    {
+      "date": "2026-08-09T07:12:00-04:00",
+      "weightKG": 85.9
+    },
+    {
+      "date": "2026-08-10T07:12:00-04:00",
+      "weightKG": 85.9
+    },
+    {
+      "date": "2026-08-11T07:12:00-04:00",
+      "weightKG": 85.9
+    },
+    {
+      "date": "2026-08-12T07:12:00-04:00",
+      "weightKG": 85.6
+    },
+    {
+      "date": "2026-08-13T07:12:00-04:00",
+      "weightKG": 85.8
+    },
+    {
+      "date": "2026-08-14T07:12:00-04:00",
+      "weightKG": 85.8
+    },
+    {
+      "date": "2026-08-15T07:12:00-04:00",
+      "weightKG": 85.9
+    },
+    {
+      "date": "2026-08-16T07:12:00-04:00",
+      "weightKG": 85.4
+    },
+    {
+      "date": "2026-08-17T07:12:00-04:00",
+      "weightKG": 85.5
+    },
+    {
+      "date": "2026-08-18T07:12:00-04:00",
+      "weightKG": 85.3
+    },
+    {
+      "date": "2026-08-19T07:12:00-04:00",
+      "weightKG": 85.7
+    },
+    {
+      "date": "2026-08-20T07:12:00-04:00",
+      "weightKG": 85.6
+    },
+    {
+      "date": "2026-08-21T07:12:00-04:00",
+      "weightKG": 85.1
+    },
+    {
+      "date": "2026-08-22T07:12:00-04:00",
+      "weightKG": 85.7
+    },
+    {
+      "date": "2026-08-23T07:12:00-04:00",
+      "weightKG": 85.7
+    },
+    {
+      "date": "2026-08-24T07:12:00-04:00",
+      "weightKG": 85.4
+    },
+    {
+      "date": "2026-08-25T07:12:00-04:00",
+      "weightKG": 85.3
+    },
+    {
+      "date": "2026-08-26T07:12:00-04:00",
+      "weightKG": 85.0
+    },
+    {
+      "date": "2026-08-27T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-08-28T07:12:00-04:00",
+      "weightKG": 85.1
+    },
+    {
+      "date": "2026-08-29T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-08-30T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-08-31T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-09-01T07:12:00-04:00",
+      "weightKG": 84.6
+    },
+    {
+      "date": "2026-09-02T07:12:00-04:00",
+      "weightKG": 84.9
+    },
+    {
+      "date": "2026-09-03T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-09-04T07:12:00-04:00",
+      "weightKG": 85.0
+    },
+    {
+      "date": "2026-09-05T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-09-06T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-09-07T07:12:00-04:00",
+      "weightKG": 84.7
+    },
+    {
+      "date": "2026-09-08T07:12:00-04:00",
+      "weightKG": 84.7
+    },
+    {
+      "date": "2026-09-09T07:12:00-04:00",
+      "weightKG": 84.5
+    },
+    {
+      "date": "2026-09-10T07:12:00-04:00",
+      "weightKG": 84.4
+    },
+    {
+      "date": "2026-09-11T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-09-12T07:12:00-04:00",
+      "weightKG": 84.8
+    },
+    {
+      "date": "2026-09-13T07:12:00-04:00",
+      "weightKG": 84.6
+    },
+    {
+      "date": "2026-09-14T07:12:00-04:00",
+      "weightKG": 84.5
+    },
+    {
+      "date": "2026-09-15T07:12:00-04:00",
+      "weightKG": 84.2
+    },
+    {
+      "date": "2026-09-16T07:12:00-04:00",
+      "weightKG": 84.1
+    },
+    {
+      "date": "2026-09-17T07:12:00-04:00",
+      "weightKG": 84.1
+    },
+    {
+      "date": "2026-09-18T07:12:00-04:00",
+      "weightKG": 83.9
+    },
+    {
+      "date": "2026-09-19T07:12:00-04:00",
+      "weightKG": 84.3
+    }
+  ],
+  "records": [
+    {
+      "exerciseID": "catalogue.bench.flat",
+      "weightLB": 245,
+      "reps": 5,
+      "date": "2026-09-10T18:30:00-04:00"
+    },
+    {
+      "exerciseID": "catalogue.squat.back",
+      "weightLB": 315,
+      "reps": 5,
+      "date": "2026-09-07T18:30:00-04:00"
+    },
+    {
+      "exerciseID": "catalogue.deadlift.conventional",
+      "weightLB": 385,
+      "reps": 3,
+      "date": "2026-09-13T18:30:00-04:00"
+    },
+    {
+      "exerciseID": "catalogue.press.overheadBarbell",
+      "weightLB": 145,
+      "reps": 5,
+      "date": "2026-09-05T18:30:00-04:00"
+    },
+    {
+      "exerciseID": "catalogue.row.barbellBentOver",
+      "weightLB": 205,
+      "reps": 8,
+      "date": "2026-09-08T18:30:00-04:00"
+    },
+    {
+      "exerciseID": "catalogue.curl.barbell",
+      "weightLB": 95,
+      "reps": 8,
+      "date": "2026-09-01T18:30:00-04:00"
+    },
+    {
+      "exerciseID": "catalogue.pullUp",
+      "weightLB": 0,
+      "reps": 12,
+      "date": "2026-09-15T18:40:00-04:00"
+    }
+  ],
+  "plan": {
+    "days": [
+      {
+        "id": "E8155521-3593-4088-8E19-C2CD61653282",
+        "name": "Push",
+        "groups": [
+          "chest",
+          "shoulder",
+          "tricep"
+        ],
+        "exerciseIDs": [
+          "catalogue.bench.flat",
+          "catalogue.bench.inclineDumbbell",
+          "catalogue.press.overheadBarbell",
+          "catalogue.lateralRaise.dumbbell",
+          "catalogue.tricepsPushdown.rope"
+        ]
+      },
+      {
+        "id": "F84E2D67-2470-4F30-B767-FD7EBBC6AFCB",
+        "name": "Pull",
+        "groups": [
+          "back",
+          "bicep"
+        ],
+        "exerciseIDs": [
+          "catalogue.deadlift.conventional",
+          "catalogue.pullUp",
+          "catalogue.row.barbellBentOver",
+          "catalogue.latPulldown.wide",
+          "catalogue.curl.barbell"
+        ]
+      },
+      {
+        "id": "0928B8F4-E378-43B1-8E61-D13DAC3C3549",
+        "name": "Legs",
+        "groups": [
+          "legs",
+          "abs"
+        ],
+        "exerciseIDs": [
+          "catalogue.squat.back",
+          "catalogue.deadlift.romanianBarbell",
+          "catalogue.legPress",
+          "catalogue.abs.plank"
+        ]
+      },
+      {
+        "id": "9CFC7C56-1B57-4F87-A55E-5EA46D4C4637",
+        "name": "Conditioning",
+        "groups": [
+          "cardio"
+        ],
+        "exerciseIDs": [
+          "catalogue.cardio.treadmill"
+        ]
+      }
+    ],
+    "updatedAt": "2026-08-20T08:00:00-04:00"
+  },
+  "workouts": [
+    {
+      "id": "AFC7F1CF-A4CF-4D11-BBA0-6803825BA3B1",
+      "date": "2026-08-31T18:15:00-04:00",
+      "dayID": "E8155521-3593-4088-8E19-C2CD61653282",
+      "dayName": "Push",
+      "entries": [
+        {
+          "id": "B77FB02C-EA95-4654-BB8D-8D46756F6DCE",
+          "exerciseID": "catalogue.bench.flat",
+          "sets": [
+            {
+              "id": "9A4F7D96-ED85-434C-AD50-C8227ABC86C5",
+              "weightKG": 83.9146,
+              "reps": 8,
+              "completedAt": "2026-08-31T18:30:00-04:00"
+            },
+            {
+              "id": "BBAD1009-211F-47C6-AAB2-D8574CC955C6",
+              "weightKG": 92.9864,
+              "reps": 6,
+              "completedAt": "2026-08-31T18:34:00-04:00"
+            },
+            {
+              "id": "F1469127-FB16-4D13-ACDE-B67FB8678B34",
+              "weightKG": 102.0583,
+              "reps": 5,
+              "completedAt": "2026-08-31T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "9C0DE51A-500C-4B62-B083-A080D6A9CB24",
+          "exerciseID": "catalogue.bench.inclineDumbbell",
+          "sets": [
+            {
+              "id": "C9065379-8471-4AE2-B331-4C9E9A8BEBF0",
+              "weightKG": 31.7515,
+              "reps": 10,
+              "completedAt": "2026-08-31T18:30:00-04:00"
+            },
+            {
+              "id": "126EEB67-9331-4017-8C02-A51EFF27A044",
+              "weightKG": 31.7515,
+              "reps": 9,
+              "completedAt": "2026-08-31T18:34:00-04:00"
+            },
+            {
+              "id": "110F2984-CAB4-42BF-AEEC-C8D6C02785AC",
+              "weightKG": 34.0194,
+              "reps": 8,
+              "completedAt": "2026-08-31T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "825BF7A7-19AC-4B5D-B85C-DD73641929A0",
+          "exerciseID": "catalogue.press.overheadBarbell",
+          "sets": [
+            {
+              "id": "FB9C5874-B243-487A-B60E-2195D458F903",
+              "weightKG": 52.1631,
+              "reps": 8,
+              "completedAt": "2026-08-31T18:30:00-04:00"
+            },
+            {
+              "id": "F1682F4B-3B6A-4209-BA06-A0E39D4A847A",
+              "weightKG": 56.699,
+              "reps": 6,
+              "completedAt": "2026-08-31T18:34:00-04:00"
+            },
+            {
+              "id": "CF1DA10C-8A1C-47E8-BCA9-30BC323BB080",
+              "weightKG": 61.235,
+              "reps": 5,
+              "completedAt": "2026-08-31T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "E9E660B3-C1F4-402B-912B-D4D62544DA49",
+          "exerciseID": "catalogue.lateralRaise.dumbbell",
+          "sets": [
+            {
+              "id": "1E68D1A8-A3CE-4731-9192-87AA43E175B1",
+              "weightKG": 9.0718,
+              "reps": 15,
+              "completedAt": "2026-08-31T18:30:00-04:00"
+            },
+            {
+              "id": "270E3590-DFED-495B-9DAF-683FDC2222F6",
+              "weightKG": 9.0718,
+              "reps": 13,
+              "completedAt": "2026-08-31T18:34:00-04:00"
+            },
+            {
+              "id": "8E571123-5B45-48A1-A686-E226CE97566D",
+              "weightKG": 9.0718,
+              "reps": 12,
+              "completedAt": "2026-08-31T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "B50BAE16-205E-4224-B419-920DAA475E36",
+          "exerciseID": "catalogue.tricepsPushdown.rope",
+          "sets": [
+            {
+              "id": "93D600E9-7E93-4398-80D7-5764BB08AC38",
+              "weightKG": 22.6796,
+              "reps": 15,
+              "completedAt": "2026-08-31T18:30:00-04:00"
+            },
+            {
+              "id": "22667070-E60D-4A96-9D06-112203F2F755",
+              "weightKG": 24.9476,
+              "reps": 12,
+              "completedAt": "2026-08-31T18:34:00-04:00"
+            },
+            {
+              "id": "2713BF90-9D99-4B70-88AC-2E56AC8231FA",
+              "weightKG": 27.2155,
+              "reps": 10,
+              "completedAt": "2026-08-31T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        }
+      ],
+      "groups": [
+        "chest",
+        "shoulder",
+        "tricep"
+      ],
+      "finishedAt": "2026-08-31T19:17:00-04:00"
+    },
+    {
+      "id": "703129B6-D566-43D1-85E4-6348B968E853",
+      "date": "2026-09-02T18:15:00-04:00",
+      "dayID": "F84E2D67-2470-4F30-B767-FD7EBBC6AFCB",
+      "dayName": "Pull",
+      "entries": [
+        {
+          "id": "67F4896B-4757-4816-9F8C-015CDDB8C6D6",
+          "exerciseID": "catalogue.deadlift.conventional",
+          "sets": [
+            {
+              "id": "044D0748-ADC3-4ACC-8CD4-109361362C55",
+              "weightKG": 142.8816,
+              "reps": 5,
+              "completedAt": "2026-09-02T18:30:00-04:00"
+            },
+            {
+              "id": "42060723-4213-4ED8-A77F-C68DF243FBD7",
+              "weightKG": 156.4894,
+              "reps": 3,
+              "completedAt": "2026-09-02T18:34:00-04:00"
+            },
+            {
+              "id": "DFEA1BF9-E0F3-462D-BF89-7D891658D4B1",
+              "weightKG": 165.5612,
+              "reps": 3,
+              "completedAt": "2026-09-02T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "EFA87ECD-B9DF-4F63-BCF3-D7FE02601462",
+          "exerciseID": "catalogue.pullUp",
+          "sets": [
+            {
+              "id": "7B688F4D-89A9-4F7E-B2E0-F246F07DC6CB",
+              "weightKG": 0.0,
+              "reps": 10,
+              "completedAt": "2026-09-02T18:30:00-04:00"
+            },
+            {
+              "id": "7A45E9D8-0AEC-4760-B00A-B1E0B2517CD6",
+              "weightKG": 0.0,
+              "reps": 9,
+              "completedAt": "2026-09-02T18:34:00-04:00"
+            },
+            {
+              "id": "C61DF7ED-5247-43A6-ADD8-3D81B2CCE232",
+              "weightKG": 0.0,
+              "reps": 7,
+              "completedAt": "2026-09-02T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "4E4ECF29-87E2-47E0-8452-9A57201D4468",
+          "exerciseID": "catalogue.row.barbellBentOver",
+          "sets": [
+            {
+              "id": "70A5E8C1-80B5-4464-8924-238B1A3C89A0",
+              "weightKG": 70.3068,
+              "reps": 10,
+              "completedAt": "2026-09-02T18:30:00-04:00"
+            },
+            {
+              "id": "3789260C-87AD-4E7F-A349-C30AA0AD8656",
+              "weightKG": 79.3787,
+              "reps": 8,
+              "completedAt": "2026-09-02T18:34:00-04:00"
+            },
+            {
+              "id": "5232E755-C6B0-48EA-8E15-A8D7023A768B",
+              "weightKG": 83.9146,
+              "reps": 8,
+              "completedAt": "2026-09-02T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "7313E5D6-652C-4296-967A-05B35AEA06FC",
+          "exerciseID": "catalogue.latPulldown.wide",
+          "sets": [
+            {
+              "id": "416643F8-6BEE-49BE-9446-31FBC4341C98",
+              "weightKG": 58.967,
+              "reps": 12,
+              "completedAt": "2026-09-02T18:30:00-04:00"
+            },
+            {
+              "id": "A5A91E32-FE5B-4820-A52D-CD0E2E682C8B",
+              "weightKG": 65.7709,
+              "reps": 10,
+              "completedAt": "2026-09-02T18:34:00-04:00"
+            },
+            {
+              "id": "0144507E-B1AC-489C-A44F-117223FFF788",
+              "weightKG": 65.7709,
+              "reps": 9,
+              "completedAt": "2026-09-02T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "CF97E99F-BA67-4CBC-ADCB-11735D235EC3",
+          "exerciseID": "catalogue.curl.barbell",
+          "sets": [
+            {
+              "id": "FC1BB31E-A735-4A94-84BC-3606EDC1852B",
+              "weightKG": 34.0194,
+              "reps": 12,
+              "completedAt": "2026-09-02T18:30:00-04:00"
+            },
+            {
+              "id": "172798D6-7B2F-4316-B203-4DD0FD6216A3",
+              "weightKG": 38.5554,
+              "reps": 10,
+              "completedAt": "2026-09-02T18:34:00-04:00"
+            },
+            {
+              "id": "823254E2-FD54-419C-B350-5C6076945692",
+              "weightKG": 38.5554,
+              "reps": 8,
+              "completedAt": "2026-09-02T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        }
+      ],
+      "groups": [
+        "back",
+        "bicep"
+      ],
+      "finishedAt": "2026-09-02T19:17:00-04:00"
+    },
+    {
+      "id": "D9FB66C6-F610-4F1A-8914-BBB31BC221B9",
+      "date": "2026-09-04T18:15:00-04:00",
+      "dayID": "0928B8F4-E378-43B1-8E61-D13DAC3C3549",
+      "dayName": "Legs",
+      "entries": [
+        {
+          "id": "D1960A24-AEF0-4B2F-BB2D-E3EB3EC93E01",
+          "exerciseID": "catalogue.squat.back",
+          "sets": [
+            {
+              "id": "646D521E-32E8-49B8-98EE-71E1B64F4490",
+              "weightKG": 102.0583,
+              "reps": 8,
+              "completedAt": "2026-09-04T18:30:00-04:00"
+            },
+            {
+              "id": "83014346-3C3D-4E9A-A2E6-6C4E16D9B1AA",
+              "weightKG": 124.7379,
+              "reps": 5,
+              "completedAt": "2026-09-04T18:34:00-04:00"
+            },
+            {
+              "id": "2B9D467F-21B2-456E-8F8F-B723C2F8659A",
+              "weightKG": 133.8097,
+              "reps": 4,
+              "completedAt": "2026-09-04T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "10903D53-127C-4E0F-88E7-81F44643F1D0",
+          "exerciseID": "catalogue.deadlift.romanianBarbell",
+          "sets": [
+            {
+              "id": "0C411D8E-4294-4387-A63A-345B517F0173",
+              "weightKG": 83.9146,
+              "reps": 10,
+              "completedAt": "2026-09-04T18:30:00-04:00"
+            },
+            {
+              "id": "7BEEDCD7-34B7-4898-9702-EF9C49786B0C",
+              "weightKG": 92.9864,
+              "reps": 8,
+              "completedAt": "2026-09-04T18:34:00-04:00"
+            },
+            {
+              "id": "A5B2FA1C-40B5-4FDE-9E4A-74E1DC984C3E",
+              "weightKG": 102.0583,
+              "reps": 8,
+              "completedAt": "2026-09-04T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "76110A3F-AFB1-4DAA-8A89-014D5127E69A",
+          "exerciseID": "catalogue.legPress",
+          "sets": [
+            {
+              "id": "85263F0F-BFFE-4C30-ADCD-6E0D08B2A807",
+              "weightKG": 163.2933,
+              "reps": 12,
+              "completedAt": "2026-09-04T18:30:00-04:00"
+            },
+            {
+              "id": "450E8E4B-6781-41EB-BC55-26088DE8468D",
+              "weightKG": 185.9729,
+              "reps": 10,
+              "completedAt": "2026-09-04T18:34:00-04:00"
+            },
+            {
+              "id": "2BE91EA1-D942-46A5-96C1-5548537B8B70",
+              "weightKG": 204.1166,
+              "reps": 8,
+              "completedAt": "2026-09-04T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "6C27BDE2-66C5-42BE-9883-45FC53C6ED5B",
+          "exerciseID": "catalogue.abs.plank",
+          "isMarkedDone": true,
+          "sets": [
+            {
+              "id": "38FDA139-8D00-47C1-9835-96C22654F114",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 60,
+              "completedAt": "2026-09-04T19:10:00-04:00"
+            },
+            {
+              "id": "1888DA12-1609-4A4B-B250-67A0009A51C8",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 70,
+              "completedAt": "2026-09-04T19:13:00-04:00"
+            },
+            {
+              "id": "0EB50F51-9B59-42EA-82E2-9F946BEB000C",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 80,
+              "completedAt": "2026-09-04T19:16:00-04:00"
+            }
+          ]
+        }
+      ],
+      "groups": [
+        "legs",
+        "abs"
+      ],
+      "finishedAt": "2026-09-04T19:17:00-04:00"
+    },
+    {
+      "id": "09A44D78-AA22-4028-BD0A-45507DEFA9F9",
+      "date": "2026-09-07T18:15:00-04:00",
+      "dayID": "E8155521-3593-4088-8E19-C2CD61653282",
+      "dayName": "Push",
+      "entries": [
+        {
+          "id": "AC144D02-6902-49DA-BEAF-6505A63C0A80",
+          "exerciseID": "catalogue.bench.flat",
+          "sets": [
+            {
+              "id": "6F4A96CF-5C72-4FE7-85F7-A59300D04C81",
+              "weightKG": 86.1826,
+              "reps": 8,
+              "completedAt": "2026-09-07T18:30:00-04:00"
+            },
+            {
+              "id": "99C1A2AF-D417-41C2-B882-E84881E7AF56",
+              "weightKG": 95.2544,
+              "reps": 6,
+              "completedAt": "2026-09-07T18:34:00-04:00"
+            },
+            {
+              "id": "2CDF60B5-4321-4FE7-A317-1224151B8188",
+              "weightKG": 104.3262,
+              "reps": 5,
+              "completedAt": "2026-09-07T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "18DF53E8-8043-4046-A666-CF2DF77F7036",
+          "exerciseID": "catalogue.bench.inclineDumbbell",
+          "sets": [
+            {
+              "id": "45060489-DF5C-45FF-A6F7-69161363BCCF",
+              "weightKG": 34.0194,
+              "reps": 10,
+              "completedAt": "2026-09-07T18:30:00-04:00"
+            },
+            {
+              "id": "92A4FF4D-E169-4D1D-9EE1-63BB1ADBB37E",
+              "weightKG": 34.0194,
+              "reps": 9,
+              "completedAt": "2026-09-07T18:34:00-04:00"
+            },
+            {
+              "id": "8AC69E81-BA9F-4505-8596-DBBA0F281633",
+              "weightKG": 36.2874,
+              "reps": 8,
+              "completedAt": "2026-09-07T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "8FE53CD6-DE5D-47E6-8CB8-A29E96E203B9",
+          "exerciseID": "catalogue.press.overheadBarbell",
+          "sets": [
+            {
+              "id": "00C181A5-319A-42F4-9DF3-20139A520A81",
+              "weightKG": 54.4311,
+              "reps": 8,
+              "completedAt": "2026-09-07T18:30:00-04:00"
+            },
+            {
+              "id": "665219A4-1175-4AF6-BB69-87539F872412",
+              "weightKG": 58.967,
+              "reps": 6,
+              "completedAt": "2026-09-07T18:34:00-04:00"
+            },
+            {
+              "id": "FE65759A-78FE-4570-B2D5-02746116760C",
+              "weightKG": 63.5029,
+              "reps": 5,
+              "completedAt": "2026-09-07T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "9977AFDE-F56A-4519-AD20-47A3ABB71479",
+          "exerciseID": "catalogue.lateralRaise.dumbbell",
+          "sets": [
+            {
+              "id": "144F60F8-C9D5-487E-B2EF-DFCA31F91DD4",
+              "weightKG": 11.3398,
+              "reps": 15,
+              "completedAt": "2026-09-07T18:30:00-04:00"
+            },
+            {
+              "id": "DF25C681-24B5-4F21-B8D1-0D3E4CB6FCF4",
+              "weightKG": 11.3398,
+              "reps": 13,
+              "completedAt": "2026-09-07T18:34:00-04:00"
+            },
+            {
+              "id": "829A1E0D-1A63-4B6B-82F6-8B24E74DF1B5",
+              "weightKG": 11.3398,
+              "reps": 12,
+              "completedAt": "2026-09-07T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "06C44CFB-A8D2-4B3D-A6B6-44CA99C0D5F8",
+          "exerciseID": "catalogue.tricepsPushdown.rope",
+          "sets": [
+            {
+              "id": "91F634AF-05F8-478A-9FF2-10487852DDBE",
+              "weightKG": 24.9476,
+              "reps": 15,
+              "completedAt": "2026-09-07T18:30:00-04:00"
+            },
+            {
+              "id": "6E8F59DC-5A92-4E00-A203-9ADC1BF9FF2B",
+              "weightKG": 27.2155,
+              "reps": 12,
+              "completedAt": "2026-09-07T18:34:00-04:00"
+            },
+            {
+              "id": "37E5A419-95A4-4A38-BD3B-0FA4DB62F2C1",
+              "weightKG": 29.4835,
+              "reps": 10,
+              "completedAt": "2026-09-07T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        }
+      ],
+      "groups": [
+        "chest",
+        "shoulder",
+        "tricep"
+      ],
+      "finishedAt": "2026-09-07T19:17:00-04:00"
+    },
+    {
+      "id": "AE0540BC-94C2-48FB-82D6-27A63DFB0FE9",
+      "date": "2026-09-09T18:15:00-04:00",
+      "dayID": "F84E2D67-2470-4F30-B767-FD7EBBC6AFCB",
+      "dayName": "Pull",
+      "entries": [
+        {
+          "id": "B7BF83AB-5D3A-4018-8707-1945292580E7",
+          "exerciseID": "catalogue.deadlift.conventional",
+          "sets": [
+            {
+              "id": "231CFF97-7752-47CD-89CE-6D02F377C439",
+              "weightKG": 145.1496,
+              "reps": 5,
+              "completedAt": "2026-09-09T18:30:00-04:00"
+            },
+            {
+              "id": "F136198F-EB47-4310-99C0-D6179858E628",
+              "weightKG": 158.7573,
+              "reps": 3,
+              "completedAt": "2026-09-09T18:34:00-04:00"
+            },
+            {
+              "id": "0E1CB4EA-17D1-4156-9FC4-D6DB08C2DED8",
+              "weightKG": 167.8292,
+              "reps": 3,
+              "completedAt": "2026-09-09T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "ED8B3D7C-B78C-4C32-8398-07962C82C948",
+          "exerciseID": "catalogue.pullUp",
+          "sets": [
+            {
+              "id": "12D6BF01-2390-4481-A8A2-68C6F893BABC",
+              "weightKG": 2.268,
+              "reps": 10,
+              "completedAt": "2026-09-09T18:30:00-04:00"
+            },
+            {
+              "id": "B0B548DE-FE69-44A0-B768-7E66E11A800C",
+              "weightKG": 2.268,
+              "reps": 9,
+              "completedAt": "2026-09-09T18:34:00-04:00"
+            },
+            {
+              "id": "60FC5729-2B0F-47BC-9ABC-A7B29F9FB131",
+              "weightKG": 2.268,
+              "reps": 7,
+              "completedAt": "2026-09-09T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "0DA966E9-8A20-443E-B753-A1FDFD5A31D1",
+          "exerciseID": "catalogue.row.barbellBentOver",
+          "sets": [
+            {
+              "id": "724CEFE7-E18F-474D-A245-6D532E779F69",
+              "weightKG": 72.5748,
+              "reps": 10,
+              "completedAt": "2026-09-09T18:30:00-04:00"
+            },
+            {
+              "id": "C45F266D-1AC5-412A-B9A3-8DDD39CEE624",
+              "weightKG": 81.6466,
+              "reps": 8,
+              "completedAt": "2026-09-09T18:34:00-04:00"
+            },
+            {
+              "id": "435B43B1-46B1-46D6-BBE1-51807F468696",
+              "weightKG": 86.1826,
+              "reps": 8,
+              "completedAt": "2026-09-09T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "229F5E83-07C8-4D3C-A868-35807B7852E9",
+          "exerciseID": "catalogue.latPulldown.wide",
+          "sets": [
+            {
+              "id": "08EE2E85-2924-487B-955C-6B1556F8EF6A",
+              "weightKG": 61.235,
+              "reps": 12,
+              "completedAt": "2026-09-09T18:30:00-04:00"
+            },
+            {
+              "id": "03CD136A-AD07-4B78-8955-B3B15279B227",
+              "weightKG": 68.0389,
+              "reps": 10,
+              "completedAt": "2026-09-09T18:34:00-04:00"
+            },
+            {
+              "id": "D8F53A43-6773-4A10-8679-D8190ECCE920",
+              "weightKG": 68.0389,
+              "reps": 9,
+              "completedAt": "2026-09-09T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "54BC833C-806C-478F-A7F9-95E1E916460C",
+          "exerciseID": "catalogue.curl.barbell",
+          "sets": [
+            {
+              "id": "79667A7A-C625-4FFA-8B57-518009055BFE",
+              "weightKG": 36.2874,
+              "reps": 12,
+              "completedAt": "2026-09-09T18:30:00-04:00"
+            },
+            {
+              "id": "591570C8-940C-4D06-8595-06424FB3090B",
+              "weightKG": 40.8233,
+              "reps": 10,
+              "completedAt": "2026-09-09T18:34:00-04:00"
+            },
+            {
+              "id": "4861414F-CB27-444F-AD8C-437F1E381675",
+              "weightKG": 40.8233,
+              "reps": 8,
+              "completedAt": "2026-09-09T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        }
+      ],
+      "groups": [
+        "back",
+        "bicep"
+      ],
+      "finishedAt": "2026-09-09T19:17:00-04:00"
+    },
+    {
+      "id": "4166A60F-E26C-42EA-A128-73997FE358F8",
+      "date": "2026-09-11T18:15:00-04:00",
+      "dayID": "0928B8F4-E378-43B1-8E61-D13DAC3C3549",
+      "dayName": "Legs",
+      "entries": [
+        {
+          "id": "D54A07A0-324A-47B4-9C94-83550D0A3644",
+          "exerciseID": "catalogue.squat.back",
+          "sets": [
+            {
+              "id": "FE276059-9C0B-48F7-B8C6-533724246C33",
+              "weightKG": 104.3262,
+              "reps": 8,
+              "completedAt": "2026-09-11T18:30:00-04:00"
+            },
+            {
+              "id": "B8BDAFC6-089C-4D8A-97FD-33CBCBFF290C",
+              "weightKG": 127.0059,
+              "reps": 5,
+              "completedAt": "2026-09-11T18:34:00-04:00"
+            },
+            {
+              "id": "C1C80FD7-968A-42FE-848E-8E153185D61E",
+              "weightKG": 136.0777,
+              "reps": 4,
+              "completedAt": "2026-09-11T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "ADE019CE-26F7-4ABE-906E-D910D1E5A01C",
+          "exerciseID": "catalogue.deadlift.romanianBarbell",
+          "sets": [
+            {
+              "id": "71558383-6E64-428B-8977-9C99932A6F0C",
+              "weightKG": 86.1826,
+              "reps": 10,
+              "completedAt": "2026-09-11T18:30:00-04:00"
+            },
+            {
+              "id": "3DC8615C-95DA-4147-A206-4285D00EC1BE",
+              "weightKG": 95.2544,
+              "reps": 8,
+              "completedAt": "2026-09-11T18:34:00-04:00"
+            },
+            {
+              "id": "8987DE9F-3B53-49F2-B6A7-6204313C6A08",
+              "weightKG": 104.3262,
+              "reps": 8,
+              "completedAt": "2026-09-11T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "3D7A013D-5C3C-4688-B71C-DCBF65580F5C",
+          "exerciseID": "catalogue.legPress",
+          "sets": [
+            {
+              "id": "60372D30-30B4-4313-9AF9-592318BF5157",
+              "weightKG": 165.5612,
+              "reps": 12,
+              "completedAt": "2026-09-11T18:30:00-04:00"
+            },
+            {
+              "id": "E97E6117-AAA9-4180-9564-2D6C1B4980A8",
+              "weightKG": 188.2408,
+              "reps": 10,
+              "completedAt": "2026-09-11T18:34:00-04:00"
+            },
+            {
+              "id": "85181A2E-9879-4860-B4BC-7F769FD6E6BA",
+              "weightKG": 206.3845,
+              "reps": 8,
+              "completedAt": "2026-09-11T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "8FBEAE59-3725-4844-BEDB-68E10C56C00E",
+          "exerciseID": "catalogue.abs.plank",
+          "isMarkedDone": true,
+          "sets": [
+            {
+              "id": "3B4CEEAD-D154-4FD8-98ED-DE0AB5F41EEC",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 60,
+              "completedAt": "2026-09-11T19:10:00-04:00"
+            },
+            {
+              "id": "33F627A0-AB43-43A4-AB82-F9D739E4C865",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 70,
+              "completedAt": "2026-09-11T19:13:00-04:00"
+            },
+            {
+              "id": "414C3D0F-9FD7-4E6A-B9DB-E6EB578DCACB",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 80,
+              "completedAt": "2026-09-11T19:16:00-04:00"
+            }
+          ]
+        }
+      ],
+      "groups": [
+        "legs",
+        "abs"
+      ],
+      "finishedAt": "2026-09-11T19:17:00-04:00"
+    },
+    {
+      "id": "7236EFCD-386C-4ECF-AD76-1CD412D966F1",
+      "date": "2026-09-14T18:15:00-04:00",
+      "dayID": "E8155521-3593-4088-8E19-C2CD61653282",
+      "dayName": "Push",
+      "entries": [
+        {
+          "id": "0E1C2322-4596-4158-B615-C05888F92337",
+          "exerciseID": "catalogue.bench.flat",
+          "sets": [
+            {
+              "id": "383EB1C2-DF43-4EB5-B73E-CA7DB2B7D70B",
+              "weightKG": 88.4505,
+              "reps": 8,
+              "completedAt": "2026-09-14T18:30:00-04:00"
+            },
+            {
+              "id": "5627FB83-115C-4ADE-AF60-436EFD8F10EC",
+              "weightKG": 97.5224,
+              "reps": 6,
+              "completedAt": "2026-09-14T18:34:00-04:00"
+            },
+            {
+              "id": "F2A56DAE-A5F9-48E7-8BB3-7717863AA8CC",
+              "weightKG": 106.5942,
+              "reps": 5,
+              "completedAt": "2026-09-14T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "66BBC91D-6FAB-4AFB-82D2-897CA804C270",
+          "exerciseID": "catalogue.bench.inclineDumbbell",
+          "sets": [
+            {
+              "id": "AB760097-F027-48B5-9FC1-0264A2F6AE3C",
+              "weightKG": 36.2874,
+              "reps": 10,
+              "completedAt": "2026-09-14T18:30:00-04:00"
+            },
+            {
+              "id": "5DEC7665-18AA-4353-B3F1-4DB3CF35B303",
+              "weightKG": 36.2874,
+              "reps": 9,
+              "completedAt": "2026-09-14T18:34:00-04:00"
+            },
+            {
+              "id": "49DDA09E-3E1E-4BB8-AD38-09324F37A082",
+              "weightKG": 38.5554,
+              "reps": 8,
+              "completedAt": "2026-09-14T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "C4C3211E-3FCD-4D3B-9798-D22FA26C9090",
+          "exerciseID": "catalogue.press.overheadBarbell",
+          "sets": [
+            {
+              "id": "9CF5E099-8711-45E7-AAA4-F154332C8AD6",
+              "weightKG": 56.699,
+              "reps": 8,
+              "completedAt": "2026-09-14T18:30:00-04:00"
+            },
+            {
+              "id": "0EB8AF6A-1FDB-4044-B062-6C0CBDCD8218",
+              "weightKG": 61.235,
+              "reps": 6,
+              "completedAt": "2026-09-14T18:34:00-04:00"
+            },
+            {
+              "id": "292C9652-099D-4A71-9B2A-355ADEAF322B",
+              "weightKG": 65.7709,
+              "reps": 5,
+              "completedAt": "2026-09-14T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "C3FB1B49-ADB8-4816-9E75-537B566620CE",
+          "exerciseID": "catalogue.lateralRaise.dumbbell",
+          "sets": [
+            {
+              "id": "6A72C71C-0940-4154-B341-51F1BA22C7F5",
+              "weightKG": 13.6078,
+              "reps": 15,
+              "completedAt": "2026-09-14T18:30:00-04:00"
+            },
+            {
+              "id": "752A3E56-667D-4DBD-99C8-617EEB7D37F0",
+              "weightKG": 13.6078,
+              "reps": 13,
+              "completedAt": "2026-09-14T18:34:00-04:00"
+            },
+            {
+              "id": "1685A5AC-889A-4A3A-8E11-A71538EC788D",
+              "weightKG": 13.6078,
+              "reps": 12,
+              "completedAt": "2026-09-14T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "37595835-5176-4A93-AF03-BB7264AAC4C9",
+          "exerciseID": "catalogue.tricepsPushdown.rope",
+          "sets": [
+            {
+              "id": "BED9803E-4A56-4928-8780-FE640489A6B5",
+              "weightKG": 27.2155,
+              "reps": 15,
+              "completedAt": "2026-09-14T18:30:00-04:00"
+            },
+            {
+              "id": "8DC5E760-BF37-4873-826A-5D128C0A61ED",
+              "weightKG": 29.4835,
+              "reps": 12,
+              "completedAt": "2026-09-14T18:34:00-04:00"
+            },
+            {
+              "id": "DE7A665C-28C4-4A71-B5F3-42B6631C43F2",
+              "weightKG": 31.7515,
+              "reps": 10,
+              "completedAt": "2026-09-14T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        }
+      ],
+      "groups": [
+        "chest",
+        "shoulder",
+        "tricep"
+      ],
+      "finishedAt": "2026-09-14T19:17:00-04:00"
+    },
+    {
+      "id": "9C211058-AB7F-401B-A698-1BCD4AE42010",
+      "date": "2026-09-16T18:15:00-04:00",
+      "dayID": "F84E2D67-2470-4F30-B767-FD7EBBC6AFCB",
+      "dayName": "Pull",
+      "entries": [
+        {
+          "id": "E19146BC-0B2D-464A-8001-BBA4819852F7",
+          "exerciseID": "catalogue.deadlift.conventional",
+          "sets": [
+            {
+              "id": "6829E794-73AF-4D03-8584-132FC8CA2A7A",
+              "weightKG": 147.4175,
+              "reps": 5,
+              "completedAt": "2026-09-16T18:30:00-04:00"
+            },
+            {
+              "id": "EBD1CF95-61BE-4E2B-A68D-43C2AFEEBEEC",
+              "weightKG": 161.0253,
+              "reps": 3,
+              "completedAt": "2026-09-16T18:34:00-04:00"
+            },
+            {
+              "id": "48F4ABFB-B430-4E5C-AC06-FAAC43AE701F",
+              "weightKG": 170.0971,
+              "reps": 3,
+              "completedAt": "2026-09-16T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "DEE6B6F8-6FB0-4AF0-93AE-61975A403725",
+          "exerciseID": "catalogue.pullUp",
+          "sets": [
+            {
+              "id": "2B71465A-295E-4B9F-9337-AD5D6C2BF56F",
+              "weightKG": 4.5359,
+              "reps": 10,
+              "completedAt": "2026-09-16T18:30:00-04:00"
+            },
+            {
+              "id": "FF3F8A91-5CB3-4C68-ACB9-6E64E8998D5D",
+              "weightKG": 4.5359,
+              "reps": 9,
+              "completedAt": "2026-09-16T18:34:00-04:00"
+            },
+            {
+              "id": "81227C35-03F7-406D-BDA1-066423C2868D",
+              "weightKG": 4.5359,
+              "reps": 7,
+              "completedAt": "2026-09-16T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "884DE598-8198-4E0A-B710-96B4B09A7B01",
+          "exerciseID": "catalogue.row.barbellBentOver",
+          "sets": [
+            {
+              "id": "6AC6529F-EBBA-47C7-BD59-69A9716E5CB1",
+              "weightKG": 74.8427,
+              "reps": 10,
+              "completedAt": "2026-09-16T18:30:00-04:00"
+            },
+            {
+              "id": "CC8AF7F8-CA26-4175-980F-EB0174E6269F",
+              "weightKG": 83.9146,
+              "reps": 8,
+              "completedAt": "2026-09-16T18:34:00-04:00"
+            },
+            {
+              "id": "8CB4486A-09A9-4005-8FB7-F944B6A0B1F2",
+              "weightKG": 88.4505,
+              "reps": 8,
+              "completedAt": "2026-09-16T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "DF7F4561-BC56-499A-A440-E183272460B0",
+          "exerciseID": "catalogue.latPulldown.wide",
+          "sets": [
+            {
+              "id": "761E8C65-9855-4514-9B24-32D4EBC0118A",
+              "weightKG": 63.5029,
+              "reps": 12,
+              "completedAt": "2026-09-16T18:30:00-04:00"
+            },
+            {
+              "id": "A0E51774-7634-482A-A303-90C02A15F019",
+              "weightKG": 70.3068,
+              "reps": 10,
+              "completedAt": "2026-09-16T18:34:00-04:00"
+            },
+            {
+              "id": "2899ECB6-73AA-498A-82A9-E98110F0AEDB",
+              "weightKG": 70.3068,
+              "reps": 9,
+              "completedAt": "2026-09-16T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "45AA2586-573C-4DF0-8F28-7897D6786BF6",
+          "exerciseID": "catalogue.curl.barbell",
+          "sets": [
+            {
+              "id": "38663840-66D2-4220-885F-2FEA91CA4476",
+              "weightKG": 38.5554,
+              "reps": 12,
+              "completedAt": "2026-09-16T18:30:00-04:00"
+            },
+            {
+              "id": "E079CDDA-63F7-4F0A-B77A-7FBB5B34CF7D",
+              "weightKG": 43.0913,
+              "reps": 10,
+              "completedAt": "2026-09-16T18:34:00-04:00"
+            },
+            {
+              "id": "E08AE497-9759-48EA-8E6F-44121EAB774F",
+              "weightKG": 43.0913,
+              "reps": 8,
+              "completedAt": "2026-09-16T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        }
+      ],
+      "groups": [
+        "back",
+        "bicep"
+      ],
+      "finishedAt": "2026-09-16T19:17:00-04:00"
+    },
+    {
+      "id": "2FDF8731-B47B-4994-8ABF-56ADEBE9A35A",
+      "date": "2026-09-18T18:15:00-04:00",
+      "dayID": "0928B8F4-E378-43B1-8E61-D13DAC3C3549",
+      "dayName": "Legs",
+      "entries": [
+        {
+          "id": "F850B75F-87FF-4A85-BC43-0C035417D94E",
+          "exerciseID": "catalogue.squat.back",
+          "sets": [
+            {
+              "id": "13EFDED4-F520-4451-833E-C66E3428B166",
+              "weightKG": 108.8622,
+              "reps": 8,
+              "completedAt": "2026-09-18T18:30:00-04:00"
+            },
+            {
+              "id": "EDA57C92-BBC1-4785-A9B8-ED95112CCEDD",
+              "weightKG": 131.5418,
+              "reps": 5,
+              "completedAt": "2026-09-18T18:34:00-04:00"
+            },
+            {
+              "id": "10EC85EE-916E-4D19-9BAF-3D1A2986AE27",
+              "weightKG": 140.6136,
+              "reps": 4,
+              "completedAt": "2026-09-18T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "ED1E2D34-C5E6-44B1-9FBE-EC09BA75FAD8",
+          "exerciseID": "catalogue.deadlift.romanianBarbell",
+          "sets": [
+            {
+              "id": "42520854-B54C-43C2-9360-D5B0ACC9880A",
+              "weightKG": 90.7185,
+              "reps": 10,
+              "completedAt": "2026-09-18T18:30:00-04:00"
+            },
+            {
+              "id": "F1CA9AE4-C140-4B64-8F20-7C29BD969BBD",
+              "weightKG": 99.7903,
+              "reps": 8,
+              "completedAt": "2026-09-18T18:34:00-04:00"
+            },
+            {
+              "id": "E346B1BE-37FF-4D82-BD57-9E46B6791201",
+              "weightKG": 108.8622,
+              "reps": 8,
+              "completedAt": "2026-09-18T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "23AC28F3-B79F-44C0-8102-62ACD05AAD76",
+          "exerciseID": "catalogue.legPress",
+          "sets": [
+            {
+              "id": "E0137FD9-89EB-47E2-8FD1-4FB8D8170874",
+              "weightKG": 170.0971,
+              "reps": 12,
+              "completedAt": "2026-09-18T18:30:00-04:00"
+            },
+            {
+              "id": "6D5F85DE-8C92-4A02-BDEC-5EF9E293B58B",
+              "weightKG": 192.7768,
+              "reps": 10,
+              "completedAt": "2026-09-18T18:34:00-04:00"
+            },
+            {
+              "id": "6F9F273E-0776-47BB-86B4-0F3971D0607D",
+              "weightKG": 210.9205,
+              "reps": 8,
+              "completedAt": "2026-09-18T18:38:00-04:00"
+            }
+          ],
+          "isMarkedDone": true
+        },
+        {
+          "id": "64E88478-473D-46AA-9D88-EB6538DA98D4",
+          "exerciseID": "catalogue.abs.plank",
+          "isMarkedDone": true,
+          "sets": [
+            {
+              "id": "3A69E704-5FD5-4156-903C-9F1263841FBA",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 60,
+              "completedAt": "2026-09-18T19:10:00-04:00"
+            },
+            {
+              "id": "1149C8D0-23AE-4982-8604-70C3EEEDD7CF",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 70,
+              "completedAt": "2026-09-18T19:13:00-04:00"
+            },
+            {
+              "id": "4DB3670A-C90A-42EC-B2E6-4A5245EF6ABB",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 80,
+              "completedAt": "2026-09-18T19:16:00-04:00"
+            }
+          ]
+        }
+      ],
+      "groups": [
+        "legs",
+        "abs"
+      ],
+      "finishedAt": "2026-09-18T19:17:00-04:00"
+    },
+    {
+      "id": "409AA276-EEB1-46FD-8B1A-62F728D0606E",
+      "date": "2026-09-13T07:30:00-04:00",
+      "dayID": "9CFC7C56-1B57-4F87-A55E-5EA46D4C4637",
+      "dayName": "Conditioning",
+      "entries": [
+        {
+          "id": "C807869D-29E3-4D33-9C7B-9F0C4605321B",
+          "exerciseID": "catalogue.cardio.treadmill",
+          "sets": [],
+          "isMarkedDone": true,
+          "cardio": {
+            "id": "D1DA7A38-CF70-4A4B-A017-9F4CAF5C9C38",
+            "seconds": 1800,
+            "values": {
+              "speed": 11.5,
+              "incline": 6.0
+            },
+            "completedAt": "2026-09-13T08:00:00-04:00"
+          }
+        }
+      ],
+      "groups": [
+        "cardio"
+      ],
+      "finishedAt": "2026-09-13T08:32:00-04:00"
+    }
+  ],
+  "cardioRecords": [
+    {
+      "id": "26F3F46D-4191-43B4-B5D5-1A50F314DAA9",
+      "exerciseID": "catalogue.cardio.treadmill",
+      "seconds": 1800,
+      "values": {
+        "speed": 11.5,
+        "incline": 6.0
+      },
+      "date": "2026-09-13T08:00:00-04:00",
+      "source": {
+        "manual": {}
+      }
+    }
+  ],
+  "cardioPlans": [
+    {
+      "exerciseID": "catalogue.cardio.treadmill",
+      "columns": [
+        "Time",
+        "Speed",
+        "Incline"
+      ],
+      "rows": [
+        [
+          "5",
+          "6.0",
+          "2"
+        ],
+        [
+          "5",
+          "8.5",
+          "4"
+        ],
+        [
+          "5",
+          "10.0",
+          "5"
+        ],
+        [
+          "5",
+          "11.5",
+          "6"
+        ],
+        [
+          "5",
+          "10.0",
+          "4"
+        ],
+        [
+          "5",
+          "6.0",
+          "2"
+        ]
+      ],
+      "note": "Thirty minutes, six blocks.",
+      "updatedAt": "2026-09-13T08:30:00-04:00"
+    }
+  ],
+  "water": [
+    {
+      "date": "2026-08-16T07:25:00-04:00",
+      "ml": 500,
+      "id": "6BEB3926-6FAC-40FA-AF85-C53F098FCECC"
+    },
+    {
+      "date": "2026-08-16T08:52:00-04:00",
+      "ml": 250,
+      "id": "DD1D07BE-08A6-443B-AD4B-E5C75ED07B7E"
+    },
+    {
+      "date": "2026-08-16T09:37:00-04:00",
+      "ml": 500,
+      "id": "1A799926-2554-4E87-8D0A-1F005FCEF6B4"
+    },
+    {
+      "date": "2026-08-16T10:02:00-04:00",
+      "ml": 500,
+      "id": "C450C672-A7AF-411D-A930-3B2F2ED2222A"
+    },
+    {
+      "date": "2026-08-16T11:26:00-04:00",
+      "ml": 750,
+      "id": "E584D8B7-CC9F-47CD-8E18-60602540CD53"
+    },
+    {
+      "date": "2026-08-16T12:05:00-04:00",
+      "ml": 500,
+      "id": "8FF41A61-B21B-4356-BA84-9EDD3BCDE79E"
+    },
+    {
+      "date": "2026-08-17T07:14:00-04:00",
+      "ml": 250,
+      "id": "3B8D52AC-0E0F-40F4-8CE7-1F32F042A54A"
+    },
+    {
+      "date": "2026-08-17T08:03:00-04:00",
+      "ml": 750,
+      "id": "CF30107C-52CB-4745-A0FE-430BFF7B1682"
+    },
+    {
+      "date": "2026-08-17T09:35:00-04:00",
+      "ml": 250,
+      "id": "46A30B09-8FBD-4A18-80C1-8FBF5269A98A"
+    },
+    {
+      "date": "2026-08-17T10:26:00-04:00",
+      "ml": 500,
+      "id": "2F3325F7-683C-43F3-A1B5-1E58522AC3B7"
+    },
+    {
+      "date": "2026-08-17T11:36:00-04:00",
+      "ml": 250,
+      "id": "E1562FE9-42C4-48EC-A68F-792E9DEAF4F2"
+    },
+    {
+      "date": "2026-08-17T13:06:00-04:00",
+      "ml": 500,
+      "id": "7FFEA5FF-3E2B-4B9F-BE71-3B4E1C9E349C"
+    },
+    {
+      "date": "2026-08-18T07:35:00-04:00",
+      "ml": 250,
+      "id": "39BC3D18-FAFA-47F2-873A-AA97D00C4E42"
+    },
+    {
+      "date": "2026-08-18T08:39:00-04:00",
+      "ml": 250,
+      "id": "71191DAF-679E-419C-BB60-124AA42EBEAF"
+    },
+    {
+      "date": "2026-08-18T09:43:00-04:00",
+      "ml": 750,
+      "id": "0B051A33-10CD-4480-BA18-3A7201D4F52B"
+    },
+    {
+      "date": "2026-08-18T11:29:00-04:00",
+      "ml": 500,
+      "id": "89B1EF02-34B9-4A19-9DEB-FB88B397A293"
+    },
+    {
+      "date": "2026-08-18T13:19:00-04:00",
+      "ml": 500,
+      "id": "7568B912-CF9F-4292-ABF1-5A63FF97874F"
+    },
+    {
+      "date": "2026-08-18T14:44:00-04:00",
+      "ml": 500,
+      "id": "F98BE276-7533-422B-896C-64590B0BF79D"
+    },
+    {
+      "date": "2026-08-18T15:36:00-04:00",
+      "ml": 250,
+      "id": "1D710237-5259-4890-9040-4A5F8FF04BEA"
+    },
+    {
+      "date": "2026-08-20T07:46:00-04:00",
+      "ml": 500,
+      "id": "A5CBD93D-509C-42D0-8DAD-3F42C8C5DB7D"
+    },
+    {
+      "date": "2026-08-20T09:38:00-04:00",
+      "ml": 500,
+      "id": "250C6F1D-C56E-4B6E-9519-21F061A5364D"
+    },
+    {
+      "date": "2026-08-20T10:32:00-04:00",
+      "ml": 250,
+      "id": "002B1BE2-8D7F-4C1D-93CD-3227B8D0B2DA"
+    },
+    {
+      "date": "2026-08-20T12:48:00-04:00",
+      "ml": 500,
+      "id": "F8B214D3-2986-417B-861D-F5901B2300AB"
+    },
+    {
+      "date": "2026-08-20T14:31:00-04:00",
+      "ml": 500,
+      "id": "677EEA7A-A10B-450F-811E-53018CC58CAA"
+    },
+    {
+      "date": "2026-08-20T16:42:00-04:00",
+      "ml": 250,
+      "id": "570CCDBA-B2F4-488E-9F0F-272A5671719C"
+    },
+    {
+      "date": "2026-08-20T17:21:00-04:00",
+      "ml": 500,
+      "id": "2A1AB4C0-F24E-4C86-B6BF-D7B080391527"
+    },
+    {
+      "date": "2026-08-20T19:37:00-04:00",
+      "ml": 750,
+      "id": "AF629D51-B30E-4547-A053-E59993A3DAFE"
+    },
+    {
+      "date": "2026-08-21T07:17:00-04:00",
+      "ml": 250,
+      "id": "A0E37019-165E-4CDC-9F61-DE3B88209C39"
+    },
+    {
+      "date": "2026-08-21T09:03:00-04:00",
+      "ml": 250,
+      "id": "DEEC6E48-4829-4400-9EB1-F916145DEB63"
+    },
+    {
+      "date": "2026-08-21T11:18:00-04:00",
+      "ml": 750,
+      "id": "8DC0E74D-F420-4798-810F-81BE44E2EC13"
+    },
+    {
+      "date": "2026-08-21T13:01:00-04:00",
+      "ml": 500,
+      "id": "7225B32C-D046-41D7-B7BF-DB8126078FB2"
+    },
+    {
+      "date": "2026-08-21T15:10:00-04:00",
+      "ml": 500,
+      "id": "B013B614-D759-4215-BF39-811D2EF8E235"
+    },
+    {
+      "date": "2026-08-21T16:03:00-04:00",
+      "ml": 750,
+      "id": "6B24D333-CE78-4488-BC26-4F2A42927E1C"
+    },
+    {
+      "date": "2026-08-22T07:47:00-04:00",
+      "ml": 500,
+      "id": "4C89C167-5441-40E8-9A33-816E6656E008"
+    },
+    {
+      "date": "2026-08-22T08:25:00-04:00",
+      "ml": 750,
+      "id": "EDA9AEF3-A193-4320-BAFA-46FB5CAC3F39"
+    },
+    {
+      "date": "2026-08-22T10:10:00-04:00",
+      "ml": 250,
+      "id": "53C630E0-6C59-4641-8FFC-5CE490DCC270"
+    },
+    {
+      "date": "2026-08-22T12:35:00-04:00",
+      "ml": 750,
+      "id": "59913AED-5F02-4A62-9F6E-EEA49AC17AEF"
+    },
+    {
+      "date": "2026-08-22T14:52:00-04:00",
+      "ml": 500,
+      "id": "9DB435C3-F4C8-48D7-8DB9-E643D700A9B9"
+    },
+    {
+      "date": "2026-08-22T16:45:00-04:00",
+      "ml": 500,
+      "id": "9B176CAE-4B6D-4474-8F8A-4F2B3E2D75B8"
+    },
+    {
+      "date": "2026-08-23T07:14:00-04:00",
+      "ml": 750,
+      "id": "C57C3D4B-C674-4801-8247-6121E716ABB7"
+    },
+    {
+      "date": "2026-08-23T08:11:00-04:00",
+      "ml": 250,
+      "id": "6D19918B-C5AB-418F-AAE2-B1A9E79C3823"
+    },
+    {
+      "date": "2026-08-23T09:42:00-04:00",
+      "ml": 500,
+      "id": "D05C3594-B948-4CD1-8190-F2FDA6227585"
+    },
+    {
+      "date": "2026-08-23T10:31:00-04:00",
+      "ml": 250,
+      "id": "AE8CDC15-18D6-4586-A357-A2C542D45B58"
+    },
+    {
+      "date": "2026-08-23T11:18:00-04:00",
+      "ml": 500,
+      "id": "74DF7550-97B1-42AA-B637-8F97182CC9F5"
+    },
+    {
+      "date": "2026-08-23T12:26:00-04:00",
+      "ml": 500,
+      "id": "16AC7E00-BE95-41CE-A26D-63FED5B893F1"
+    },
+    {
+      "date": "2026-08-23T14:08:00-04:00",
+      "ml": 500,
+      "id": "D85DAB2E-B582-42FD-9904-DBE2F84EF3AC"
+    },
+    {
+      "date": "2026-08-24T07:25:00-04:00",
+      "ml": 750,
+      "id": "B94E584B-421E-4410-96DF-D660D11CC529"
+    },
+    {
+      "date": "2026-08-24T09:06:00-04:00",
+      "ml": 750,
+      "id": "904CCC56-81FC-4212-A5F1-7FFBD035FF78"
+    },
+    {
+      "date": "2026-08-24T11:03:00-04:00",
+      "ml": 750,
+      "id": "9ECED5CE-FA04-482F-A402-488CB6A4BAAC"
+    },
+    {
+      "date": "2026-08-24T12:13:00-04:00",
+      "ml": 250,
+      "id": "B4E87648-8FD3-4783-A83A-7F980B5D44AA"
+    },
+    {
+      "date": "2026-08-24T14:07:00-04:00",
+      "ml": 500,
+      "id": "7C51382D-5CFF-467D-8D36-0E82214D87FB"
+    },
+    {
+      "date": "2026-08-24T16:06:00-04:00",
+      "ml": 250,
+      "id": "69983BCA-3435-4BCF-9B41-2F9E8918DFF5"
+    },
+    {
+      "date": "2026-08-25T07:23:00-04:00",
+      "ml": 250,
+      "id": "B68BF2B3-78E1-4477-BFA2-FE461B2BA646"
+    },
+    {
+      "date": "2026-08-25T08:55:00-04:00",
+      "ml": 250,
+      "id": "53AB789F-8DCF-477D-95D6-779C8D41A7A4"
+    },
+    {
+      "date": "2026-08-25T09:09:00-04:00",
+      "ml": 750,
+      "id": "EB1DF2B6-8515-4CBC-828B-4B34B12F221B"
+    },
+    {
+      "date": "2026-08-25T11:38:00-04:00",
+      "ml": 500,
+      "id": "9D1427A2-BFB4-46E8-998B-30D63D6AA49F"
+    },
+    {
+      "date": "2026-08-25T13:07:00-04:00",
+      "ml": 750,
+      "id": "DD6AD8D8-B4B2-48DB-BE86-283479DC206A"
+    },
+    {
+      "date": "2026-08-25T14:29:00-04:00",
+      "ml": 750,
+      "id": "AA545A8A-B20C-4E6C-90DB-5655A844CAFE"
+    },
+    {
+      "date": "2026-08-26T07:05:00-04:00",
+      "ml": 500,
+      "id": "1C284370-FADB-44E6-B69A-083F95A21EEE"
+    },
+    {
+      "date": "2026-08-26T08:47:00-04:00",
+      "ml": 250,
+      "id": "52A39B2A-6722-4CBE-BC21-40214CAF50A7"
+    },
+    {
+      "date": "2026-08-26T10:30:00-04:00",
+      "ml": 500,
+      "id": "4086FE13-3CA4-4F01-BD47-3B98DEEF10A0"
+    },
+    {
+      "date": "2026-08-26T11:13:00-04:00",
+      "ml": 250,
+      "id": "612AF94F-D5AA-414C-8CE4-273925D4A87F"
+    },
+    {
+      "date": "2026-08-26T13:44:00-04:00",
+      "ml": 500,
+      "id": "5035EFC1-7E93-4E4A-841F-E90D60BA5FBF"
+    },
+    {
+      "date": "2026-08-26T14:41:00-04:00",
+      "ml": 500,
+      "id": "BE332A5A-B9F5-4905-91A8-BF38DC266D7B"
+    },
+    {
+      "date": "2026-08-26T15:33:00-04:00",
+      "ml": 500,
+      "id": "5562609D-1AE9-40F0-84CA-3B4025593F5A"
+    },
+    {
+      "date": "2026-08-26T17:22:00-04:00",
+      "ml": 500,
+      "id": "67588A17-EB29-474B-ABD5-7663BDBB5226"
+    },
+    {
+      "date": "2026-08-27T07:39:00-04:00",
+      "ml": 500,
+      "id": "BAB3DF98-FA0D-4D62-8F65-72EFABD7CBC5"
+    },
+    {
+      "date": "2026-08-27T08:52:00-04:00",
+      "ml": 500,
+      "id": "516C02FD-F4D9-4057-942B-EFA2317BE6BD"
+    },
+    {
+      "date": "2026-08-27T10:12:00-04:00",
+      "ml": 500,
+      "id": "CD658E4C-561F-4353-9314-0D3A13184953"
+    },
+    {
+      "date": "2026-08-27T12:46:00-04:00",
+      "ml": 500,
+      "id": "1263240C-CA98-4617-AAE2-CF490078CD64"
+    },
+    {
+      "date": "2026-08-27T13:50:00-04:00",
+      "ml": 250,
+      "id": "57F723EC-1AEF-44D6-A38A-EA1CF291839A"
+    },
+    {
+      "date": "2026-08-27T15:16:00-04:00",
+      "ml": 750,
+      "id": "4F565967-9D4A-458B-B04F-08A49578AFA6"
+    },
+    {
+      "date": "2026-08-29T07:51:00-04:00",
+      "ml": 750,
+      "id": "4298B23C-6B8D-481B-8D0F-2B89D4E0846E"
+    },
+    {
+      "date": "2026-08-29T09:05:00-04:00",
+      "ml": 500,
+      "id": "55C57332-A175-449D-928F-53D81FA4863A"
+    },
+    {
+      "date": "2026-08-29T10:14:00-04:00",
+      "ml": 250,
+      "id": "2FAB57A1-C71C-4596-8A88-FF18D428525D"
+    },
+    {
+      "date": "2026-08-29T12:21:00-04:00",
+      "ml": 500,
+      "id": "F1316FE1-33F9-4D4D-A2A4-94DF02885AC6"
+    },
+    {
+      "date": "2026-08-29T13:39:00-04:00",
+      "ml": 750,
+      "id": "59EFEB55-48C8-4C3A-8AAD-AC539ECB9AFC"
+    },
+    {
+      "date": "2026-08-29T14:41:00-04:00",
+      "ml": 750,
+      "id": "C0D1C330-1989-466B-A6AB-F155F4DBBAA2"
+    },
+    {
+      "date": "2026-08-30T07:24:00-04:00",
+      "ml": 250,
+      "id": "615DD2CB-20AE-4D96-99FF-5389976C22E2"
+    },
+    {
+      "date": "2026-08-30T08:11:00-04:00",
+      "ml": 750,
+      "id": "B5745962-0296-423E-9795-4FC98DC3C282"
+    },
+    {
+      "date": "2026-08-30T10:05:00-04:00",
+      "ml": 500,
+      "id": "4998F740-404A-43A2-98C3-1DDC8A0B170F"
+    },
+    {
+      "date": "2026-08-30T12:25:00-04:00",
+      "ml": 750,
+      "id": "C5279185-B0C2-4670-BFBF-92A0CDA2C0B7"
+    },
+    {
+      "date": "2026-08-30T13:10:00-04:00",
+      "ml": 500,
+      "id": "05EBDA46-6DE7-4E15-989E-EDD78D4853FD"
+    },
+    {
+      "date": "2026-08-31T07:37:00-04:00",
+      "ml": 500,
+      "id": "E85F3D1A-DB2A-43A0-A36C-2DC07B6274AC"
+    },
+    {
+      "date": "2026-08-31T09:39:00-04:00",
+      "ml": 500,
+      "id": "27BCD3D6-DC3D-4CF0-9A72-E3A4A17043FF"
+    },
+    {
+      "date": "2026-08-31T11:09:00-04:00",
+      "ml": 500,
+      "id": "CB439B52-ED8B-432E-BF7B-0080624AD85A"
+    },
+    {
+      "date": "2026-08-31T12:00:00-04:00",
+      "ml": 250,
+      "id": "E23D1942-839B-4EC8-9E42-9E5B84C49621"
+    },
+    {
+      "date": "2026-08-31T13:27:00-04:00",
+      "ml": 500,
+      "id": "A7B3DE52-9427-4711-A2F8-D138BD380435"
+    },
+    {
+      "date": "2026-08-31T14:01:00-04:00",
+      "ml": 500,
+      "id": "8A01DFFD-D012-443C-89B6-D10629525878"
+    },
+    {
+      "date": "2026-09-01T07:32:00-04:00",
+      "ml": 500,
+      "id": "730E06F8-7CB2-495E-A591-3ABACF05E1DF"
+    },
+    {
+      "date": "2026-09-01T08:16:00-04:00",
+      "ml": 500,
+      "id": "7BE72CAE-569E-4386-89C4-D9803DE30FBC"
+    },
+    {
+      "date": "2026-09-01T10:03:00-04:00",
+      "ml": 500,
+      "id": "E99DF111-2A70-4780-931C-C934770DECFC"
+    },
+    {
+      "date": "2026-09-01T12:42:00-04:00",
+      "ml": 750,
+      "id": "A3850424-49DC-4EDE-A487-BA6C7FB03239"
+    },
+    {
+      "date": "2026-09-01T14:34:00-04:00",
+      "ml": 500,
+      "id": "B29C359A-D5AB-437E-8461-082924A621F6"
+    },
+    {
+      "date": "2026-09-02T07:49:00-04:00",
+      "ml": 750,
+      "id": "B0CFEDFC-1876-43A4-865E-56742224D9AA"
+    },
+    {
+      "date": "2026-09-02T08:49:00-04:00",
+      "ml": 250,
+      "id": "7A8B438D-417E-486E-9D8B-5D084F36D75A"
+    },
+    {
+      "date": "2026-09-02T09:09:00-04:00",
+      "ml": 500,
+      "id": "729ED51E-37ED-48A4-8354-73C9A46F0C75"
+    },
+    {
+      "date": "2026-09-02T11:35:00-04:00",
+      "ml": 250,
+      "id": "34894033-81DA-45F4-963D-C99D1E1C082F"
+    },
+    {
+      "date": "2026-09-02T12:43:00-04:00",
+      "ml": 500,
+      "id": "251DBD21-B007-466A-9B21-DCF99B130D46"
+    },
+    {
+      "date": "2026-09-02T14:35:00-04:00",
+      "ml": 250,
+      "id": "35CFAD67-B267-4BEF-84B7-38C2E46578E7"
+    },
+    {
+      "date": "2026-09-03T07:17:00-04:00",
+      "ml": 500,
+      "id": "D66DCF41-D543-477E-9DCF-B3E9DFE16AFB"
+    },
+    {
+      "date": "2026-09-03T08:32:00-04:00",
+      "ml": 250,
+      "id": "0E05FBA8-88EA-439F-9A40-4B20C649B6F6"
+    },
+    {
+      "date": "2026-09-03T10:48:00-04:00",
+      "ml": 250,
+      "id": "FCFEFFC1-A692-4320-9135-3F079FBD8B5A"
+    },
+    {
+      "date": "2026-09-03T11:20:00-04:00",
+      "ml": 750,
+      "id": "CAA023C7-5574-40FE-9C4B-B23BB161F822"
+    },
+    {
+      "date": "2026-09-03T12:28:00-04:00",
+      "ml": 500,
+      "id": "6C319D34-F38D-46EC-8D52-C71C0BAB4719"
+    },
+    {
+      "date": "2026-09-03T14:44:00-04:00",
+      "ml": 500,
+      "id": "3A580315-CE40-4C73-80C3-01D54892014A"
+    },
+    {
+      "date": "2026-09-04T07:08:00-04:00",
+      "ml": 750,
+      "id": "F7104437-EE6B-49CE-9E2F-E1D8CB523D03"
+    },
+    {
+      "date": "2026-09-04T09:25:00-04:00",
+      "ml": 250,
+      "id": "0E2CF708-E1E6-4376-A034-0C13222C93E6"
+    },
+    {
+      "date": "2026-09-04T11:04:00-04:00",
+      "ml": 500,
+      "id": "6AA5DF51-16F9-4E5F-B673-FBB04A05D8FD"
+    },
+    {
+      "date": "2026-09-04T12:04:00-04:00",
+      "ml": 750,
+      "id": "C7932052-4EB0-43F5-8207-54C5CB7D7749"
+    },
+    {
+      "date": "2026-09-04T13:50:00-04:00",
+      "ml": 500,
+      "id": "13C514F1-B5AC-42BC-B876-E136648338E9"
+    },
+    {
+      "date": "2026-09-05T07:09:00-04:00",
+      "ml": 500,
+      "id": "0BD3768B-99E0-4AC2-82DB-CFA3FCF2008F"
+    },
+    {
+      "date": "2026-09-05T09:29:00-04:00",
+      "ml": 500,
+      "id": "A88E3B8B-2803-486C-91A3-CB3017881F7B"
+    },
+    {
+      "date": "2026-09-05T10:25:00-04:00",
+      "ml": 250,
+      "id": "E7D413F2-641E-47D6-BCD2-4E6C25BF6E9B"
+    },
+    {
+      "date": "2026-09-05T12:42:00-04:00",
+      "ml": 500,
+      "id": "0AA352FD-015E-4446-9C2F-43D29D02C0CB"
+    },
+    {
+      "date": "2026-09-05T13:45:00-04:00",
+      "ml": 500,
+      "id": "22E09F4A-EA7B-471E-8961-D8D5ABEA6BDF"
+    },
+    {
+      "date": "2026-09-05T15:21:00-04:00",
+      "ml": 750,
+      "id": "0E34AC9F-AA4A-4828-8C93-8B701D893B32"
+    },
+    {
+      "date": "2026-09-07T07:20:00-04:00",
+      "ml": 500,
+      "id": "112FC23B-1763-4D4F-AD02-3FDEA7A4E1A5"
+    },
+    {
+      "date": "2026-09-07T08:01:00-04:00",
+      "ml": 500,
+      "id": "DF60A45B-1F4A-476E-A6B9-4D8168EC5EDE"
+    },
+    {
+      "date": "2026-09-07T10:28:00-04:00",
+      "ml": 750,
+      "id": "322B2D97-2AB8-46A3-A1AC-B273F8380185"
+    },
+    {
+      "date": "2026-09-07T11:21:00-04:00",
+      "ml": 750,
+      "id": "6FA7437F-6A63-4A71-B8BA-15566BC11439"
+    },
+    {
+      "date": "2026-09-07T13:07:00-04:00",
+      "ml": 250,
+      "id": "BB775896-923F-4789-B0F3-1A65AC1FBC97"
+    },
+    {
+      "date": "2026-09-08T07:16:00-04:00",
+      "ml": 250,
+      "id": "9C3C0FEA-6F33-4C2F-8131-732701050042"
+    },
+    {
+      "date": "2026-09-08T09:49:00-04:00",
+      "ml": 250,
+      "id": "D96A5538-49F3-4259-BE0B-54E49F1C966A"
+    },
+    {
+      "date": "2026-09-08T10:48:00-04:00",
+      "ml": 500,
+      "id": "F6948336-B59A-4B04-9D1B-16E77A1CB0A7"
+    },
+    {
+      "date": "2026-09-08T11:54:00-04:00",
+      "ml": 750,
+      "id": "C3FFA261-ADAE-4AF7-9BEF-BCF0CBAB9DB2"
+    },
+    {
+      "date": "2026-09-08T13:09:00-04:00",
+      "ml": 750,
+      "id": "041A650E-8623-4967-845C-0CB702DC9ECD"
+    },
+    {
+      "date": "2026-09-09T07:17:00-04:00",
+      "ml": 250,
+      "id": "D151947E-4688-4C68-A1DB-F0ACBDC0C356"
+    },
+    {
+      "date": "2026-09-09T08:27:00-04:00",
+      "ml": 500,
+      "id": "588634A9-287A-4E79-A346-47F5176D9612"
+    },
+    {
+      "date": "2026-09-09T09:01:00-04:00",
+      "ml": 500,
+      "id": "F1AB3420-7F1E-4C5A-B589-53860A926834"
+    },
+    {
+      "date": "2026-09-09T10:05:00-04:00",
+      "ml": 500,
+      "id": "BE63D3A1-BB71-4C5C-866F-3FFF002368A4"
+    },
+    {
+      "date": "2026-09-09T11:16:00-04:00",
+      "ml": 250,
+      "id": "C327400C-681E-4CEC-B6A5-251C12368C22"
+    },
+    {
+      "date": "2026-09-09T12:00:00-04:00",
+      "ml": 750,
+      "id": "2C89161A-5277-49A6-AE31-5BA3E630C50B"
+    },
+    {
+      "date": "2026-09-09T14:17:00-04:00",
+      "ml": 750,
+      "id": "2BC4856F-9617-4D35-8D3F-CAEE3900F570"
+    },
+    {
+      "date": "2026-09-10T07:07:00-04:00",
+      "ml": 500,
+      "id": "757B3A9F-FE29-4567-BE0C-49054F2A89E4"
+    },
+    {
+      "date": "2026-09-10T08:03:00-04:00",
+      "ml": 500,
+      "id": "8909EF33-CEC7-4CB6-95DD-D4CF77782521"
+    },
+    {
+      "date": "2026-09-10T09:19:00-04:00",
+      "ml": 500,
+      "id": "E145457F-7095-46C6-A063-55E8D545321D"
+    },
+    {
+      "date": "2026-09-10T11:18:00-04:00",
+      "ml": 500,
+      "id": "752F3402-2ED8-4519-85C5-6A58E4B5F256"
+    },
+    {
+      "date": "2026-09-10T13:17:00-04:00",
+      "ml": 500,
+      "id": "8DE5A77B-13E9-4DC5-9A1A-348B446760F1"
+    },
+    {
+      "date": "2026-09-11T07:02:00-04:00",
+      "ml": 500,
+      "id": "167E2751-A352-4079-82DE-C444423C1233"
+    },
+    {
+      "date": "2026-09-11T08:46:00-04:00",
+      "ml": 250,
+      "id": "222A9832-3F31-49B3-8C97-13B4EF3BEC69"
+    },
+    {
+      "date": "2026-09-11T09:15:00-04:00",
+      "ml": 750,
+      "id": "7FDE4451-50E2-49F8-844B-F2600D4CE19A"
+    },
+    {
+      "date": "2026-09-11T11:42:00-04:00",
+      "ml": 250,
+      "id": "4E710A98-0574-4E2B-8AE5-C46F179B7463"
+    },
+    {
+      "date": "2026-09-11T13:34:00-04:00",
+      "ml": 750,
+      "id": "38456ED6-C68C-4F93-BC7D-E0562268555B"
+    },
+    {
+      "date": "2026-09-12T07:14:00-04:00",
+      "ml": 500,
+      "id": "36936E64-274D-40A8-A8FB-BB3D1109EB16"
+    },
+    {
+      "date": "2026-09-12T09:53:00-04:00",
+      "ml": 500,
+      "id": "F81FDB30-EAA4-43C2-AD55-68C0835A7664"
+    },
+    {
+      "date": "2026-09-12T10:22:00-04:00",
+      "ml": 750,
+      "id": "1393523D-5E63-4145-B3D8-F02575A77850"
+    },
+    {
+      "date": "2026-09-12T11:00:00-04:00",
+      "ml": 500,
+      "id": "176337A2-0ACA-4113-B008-B863819CC9F5"
+    },
+    {
+      "date": "2026-09-12T12:27:00-04:00",
+      "ml": 500,
+      "id": "214DF509-AE3B-47FC-A81A-D5BCCCB51E2B"
+    },
+    {
+      "date": "2026-09-12T13:05:00-04:00",
+      "ml": 250,
+      "id": "C365EADD-2549-4B81-94EC-4B88DAE2EA83"
+    },
+    {
+      "date": "2026-09-13T07:44:00-04:00",
+      "ml": 500,
+      "id": "F4C879B7-2659-428F-B8CC-C965189A5525"
+    },
+    {
+      "date": "2026-09-13T09:29:00-04:00",
+      "ml": 250,
+      "id": "A824B005-2175-4DF2-9688-F2C7BB5AA36B"
+    },
+    {
+      "date": "2026-09-13T10:17:00-04:00",
+      "ml": 500,
+      "id": "680FF0A5-CA47-4595-ABFB-1FB3C4721877"
+    },
+    {
+      "date": "2026-09-13T12:16:00-04:00",
+      "ml": 250,
+      "id": "EE6FC82D-685D-41BE-BB4B-61FEC9ED655D"
+    },
+    {
+      "date": "2026-09-13T14:35:00-04:00",
+      "ml": 500,
+      "id": "3D72EEBF-C024-4563-9B59-58C9BE67AEE5"
+    },
+    {
+      "date": "2026-09-13T16:02:00-04:00",
+      "ml": 500,
+      "id": "A679E2D2-CA1B-46F6-99E2-1F274A459771"
+    },
+    {
+      "date": "2026-09-13T18:22:00-04:00",
+      "ml": 500,
+      "id": "C0E4FCD8-8955-449D-8CF6-1BEC5FD61848"
+    },
+    {
+      "date": "2026-09-14T07:24:00-04:00",
+      "ml": 500,
+      "id": "E5E1C1EF-C936-4EFD-9085-671D0FC53BB6"
+    },
+    {
+      "date": "2026-09-14T08:17:00-04:00",
+      "ml": 750,
+      "id": "79BA214B-7319-402D-B21E-8CA9F9F740C7"
+    },
+    {
+      "date": "2026-09-14T09:32:00-04:00",
+      "ml": 500,
+      "id": "DAF5D165-39B4-434E-B10B-42E17D02B2F3"
+    },
+    {
+      "date": "2026-09-14T10:16:00-04:00",
+      "ml": 250,
+      "id": "0C7B64CB-196F-4B77-94A0-F4946EF125C2"
+    },
+    {
+      "date": "2026-09-14T11:25:00-04:00",
+      "ml": 500,
+      "id": "409EA43D-DBA1-41EF-8CF2-CDE6D061CCEB"
+    },
+    {
+      "date": "2026-09-16T07:19:00-04:00",
+      "ml": 250,
+      "id": "DA32ABDF-B449-4EAE-917B-B6D64CA04B08"
+    },
+    {
+      "date": "2026-09-16T09:05:00-04:00",
+      "ml": 500,
+      "id": "F8C51D63-4AED-4D35-B473-9A24FEB3715A"
+    },
+    {
+      "date": "2026-09-16T10:48:00-04:00",
+      "ml": 750,
+      "id": "BDB5D47B-9737-44D2-B5C1-2E6011F31AAA"
+    },
+    {
+      "date": "2026-09-16T12:09:00-04:00",
+      "ml": 750,
+      "id": "2C8DE1EE-B6E3-4FD8-9570-DF25F878138E"
+    },
+    {
+      "date": "2026-09-16T14:02:00-04:00",
+      "ml": 500,
+      "id": "5A6D9AFE-82C6-407D-BAD7-E1B027CC320B"
+    },
+    {
+      "date": "2026-09-16T16:33:00-04:00",
+      "ml": 500,
+      "id": "82EB472C-2705-4D56-A65F-F03DE4816361"
+    },
+    {
+      "date": "2026-09-17T07:01:00-04:00",
+      "ml": 250,
+      "id": "CAA75097-2718-4D5A-BAD6-240E43E8AB24"
+    },
+    {
+      "date": "2026-09-17T08:40:00-04:00",
+      "ml": 500,
+      "id": "C43E09DD-AE2A-4E9D-99C7-4F8E543DAE6C"
+    },
+    {
+      "date": "2026-09-17T10:24:00-04:00",
+      "ml": 250,
+      "id": "41E936FB-9618-4FB3-B830-C273F6ECC9C7"
+    },
+    {
+      "date": "2026-09-17T12:40:00-04:00",
+      "ml": 250,
+      "id": "92736A10-E8DB-4924-9AF0-2E776E84BF5A"
+    },
+    {
+      "date": "2026-09-17T13:31:00-04:00",
+      "ml": 500,
+      "id": "FFAF1AEC-CDCF-479E-BB78-641EA8C7ECE5"
+    },
+    {
+      "date": "2026-09-17T15:29:00-04:00",
+      "ml": 250,
+      "id": "41878C82-EE5A-4B69-A75C-9F385B5E699C"
+    },
+    {
+      "date": "2026-09-17T16:42:00-04:00",
+      "ml": 250,
+      "id": "F1B5255A-826B-4725-B359-92CAF176D746"
+    },
+    {
+      "date": "2026-09-17T17:16:00-04:00",
+      "ml": 750,
+      "id": "93F064DF-B611-4EAC-A8BD-288563467201"
+    },
+    {
+      "date": "2026-09-18T07:46:00-04:00",
+      "ml": 500,
+      "id": "889E6906-0C1F-4C75-9E62-BCE4B350DCF9"
+    },
+    {
+      "date": "2026-09-18T08:47:00-04:00",
+      "ml": 500,
+      "id": "77D469F4-3C5D-4E7C-BB8E-E4E414BFA0EC"
+    },
+    {
+      "date": "2026-09-18T10:54:00-04:00",
+      "ml": 750,
+      "id": "C22782D3-EBA6-46FC-B333-F8F3A41439DF"
+    },
+    {
+      "date": "2026-09-18T12:30:00-04:00",
+      "ml": 250,
+      "id": "9D69C0E1-7EE0-43D6-85EA-D99902CE9170"
+    },
+    {
+      "date": "2026-09-18T14:39:00-04:00",
+      "ml": 250,
+      "id": "5A290878-BC84-4A59-8287-DF5D7CC5432D"
+    },
+    {
+      "date": "2026-09-18T15:38:00-04:00",
+      "ml": 250,
+      "id": "AB1CF770-8437-4973-96B6-96A3A0D30F1F"
+    },
+    {
+      "date": "2026-09-18T16:16:00-04:00",
+      "ml": 500,
+      "id": "A2F30223-AED9-4667-9392-397ED185AB77"
+    },
+    {
+      "date": "2026-09-19T07:30:00-04:00",
+      "ml": 250,
+      "id": "7A18837A-42FB-4A5A-B692-EE224BFE0812"
+    },
+    {
+      "date": "2026-09-19T08:17:00-04:00",
+      "ml": 750,
+      "id": "791A6983-71CA-43F9-B3F2-F44CAED5C18B"
+    },
+    {
+      "date": "2026-09-19T09:43:00-04:00",
+      "ml": 500,
+      "id": "E431A3BC-C875-4CD3-8A8D-84FEF6D6BE79"
+    },
+    {
+      "date": "2026-09-19T11:45:00-04:00",
+      "ml": 500,
+      "id": "69BAFDFA-1850-46B8-8AF0-34A4FA10630B"
+    },
+    {
+      "date": "2026-09-19T13:29:00-04:00",
+      "ml": 750,
+      "id": "305C9893-D62E-416B-B098-5EAFD4B6F14E"
+    }
+  ],
+  "intake": [
+    {
+      "id": "25D50470-6741-43A0-9255-98B4F01EF523",
+      "date": "2026-08-30T07:22:00-04:00",
+      "name": "Shake",
+      "proteinG": 28.1,
+      "carbsG": 7.5,
+      "fatG": 2.8,
+      "fiberG": 0.9
+    },
+    {
+      "id": "8A89D96E-7DA5-4EB9-A1DB-CDB929160FA3",
+      "date": "2026-08-30T09:01:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 54.5,
+      "carbsG": 91.1,
+      "fatG": 13.9,
+      "fiberG": 5.9
+    },
+    {
+      "id": "73DD5B88-CEA3-4EF8-962C-FB8CCA45DBE5",
+      "date": "2026-08-30T11:06:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 26.3,
+      "carbsG": 28.5,
+      "fatG": 5.5,
+      "fiberG": 4.4
+    },
+    {
+      "id": "CD7F3DF4-5576-4825-A28C-646AC0137241",
+      "date": "2026-08-30T13:41:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 51.5,
+      "carbsG": 83.7,
+      "fatG": 21.5,
+      "fiberG": 9.7
+    },
+    {
+      "id": "926CFBF2-1C3B-456F-BB80-9DC0832AE72C",
+      "date": "2026-08-30T15:22:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 7.7,
+      "carbsG": 26.9,
+      "fatG": 15.4,
+      "fiberG": 4.8
+    },
+    {
+      "id": "72B663DA-0D18-49B7-9BEB-7D10D51E6E44",
+      "date": "2026-08-30T17:31:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 20.6,
+      "carbsG": 7.5,
+      "fatG": 3.7,
+      "fiberG": 0.0
+    },
+    {
+      "id": "48154BDF-0A92-47F6-BD8D-A4FAC90BD40D",
+      "date": "2026-08-31T07:10:00-04:00",
+      "name": "Shake",
+      "proteinG": 30.0,
+      "carbsG": 8.0,
+      "fatG": 3.0,
+      "fiberG": 1.0
+    },
+    {
+      "id": "97972C6D-E6B7-4865-8EAA-439331471724",
+      "date": "2026-08-31T09:50:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 7.7,
+      "carbsG": 26.9,
+      "fatG": 15.4,
+      "fiberG": 4.8
+    },
+    {
+      "id": "6DA59D1E-1022-407F-BEA5-565FA586AA37",
+      "date": "2026-08-31T11:50:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 47.7,
+      "carbsG": 77.5,
+      "fatG": 19.9,
+      "fiberG": 8.9
+    },
+    {
+      "id": "4FE730BF-25D7-4CD7-BB32-9FC8F501F65F",
+      "date": "2026-08-31T13:33:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 22.9,
+      "carbsG": 8.3,
+      "fatG": 4.2,
+      "fiberG": 0.0
+    },
+    {
+      "id": "469198A4-C37C-41DB-9B35-6FE52E9CC150",
+      "date": "2026-08-31T15:43:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 43.9,
+      "carbsG": 59.2,
+      "fatG": 22.9,
+      "fiberG": 6.7
+    },
+    {
+      "id": "40191CCA-DFE5-4DFC-B8C7-48760474AC3F",
+      "date": "2026-08-31T17:17:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 54.8,
+      "carbsG": 91.6,
+      "fatG": 13.9,
+      "fiberG": 6.0
+    },
+    {
+      "id": "BC09C05F-2BEC-4B82-9A18-028F9D75CC81",
+      "date": "2026-09-01T07:48:00-04:00",
+      "name": "Shake",
+      "proteinG": 31.7,
+      "carbsG": 8.4,
+      "fatG": 3.2,
+      "fiberG": 1.1
+    },
+    {
+      "id": "E2580DE3-4E24-4F8A-9F2D-67A529FD1B88",
+      "date": "2026-09-01T09:45:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 44.8,
+      "carbsG": 60.4,
+      "fatG": 23.4,
+      "fiberG": 6.8
+    },
+    {
+      "id": "2B27DAE2-AC72-4DC2-AFB9-FBCF169884FF",
+      "date": "2026-09-01T11:25:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 22.8,
+      "carbsG": 8.3,
+      "fatG": 4.1,
+      "fiberG": 0.0
+    },
+    {
+      "id": "222767B9-D2A1-4AF2-9EA7-9682017CD9AB",
+      "date": "2026-09-01T13:54:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 12.8,
+      "carbsG": 68.3,
+      "fatG": 9.6,
+      "fiberG": 8.5
+    },
+    {
+      "id": "8CB68453-005F-4491-985A-99CCA3FCB192",
+      "date": "2026-09-01T15:06:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.5,
+      "carbsG": 29.7,
+      "fatG": 17.0,
+      "fiberG": 5.3
+    },
+    {
+      "id": "A91686D6-D61C-45A3-99E5-C7B85AC34D96",
+      "date": "2026-09-01T17:23:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 57.8,
+      "carbsG": 96.7,
+      "fatG": 14.7,
+      "fiberG": 6.3
+    },
+    {
+      "id": "8B870373-2F55-4C62-B66C-127C800AFC46",
+      "date": "2026-09-03T07:10:00-04:00",
+      "name": "Shake",
+      "proteinG": 30.6,
+      "carbsG": 8.2,
+      "fatG": 3.1,
+      "fiberG": 1.0
+    },
+    {
+      "id": "5941EAAB-6FC5-493C-B37F-265EC84EA8F2",
+      "date": "2026-09-03T09:41:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 23.9,
+      "carbsG": 25.9,
+      "fatG": 5.0,
+      "fiberG": 4.0
+    },
+    {
+      "id": "6C83FC39-E86E-42A4-A3D3-EFDC95F17348",
+      "date": "2026-09-03T11:18:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 12.0,
+      "carbsG": 63.8,
+      "fatG": 9.0,
+      "fiberG": 8.0
+    },
+    {
+      "id": "F5442125-6316-4A81-9FC1-30925375E8FA",
+      "date": "2026-09-03T13:42:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 59.9,
+      "carbsG": 100.1,
+      "fatG": 15.2,
+      "fiberG": 6.5
+    },
+    {
+      "id": "1EC7F3D4-B293-4F61-8763-F49E6A0B8B1A",
+      "date": "2026-09-03T15:47:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 20.9,
+      "carbsG": 7.6,
+      "fatG": 3.8,
+      "fiberG": 0.0
+    },
+    {
+      "id": "0B89C031-CDDD-46E0-B0F7-31D62A8119E4",
+      "date": "2026-09-03T17:44:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 34.5,
+      "carbsG": 49.6,
+      "fatG": 28.0,
+      "fiberG": 7.5
+    },
+    {
+      "id": "9E7C16C3-E232-4322-BCED-2645E8934E64",
+      "date": "2026-09-04T07:26:00-04:00",
+      "name": "Shake",
+      "proteinG": 29.8,
+      "carbsG": 7.9,
+      "fatG": 3.0,
+      "fiberG": 1.0
+    },
+    {
+      "id": "E8422128-03A3-4E6B-90FD-23E827BBE233",
+      "date": "2026-09-04T09:08:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 49.9,
+      "carbsG": 67.2,
+      "fatG": 26.0,
+      "fiberG": 7.6
+    },
+    {
+      "id": "E218A633-2B59-4B44-B232-7B9D20BD0FDE",
+      "date": "2026-09-04T11:18:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.0,
+      "carbsG": 28.0,
+      "fatG": 16.0,
+      "fiberG": 5.0
+    },
+    {
+      "id": "83E50FC3-421A-43F4-91F8-742F7090E402",
+      "date": "2026-09-04T13:55:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 26.0,
+      "carbsG": 28.2,
+      "fatG": 5.4,
+      "fiberG": 4.3
+    },
+    {
+      "id": "0C51733D-E430-4735-B036-24A7EB26DDCD",
+      "date": "2026-09-04T15:46:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 34.4,
+      "carbsG": 49.5,
+      "fatG": 28.0,
+      "fiberG": 7.5
+    },
+    {
+      "id": "FAAD9DE7-2392-40A3-8AF9-07B792294C4E",
+      "date": "2026-09-04T17:41:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 44.5,
+      "carbsG": 72.3,
+      "fatG": 18.5,
+      "fiberG": 8.3
+    },
+    {
+      "id": "582938D8-EAB4-4934-97DE-5BB7920F6D08",
+      "date": "2026-09-05T07:32:00-04:00",
+      "name": "Shake",
+      "proteinG": 32.7,
+      "carbsG": 8.7,
+      "fatG": 3.3,
+      "fiberG": 1.1
+    },
+    {
+      "id": "261D2AEE-7423-40CF-BBC0-3D9CA6DE99B1",
+      "date": "2026-09-05T09:09:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 50.8,
+      "carbsG": 82.5,
+      "fatG": 21.2,
+      "fiberG": 9.5
+    },
+    {
+      "id": "CC2F286E-CCFB-445A-BE77-97095A41950D",
+      "date": "2026-09-05T11:28:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 30.4,
+      "carbsG": 43.8,
+      "fatG": 24.7,
+      "fiberG": 6.7
+    },
+    {
+      "id": "131BCE1D-9B2B-4904-B496-ED3BE9CCB669",
+      "date": "2026-09-05T13:04:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 21.7,
+      "carbsG": 7.9,
+      "fatG": 3.9,
+      "fiberG": 0.0
+    },
+    {
+      "id": "4241C901-ECAD-4360-9DE7-A448F163852E",
+      "date": "2026-09-05T15:12:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 11.1,
+      "carbsG": 59.2,
+      "fatG": 8.3,
+      "fiberG": 7.4
+    },
+    {
+      "id": "724EFFFE-948B-4989-AC7F-B155AAFF672C",
+      "date": "2026-09-05T17:01:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 7.7,
+      "carbsG": 27.1,
+      "fatG": 15.5,
+      "fiberG": 4.8
+    },
+    {
+      "id": "BEA62579-66E5-4CE9-B704-482F67E0F14D",
+      "date": "2026-09-06T07:24:00-04:00",
+      "name": "Shake",
+      "proteinG": 31.1,
+      "carbsG": 8.3,
+      "fatG": 3.1,
+      "fiberG": 1.0
+    },
+    {
+      "id": "C031E05A-F81C-4546-AC57-635E0081DF8D",
+      "date": "2026-09-06T09:12:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 25.8,
+      "carbsG": 28.0,
+      "fatG": 5.4,
+      "fiberG": 4.3
+    },
+    {
+      "id": "440DFF08-828E-4BE8-9974-BD05247CBD16",
+      "date": "2026-09-06T11:55:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 52.6,
+      "carbsG": 88.0,
+      "fatG": 13.4,
+      "fiberG": 5.7
+    },
+    {
+      "id": "E16C85BD-51CE-4F7E-89D9-ED361E7E7234",
+      "date": "2026-09-06T13:15:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 34.5,
+      "carbsG": 49.6,
+      "fatG": 28.0,
+      "fiberG": 7.5
+    },
+    {
+      "id": "469978A2-E2DC-48E7-8017-A5673FF61B16",
+      "date": "2026-09-06T15:14:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 24.0,
+      "carbsG": 8.7,
+      "fatG": 4.4,
+      "fiberG": 0.0
+    },
+    {
+      "id": "0A23CEA9-2E2D-40F9-9269-0F0F0343354A",
+      "date": "2026-09-06T17:48:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.6,
+      "carbsG": 30.2,
+      "fatG": 17.3,
+      "fiberG": 5.4
+    },
+    {
+      "id": "B53395EC-FE76-4BC5-824E-D89EA2EC2035",
+      "date": "2026-09-07T07:43:00-04:00",
+      "name": "Shake",
+      "proteinG": 29.3,
+      "carbsG": 7.8,
+      "fatG": 2.9,
+      "fiberG": 1.0
+    },
+    {
+      "id": "3BCDBE42-235F-4DBC-9D05-E7F351F47291",
+      "date": "2026-09-07T09:03:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 31.8,
+      "carbsG": 45.8,
+      "fatG": 25.9,
+      "fiberG": 7.0
+    },
+    {
+      "id": "0A36B8D0-DFF7-460C-B736-7DB5F580B873",
+      "date": "2026-09-07T11:26:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 51.9,
+      "carbsG": 84.3,
+      "fatG": 21.6,
+      "fiberG": 9.7
+    },
+    {
+      "id": "17C5E3CB-668F-4674-A4AE-E7DC63FD6538",
+      "date": "2026-09-07T13:10:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 11.7,
+      "carbsG": 62.3,
+      "fatG": 8.8,
+      "fiberG": 7.8
+    },
+    {
+      "id": "DCC1EDF1-64B5-4E18-B19C-337BE49ACC92",
+      "date": "2026-09-07T15:43:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 21.4,
+      "carbsG": 7.8,
+      "fatG": 3.9,
+      "fiberG": 0.0
+    },
+    {
+      "id": "AA2D6C2D-B77C-4D15-A9CA-BC0043633606",
+      "date": "2026-09-07T17:03:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 22.6,
+      "carbsG": 24.5,
+      "fatG": 4.7,
+      "fiberG": 3.8
+    },
+    {
+      "id": "760C244C-2A6A-4C6B-BD96-87957B03DB23",
+      "date": "2026-09-08T07:09:00-04:00",
+      "name": "Shake",
+      "proteinG": 29.7,
+      "carbsG": 7.9,
+      "fatG": 3.0,
+      "fiberG": 1.0
+    },
+    {
+      "id": "B24BC6C0-A063-426E-A494-2A4267FD6BAF",
+      "date": "2026-09-08T09:39:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 20.9,
+      "carbsG": 7.6,
+      "fatG": 3.8,
+      "fiberG": 0.0
+    },
+    {
+      "id": "9C6FC668-60CA-4B38-9AF7-FF54DDD01EFA",
+      "date": "2026-09-08T11:41:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 46.2,
+      "carbsG": 62.3,
+      "fatG": 24.1,
+      "fiberG": 7.0
+    },
+    {
+      "id": "B505E83E-07E8-4DDA-A8B4-F6654AB12501",
+      "date": "2026-09-08T13:05:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 12.1,
+      "carbsG": 64.8,
+      "fatG": 9.1,
+      "fiberG": 8.1
+    },
+    {
+      "id": "2BF85EB8-3F36-4CAC-BA48-5B71D65BE86D",
+      "date": "2026-09-08T15:30:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 31.3,
+      "carbsG": 45.0,
+      "fatG": 25.4,
+      "fiberG": 6.8
+    },
+    {
+      "id": "4F207094-5F73-4EB8-8222-86F66B622FDB",
+      "date": "2026-09-08T17:28:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 26.0,
+      "carbsG": 28.2,
+      "fatG": 5.4,
+      "fiberG": 4.3
+    },
+    {
+      "id": "1DB67348-0791-4343-8FB9-99E303FB0A66",
+      "date": "2026-09-10T07:32:00-04:00",
+      "name": "Shake",
+      "proteinG": 32.3,
+      "carbsG": 8.6,
+      "fatG": 3.2,
+      "fiberG": 1.1
+    },
+    {
+      "id": "A7D8AD58-8317-45BB-8E51-FFFDFAB9C69E",
+      "date": "2026-09-10T09:10:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 47.7,
+      "carbsG": 64.3,
+      "fatG": 24.9,
+      "fiberG": 7.3
+    },
+    {
+      "id": "D3811D52-BAFB-4AFF-B309-3B2D5C658DD1",
+      "date": "2026-09-10T11:40:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 45.7,
+      "carbsG": 74.2,
+      "fatG": 19.0,
+      "fiberG": 8.6
+    },
+    {
+      "id": "4A8A945B-FF9E-4896-8F9A-8D78AB8957EA",
+      "date": "2026-09-10T13:40:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 55.1,
+      "carbsG": 92.2,
+      "fatG": 14.0,
+      "fiberG": 6.0
+    },
+    {
+      "id": "82600A29-355D-4974-8D63-916D1F330E66",
+      "date": "2026-09-10T15:46:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 12.2,
+      "carbsG": 65.2,
+      "fatG": 9.2,
+      "fiberG": 8.2
+    },
+    {
+      "id": "8260AF56-FF31-408A-8A31-A57F981717A1",
+      "date": "2026-09-10T17:19:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.0,
+      "carbsG": 28.1,
+      "fatG": 16.1,
+      "fiberG": 5.0
+    },
+    {
+      "id": "05DEA4BF-5072-42B4-806B-867C963038BD",
+      "date": "2026-09-11T07:12:00-04:00",
+      "name": "Shake",
+      "proteinG": 28.8,
+      "carbsG": 7.7,
+      "fatG": 2.9,
+      "fiberG": 1.0
+    },
+    {
+      "id": "6FCEDCCC-FD10-471E-BADF-B24D258EC590",
+      "date": "2026-09-11T09:38:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 33.5,
+      "carbsG": 48.1,
+      "fatG": 27.2,
+      "fiberG": 7.3
+    },
+    {
+      "id": "B0679316-00B5-4612-92C3-5C3D555D9D91",
+      "date": "2026-09-11T11:12:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 11.4,
+      "carbsG": 60.8,
+      "fatG": 8.5,
+      "fiberG": 7.6
+    },
+    {
+      "id": "6E108A67-C83B-49AB-B4A2-A98296DBA65D",
+      "date": "2026-09-11T13:16:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 22.5,
+      "carbsG": 24.4,
+      "fatG": 4.7,
+      "fiberG": 3.8
+    },
+    {
+      "id": "9383CDD5-4717-4861-8525-268DDC405578",
+      "date": "2026-09-11T15:23:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 53.7,
+      "carbsG": 89.9,
+      "fatG": 13.7,
+      "fiberG": 5.9
+    },
+    {
+      "id": "8E11138D-BDA4-4A76-976B-9A6075BCA23D",
+      "date": "2026-09-11T17:23:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 7.4,
+      "carbsG": 25.8,
+      "fatG": 14.7,
+      "fiberG": 4.6
+    },
+    {
+      "id": "5D7BDC95-D4C8-46EC-B5B7-E7800665D628",
+      "date": "2026-09-12T07:16:00-04:00",
+      "name": "Shake",
+      "proteinG": 32.6,
+      "carbsG": 8.7,
+      "fatG": 3.3,
+      "fiberG": 1.1
+    },
+    {
+      "id": "F017C275-6748-47D4-BC62-13DBC64CA003",
+      "date": "2026-09-12T09:21:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 44.4,
+      "carbsG": 59.8,
+      "fatG": 23.2,
+      "fiberG": 6.8
+    },
+    {
+      "id": "FD79C996-8655-4E2C-A8B6-23BF5C9568FC",
+      "date": "2026-09-12T11:29:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 21.5,
+      "carbsG": 7.8,
+      "fatG": 3.9,
+      "fiberG": 0.0
+    },
+    {
+      "id": "D777A08B-7795-4113-85C6-EA79516F7C9C",
+      "date": "2026-09-12T13:42:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 53.6,
+      "carbsG": 89.6,
+      "fatG": 13.6,
+      "fiberG": 5.8
+    },
+    {
+      "id": "1A6BFDB2-8EC0-4C38-A750-2D9110FCF8EF",
+      "date": "2026-09-12T15:10:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 11.3,
+      "carbsG": 60.2,
+      "fatG": 8.5,
+      "fiberG": 7.5
+    },
+    {
+      "id": "5B421100-7B60-450D-85EA-CDAA8AF677F7",
+      "date": "2026-09-12T17:36:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.5,
+      "carbsG": 29.6,
+      "fatG": 16.9,
+      "fiberG": 5.3
+    },
+    {
+      "id": "224F8EBC-E4DA-4022-A99E-944937E79BE1",
+      "date": "2026-09-13T07:14:00-04:00",
+      "name": "Shake",
+      "proteinG": 31.7,
+      "carbsG": 8.5,
+      "fatG": 3.2,
+      "fiberG": 1.1
+    },
+    {
+      "id": "8CEAFE8F-2C62-4B70-B341-7A02E5C97191",
+      "date": "2026-09-13T09:02:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 52.6,
+      "carbsG": 88.0,
+      "fatG": 13.4,
+      "fiberG": 5.7
+    },
+    {
+      "id": "481C406A-3D7F-4A28-B9E6-251A24CB3EB3",
+      "date": "2026-09-13T11:52:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 7.8,
+      "carbsG": 27.1,
+      "fatG": 15.5,
+      "fiberG": 4.8
+    },
+    {
+      "id": "0E0678BA-2C6B-435C-9551-48765763AFFE",
+      "date": "2026-09-13T13:23:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 25.3,
+      "carbsG": 27.4,
+      "fatG": 5.3,
+      "fiberG": 4.2
+    },
+    {
+      "id": "F212F414-A2B2-4DA9-BD01-A3F1AB1713EB",
+      "date": "2026-09-13T15:20:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 33.9,
+      "carbsG": 48.7,
+      "fatG": 27.5,
+      "fiberG": 7.4
+    },
+    {
+      "id": "1BDC0BB7-757B-41B3-A09F-981AA0D514D7",
+      "date": "2026-09-13T17:18:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 50.5,
+      "carbsG": 82.1,
+      "fatG": 21.0,
+      "fiberG": 9.5
+    },
+    {
+      "id": "57AAD53B-145C-47B0-A60C-34130B8EC4FC",
+      "date": "2026-09-14T07:41:00-04:00",
+      "name": "Shake",
+      "proteinG": 29.6,
+      "carbsG": 7.9,
+      "fatG": 3.0,
+      "fiberG": 1.0
+    },
+    {
+      "id": "E23F3920-8DDA-41A4-99FB-20C3931FF31F",
+      "date": "2026-09-14T09:18:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 57.4,
+      "carbsG": 96.0,
+      "fatG": 14.6,
+      "fiberG": 6.3
+    },
+    {
+      "id": "D101B08A-2783-413F-AA6E-410B827A7C06",
+      "date": "2026-09-14T11:07:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.7,
+      "carbsG": 30.3,
+      "fatG": 17.3,
+      "fiberG": 5.4
+    },
+    {
+      "id": "3EB178F2-C23B-4DA7-99F6-9C373CF2AC0D",
+      "date": "2026-09-14T13:34:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 22.7,
+      "carbsG": 8.3,
+      "fatG": 4.1,
+      "fiberG": 0.0
+    },
+    {
+      "id": "6B6E0D11-E171-4E00-B83E-A05FF0FDD12A",
+      "date": "2026-09-14T15:33:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 23.6,
+      "carbsG": 25.5,
+      "fatG": 4.9,
+      "fiberG": 3.9
+    },
+    {
+      "id": "208555CF-0F58-4EA4-8F1A-302D32E1B7E7",
+      "date": "2026-09-14T17:11:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 49.0,
+      "carbsG": 66.0,
+      "fatG": 25.6,
+      "fiberG": 7.5
+    },
+    {
+      "id": "BD71FEFC-FBD0-420D-BE3B-712040E51B40",
+      "date": "2026-09-15T07:45:00-04:00",
+      "name": "Shake",
+      "proteinG": 31.7,
+      "carbsG": 8.5,
+      "fatG": 3.2,
+      "fiberG": 1.1
+    },
+    {
+      "id": "64C15480-412E-41E5-B418-0079D3D9CDC0",
+      "date": "2026-09-15T09:13:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 33.9,
+      "carbsG": 48.7,
+      "fatG": 27.5,
+      "fiberG": 7.4
+    },
+    {
+      "id": "75313B14-40D2-4E72-938F-8F5218E06830",
+      "date": "2026-09-15T11:24:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 45.6,
+      "carbsG": 61.5,
+      "fatG": 23.8,
+      "fiberG": 6.9
+    },
+    {
+      "id": "613A0CD6-DEAE-4CCC-9A3C-184228718926",
+      "date": "2026-09-15T13:39:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 55.9,
+      "carbsG": 93.5,
+      "fatG": 14.2,
+      "fiberG": 6.1
+    },
+    {
+      "id": "1D291758-626B-44C1-9E5C-100E04ABFCDE",
+      "date": "2026-09-15T15:12:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 25.7,
+      "carbsG": 27.8,
+      "fatG": 5.3,
+      "fiberG": 4.3
+    },
+    {
+      "id": "D6E259FE-7790-4C4F-BB9C-81FEB9091787",
+      "date": "2026-09-15T17:15:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.6,
+      "carbsG": 30.0,
+      "fatG": 17.1,
+      "fiberG": 5.4
+    },
+    {
+      "id": "A492EC5B-2BBE-41DA-82FD-4A38EFCF1993",
+      "date": "2026-09-17T07:35:00-04:00",
+      "name": "Shake",
+      "proteinG": 30.5,
+      "carbsG": 8.1,
+      "fatG": 3.0,
+      "fiberG": 1.0
+    },
+    {
+      "id": "DF33A6AF-36C6-4444-8D0E-1F9534E41CD6",
+      "date": "2026-09-17T09:32:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 11.5,
+      "carbsG": 61.4,
+      "fatG": 8.6,
+      "fiberG": 7.7
+    },
+    {
+      "id": "FE551763-F12B-4508-A811-C55ED1610C83",
+      "date": "2026-09-17T11:14:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.4,
+      "carbsG": 29.5,
+      "fatG": 16.9,
+      "fiberG": 5.3
+    },
+    {
+      "id": "D827A0FE-D1AE-40E1-9EAF-D83074321C07",
+      "date": "2026-09-17T13:45:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 25.7,
+      "carbsG": 27.8,
+      "fatG": 5.3,
+      "fiberG": 4.3
+    },
+    {
+      "id": "D60B4A0C-ACA6-49AC-9CEE-2C7B2A99ECB1",
+      "date": "2026-09-17T15:15:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 21.1,
+      "carbsG": 7.7,
+      "fatG": 3.8,
+      "fiberG": 0.0
+    },
+    {
+      "id": "87313CC9-91DE-4E02-B96A-E1543FFC90D5",
+      "date": "2026-09-17T17:30:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 49.6,
+      "carbsG": 80.6,
+      "fatG": 20.7,
+      "fiberG": 9.3
+    },
+    {
+      "id": "1EC1C6FB-3FC3-4814-AC38-1536097DDEC5",
+      "date": "2026-09-18T07:00:00-04:00",
+      "name": "Shake",
+      "proteinG": 31.7,
+      "carbsG": 8.5,
+      "fatG": 3.2,
+      "fiberG": 1.1
+    },
+    {
+      "id": "C41F20D3-8CF4-4010-A9F2-93799B10F194",
+      "date": "2026-09-18T09:47:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 46.5,
+      "carbsG": 75.6,
+      "fatG": 19.4,
+      "fiberG": 8.7
+    },
+    {
+      "id": "ED7D5550-F97F-4336-A246-19D315035B0F",
+      "date": "2026-09-18T11:38:00-04:00",
+      "name": "Cottage cheese",
+      "proteinG": 22.5,
+      "carbsG": 8.2,
+      "fatG": 4.1,
+      "fiberG": 0.0
+    },
+    {
+      "id": "9B113B05-CBE2-4018-9FCE-F82B84AE4A3D",
+      "date": "2026-09-18T13:25:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 33.1,
+      "carbsG": 47.6,
+      "fatG": 26.9,
+      "fiberG": 7.3
+    },
+    {
+      "id": "7FD55EC1-08B2-49D0-A827-F8D9A6668B9F",
+      "date": "2026-09-18T15:19:00-04:00",
+      "name": "Apple and peanut butter",
+      "proteinG": 8.2,
+      "carbsG": 28.8,
+      "fatG": 16.5,
+      "fiberG": 5.1
+    },
+    {
+      "id": "FAF9B0AA-76C1-4C34-AC59-6366F423154C",
+      "date": "2026-09-18T17:05:00-04:00",
+      "name": "Salmon, potatoes and salad",
+      "proteinG": 42.9,
+      "carbsG": 57.8,
+      "fatG": 22.4,
+      "fiberG": 6.5
+    },
+    {
+      "id": "17A336CF-7394-4580-8A70-AC30988FD8D7",
+      "date": "2026-09-19T07:50:00-04:00",
+      "name": "Shake",
+      "proteinG": 28.5,
+      "carbsG": 7.6,
+      "fatG": 2.9,
+      "fiberG": 1.0
+    },
+    {
+      "id": "64F83709-654B-46B0-93E2-134F9AC464F3",
+      "date": "2026-09-19T09:49:00-04:00",
+      "name": "Eggs, toast and avocado",
+      "proteinG": 33.3,
+      "carbsG": 47.9,
+      "fatG": 27.1,
+      "fiberG": 7.3
+    },
+    {
+      "id": "8A5BA4A0-DDAE-4170-80C7-515FA044B620",
+      "date": "2026-09-19T11:09:00-04:00",
+      "name": "Oats and banana",
+      "proteinG": 11.7,
+      "carbsG": 62.5,
+      "fatG": 8.8,
+      "fiberG": 7.8
+    },
+    {
+      "id": "0CCF3FDE-86D9-420A-92DC-9AEFF2FC9980",
+      "date": "2026-09-19T13:10:00-04:00",
+      "name": "Beef burrito bowl",
+      "proteinG": 48.8,
+      "carbsG": 79.4,
+      "fatG": 20.4,
+      "fiberG": 9.2
+    },
+    {
+      "id": "B11CC57F-A900-491D-9D47-7C56426C4B16",
+      "date": "2026-09-19T15:09:00-04:00",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 22.6,
+      "carbsG": 24.4,
+      "fatG": 4.7,
+      "fiberG": 3.8
+    },
+    {
+      "id": "041F7335-4BBB-49FC-ACCD-506218523A63",
+      "date": "2026-09-19T17:32:00-04:00",
+      "name": "Chicken, rice and greens",
+      "proteinG": 50.8,
+      "carbsG": 85.0,
+      "fatG": 12.9,
+      "fiberG": 5.5
+    }
+  ],
+  "favourites": [
+    {
+      "id": "F05DFE68-DA1B-43CF-804A-E20ED1AB4880",
+      "name": "Shake",
+      "proteinG": 30,
+      "carbsG": 8,
+      "fatG": 3,
+      "fiberG": 1,
+      "timesUsed": 24
+    },
+    {
+      "id": "12C0FA17-F7C2-41A8-912A-E670CA925CBB",
+      "name": "Chicken, rice and greens",
+      "proteinG": 55,
+      "carbsG": 92,
+      "fatG": 14,
+      "fiberG": 6,
+      "timesUsed": 15
+    },
+    {
+      "id": "000C89F7-7318-4982-8396-238C8174F2E7",
+      "name": "Greek yoghurt and berries",
+      "proteinG": 24,
+      "carbsG": 26,
+      "fatG": 5,
+      "fiberG": 4,
+      "timesUsed": 9
+    },
+    {
+      "id": "57DCDF59-FD6A-4FD4-996D-2A1E28BA51D5",
+      "name": "Friday takeaway",
+      "proteinG": 0,
+      "carbsG": 0,
+      "fatG": 0,
+      "calories": 1150,
+      "timesUsed": 3
+    }
+  ],
+  "anime": [
+    {
+      "id": "A1F53B4B-FA96-4615-A4C3-845AAC7BBB3D",
+      "title": "Dr. Stone",
+      "genres": [
+        "Adventure",
+        "Sci-Fi"
+      ],
+      "status": "airing",
+      "seasons": [
+        {
+          "id": "8C39ECE5-999F-4DAB-93EE-0BD5D5D7B4DF",
+          "number": 1,
+          "title": "",
+          "episodes": 24
+        },
+        {
+          "id": "E32438F2-75A8-4CBE-8D3A-18351A0E698B",
+          "number": 2,
+          "title": "",
+          "episodes": 11
+        },
+        {
+          "id": "25C61CB5-5D20-4C12-8E6B-CF0BE05BB586",
+          "number": 3,
+          "title": "",
+          "episodes": 22
+        }
+      ],
+      "isMovie": false,
+      "note": "",
+      "addedAt": "2026-07-21T01:46:57-04:00",
+      "updatedAt": "2026-09-17T01:46:57-04:00"
+    },
+    {
+      "id": "AA53B8C9-6E56-49D3-9505-E375E237C5E9",
+      "title": "Vinland Saga",
+      "genres": [
+        "Action",
+        "Drama"
+      ],
+      "status": "completed",
+      "seasons": [
+        {
+          "id": "CEA2EA6B-8454-4085-AC0F-D4DD56109660",
+          "number": 1,
+          "title": "",
+          "episodes": 24
+        },
+        {
+          "id": "27DCC03D-C7AA-4422-92DD-F1996623E689",
+          "number": 2,
+          "title": "",
+          "episodes": 24
+        }
+      ],
+      "isMovie": false,
+      "note": "",
+      "addedAt": "2026-05-22T01:46:57-04:00",
+      "updatedAt": "2026-08-20T01:46:57-04:00"
+    },
+    {
+      "id": "BB6AACDB-9314-4CAA-AB3E-A850E4D006A0",
+      "title": "Frieren",
+      "genres": [
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "pending",
+      "seasons": [],
+      "totalEpisodes": 28,
+      "isMovie": false,
+      "note": "",
+      "addedAt": "2026-09-10T01:46:57-04:00",
+      "updatedAt": "2026-09-10T01:46:57-04:00"
+    },
+    {
+      "id": "208A27C9-FD37-4833-B48E-E95FE7E4A295",
+      "title": "A Silent Voice",
+      "genres": [
+        "Drama"
+      ],
+      "status": "watched",
+      "seasons": [],
+      "totalEpisodes": 1,
+      "isMovie": true,
+      "note": "",
+      "addedAt": "2026-03-03T01:46:57-04:00",
+      "updatedAt": "2026-03-03T01:46:57-04:00"
+    }
+  ]
+}

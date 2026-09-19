@@ -3,7 +3,7 @@ import SenkuCore
     #if os(watchOS)
 import WatchKit
 #endif
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
 import UIKit
 #endif
 
@@ -40,19 +40,12 @@ public struct RestTimerView: View {
     /// your lock screen and a screen refreshing for nobody.
     private static let overrunLimit: TimeInterval = 10 * 60
 
-    /// `scrolls: false` drops the surrounding `ScrollView`. `ImageRenderer`
-    /// has no window to size a scroll view against and renders one blank, so
-    /// `senku-render` needs the bare content to review this screen offscreen.
-    private let scrolls: Bool
-
     public init(
         timer: RestTimer = RestTimer(preset: .ninetySeconds),
-        now: Date = .now,
-        scrolls: Bool = true
+        now: Date = .now
     ) {
         _timer = State(initialValue: timer)
         _now = State(initialValue: now)
-        self.scrolls = scrolls
     }
 
     /// Every control routes its mutation through here. The Live Activity is
@@ -60,7 +53,7 @@ public struct RestTimerView: View {
     /// control cannot quietly forget to keep the lock screen in step.
     private func changed(at instant: Date) {
         now = instant
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         RestActivityController.shared.sync(with: timer, at: instant)
         // The chime, booked on the audio clock so it still sounds with the
         // phone locked and silenced.
@@ -72,7 +65,7 @@ public struct RestTimerView: View {
         #if os(watchOS)
         RestRuntimeSession.shared.sync(with: timer, at: instant)
         #endif
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         // The phone has a simpler answer than the watch: while a rest is
         // running, refuse to dim. Mid-set is the one time a screen locking
         // itself is purely a nuisance.
@@ -86,6 +79,14 @@ public struct RestTimerView: View {
     /// on screen the app rings the chime itself.
     @State private var canAlert: Bool?
 
+    /// False while this screen is mounted but not on display — see
+    /// `senkuScreenIsVisible`. On the watch, and in a sheet, it is always true.
+    #if os(iOS)
+    @Environment(\.senkuScreenIsVisible) private var isVisible
+    #else
+    private let isVisible = true
+    #endif
+
     /// Tears the rest down across every surface that knows about it.
     private func endEverything() {
         timer.reset()
@@ -93,7 +94,7 @@ public struct RestTimerView: View {
         #if canImport(UserNotifications) && !os(macOS)
         RestNotifications.cancel()
         #endif
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         RestActivityController.shared.end(dismissing: .immediate)
         RestChime.cancel()
         UIApplication.shared.isIdleTimerDisabled = false
@@ -105,18 +106,14 @@ public struct RestTimerView: View {
 
     public var body: some View {
         Group {
-            if scrolls {
-                #if os(watchOS)
-                // No scroll view. The ring, the three controls and the three
-                // intervals are the whole screen, and a timer whose start
-                // buttons are below the fold is a timer you fight with mid-set.
-                content
-                #else
-                ScrollView { content }
-                #endif
-            } else {
-                content
-            }
+            #if os(watchOS)
+            // No scroll view. The ring, the three controls and the three
+            // intervals are the whole screen, and a timer whose start buttons
+            // are below the fold is a timer you fight with mid-set.
+            content
+            #else
+            ScrollView { content }
+            #endif
         }
         .background(.background)
         .onReceive(NotificationCenter.default.publisher(for: RestDeepLink.didStart)) { _ in
@@ -141,7 +138,7 @@ public struct RestTimerView: View {
                 RestTimerStore.clear()
             }
         }
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willTerminateNotification)) { _ in
             // Swiping the app out of the app switcher is a deliberate act, and
             // "stop what you are doing" is the only sensible reading of it. So
@@ -155,10 +152,17 @@ public struct RestTimerView: View {
             endEverything()
         }
         #endif
-        .task {
-            // Asked up front rather than at the moment a rest is scheduled: a
-            // permission prompt that appears as you start a set is a prompt
-            // nobody reads, and dismissing it silently disables every alert.
+        // Keyed on visibility, not on appearing: every page of the shell stays
+        // mounted, so an unkeyed task ran while this screen was hidden and the
+        // app asked for notification permission at launch, from a screen nobody
+        // had opened.
+        .task(id: isVisible) {
+            guard isVisible else { return }
+
+            // Asked as the screen opens rather than at the moment a rest is
+            // scheduled: a permission prompt that appears as you start a set is
+            // a prompt nobody reads, and dismissing it silently disables every
+            // alert.
             #if canImport(UserNotifications) && !os(macOS)
             if await RestNotifications.canAlert() {
                 canAlert = true

@@ -1,4 +1,4 @@
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
 import Foundation
 import AVFoundation
 import SenkuCore

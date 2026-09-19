@@ -24,19 +24,11 @@ public enum UnitSystem: String, Codable, CaseIterable, Identifiable, Sendable {
         case .imperial: "lb"
         }
     }
-
-    public var volumeLabel: String {
-        switch self {
-        case .metric: "ml"
-        case .imperial: "fl oz"
-        }
-    }
 }
 
 public enum Convert {
     public static let poundsPerKilogram = 2.204_622_62
     public static let centimetresPerInch = 2.54
-    public static let millilitresPerFluidOunce = 29.5735
 
     public static func kilograms(fromPounds pounds: Double) -> Double {
         pounds / poundsPerKilogram
@@ -63,7 +55,4 @@ public enum Convert {
         return (feet, inches)
     }
 
-    public static func fluidOunces(fromMillilitres millilitres: Double) -> Double {
-        millilitres / millilitresPerFluidOunce
-    }
 }

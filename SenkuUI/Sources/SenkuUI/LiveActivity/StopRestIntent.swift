@@ -1,7 +1,7 @@
 import Foundation
 import SenkuCore
 
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
 import AppIntents
 
 /// Ends a rest from the Live Activity, without opening the app.

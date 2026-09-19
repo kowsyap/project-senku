@@ -41,8 +41,6 @@ public struct MuscleCoverage: Hashable, Sendable {
 
         /// What covering this region completely would add to the group figure.
         public var remainingValue: Double { (1 - covered) * share }
-
-        public var isCovered: Bool { covered >= 0.5 }
     }
 
     public let group: WorkoutGroup

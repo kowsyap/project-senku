@@ -271,9 +271,15 @@ struct SplitDayEditor: View {
         dismiss()
     }
 
+    /// Deleting an exercise the plan names would leave a checklist row nothing
+    /// can label — so it is refused rather than cascaded. Records are a
+    /// different matter and are guarded separately, on the PR page.
     private func deletionRefusal(_ exercise: Exercise) -> String? {
-        guard day.exerciseIDs.contains(exercise.id) else { return nil }
-        return "“\(exercise.name)” is in this day. Remove it from the list first."
+        if day.exerciseIDs.contains(exercise.id) {
+            return "“\(exercise.name)” is in this day. Remove it from the list first."
+        }
+        guard store.isUsed(exercise: exercise.id) else { return nil }
+        return "“\(exercise.name)” is in another day of your plan. Take it out there first."
     }
 }
 

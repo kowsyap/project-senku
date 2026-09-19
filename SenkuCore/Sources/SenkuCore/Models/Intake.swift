@@ -197,8 +197,6 @@ public struct IntakeDay: Hashable, Sendable, Identifiable {
     }
 
     public var proteinFraction: Double { fraction(of: proteinG, target: targets.proteinGrams) }
-    public var carbsFraction: Double { fraction(of: carbsG, target: targets.carbGrams) }
-    public var fatFraction: Double { fraction(of: fatG, target: targets.fatGrams) }
     public var calorieFraction: Double { fraction(of: calories, target: targets.calories) }
 
     /// Protein is a floor. More than the target is not a failure — it is the

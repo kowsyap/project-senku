@@ -166,12 +166,6 @@ public final class WaterStore {
         persistEntries()
     }
 
-    /// Undo, which is the button people actually want after a mis-tap.
-    public func undoLast(on date: Date = .now) {
-        guard let last = log.entries(on: date).first else { return }
-        delete(last)
-    }
-
     public func restore(_ entry: WaterEntry) {
         reload()
         guard !entries.contains(where: { $0.id == entry.id }) else { return }

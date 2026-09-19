@@ -131,7 +131,7 @@ public final class ProfileStore {
     }
 
     private func publish(_ profile: Profile?) {
-        #if (os(iOS) && !targetEnvironment(macCatalyst)) || os(watchOS)
+        #if os(iOS) || os(watchOS)
         ProfileSync.shared.send(profile)
         #endif
     }

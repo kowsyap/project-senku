@@ -28,6 +28,8 @@ public struct RecordsView: View {
     @State private var library: ExerciseLibrary
     @State private var protocols: CardioProtocolStore
     @State private var cardioRecords: CardioRecordStore
+    /// Consulted before a custom exercise is deleted — see the refusal below.
+    @State private var plans: TrainingPlanStore
     private let unitSystem: UnitSystem
 
     /// Which cardio plan is open for editing.
@@ -39,12 +41,14 @@ public struct RecordsView: View {
         library: ExerciseLibrary = ExerciseLibrary(),
         protocols: CardioProtocolStore = CardioProtocolStore(),
         cardioRecords: CardioRecordStore = CardioRecordStore(),
+        plans: TrainingPlanStore = TrainingPlanStore(),
         unitSystem: UnitSystem = .metric
     ) {
         _store = State(initialValue: store)
         _library = State(initialValue: library)
         _protocols = State(initialValue: protocols)
         _cardioRecords = State(initialValue: cardioRecords)
+        _plans = State(initialValue: plans)
         self.unitSystem = unitSystem
     }
 
@@ -269,6 +273,12 @@ public struct RecordsView: View {
                 // Already has a record: the next one goes inside it, dated.
                 hidden: Set(store.book.exerciseIDs),
                 deletionRefusal: { exercise in
+                    // The plan first: deleting an exercise a split names leaves
+                    // that day with a row nothing can label.
+                    if plans.isUsed(exercise: exercise.id) {
+                        return "“\(exercise.name)” is in your training plan. Take it out of the split first."
+                    }
+
                     let count = store.book.records(for: exercise.id).records.count
                     guard count > 0 else { return nil }
                     // Refused rather than cascaded: a record is a thing that

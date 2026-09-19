@@ -1,12 +1,12 @@
 # Requirements — training, intake, and one thing that is neither
 
-Six features, agreed in outline and specified here before any of them is built.
-Nothing in this document is implemented yet. It exists so that when we start,
-the arguments have already been had.
+Six features, specified before any of them was built, so that the arguments were
+had before the code was. **All six now exist**, and this document has been kept
+as the record: the rules each feature is held to, the acceptance criteria it is
+checked against, and — added as they were taken — the decisions that closed each
+open question, with the reasoning attached.
 
-These land in [ROADMAP.md](ROADMAP.md) Phase 4, which currently says "workout
-logger, weight history, adaptive TDEE" in three lines. This is those three lines
-taken seriously, plus water and macro intake.
+Two criteria below remain unticked on purpose. Both say why.
 
 | # | Feature | Depends on |
 |---|---|---|
@@ -16,7 +16,7 @@ taken seriously, plus water and macro intake.
 | F4 | [Water tracking](#f4--water-tracking) | Storage, notification scheduler |
 | F5 | [Protein and macro intake](#f5--protein-and-macro-intake) | Storage |
 | F6 | [Anime log](#f6--anime-log) | Storage |
-| F7 | [Logging a workout from the watch](#f7--logging-a-workout-from-the-watch) | F3, WatchConnectivity |
+| F7 | ~~[Logging a workout from the watch](#f7--logging-a-workout-from-the-watch)~~ — dropped | F3, WatchConnectivity |
 
 ---
 
@@ -54,7 +54,7 @@ here stores **many rows, queried by date**, which that cannot do.
   framework import. Persistence lives in a new layer — either the app target or
   a `SenkuData` package that depends on `SenkuCore`.
 - Every screen reads through a repository protocol, so tests run against an
-  in-memory store and `senku-render` keeps working without a container.
+  in-memory store and previews keep working without a container.
 - The single profile stays in `ProfileStore`. Do not migrate it for its own
   sake.
 
@@ -162,10 +162,15 @@ WeighIn
 
 ### Acceptance
 
-- [ ] Logging three days produces a trend that differs from the last reading
-- [ ] Deleting the only weigh-in of a day removes it from the trend
-- [ ] The profile weight never changes without an explicit tap
-- [ ] Reminder does not fire on a day already logged
+- [x] Logging three days produces a trend that differs from the last reading —
+      `WeightSeriesTests`
+- [x] Deleting the only weigh-in of a day removes it from the trend
+- [x] The profile weight never changes without an explicit tap. Adopting the
+      trend is a button, and it edits the one field it measures
+- [ ] Reminder does not fire on a day already logged. **Not built**: the reminder
+      repeats daily at 10:00 whether or not you have weighed in, because a
+      repeating request cannot skip one occurrence — cancelling and re-adding it
+      each morning would spend the app's notification budget to save one swipe
 - [x] Adaptive TDEE refuses to appear under the data threshold (8 weigh-ins
       across 14 days, food logged on 10 of the last 14, and a difference of at
       least 100 kcal). It shows nothing rather than a caveated number, because a
@@ -215,12 +220,18 @@ PersonalRecord
 
 ### Acceptance
 
-- [ ] Removing an exercise from every split leaves its PR untouched
-- [ ] A logged set heavier than the stored PR updates it without asking
-- [ ] A manual PR below a logged PR is kept but not shown as the headline
-- [ ] Deleting a workout session does not delete PRs it produced (they become
-      `.manual`, dated as before — history you deleted is not a record you
-      un-lifted). *Open question 4 — confirm this is the behaviour you want.*
+- [x] Removing an exercise from every split leaves its PR untouched
+- [x] A logged set heavier than the stored PR updates it without asking —
+      `WorkoutStore.log(_:for:records:)`
+- [x] A manual PR below a logged PR is kept but not shown as the headline —
+      `PersonalRecordTests`
+- [x] Deleting a workout session does not delete PRs it produced. Deleting a
+      single set detaches its record instead: `RecordStore.detachRecords(fromSets:)`
+      keeps it and downgrades its provenance to `.manual`, because the lift was
+      still performed
+- [x] Deleting a custom exercise the plan still names is refused, on both the PR
+      page and the split editor — otherwise a checklist comes up with a row
+      nothing can label
 
 ---
 
@@ -313,11 +324,14 @@ wrong:
 
 ### Acceptance
 
-- [ ] A chest split of flat bench alone reads well under 100%, and names the gap
-- [ ] Adding incline and decline raises it, and the ⓘ shows each one's share
-- [ ] A custom exercise is visibly marked as user-classified wherever it counts
-- [ ] Logging a set starts the rest timer without a second tap
-- [ ] Every rule in the table above has a test
+- [x] A chest split of flat bench alone reads well under 100%, and names the gap
+      — `MuscleCoverageTests`
+- [x] Adding incline and decline raises it, and the ⓘ shows each one's share
+- [x] A custom exercise is visibly marked as user-classified wherever it counts
+- [x] Logging a set starts the rest timer without a second tap
+- [x] Every rule in the coverage table has a test — 171 in `SenkuCore`
+- [x] Cardio is a group without muscles: always 100%, logged as time and the
+      machine's own metrics, with a protocol table you define
 
 ---
 
@@ -363,10 +377,16 @@ WaterSettings{ goalOverrideML?, containers, reminder: ReminderSettings }
 ### Acceptance
 
 - [x] A past day can be marked "never logged" but never filled in
-- [ ] Reminders stop once the goal is met and resume the next day
-- [ ] Pending requests never exceed a documented ceiling well under 64
-- [ ] The goal follows the profile when the profile changes
-- [ ] Logging from the notification adds without launching the app
+- [x] Reminders stop once the goal is met and resume the next day —
+      `WaterReminders.silenceRestOfToday`
+- [x] Pending requests never exceed a documented ceiling well under 64: twelve
+      water slots, one weigh-in, one creatine, one rest — fifteen at worst
+- [x] The goal follows the profile when the profile changes. It is resolved on
+      every read, never stored
+- [x] Logging from the notification adds without launching the app — the action
+      carries no `.foreground` option and runs `LogWaterIntent` in the background
+- [x] A drink logged on the watch reaches the phone, and a drink logged in the
+      widget reaches the app
 
 ---
 
@@ -408,7 +428,10 @@ Favourite   { id, name, macros }            // reusable quick-adds
 - [x] Targets change when the profile changes, with no copy kept
 - [x] Derived calories and entered calories are never silently reconciled
 - [x] A day with no entries reads as "nothing logged", not as "0 g — you failed"
-- [ ] Yesterday can be edited; tomorrow cannot be logged
+- [x] Tomorrow cannot be logged
+- [ ] Yesterday can be edited. **Not built** — see the open list in
+      [ROADMAP.md](ROADMAP.md). A past day can be marked "never logged" so a
+      streak survives, but a wrong figure cannot be corrected
 
 ### Streaks
 
@@ -483,10 +506,11 @@ Progress
 
 ### Acceptance
 
-- [ ] A series airing weekly can be advanced one episode with one tap
-- [ ] A series with no known total never displays a completion percentage
-- [ ] A re-watch does not erase the first watch
-- [ ] Nothing here appears anywhere near the training or nutrition screens
+- [x] A series airing weekly can be advanced one episode with one tap
+- [x] A series with no known total never displays a completion percentage —
+      `AnimeTests`
+- [x] A re-watch does not erase the first watch
+- [x] Nothing here appears anywhere near the training or nutrition screens
 
 ---
 

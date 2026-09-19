@@ -154,8 +154,6 @@ public struct WorkoutEntry: Identifiable, Codable, Hashable, Sendable {
             : "\(sets.count)/\(Self.setsForDone)"
     }
 
-    public var totalReps: Int { sets.reduce(0) { $0 + $1.reps } }
-
     /// Weight moved, in kilogram-reps. The usual definition of volume, and the
     /// one figure that makes two sessions of the same exercise comparable.
     /// Weight moved. A hold moves nothing, so it contributes nothing here —

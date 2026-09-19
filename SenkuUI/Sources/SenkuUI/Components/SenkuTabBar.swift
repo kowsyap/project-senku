@@ -1,37 +1,43 @@
 #if os(iOS)
 import SwiftUI
 
-/// A tab bar that scrolls sideways instead of hiding tabs behind "More".
+/// The bar: five or six screens, and one pill that slides between them.
 ///
-/// ## Why this exists at all
+/// ## What it is not
 ///
-/// UIKit gives an iPhone five slots and puts everything after them inside a
-/// "More" list. That list is where features go to be forgotten: it is two taps
-/// deep, it is a plain table with none of the app's colour, and the tab that
-/// lands in it is chosen by position rather than by how much anybody uses it.
-/// With six destinations and more coming — water, macros — Senku would be
-/// permanently one feature away from burying one.
+/// It is not a `TabView`'s bar. That was tried both ways — first a row that
+/// scrolled sideways so nine destinations could each keep a slot, then a paging
+/// `TabView` so the pages could be swiped — and both were taken out again. Nine
+/// tabs meant reading the bar before using it; the pager rebuilt itself
+/// whenever the bar's contents changed and showed a blank page mid-edit. What
+/// is left is the thing that was actually wanted: a few fixed positions you can
+/// hit without looking, and everything else behind "More".
 ///
-/// So the bar scrolls. Every destination stays a single tap away, at the same
-/// size, in the same colours, and the sixth is reached by a flick rather than a
-/// menu. What is given up is the system's own customisation — reordering and
-/// pinning came free with `TabViewCustomization` and cannot be had here — which
-/// is a real loss, and the reason iPad and Mac keep the system sidebar: they
-/// have the width to show everything at once, and nothing to gain from this.
+/// ## The pill belongs to the bar, not to a tab
+///
+/// A tint applied to the selected item can only ever be on one item or another,
+/// so it cannot sit between two of them — and sitting between two of them is
+/// the whole point of dragging. So the highlight is one capsule drawn behind
+/// the row and positioned by hand: it follows a finger exactly while one is
+/// down, and springs to whatever it was left on when the finger lifts.
+///
+/// One gesture does everything, because two cannot share a short distance. The
+/// items were buttons once, and a drag to the tab *next door* ended inside the
+/// neighbouring button's slop: the tap won and put the selection back where it
+/// started, while a drag two tabs over was far enough to escape. A tap is now
+/// simply a drag that went nowhere, which is also what a tap is. VoiceOver
+/// keeps its own way in — each item carries the button trait and an action.
 ///
 /// ## Drawn as glass, not as a panel
 ///
 /// On iOS 26 the system tab bar is a floating capsule of Liquid Glass that the
 /// content scrolls *under*, not an opaque strip the content stops above. This
 /// is built from the same material — `glassEffect` inside a
-/// `GlassEffectContainer`, so the selected tab's own capsule merges with the
-/// bar's rather than sitting on top of it as a separate pane of glass, which is
-/// what the container is for.
-///
-/// The selected capsule is tinted with the tab's colour. That is the one place
-/// this deliberately does more than the system bar: with six destinations and
-/// no labels visible at a glance, colour is the fastest way to know where you
-/// are, and the app already gives every screen one.
+/// `GlassEffectContainer`, so the pill merges with the bar's own glass rather
+/// than sitting on top of it as a separate pane, which is what the container is
+/// for. The pill carries a single `glassEffectID` for its whole life, so the
+/// container treats it as one piece of glass moving rather than a shape
+/// appearing somewhere else.
 ///
 /// Older systems fall back to the material bar, which is what they had anyway.
 struct SenkuTabBar: View {
@@ -108,7 +114,7 @@ struct SenkuTabBar: View {
     @available(iOS 26.0, *)
     private var glassBar: some View {
         GlassEffectContainer(spacing: 18) {
-            scroller { item($0) }
+            row { item($0) }
                 .background(alignment: .topLeading) {
                     // One pill that moves, rather than a tint that jumps from
                     // item to item. It is what lets a finger drag it: a
@@ -143,7 +149,7 @@ struct SenkuTabBar: View {
     // MARK: - Before Liquid Glass
 
     private var legacyBar: some View {
-        scroller { item($0) }
+        row { item($0) }
             .background(alignment: .topLeading) {
                 if let pill {
                     Capsule()
@@ -163,7 +169,6 @@ struct SenkuTabBar: View {
 
     // MARK: - Shared
 
-    /// The scrolling row itself, with the decoration left to the caller.
     /// The row itself, as wide as what is in it.
     ///
     /// It used to be a horizontal `ScrollView`, which takes the whole width
@@ -171,7 +176,7 @@ struct SenkuTabBar: View {
     /// adrift in their own capsule. The slot count is capped at what fits, so
     /// there is nothing left to scroll: an `HStack` hugs its contents and the
     /// capsule shrinks to them, centred.
-    private func scroller<Item: View>(
+    private func row<Item: View>(
         @ViewBuilder item: @escaping (RootView.Tab) -> Item
     ) -> some View {
         HStack(spacing: 4) {

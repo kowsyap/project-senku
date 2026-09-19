@@ -62,6 +62,12 @@ public enum RestNotifications {
     /// - Returns: whether alerts can now be delivered.
     @discardableResult
     public static func requestAuthorization() async -> Bool {
+        #if DEBUG
+        // A screenshot run must not be interrupted by a permission sheet — see
+        // `SENKU_SCREEN` in `RootView`. Only ever set by hand, in a debug build.
+        if ProcessInfo.processInfo.environment["SENKU_SCREEN"] != nil { return false }
+        #endif
+
         let status = await authorizationStatus()
         guard status == .notDetermined else {
             return status == .authorized || status == .provisional

@@ -43,9 +43,7 @@ SenkuWatchWidgets.appex  ['group.pk.Senku']
 ```
 
 So `SENKU_ENTITLEMENTS = AppGroup` is the default. `Free` still exists and still
-builds — Mac Catalyst is pinned to it via `CODE_SIGN_ENTITLEMENTS[sdk=macosx*]`,
-because a Mac app carrying an App Group demands a provisioning profile and there
-is no widget on Catalyst to share with.
+builds, for a machine whose Apple ID will not issue the group.
 
 `SenkuStorage.migrateIfNeeded` carries a profile saved before the group into it,
 so turning this on costs nobody their numbers.
@@ -69,20 +67,18 @@ simulator builds even when an entitlement is live. The check that works is
 `xcrun simctl get_app_container <device> pk.Senku groups`, or reading
 `embedded.mobileprovision` out of a device build.
 
-## Remaining
+## The four targets
 
-### Turn on Mac
+| Target | Bundle id | What it is |
+| --- | --- | --- |
+| `Senku` | `pk.Senku` | the iPhone app |
+| `SenkuWidgets` | `pk.Senku.SenkuWidgets` | Home Screen widgets, Live Activity, Control Center |
+| `SenkuWatch` | `pk.Senku.watchkitapp` | the watch app |
+| `SenkuWatchWidgets` | `pk.Senku.watchkitapp.widgets` | the rest-timer complication |
 
-Select the **Senku** target ▸ **General** ▸ *Supported Destinations* ▸ **+** ▸
-**Mac (Mac Catalyst)**. Then build with the scheme set to *My Mac*.
-
-### Add the watch app
-
-1. **File ▸ New ▸ Target… ▸ watchOS ▸ App**, named **Senku Watch**.
-2. Delete the generated `ContentView.swift` and app entry file.
-3. Move `App/Watch/SenkuWatchApp.swift` into the new target's folder.
-4. Add `SenkuCore` and `SenkuUI` to that target under **General** ▸ *Frameworks,
-   Libraries, and Embedded Content*.
+All four link `SenkuCore` and `SenkuUI` as local packages and carry
+`group.pk.Senku`. There is **no Mac target**: the packages declare `.macOS(.v14)`
+only so `swift test` runs on the host.
 
 ### Signing
 
@@ -95,8 +91,8 @@ only needed to ship.
 The project uses Xcode 16+ **synchronized folders**: every file inside
 `Senku/Senku/` is automatically part of the target, with no project file entry.
 Adding a screen means dropping a file in — though in practice screens belong in
-the `SenkuUI` package, where they can be built and tested for all three
-platforms at once.
+the `SenkuUI` package, where they can be built and tested for both platforms at
+once.
 
 ## Building and testing from the command line
 
@@ -108,9 +104,6 @@ cd SenkuCore && swift run senku verify && swift test
 cd ../SenkuUI && swift test
 xcodebuild -scheme SenkuUI -destination 'generic/platform=iOS' build
 xcodebuild -scheme SenkuUI -destination 'generic/platform=watchOS' build
-
-# Screens as PNG, without a simulator
-swift run senku-render /tmp/senku-shots
 
 # The app itself. Note the *generic* destination — see below.
 cd ../Senku
@@ -159,3 +152,30 @@ Seeding a profile into the simulator from outside the app does **not** work.
 daemon, and `simctl spawn booted /usr/bin/defaults write` is refused by the
 sandbox ("Could not write domain"). Save a profile through the app's own Quick
 calc tab, and test persistence through `SenkuUIUnitTests`.
+
+## The debug hooks
+
+Both are `#if DEBUG` and both are read at launch, so they go on the scheme's
+environment or on `simctl launch`:
+
+```sh
+SIMCTL_CHILD_SENKU_SAMPLE=1 xcrun simctl launch booted pk.Senku
+```
+
+| Variable | Effect |
+| --- | --- |
+| `SENKU_SAMPLE` | loads `Senku/Senku/sample-data.json` through the real importer — three weeks of workouts, weigh-ins, water, food and anime |
+| `SENKU_SCREEN` | opens the app directly on one screen (`water`, `food`, `records`…), for screenshots |
+
+## Running the watch app
+
+The watch app needs its phone: pair the simulators once, install both, and run
+the phone first so `PhoneSync` is up before the watch asks it for a refresh.
+
+```sh
+xcrun simctl list pairs                      # find or create a pair
+xcrun simctl boot "iPhone 17 Pro"
+xcrun simctl boot "Apple Watch Series 11 (46mm)"
+xcrun simctl install booted <path to SenkuWatch.app>
+xcrun simctl launch booted pk.Senku.watchkitapp
+```

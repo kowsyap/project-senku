@@ -3,7 +3,7 @@ import SenkuCore
 
 // WatchConnectivity exists only on the two platforms that have a counterpart.
 // Mac Catalyst reports `os(iOS)` and has no watch to talk to.
-#if (os(iOS) && !targetEnvironment(macCatalyst)) || os(watchOS)
+#if os(iOS) || os(watchOS)
 import WatchConnectivity
 
 /// Carries the profile from the phone to the watch.

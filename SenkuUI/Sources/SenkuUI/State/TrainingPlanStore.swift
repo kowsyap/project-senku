@@ -73,13 +73,7 @@ public final class TrainingPlanStore {
         persist()
     }
 
-    /// Drops an exercise from every day that names it.
-    ///
-    /// For a custom exercise being deleted: the plan must not keep pointing at
-    /// something the library no longer has, or a checklist comes up with a row
-    /// that cannot be named. Records are untouched, per F2 — a lift you did
-    /// stays on the PR page whether or not you still train it.
-    public func removeEverywhere(exercise id: String) {
+    private func removeEverywhere(exercise id: String) {
         var changed = false
         for index in plan.days.indices where plan.days[index].exerciseIDs.contains(id) {
             plan.days[index].exerciseIDs.removeAll { $0 == id }

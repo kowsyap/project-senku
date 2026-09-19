@@ -11,7 +11,7 @@ final class RestLiveActivityUITests: XCTestCase {
     func testLiveActivityAppearsAfterStartingARest() {
         let app = XCUIApplication()
         app.launch()
-        app.tabBars.buttons["Rest"].tap()
+        app.open("Rest")
 
         app.buttons["preset.threeMinutes"].tap()
         XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 3), "The rest should be running")

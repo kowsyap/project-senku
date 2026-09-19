@@ -43,19 +43,6 @@ public enum Goal: String, Codable, Hashable, Sendable, CaseIterable, Identifiabl
         }
     }
 
-    /// Expected weekly bodyweight change, as a fraction of bodyweight.
-    public var weeklyBodyweightChangeFraction: Double {
-        switch self {
-        case .aggressiveCut: -0.010
-        case .moderateCut: -0.0075
-        case .mildCut: -0.004
-        case .maintain: 0
-        case .leanBulk: 0.002
-        case .moderateBulk: 0.004
-        case .aggressiveBulk: 0.006
-        }
-    }
-
     public var detail: String {
         switch self {
         case .aggressiveCut: "Fastest fat loss. Harder to keep muscle and adherence."

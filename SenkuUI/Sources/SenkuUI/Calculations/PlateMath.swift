@@ -105,10 +105,6 @@ public struct PlateLoad: Hashable, Sendable {
     /// Whether the bar can be built to the weight asked for.
     public var isExact: Bool { abs(total - target) < 0.01 }
 
-    /// True when the target is below the empty bar — which is not a loading
-    /// problem, it is a different exercise.
-    public var isUnderBar: Bool { target < 0 }
-
     /// "45 · 25 · 10", or an empty string for a bare bar.
     public var description: String {
         perSide.map { Self.trim($0) }.joined(separator: " · ")

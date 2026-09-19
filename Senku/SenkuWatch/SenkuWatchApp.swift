@@ -22,7 +22,7 @@ struct SenkuWatchApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var store = ProfileStore()
-    @State private var selection = Tab.rest
+    @State private var selection = Tab.opening
 
     /// What the phone last said about weight. Held here rather than persisted:
     /// the phone owns the log, and a stale copy on the wrist is worth less than
@@ -45,7 +45,23 @@ struct SenkuWatchApp: App {
     @State private var pendingProteinG: Double = 0
     @State private var pendingCalories: Double = 0
 
-    private enum Tab: Hashable { case rest, plan, weight, water, food }
+    private enum Tab: String, Hashable {
+        case rest, plan, weight, water, food
+
+        /// The rest timer, unless a debug build was asked for another page —
+        /// which is how the watch screenshots in the README are taken:
+        ///
+        ///     SIMCTL_CHILD_SENKU_SCREEN=water xcrun simctl launch <watch> pk.Senku.watchkitapp
+        static var opening: Tab {
+            #if DEBUG
+            if let asked = ProcessInfo.processInfo.environment["SENKU_SCREEN"],
+               let tab = Tab(rawValue: asked) {
+                return tab
+            }
+            #endif
+            return .rest
+        }
+    }
 
     init() {
         // Before anything can schedule a rest. Without it the alert is

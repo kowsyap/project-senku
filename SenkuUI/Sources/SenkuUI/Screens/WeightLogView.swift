@@ -36,20 +36,13 @@ public struct WeightLogView: View {
     private let profile: ProfileStore.Profile?
     private let onAdoptWeight: ((Double) -> Void)?
 
-    /// `scrolls: false` drops the surrounding `ScrollView`, which `ImageRenderer`
-    /// has no window to size and renders blank — the same accommodation
-    /// `RestTimerView` makes so `senku-render` can review this screen offscreen.
-    private let scrolls: Bool
-
     public init(
         store: WeightLogStore = WeightLogStore(),
         profile: ProfileStore.Profile?,
-        scrolls: Bool = true,
         onAdoptWeight: ((Double) -> Void)? = nil
     ) {
         _store = State(initialValue: store)
         self.profile = profile
-        self.scrolls = scrolls
         self.onAdoptWeight = onAdoptWeight
     }
 
@@ -118,11 +111,7 @@ public struct WeightLogView: View {
 
     public var body: some View {
         Group {
-            if scrolls {
-                ScrollView { content }
-            } else {
-                content
-            }
+            ScrollView { content }
         }
         .background(.background)
         #if canImport(UserNotifications) && !os(macOS)

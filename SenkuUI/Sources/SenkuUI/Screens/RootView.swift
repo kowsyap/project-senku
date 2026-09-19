@@ -193,7 +193,21 @@ public struct RootView: View {
         // does not have silently shows its first one instead. So an opening
         // destination is routed exactly like any other: onto the bar if it is
         // there, and under More if it is not.
-        let opening: Tab = store.hasProfile ? .me : .quickCalc
+        var opening: Tab = store.hasProfile ? .me : .quickCalc
+
+        #if DEBUG
+        // Lets a debug build be launched straight onto a screen, which is how
+        // the screenshots in the README are taken:
+        //
+        //     SIMCTL_CHILD_SENKU_SCREEN=water xcrun simctl launch <device> pk.Senku
+        //
+        // Beside `SampleData`, and for the same reason: a screenshot of an
+        // empty app teaches nobody anything.
+        if let asked = ProcessInfo.processInfo.environment["SENKU_SCREEN"],
+           let tab = Tab(rawValue: asked) {
+            opening = tab
+        }
+        #endif
         let bar = [Tab.me] + TabLayout().chosen + [Tab.more]
 
         if bar.contains(opening) {
@@ -220,12 +234,13 @@ public struct RootView: View {
     private var shell: some View {
         Group {
             #if os(iOS)
-            // On a phone the bar scrolls; on an iPad it is the system sidebar,
-            // which has the width to show every destination at once and gains
-            // nothing from scrolling. `horizontalSizeClass` is the same test
-            // `sidebarAdaptable` itself uses to decide between the two.
+            // On a phone, the app's own bar: five or six screens with the
+            // rest behind More. On an iPad it is the system sidebar, which has
+            // the width to show every destination at once and needs neither a
+            // More list nor a bar to choose its contents. `horizontalSizeClass`
+            // is the same test `sidebarAdaptable` itself uses.
             if horizontalSizeClass == .compact {
-                scrollingTabs
+                phoneTabs
             } else {
                 systemTabs
             }
@@ -258,7 +273,7 @@ public struct RootView: View {
             // it next runs. Started here rather than in the app entry point so
             // that previews and tests, which build their own store, never open
             // a session at all.
-            #if os(iOS) && !targetEnvironment(macCatalyst)
+            #if os(iOS)
             ProfileSync.shared.start(applying: store)
 
             // A weigh-in typed on the watch lands here, in the log that owns
@@ -312,7 +327,7 @@ public struct RootView: View {
             // honest definition of "regularly": the phone is the source, and
             // the moment you have been looking at it is the moment its numbers
             // are most likely to have changed.
-            #if os(iOS) && !targetEnvironment(macCatalyst)
+            #if os(iOS)
             if phase == .active {
                 publishWeight()
                 publishWater()
@@ -469,7 +484,7 @@ public struct RootView: View {
         generation = UUID()
         show(.quickCalc)
 
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         // The watch holds its own copy of the profile and the weight summary.
         // Told explicitly, rather than left to drift: a wiped phone and a watch
         // still showing yesterday's plan is worse than either.
@@ -554,14 +569,14 @@ public struct RootView: View {
     /// an application context replaces the one before it, so calling this three
     /// times in a second costs one delivery.
     private func publishWeight() {
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         ProfileSync.shared.send(weight: WeightSummary(log: weightLog, profile: store.profile))
         #endif
     }
 
     /// The watch's bottle, as two numbers.
     private func publishWater() {
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         // Read before publishing rather than trusting what is in memory. The
         // watch asks for this while the phone is in a pocket, and a widget tap
         // since the app was last on screen changed the total without anything
@@ -577,7 +592,7 @@ public struct RootView: View {
 
     /// The watch's two rings, as four numbers.
     private func publishIntake() {
-        #if os(iOS) && !targetEnvironment(macCatalyst)
+        #if os(iOS)
         // Read before publishing, for the same reason water does — see there.
         intake.reload()
 
@@ -745,6 +760,7 @@ public struct RootView: View {
             library: library,
             protocols: cardioPlans,
             cardioRecords: cardioRecords,
+            plans: plans,
             unitSystem: store.profile?.unitSystem ?? UnitPreference.current
         )
             // Spelled out where there is room for it. The tab keeps "PRs",
@@ -791,7 +807,7 @@ public struct RootView: View {
     }
 
     #if os(iOS)
-    /// Every tab kept alive, one shown, above a bar that scrolls.
+    /// Every page kept alive, one shown, under a bar that floats over them.
     ///
     /// A `ZStack` rather than a `switch`, and that is the whole trick: a switch
     /// would build the chosen screen and throw away the others, so every tab
@@ -799,7 +815,7 @@ public struct RootView: View {
     /// scroll position lost, a half-typed weight gone. Keeping them all
     /// mounted and hiding five is what `TabView` does, and what makes leaving a
     /// tab and coming back feel like returning rather than starting again.
-    private var scrollingTabs: some View {
+    private var phoneTabs: some View {
         // Every page mounted, one visible. Swiping between them was tried and
         // taken out again: rebuilding a pager whenever the bar's contents
         // change is what left it showing a blank page.
@@ -899,6 +915,9 @@ public struct RootView: View {
             // read it and pad themselves — see `senkuBottomBarInset()`, which
             // explains why an inset out here does nothing.
             .environment(\.senkuBottomInset, tabBarHeight)
+            // A hidden page still runs its `task`; this is how the screens
+            // that ask for something on appearing know to wait their turn.
+            .environment(\.senkuScreenIsVisible, isOn)
             .opacity(isOn ? 1 : 0)
             // A hidden page must not answer taps or be read out by VoiceOver;
             // opacity alone leaves it doing both.

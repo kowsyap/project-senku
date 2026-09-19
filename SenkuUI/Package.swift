@@ -10,7 +10,6 @@ let package = Package(
     ],
     products: [
         .library(name: "SenkuUI", targets: ["SenkuUI"]),
-        .executable(name: "senku-render", targets: ["SenkuRender"]),
     ],
     dependencies: [
         .package(path: "../SenkuCore"),
@@ -22,15 +21,10 @@ let package = Package(
             resources: [.process("Resources")]
         ),
 
-        // Renders screens to PNG off screen, so layout can be reviewed without
-        // launching a simulator. Development tooling; not shipped in the apps.
+        // Stores, importer, plate maths, tab layout, and the sample file —
+        // everything that can be checked on the host, without a simulator.
         .testTarget(
             name: "SenkuUIUnitTests",
-            dependencies: ["SenkuUI", .product(name: "SenkuCore", package: "SenkuCore")]
-        ),
-
-        .executableTarget(
-            name: "SenkuRender",
             dependencies: ["SenkuUI", .product(name: "SenkuCore", package: "SenkuCore")]
         ),
     ]
