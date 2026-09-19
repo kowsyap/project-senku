@@ -2,6 +2,8 @@
 
 # Senku
 
+**S**ets · **E**nergy · **N**utrition · **K**ilos · **U**tility
+
 **A science-based training and nutrition companion for iPhone and Apple Watch —
 one that shows its work.**
 
