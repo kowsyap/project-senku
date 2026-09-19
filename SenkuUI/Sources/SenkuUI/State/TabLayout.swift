@@ -27,13 +27,23 @@ public final class TabLayout {
     /// Fifty-six is the minimum an item is allowed to be, plus its padding.
     static let itemWidth: CGFloat = 64
 
-    /// How many middle slots a bar of this width can carry without scrolling.
+    /// How many middle slots a screen of this width can carry.
     ///
-    /// Four on a Max-sized phone, three on everything else, two on nothing that
-    /// exists — the clamp is there so a narrow window on iPad cannot ask for a
-    /// bar of one thing and More.
-    public static func slots(forBarWidth width: CGFloat) -> Int {
-        let usable = width - 12          // the row's own padding
+    /// Four on a Max-sized phone — six tabs in all — and three on everything
+    /// else. Measured from the screen rather than from the bar as it is drawn,
+    /// because the bar now hugs its contents: asking a thing that shrinks to
+    /// fit how much room it has is a circle.
+    ///
+    /// | Screen | Tabs |
+    /// | --- | --- |
+    /// | 440 pt (16/17 Pro Max) | 6 |
+    /// | 430 pt (14/15 Pro Max) | 6 |
+    /// | 402, 393, 390, 375 pt | 5 |
+    ///
+    /// The two-slot floor is for a narrow window on iPad, where a bar of one
+    /// thing and More would be a menu with extra steps.
+    public static func slots(forScreenWidth width: CGFloat) -> Int {
+        let usable = width - 24 - 12     // the bar's margins, then the row's
         let fits = Int((usable + 4) / (itemWidth + 4))
         return min(4, max(2, fits - 2))  // less Me and More
     }
@@ -64,13 +74,13 @@ public final class TabLayout {
         self.chosen = stored.isEmpty ? Self.fallback : stored
     }
 
-    /// Told by the bar, once it has been laid out.
+    /// Told by the window, once its width is known.
     ///
     /// Growing the bar does not fill the new slot — that is a choice, and the
     /// app should not make it on your behalf. Shrinking it does drop the tail,
     /// because the alternative is a tab you cannot see.
-    public func fit(barWidth: CGFloat) {
-        slots = Self.slots(forBarWidth: barWidth)
+    public func fit(screenWidth: CGFloat) {
+        slots = Self.slots(forScreenWidth: screenWidth)
 
         // Not guarded on the count having changed: a bar measured at three
         // slots starts at three, so "no change" is exactly the case where a

@@ -37,10 +37,8 @@ import SwiftUI
 struct SenkuTabBar: View {
     @Binding var selection: RootView.Tab
 
-    /// Five of them, chosen by the person using it — see ``TabLayout``. The row
-    /// no longer scrolls in practice, but the scroller is kept: a long label in
-    /// a large accessibility size can still overflow, and a bar that clips is
-    /// worse than one that can be nudged.
+    /// Five or six of them, chosen by the person using it — see ``TabLayout``,
+    /// which only ever hands over as many as this can hold.
     let tabs: [RootView.Tab]
 
     @Namespace private var glassNamespace
@@ -79,6 +77,7 @@ struct SenkuTabBar: View {
             }
             .glassEffect(.regular, in: .capsule)
         }
+        .frame(maxWidth: .infinity)          // centres the capsule, does not stretch it
         .padding(.horizontal, 12)
         .padding(.bottom, 4)
     }
@@ -89,6 +88,7 @@ struct SenkuTabBar: View {
         scroller { item($0) }
             .background(.bar, in: .capsule)
             .overlay(Capsule().strokeBorder(.separator, lineWidth: 0.5))
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
             .padding(.bottom, 4)
     }
@@ -96,36 +96,23 @@ struct SenkuTabBar: View {
     // MARK: - Shared
 
     /// The scrolling row itself, with the decoration left to the caller.
+    /// The row itself, as wide as what is in it.
+    ///
+    /// It used to be a horizontal `ScrollView`, which takes the whole width
+    /// whether it needs it or not — so four tabs sat in a bar sized for nine,
+    /// adrift in their own capsule. The slot count is capped at what fits, so
+    /// there is nothing left to scroll: an `HStack` hugs its contents and the
+    /// capsule shrinks to them, centred.
     private func scroller<Item: View>(
         @ViewBuilder item: @escaping (RootView.Tab) -> Item
     ) -> some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
-                    ForEach(tabs, id: \.self) { tab in
-                        item(tab).id(tab)
-                    }
-                }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 6)
-            }
-            // The glass capsule is the clip, so the row must not add one of its
-            // own — a second clip inside the first crops the tinted selection
-            // against a straight edge.
-            .scrollClipDisabled()
-            // Selecting a tab that is half off the edge brings it fully in —
-            // otherwise the bar tells you where you are with something you
-            // cannot entirely see.
-            .onChange(of: selection) { _, tab in
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    proxy.scrollTo(tab, anchor: .center)
-                }
-            }
-            .onAppear {
-                proxy.scrollTo(selection, anchor: .center)
+        HStack(spacing: 4) {
+            ForEach(tabs, id: \.self) { tab in
+                item(tab).id(tab)
             }
         }
-        .frame(height: 58)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 6)
     }
 
     private func selected(_ tab: RootView.Tab) -> Bool { tab == selection }
@@ -135,8 +122,7 @@ struct SenkuTabBar: View {
 
         return Button {
             guard !isOn else { return }
-            // No haptic here: the pager ticks on every landing, however the
-            // page was reached, and two taps for one press feels like a stutter.
+            Feedback.control()
             withAnimation(.snappy(duration: 0.3)) {
                 selection = tab
             }

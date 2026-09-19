@@ -205,6 +205,19 @@ public struct RootView: View {
     }
 
     public var body: some View {
+        GeometryReader { window in
+            shell
+                // How many tabs this screen can carry, asked of the window
+                // rather than of the bar — the bar hugs its contents now, so
+                // asking it how much room it has would be a circle.
+                .onAppear { layout.fit(screenWidth: window.size.width) }
+                .onChange(of: window.size.width) { _, width in
+                    layout.fit(screenWidth: width)
+                }
+        }
+    }
+
+    private var shell: some View {
         Group {
             #if os(iOS)
             // On a phone the bar scrolls; on an iPad it is the system sidebar,
@@ -278,7 +291,13 @@ public struct RootView: View {
         // pager on a page that no longer exists — which looks like the app
         // jumping to "Me" of its own accord.
         .onChange(of: layout.chosen) { _, _ in
-            if !barTabs.contains(selection) { show(selection) }
+            // The screen you were on has just been taken out of the bar. It
+            // still exists — under More — so send it there rather than leaving
+            // a selection pointing at nothing.
+            guard !barTabs.contains(selection) else { return }
+            let stranded = selection
+            selection = .more
+            moreDestination = stranded
         }
         .onChange(of: scenePhase) { _, phase in
             // Drinks can be logged from the Home Screen widget, in another
@@ -568,8 +587,17 @@ public struct RootView: View {
         #endif
     }
 
-    /// Me, the three you chose, and More — in that order, always five.
+    /// Me, the ones you chose, and More — in that order.
     private var barTabs: [Tab] { [.me] + layout.chosen + [.more] }
+
+    /// Which page is actually on screen.
+    ///
+    /// Never the raw selection: taking the current tab out of the bar would
+    /// otherwise leave a selection with no page behind it, and every page
+    /// hidden is a blank screen.
+    private var visibleTab: Tab {
+        barTabs.contains(selection) ? selection : .more
+    }
 
     /// Opens a screen wherever it happens to live.
     ///
@@ -772,11 +800,10 @@ public struct RootView: View {
     /// mounted and hiding five is what `TabView` does, and what makes leaving a
     /// tab and coming back feel like returning rather than starting again.
     private var scrollingTabs: some View {
-        // A paging `TabView` rather than the stack it was: the same pages, kept
-        // alive the same way, but reachable by swiping as well as by tapping
-        // the bar. Every screen here scrolls vertically, so a horizontal drag
-        // has nothing to argue with.
-        TabView(selection: $selection) {
+        // Every page mounted, one visible. Swiping between them was tried and
+        // taken out again: rebuilding a pager whenever the bar's contents
+        // change is what left it showing a blank page.
+        ZStack {
             ForEach(barTabs) { tab in
                 page(tab) {
                     if tab == .more {
@@ -790,28 +817,23 @@ public struct RootView: View {
                 }
             }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        // The bar is the index; two of them would be one too many.
-        .ignoresSafeArea(.keyboard)
-        // A tick as each page lands, which is what makes a swipe feel like it
-        // moved something rather than just animating.
-        .onChange(of: selection) { _, _ in Feedback.control() }
         // The bar floats over the pages, and each page reserves room for it
         // from the inside — see `page(_:content:)`. A `safeAreaInset` out here
         // insets the stack, and the stack is not what scrolls: the lists are,
         // several layers down inside their own navigation stacks, and they went
         // on ending underneath the bar with their last rows unreachable.
         .overlay(alignment: .bottom) {
-            SenkuTabBar(selection: $selection, tabs: barTabs)
-                .onGeometryChange(for: CGSize.self) { proxy in
-                    proxy.size
-                } action: { size in
-                    tabBarHeight = size.height
-                    // How many slots this screen can carry — four on a Max,
-                    // three on the rest. Asked of the bar rather than of the
-                    // device, because it is the bar that has to hold them.
-                    layout.fit(barWidth: size.width)
-                }
+            SenkuTabBar(
+                // The bar shows More for anything it is not carrying, so a
+                // screen opened from the More list still has something lit.
+                selection: Binding(get: { visibleTab }, set: { show($0) }),
+                tabs: barTabs
+            )
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.size.height
+            } action: { height in
+                tabBarHeight = height
+            }
         }
     }
 
@@ -867,12 +889,19 @@ public struct RootView: View {
         _ tab: Tab,
         @ViewBuilder content: () -> Content
     ) -> some View {
+        let isOn = tab == visibleTab
+
         content()
             // Published, not applied. The screens inside each navigation stack
             // read it and pad themselves — see `senkuBottomBarInset()`, which
             // explains why an inset out here does nothing.
             .environment(\.senkuBottomInset, tabBarHeight)
-            .tag(tab)
+            .opacity(isOn ? 1 : 0)
+            // A hidden page must not answer taps or be read out by VoiceOver;
+            // opacity alone leaves it doing both.
+            .allowsHitTesting(isOn)
+            .accessibilityHidden(!isOn)
+            .zIndex(isOn ? 1 : 0)
     }
     #endif
 
