@@ -586,8 +586,12 @@ The phone stays the owner of the session and the only thing that writes history.
 
 These need your answer before the features they touch are built.
 
-1. **HealthKit.** Read weight and write workouts, or stay self-contained? It
-   changes F1's data model (dedupe, source of truth) and adds an entitlement.
+1. ~~**HealthKit.**~~ **Answered: no.** Stay self-contained. The payoff was
+   weight arriving from a connected scale, workouts closing the Move ring, and
+   real expenditure feeding the calorie target — and the cost was two sources of
+   truth for weight, with the dedupe and provenance that implies, plus an
+   entitlement a personal team may not even grant. Revisit only if a scale
+   turns up.
 2. ~~**iCloud sync.**~~ **Answered: no.** CloudKit is refused outright by a
    personal development team, so it is not available to this build at any price
    below a paid membership. The App Group plus the JSON export is the backup
@@ -602,6 +606,9 @@ These need your answer before the features they touch are built.
 5. **Sets-per-week volume guidance.** Out of scope here. Do you want it as a
    sixth feature, given it is the thing coverage percentages will make people
    ask for?
-6. ~~**Plate calculator**~~ **Built.** A per-side row inside the set logger,
-   barbell lifts only, with a rack editor behind it. Pounds by default, since
-   that is what the plates say.
+6. ~~**Plate calculator**~~ **Built.** A page of its own, reached from the
+   workout screen: type a weight and it draws the bar, plates sized and
+   coloured by where they sit in your rack, with the per-side list counted
+   ("45 ×2 · 25"). It began as a row inside the set logger and moved, because
+   the logger is opened *after* a set — by which point the bar is loaded and
+   the arithmetic is a fact rather than a question.
