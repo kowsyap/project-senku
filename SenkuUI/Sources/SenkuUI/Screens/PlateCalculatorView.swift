@@ -204,15 +204,23 @@ struct PlateCalculatorView: View {
         }
     }
 
-    /// One plate, sized like the real thing and labelled with its weight.
+    /// One plate, sized and coloured by where it sits in the rack.
+    ///
+    /// ## Why rank and not ratio
+    ///
+    /// Drawn to scale, a 2.5 beside a 45 is a eighteenth of its height — a
+    /// sliver with no room for its own number. Clamping the small ones to a
+    /// floor fixed that and created a worse problem: 10, 5 and 2.5 all hit the
+    /// floor and became the same plate. So height follows the plate's *place*
+    /// in your rack rather than its weight, which keeps every denomination a
+    /// different size however odd the rack is.
     private func plateShape(_ plate: Double) -> some View {
-        let biggest = set.plates.first ?? plate
-        // Nothing smaller than a third of the tallest: a 1.25 drawn to scale
-        // beside a 45 would be a sliver with no room for its own number.
-        let scale = max(0.34, plate / max(biggest, 0.001))
+        let rank = set.plates.firstIndex { abs($0 - plate) < 0.001 } ?? 0
+        let steps = max(set.plates.count - 1, 1)
+        let scale = 1 - (Double(rank) / Double(steps)) * 0.62
 
         return RoundedRectangle(cornerRadius: 4, style: .continuous)
-            .fill(colour(for: plate))
+            .fill(colour(rank: rank))
             .frame(width: 22, height: 108 * scale)
             .overlay {
                 Text(PlateLoad.trim(plate))
@@ -224,17 +232,24 @@ struct PlateCalculatorView: View {
             .accessibilityLabel("\(PlateLoad.trim(plate)) \(unit.massLabel)")
     }
 
-    /// Competition plate colours where they apply, and a sensible ladder where
-    /// they do not — the point is that two plates of different weight never
-    /// look the same, not that a commercial gym's rack is colour-coded.
-    private func colour(for plate: Double) -> Color {
-        switch (unit, plate) {
-        case (.metric, 25), (.imperial, 45): return Senku.Palette.warning
-        case (.metric, 20), (.imperial, 35): return Senku.Palette.deficit
-        case (.metric, 15), (.imperial, 25): return Senku.Palette.caution
-        case (.metric, 10), (.imperial, 10): return Senku.Palette.surplus
-        default: return Senku.Palette.info
-        }
+    /// A colour per denomination, by rank rather than by weight.
+    ///
+    /// The heaviest four follow the competition colours everyone has seen —
+    /// red, blue, yellow, green — and the rest carry on down a ladder that
+    /// never repeats. Hard-coding it by weight left 5 and 2.5 sharing the
+    /// default, which is the one thing a colour code must not do.
+    private func colour(rank: Int) -> Color {
+        let ladder: [Color] = [
+            Senku.Palette.warning,                          // red
+            Senku.Palette.deficit,                          // blue
+            Senku.Palette.caution,                          // amber
+            Senku.Palette.surplus,                          // green
+            Color(red: 0.62, green: 0.45, blue: 0.92),      // violet
+            Color(red: 0.09, green: 0.69, blue: 0.65),      // teal
+            Color(red: 0.95, green: 0.45, blue: 0.75),      // pink
+            Senku.Palette.info,                             // slate
+        ]
+        return ladder[min(rank, ladder.count - 1)]
     }
 
     // MARK: - Per side, in words
