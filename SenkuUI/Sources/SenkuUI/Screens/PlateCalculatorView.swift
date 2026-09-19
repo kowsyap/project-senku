@@ -170,17 +170,26 @@ struct PlateCalculatorView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    HStack(alignment: .center, spacing: 3) {
-                        // The sleeve, so the plates have something to sit on.
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(.tertiary)
-                            .frame(width: 26, height: 8)
+                    // Sized to the card rather than to a fixed width: twelve
+                    // plates at full size need 326 points and a small phone has
+                    // 311 to give, so the drawing thins out instead of running
+                    // off the edge.
+                    GeometryReader { card in
+                        let width = plateWidth(for: load.perSide.count, in: card.size.width)
 
-                        ForEach(Array(load.perSide.enumerated()), id: \.offset) { _, plate in
-                            plateShape(plate)
+                        HStack(alignment: .center, spacing: 3) {
+                            // The sleeve, so the plates have something to sit on.
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(.tertiary)
+                                .frame(width: 26, height: 8)
+
+                            ForEach(Array(load.perSide.enumerated()), id: \.offset) { _, plate in
+                                plateShape(plate, width: width)
+                            }
+
+                            Spacer(minLength: 0)
                         }
-
-                        Spacer(minLength: 0)
+                        .frame(height: card.size.height)
                     }
                     .frame(height: 108)
                 }
@@ -222,14 +231,29 @@ struct PlateCalculatorView: View {
     /// floor and became the same plate. So height follows the plate's *place*
     /// in your rack rather than its weight, which keeps every denomination a
     /// different size however odd the rack is.
-    private func plateShape(_ plate: Double) -> some View {
+    /// How wide each plate can be and still leave the row inside the card.
+    ///
+    /// Never wider than 22 — fat plates on a bare bar look like a mistake —
+    /// and never thinner than 13, below which the number on it stops being
+    /// readable and the drawing stops being worth having.
+    private func plateWidth(for count: Int, in available: CGFloat) -> CGFloat {
+        guard count > 0 else { return 22 }
+
+        let sleeve: CGFloat = 26 + 3
+        let gaps = CGFloat(count) * 3
+        let each = (available - sleeve - gaps) / CGFloat(count)
+
+        return min(22, max(13, each))
+    }
+
+    private func plateShape(_ plate: Double, width: CGFloat) -> some View {
         let rank = set.plates.firstIndex { abs($0 - plate) < 0.001 } ?? 0
         let steps = max(set.plates.count - 1, 1)
         let scale = 1 - (Double(rank) / Double(steps)) * 0.62
 
         return RoundedRectangle(cornerRadius: 4, style: .continuous)
             .fill(colour(rank: rank))
-            .frame(width: 22, height: 108 * scale)
+            .frame(width: width, height: 108 * scale)
             .overlay {
                 Text(PlateLoad.trim(plate))
                     .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -269,7 +293,8 @@ struct PlateCalculatorView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                Text(load.description)
+                // Counted rather than listed: "45 ×12" beats twelve 45s.
+                Text(load.grouped)
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Senku.Palette.protein)

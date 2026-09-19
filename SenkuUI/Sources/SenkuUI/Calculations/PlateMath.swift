@@ -114,6 +114,34 @@ public struct PlateLoad: Hashable, Sendable {
         perSide.map { Self.trim($0) }.joined(separator: " · ")
     }
 
+    /// The same list with repeats counted: "45 ×3 · 25 · 10".
+    ///
+    /// Twelve 45s written out is a wall of the same number that has to be
+    /// counted to be read, and does not fit a small phone either. Loading a bar
+    /// is counting anyway — three of these, one of those — so the count is the
+    /// useful half.
+    public var grouped: String {
+        var parts: [String] = []
+        var run: (plate: Double, count: Int)?
+
+        for plate in perSide {
+            if var current = run, current.plate == plate {
+                current.count += 1
+                run = current
+            } else {
+                if let current = run { parts.append(Self.label(current)) }
+                run = (plate, 1)
+            }
+        }
+        if let current = run { parts.append(Self.label(current)) }
+
+        return parts.joined(separator: " · ")
+    }
+
+    private static func label(_ run: (plate: Double, count: Int)) -> String {
+        run.count > 1 ? "\(trim(run.plate)) ×\(run.count)" : trim(run.plate)
+    }
+
     static func trim(_ value: Double) -> String {
         value == value.rounded() ? "\(Int(value))" : String(format: "%.1f", value)
     }

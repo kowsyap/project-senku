@@ -106,6 +106,16 @@ import SenkuCore
 
     /// Twelve of the heaviest plate on each side — the most either rack will
     /// be asked to build.
+    /// Twelve of the same plate is a wall of one number; the count is what
+    /// you are actually going to do.
+    @Test func repeatsAreCounted() {
+        #expect(PlateMath.load(target: 1125, using: .pounds).grouped == "45 ×12")
+        #expect(PlateMath.load(target: 225, using: .pounds).grouped == "45 ×2")
+        #expect(PlateMath.load(target: 185, using: .pounds).grouped == "45 · 25")
+        #expect(PlateMath.load(target: 290, using: .pounds).grouped == "45 ×2 · 25 · 5 · 2.5")
+        #expect(PlateMath.load(target: 45, using: .pounds).grouped == "")
+    }
+
     @Test func theCeilingIsTwelvePlatesASide() {
         #expect(PlateSet.pounds.maxWeight == 45 + 45 * 24)        // 1,125 lb
         #expect(PlateSet.kilograms.maxWeight == 20 + 25 * 24)     // 620 kg
