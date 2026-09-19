@@ -80,7 +80,11 @@ public struct RootView: View {
     /// action in the app that means "forget everything".
     @State private var generation = UUID()
 
-    enum Tab: String, Hashable {
+    /// Which three screens the bar is carrying, and what More is showing.
+    @State private var layout = TabLayout()
+    @State private var moreDestination: Tab?
+
+    public enum Tab: String, Hashable, Identifiable, Sendable, CaseIterable {
         case me
         case quickCalc
         case rest
@@ -90,6 +94,10 @@ public struct RootView: View {
         case food
         case records
         case anime
+        /// Not a screen: the way to the screens the bar has no room for.
+        case more
+
+        public var id: String { rawValue }
 
         /// The colour the tab bar takes while this tab is showing.
         ///
@@ -110,6 +118,7 @@ public struct RootView: View {
             case .food: "Food"
             case .records: "PRs"
             case .anime: "Anime"
+            case .more: "More"
             }
         }
 
@@ -139,11 +148,14 @@ public struct RootView: View {
             case .food: "fork.knife"
             case .records: "trophy"
             case .anime: "sparkles.tv"
+            case .more: "ellipsis.circle"
             }
         }
 
-        /// Left to right, as they appear in the bar.
-        static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime]
+        /// Every screen, in the order they are listed wherever all of them
+        /// appear — the sidebar on iPad, and the More list on a phone. "More"
+        /// is not in it, because it is not a screen.
+        public static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime]
 
         /// One hue each, spread around the wheel.
         ///
@@ -168,6 +180,7 @@ public struct RootView: View {
             case .water: Color(red: 0.25, green: 0.60, blue: 0.94)      // azure
             case .records: Color(red: 0.35, green: 0.39, blue: 0.85)    // indigo
             case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)      // pink
+            case .more: Color(red: 0.45, green: 0.50, blue: 0.58)        // slate
             }
         }
     }
@@ -198,7 +211,7 @@ public struct RootView: View {
         .animation(.easeInOut(duration: 0.2), value: selection)
         .onOpenURL { url in
             if RestDeepLink.handle(url) != nil {
-                selection = .rest
+                show(.rest)
                 return
             }
 
@@ -207,9 +220,9 @@ public struct RootView: View {
             // widget that dropped you on the weight page with nothing to do
             // would be a link to a place you were already able to reach.
             switch url.host() {
-            case "weigh-in": selection = .weight
-            case "water": selection = .water
-            case "food": selection = .food
+            case "weigh-in": show(.weight)
+            case "water": show(.water)
+            case "food": show(.food)
             default: break
             }
         }
@@ -415,7 +428,7 @@ public struct RootView: View {
         intake = IntakeStore()
         profileEditionID = UUID()
         generation = UUID()
-        selection = .quickCalc
+        show(.quickCalc)
 
         #if os(iOS) && !targetEnvironment(macCatalyst)
         // The watch holds its own copy of the profile and the weight summary.
@@ -535,141 +548,168 @@ public struct RootView: View {
         #endif
     }
 
+    /// Me, the three you chose, and More — in that order, always five.
+    private var barTabs: [Tab] { [.me] + layout.chosen + [.more] }
+
+    /// Opens a screen wherever it happens to live.
+    ///
+    /// A screen not in the bar is not unreachable — it is under More, and a
+    /// deep link or an in-app jump has to land there rather than selecting a
+    /// tab that is not on screen. Every `selection =` in this file goes through
+    /// here for that reason.
+    private func show(_ tab: Tab) {
+        if barTabs.contains(tab) {
+            moreDestination = nil
+            selection = tab
+        } else {
+            moreDestination = tab
+            selection = .more
+        }
+    }
+
     // MARK: - The destinations
 
-    private var meTab: some View {
-        NavigationStack {
-            profileTab
-                .senkuBottomBarInset()
-                .navigationTitle(store.hasProfile ? "My plan" : "Senku")
-                .senkuWordmark()
+    /// A screen without its navigation stack, so the same view can be a tab in
+    /// the bar or a page pushed from More.
+    @ViewBuilder
+    private func screen(_ tab: Tab) -> some View {
+        switch tab {
+        case .me: meScreen
+        case .quickCalc: quickCalcScreen
+        case .rest: restScreen
+        case .workout: workoutScreen
+        case .weight: weightScreen
+        case .water: waterScreen
+        case .food: foodScreen
+        case .records: recordsScreen
+        case .anime: animeScreen
+        case .more: EmptyView()   // the list itself, not a destination
         }
     }
 
-    private var quickCalcTab: some View {
-        NavigationStack {
-            // Saving is offered whether or not a profile exists. It used
-            // to be hidden once one did, on the theory that this tab was
-            // then only for other people's numbers — which left someone who
-            // had just worked out their own new numbers here with no way to
-            // keep them.
-            CalculatorView(
-                draft: PlanDraft(),
-                saveTitle: store.hasProfile ? "Update my profile" : "Save as my profile"
-            ) { profile in
-                store.save(profile)
-                profileEditionID = UUID()
-                selection = .me
-            }
+    @ViewBuilder
+    private var meScreen: some View {
+        profileTab
             .senkuBottomBarInset()
-                .navigationTitle("Quick calc")
-            .senkuWordmark()
-        }
+            .navigationTitle(store.hasProfile ? "My plan" : "Senku")
     }
 
-    private var restTab: some View {
-        NavigationStack {
-            RestTimerView()
-                .senkuBottomBarInset()
-                .navigationTitle("Rest")
-                .senkuWordmark()
+    @ViewBuilder
+    private var quickCalcScreen: some View {
+        // Saving is offered whether or not a profile exists. It used
+        // to be hidden once one did, on the theory that this tab was
+        // then only for other people's numbers — which left someone who
+        // had just worked out their own new numbers here with no way to
+        // keep them.
+        CalculatorView(
+            draft: PlanDraft(),
+            saveTitle: store.hasProfile ? "Update my profile" : "Save as my profile"
+        ) { profile in
+            store.save(profile)
+            profileEditionID = UUID()
+            show(.me)
         }
+        .senkuBottomBarInset()
+            .navigationTitle("Quick calc")
     }
 
-    private var weightTab: some View {
-        NavigationStack {
-            WeightLogView(store: weightLog, profile: store.profile) { trend in
-                // Adopting the trend edits the one field it measures and leaves
-                // the rest of the profile alone.
-                guard var updated = store.profile else { return }
-                guard let metrics = try? BodyMetrics(
-                    sex: updated.metrics.sex,
-                    age: updated.metrics.age,
-                    heightCM: updated.metrics.heightCM,
-                    weightKG: trend,
-                    bodyFatPercentage: updated.metrics.bodyFatPercentage
-                ) else { return }
-
-                updated.metrics = metrics
-                store.save(updated)
-                profileEditionID = UUID()
-            }
+    @ViewBuilder
+    private var restScreen: some View {
+        RestTimerView()
             .senkuBottomBarInset()
-                .navigationTitle("Weight")
-            .senkuWordmark()
+            .navigationTitle("Rest")
+    }
+
+    @ViewBuilder
+    private var weightScreen: some View {
+        WeightLogView(store: weightLog, profile: store.profile) { trend in
+            // Adopting the trend edits the one field it measures and leaves
+            // the rest of the profile alone.
+            guard var updated = store.profile else { return }
+            guard let metrics = try? BodyMetrics(
+                sex: updated.metrics.sex,
+                age: updated.metrics.age,
+                heightCM: updated.metrics.heightCM,
+                weightKG: trend,
+                bodyFatPercentage: updated.metrics.bodyFatPercentage
+            ) else { return }
+
+            updated.metrics = metrics
+            store.save(updated)
+            profileEditionID = UUID()
         }
+        .senkuBottomBarInset()
+            .navigationTitle("Weight")
     }
 
     /// The workout tab: today's checklist, and the plan behind it.
-    private var workoutTab: some View {
-        NavigationStack {
-            WorkoutView(
-                plans: plans,
-                workouts: workouts,
-                records: records,
-                cardioRecords: cardioRecords,
-                library: library,
-                unitSystem: store.profile?.unitSystem ?? UnitPreference.current
-            )
-            .senkuBottomBarInset()
-                .navigationTitle("Workout")
-            .senkuWordmark()
-        }
+    @ViewBuilder
+    private var workoutScreen: some View {
+        WorkoutView(
+            plans: plans,
+            workouts: workouts,
+            records: records,
+            cardioRecords: cardioRecords,
+            library: library,
+            unitSystem: store.profile?.unitSystem ?? UnitPreference.current
+        )
+        .senkuBottomBarInset()
+            .navigationTitle("Workout")
     }
 
     /// The target the profile has always computed, finally something to act on.
-    private var waterTab: some View {
-        NavigationStack {
-            WaterView(store: water, workouts: workouts, profile: store.profile)
-                .navigationTitle("Water")
-                .senkuWordmark()
-        }
+    @ViewBuilder
+    private var waterScreen: some View {
+        WaterView(store: water, workouts: workouts, profile: store.profile)
+            .navigationTitle("Water")
     }
 
-    private var foodTab: some View {
-        NavigationStack {
-            IntakeView(
-                store: intake,
-                profile: store.profile,
-                weights: weightLog
-            ) {
-                selection = .quickCalc
-            } onAdoptMaintenance: { measured in
-                guard var profile = store.profile else { return }
-                profile.measuredMaintenanceCalories = measured
-                store.save(profile)
-                // Every target in the app moves with it, and the watch is
-                // holding a copy of the old ones.
-                profileEditionID = UUID()
-            }
-            .navigationTitle("Food")
-            .senkuWordmark()
+    @ViewBuilder
+    private var foodScreen: some View {
+        IntakeView(
+            store: intake,
+            profile: store.profile,
+            weights: weightLog
+        ) {
+            show(.quickCalc)
+        } onAdoptMaintenance: { measured in
+            guard var profile = store.profile else { return }
+            profile.measuredMaintenanceCalories = measured
+            store.save(profile)
+            // Every target in the app moves with it, and the watch is
+            // holding a copy of the old ones.
+            profileEditionID = UUID()
         }
+        .navigationTitle("Food")
     }
 
     /// Nothing to do with training, and deliberately so — see F6.
-    private var animeTab: some View {
-        NavigationStack {
-            AnimeView(store: anime)
-                .navigationTitle("Anime")
-                .senkuWordmark()
-        }
+    @ViewBuilder
+    private var animeScreen: some View {
+        AnimeView(store: anime)
+            .navigationTitle("Anime")
     }
 
-    private var recordsTab: some View {
+    @ViewBuilder
+    private var recordsScreen: some View {
+        RecordsView(
+            store: records,
+            library: library,
+            protocols: cardioPlans,
+            cardioRecords: cardioRecords,
+            unitSystem: store.profile?.unitSystem ?? UnitPreference.current
+        )
+            // Spelled out where there is room for it. The tab keeps "PRs",
+            // which is both what lifters say and all a tab bar slot will
+            // hold without truncating.
+            .senkuBottomBarInset()
+            .navigationTitle("Personal Records")
+    }
+
+    /// A screen with its own navigation stack, as a tab needs it.
+    private func stack(_ tab: Tab) -> some View {
         NavigationStack {
-            RecordsView(
-                store: records,
-                library: library,
-                protocols: cardioPlans,
-                cardioRecords: cardioRecords,
-                unitSystem: store.profile?.unitSystem ?? UnitPreference.current
-            )
-                // Spelled out where there is room for it. The tab keeps "PRs",
-                // which is both what lifters say and all a tab bar slot will
-                // hold without truncating.
-                .senkuBottomBarInset()
-                .navigationTitle("Personal Records")
+            screen(tab)
                 .senkuWordmark()
         }
     }
@@ -679,23 +719,23 @@ public struct RootView: View {
     private var systemTabs: some View {
         if #available(iOS 18.0, macOS 15.0, *) {
             AdaptiveTabs(selection: $selection) {
-                meTab
+                stack(.me)
             } quickCalc: {
-                quickCalcTab
+                stack(.quickCalc)
             } rest: {
-                restTab
+                stack(.rest)
             } workout: {
-                workoutTab
+                stack(.workout)
             } weight: {
-                weightTab
+                stack(.weight)
             } water: {
-                waterTab
+                stack(.water)
             } food: {
-                foodTab
+                stack(.food)
             } records: {
-                recordsTab
+                stack(.records)
             } anime: {
-                animeTab
+                stack(.anime)
             }
         } else {
             legacyTabs
@@ -717,15 +757,18 @@ public struct RootView: View {
         // the bar. Every screen here scrolls vertically, so a horizontal drag
         // has nothing to argue with.
         TabView(selection: $selection) {
-            page(.me) { meTab }
-            page(.quickCalc) { quickCalcTab }
-            page(.rest) { restTab }
-            page(.workout) { workoutTab }
-            page(.weight) { weightTab }
-            page(.water) { waterTab }
-            page(.food) { foodTab }
-            page(.records) { recordsTab }
-            page(.anime) { animeTab }
+            ForEach(barTabs) { tab in
+                page(tab) {
+                    if tab == .more {
+                        morePage
+                    } else {
+                        NavigationStack {
+                            screen(tab)
+                                .senkuWordmark()
+                        }
+                    }
+                }
+            }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         // The bar is the index; two of them would be one too many.
@@ -739,12 +782,59 @@ public struct RootView: View {
         // several layers down inside their own navigation stacks, and they went
         // on ending underneath the bar with their last rows unreachable.
         .overlay(alignment: .bottom) {
-            SenkuTabBar(selection: $selection)
+            SenkuTabBar(selection: $selection, tabs: barTabs)
                 .onGeometryChange(for: CGFloat.self) { proxy in
                     proxy.size.height
                 } action: { height in
                     tabBarHeight = height
                 }
+        }
+    }
+
+    /// The list of everything the bar has no room for.
+    private var morePage: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(Tab.ordered.filter { !barTabs.contains($0) }) { tab in
+                        Button {
+                            moreDestination = tab
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: tab.symbol)
+                                    .foregroundStyle(tab.tint)
+                                    .frame(width: 26)
+
+                                Text(tab.title)
+                                    .foregroundStyle(Color.primary)
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                Section {
+                    NavigationLink {
+                        TabBarEditor(layout: layout)
+                    } label: {
+                        Label("Choose what is in the bar", systemImage: "slider.horizontal.3")
+                    }
+                }
+            }
+            .senkuBottomBarInset()
+            .navigationTitle("More")
+            .senkuWordmark()
+            .navigationDestination(item: $moreDestination) { tab in
+                // The same screen it would be in the bar, one level deeper.
+                screen(tab)
+            }
         }
     }
 
@@ -763,43 +853,17 @@ public struct RootView: View {
     #endif
 
     /// The pre-iOS 18 arrangement: a plain tab bar, no sidebar and no pinning.
+    ///
+    /// The system's own bar, which means the system's own "More" past the fifth
+    /// item — the same shape as the phone's custom bar, arrived at by a
+    /// different route.
     private var legacyTabs: some View {
         TabView(selection: $selection) {
-            meTab
-                .tabItem { Label("Me", systemImage: "person.fill") }
-                .tag(Tab.me)
-
-            quickCalcTab
-                .tabItem { Label("Quick calc", systemImage: "function") }
-                .tag(Tab.quickCalc)
-
-            restTab
-                .tabItem { Label("Rest", systemImage: "timer") }
-                .tag(Tab.rest)
-
-            workoutTab
-                .tabItem { Label("Workout", systemImage: "figure.strengthtraining.traditional") }
-                .tag(Tab.workout)
-
-            weightTab
-                .tabItem { Label("Weight", systemImage: "scalemass") }
-                .tag(Tab.weight)
-
-            recordsTab
-                .tabItem { Label("PRs", systemImage: "trophy") }
-                .tag(Tab.records)
-
-            waterTab
-                .tabItem { Label("Water", systemImage: "drop.fill") }
-                .tag(Tab.water)
-
-            foodTab
-                .tabItem { Label("Food", systemImage: "fork.knife") }
-                .tag(Tab.food)
-
-            animeTab
-                .tabItem { Label("Anime", systemImage: "sparkles.tv") }
-                .tag(Tab.anime)
+            ForEach(Tab.ordered) { tab in
+                stack(tab)
+                    .tabItem { Label(tab.title, systemImage: tab.symbol) }
+                    .tag(tab)
+            }
         }
     }
 
@@ -823,7 +887,7 @@ public struct RootView: View {
             Text("Work out your numbers in Quick calc, then save them here to keep them.")
         } actions: {
             Button("Open quick calc") {
-                selection = .quickCalc
+                show(.quickCalc)
             }
             .buttonStyle(.borderedProminent)
         }

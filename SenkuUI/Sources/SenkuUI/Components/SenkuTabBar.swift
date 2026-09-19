@@ -37,9 +37,13 @@ import SwiftUI
 struct SenkuTabBar: View {
     @Binding var selection: RootView.Tab
 
-    @Namespace private var glassNamespace
+    /// Five of them, chosen by the person using it — see ``TabLayout``. The row
+    /// no longer scrolls in practice, but the scroller is kept: a long label in
+    /// a large accessibility size can still overflow, and a bar that clips is
+    /// worse than one that can be nudged.
+    let tabs: [RootView.Tab]
 
-    private let tabs = RootView.Tab.ordered
+    @Namespace private var glassNamespace
 
     var body: some View {
         Group {
@@ -171,9 +175,10 @@ struct SenkuTabBar: View {
                     )
             }
             .foregroundStyle(isOn ? AnyShapeStyle(tab.activeTint) : AnyShapeStyle(.secondary))
-            // Wide enough for the longest label, so the row reads as even
-            // columns rather than as text of varying width.
-            .frame(minWidth: 70)
+            // Wide enough to read as a column, narrow enough that five of them
+            // fit a phone without the row scrolling. Seventy was sized for a
+            // bar that scrolled anyway; five fixed positions have to fit.
+            .frame(minWidth: 56)
             .padding(.vertical, 6)
             .padding(.horizontal, 4)
             .contentShape(Capsule())
