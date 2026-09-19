@@ -53,7 +53,10 @@ public struct TargetsView: View {
                 figure(Display.compactGrams(plan.macros.carbGrams), "carbs", Senku.Palette.carbs)
                 figure(Display.compactGrams(plan.macros.fatGrams), "fat", Senku.Palette.fat)
                 figure(
-                    Display.compactVolume(plan.macros.waterML, in: unitSystem)
+                    // Millilitres whatever the profile's units say — see
+                    // Display.millilitres. Nobody fills a bottle in fluid
+                    // ounces.
+                    Display.compactMillilitres(plan.macros.waterML)
                         .replacingOccurrences(of: " ", with: ""),
                     "water",
                     Senku.Palette.deficit
@@ -98,7 +101,7 @@ public struct TargetsView: View {
                 row("Carbs", Display.grams(plan.macros.carbGrams), Senku.Palette.carbs)
                 row("Fat", Display.grams(plan.macros.fatGrams), Senku.Palette.fat)
                 Divider()
-                row("Water", Display.volume(plan.macros.waterML, in: unitSystem), Senku.Palette.deficit)
+                row("Water", Display.millilitres(plan.macros.waterML), Senku.Palette.deficit)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -129,7 +132,7 @@ public struct TargetsView: View {
         Protein \(Display.grams(plan.macros.proteinGrams)), \
         carbohydrate \(Display.grams(plan.macros.carbGrams)), \
         fat \(Display.grams(plan.macros.fatGrams)), \
-        water \(Display.volume(plan.macros.waterML, in: unitSystem)).
+        water \(Display.millilitres(plan.macros.waterML)).
         """
     }
 

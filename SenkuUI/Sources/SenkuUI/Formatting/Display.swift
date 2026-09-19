@@ -99,14 +99,10 @@ public enum Display {
         }
     }
 
-    public static func volume(_ millilitres: Double, in system: UnitSystem) -> String {
-        switch system {
-        case .metric:
-            return "\(Int(millilitres.rounded())) ml"
-        case .imperial:
-            return String(format: "%.0f fl oz", Convert.fluidOunces(fromMillilitres: millilitres))
-        }
-    }
+    // There is deliberately no fluid-ounce formatter. Both of them were
+    // deleted the day a profile in pounds showed its water target as "66 fl
+    // oz": every other measure in the app follows the profile's units, and
+    // water is the one that must not.
 
     /// Water, in millilitres, whatever the unit system says.
     ///
@@ -116,6 +112,16 @@ public enum Display {
     /// meant anything at the tap.
     public static func millilitres(_ value: Double) -> String {
         "\(Int(value.rounded())) ml"
+    }
+
+    /// Water for a space with no room for "2800 ml", still metric.
+    ///
+    /// The compact twin of `millilitres`, and metric for the same reason: a
+    /// bottle is sold in litres wherever you are.
+    public static func compactMillilitres(_ value: Double) -> String {
+        value >= 1000
+            ? String(format: "%.1f L", value / 1000)
+            : "\(Int(value.rounded())) ml"
     }
 
     /// A weight with the decimal only when there is one.
@@ -140,23 +146,6 @@ public enum Display {
     /// never the right trade.
     public static func compactGrams(_ value: Double) -> String {
         "\(Int(value.rounded()))g"
-    }
-
-    /// Volume for a space that has no room for "2800 ml".
-    ///
-    /// Litres past a litre, which is how anyone says it out loud anyway, and
-    /// short enough to sit under a widget's macro column without eliding to
-    /// "2800…" — an ellipsis where a number should be is worse than a rounder
-    /// number.
-    public static func compactVolume(_ millilitres: Double, in system: UnitSystem) -> String {
-        switch system {
-        case .metric:
-            return millilitres >= 1000
-                ? String(format: "%.1f L", millilitres / 1000)
-                : "\(Int(millilitres.rounded())) ml"
-        case .imperial:
-            return String(format: "%.0f oz", Convert.fluidOunces(fromMillilitres: millilitres))
-        }
     }
 
     public static func range(_ range: ClosedRange<Double>, in system: UnitSystem) -> String {
