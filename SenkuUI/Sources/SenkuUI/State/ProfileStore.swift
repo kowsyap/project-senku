@@ -27,6 +27,13 @@ public final class ProfileStore {
         /// The weight being worked towards, if one was named.
         public var goalWeightKG: Double?
 
+        /// Maintenance as measured from what you ate against what the scale
+        /// did, once you have accepted it — see ``AdaptiveMaintenance``. Nil
+        /// means the plan is using the formula, which is where everyone starts.
+        ///
+        /// Optional, so a profile saved before this existed still decodes.
+        public var measuredMaintenanceCalories: Double?
+
         public var updatedAt: Date
 
         public init(
@@ -37,6 +44,7 @@ public final class ProfileStore {
             formula: BMRFormula,
             unitSystem: UnitSystem,
             goalWeightKG: Double? = nil,
+            measuredMaintenanceCalories: Double? = nil,
             updatedAt: Date = .now
         ) {
             self.name = name
@@ -46,6 +54,7 @@ public final class ProfileStore {
             self.formula = formula
             self.unitSystem = unitSystem
             self.goalWeightKG = goalWeightKG
+            self.measuredMaintenanceCalories = measuredMaintenanceCalories
             self.updatedAt = updatedAt
         }
 
@@ -54,7 +63,8 @@ public final class ProfileStore {
                 for: metrics,
                 activityLevel: activityLevel,
                 goal: goal,
-                formula: formula
+                formula: formula,
+                measuredMaintenance: measuredMaintenanceCalories
             )
         }
 

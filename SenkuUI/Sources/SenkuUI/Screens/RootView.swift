@@ -603,8 +603,19 @@ public struct RootView: View {
 
     private var foodTab: some View {
         NavigationStack {
-            IntakeView(store: intake, profile: store.profile) {
+            IntakeView(
+                store: intake,
+                profile: store.profile,
+                weights: weightLog
+            ) {
                 selection = .quickCalc
+            } onAdoptMaintenance: { measured in
+                guard var profile = store.profile else { return }
+                profile.measuredMaintenanceCalories = measured
+                store.save(profile)
+                // Every target in the app moves with it, and the watch is
+                // holding a copy of the old ones.
+                profileEditionID = UUID()
             }
             .navigationTitle("Food")
             .senkuWordmark()

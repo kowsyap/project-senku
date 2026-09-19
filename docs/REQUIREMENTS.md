@@ -166,7 +166,10 @@ WeighIn
 - [ ] Deleting the only weigh-in of a day removes it from the trend
 - [ ] The profile weight never changes without an explicit tap
 - [ ] Reminder does not fire on a day already logged
-- [ ] Adaptive TDEE refuses to appear under the data threshold, and says why
+- [x] Adaptive TDEE refuses to appear under the data threshold (8 weigh-ins
+      across 14 days, food logged on 10 of the last 14, and a difference of at
+      least 100 kcal). It shows nothing rather than a caveated number, because a
+      figure on screen gets believed regardless of the small print beside it.
 
 ---
 

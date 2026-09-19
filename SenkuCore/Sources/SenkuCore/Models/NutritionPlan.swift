@@ -19,13 +19,15 @@ public struct NutritionPlan: Hashable, Sendable {
         for metrics: BodyMetrics,
         activityLevel: ActivityLevel,
         goal: Goal,
-        formula: BMRFormula = .automatic
+        formula: BMRFormula = .automatic,
+        measuredMaintenance: Double? = nil
     ) -> NutritionPlan {
         let energy = EnergyCalculator.profile(
             for: metrics,
             activityLevel: activityLevel,
             goal: goal,
-            formula: formula
+            formula: formula,
+            measuredMaintenance: measuredMaintenance
         )
         return NutritionPlan(
             metrics: metrics,

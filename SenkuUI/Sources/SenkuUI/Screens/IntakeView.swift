@@ -24,7 +24,11 @@ public struct IntakeView: View {
     @Bindable private var store: IntakeStore
 
     private let profile: ProfileStore.Profile?
+    private let weights: WeightLogStore?
     private let onOpenCalculator: () -> Void
+    /// Handed the measured figure when you accept it, or nil to go back to the
+    /// formula. The screen does not own the profile, so it asks.
+    private let onAdoptMaintenance: ((Double?) -> Void)?
 
     @State private var isAdding = false
     @State private var editing: IntakeEntry?
@@ -38,11 +42,15 @@ public struct IntakeView: View {
     public init(
         store: IntakeStore,
         profile: ProfileStore.Profile?,
-        onOpenCalculator: @escaping () -> Void = {}
+        weights: WeightLogStore? = nil,
+        onOpenCalculator: @escaping () -> Void = {},
+        onAdoptMaintenance: ((Double?) -> Void)? = nil
     ) {
         self.store = store
         self.profile = profile
+        self.weights = weights
         self.onOpenCalculator = onOpenCalculator
+        self.onAdoptMaintenance = onAdoptMaintenance
     }
 
     private var today: IntakeDay? { store.day(profile: profile) }
@@ -92,6 +100,7 @@ public struct IntakeView: View {
     private func loggedBody(_ day: IntakeDay) -> some View {
         ScrollView {
             VStack(spacing: Senku.Metrics.stackSpacing) {
+                maintenanceCard
                 proteinCard(day)
                 restCard(day)
                 favouritesCard
@@ -517,6 +526,107 @@ public struct IntakeView: View {
                 if entry.id != day.entries.last?.id { Divider() }
             }
         }
+    }
+
+    // MARK: - What the scale says you burn
+
+    /// Offered, never applied. The app is telling you its own formula was
+    /// wrong about you, which is worth saying — and is still a claim built on
+    /// self-reported eating, so the decision stays yours.
+    @ViewBuilder
+    private var maintenanceCard: some View {
+        if let profile, let onAdoptMaintenance {
+            if let measured = profile.measuredMaintenanceCalories {
+                Card("Maintenance") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text("\(Int(measured.rounded()).formatted())")
+                                .font(.system(size: 26, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(Senku.Palette.surplus)
+                            Text("kcal, measured")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Text("Your targets come from what the scale did, not from the formula.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button("Use the formula instead") { onAdoptMaintenance(nil) }
+                            .font(.caption.weight(.semibold))
+                            .buttonStyle(.plain)
+                            .foregroundStyle(Senku.Palette.deficit)
+                    }
+                }
+            } else if let weights,
+                      let finding = MaintenanceCheck.finding(
+                          profile: profile,
+                          weights: weights,
+                          intake: store
+                      ) {
+                Card("Maintenance") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(
+                            "Over \(finding.loggedDays) logged days you averaged "
+                            + "\(Int(finding.estimate.intakeCalories.rounded()).formatted()) kcal and the scale "
+                            + (finding.estimate.observedWeeklyChangeKG < 0 ? "fell" : "rose")
+                            + " \(Display.mass(abs(finding.estimate.observedWeeklyChangeKG), in: unitSystem)) a week."
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text("MEASURED")
+                                    .font(.system(size: 8, weight: .heavy))
+                                    .foregroundStyle(.tertiary)
+                                Text("\(Int(finding.measured).formatted())")
+                                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                    .foregroundStyle(Senku.Palette.surplus)
+                            }
+
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text("FORMULA")
+                                    .font(.system(size: 8, weight: .heavy))
+                                    .foregroundStyle(.tertiary)
+                                Text("\(Int(finding.formula).formatted())")
+                                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                    .foregroundStyle(Color.secondary)
+                            }
+
+                            Spacer(minLength: 0)
+                        }
+
+                        Text(finding.burnsMore
+                             ? "You burn about \(Int(abs(finding.difference).rounded())) kcal more a day than the formula assumed."
+                             : "You burn about \(Int(abs(finding.difference).rounded())) kcal less a day than the formula assumed.")
+                            .font(.caption)
+                            .foregroundStyle(Color.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Button {
+                            onAdoptMaintenance(finding.measured)
+                            Feedback.control()
+                        } label: {
+                            Text("Use \(Int(finding.measured).formatted()) kcal")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity, minHeight: 40)
+                                .background(Senku.Palette.surplus, in: .rect(cornerRadius: 11))
+                                .foregroundStyle(.white)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private var unitSystem: UnitSystem {
+        profile?.unitSystem ?? UnitPreference.current
     }
 
     // MARK: - Streaks

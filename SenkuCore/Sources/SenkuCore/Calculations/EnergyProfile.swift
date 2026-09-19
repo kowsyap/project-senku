@@ -29,6 +29,12 @@ public struct EnergyProfile: Hashable, Sendable {
     /// True when the goal's target fell below the safe floor and was raised.
     public let wasClampedToSafeMinimum: Bool
 
+    /// True when `maintenanceCalories` came from what the scale did rather than
+    /// from a formula — see ``AdaptiveMaintenance``. Worth carrying so the
+    /// screens can say which kind of number they are showing: one is an
+    /// estimate about people like you, the other is a measurement of you.
+    public var isMaintenanceMeasured = false
+
     public func expenditure(at level: ActivityLevel) -> Double {
         expenditureByActivity[level] ?? basalMetabolicRate * level.multiplier
     }
@@ -38,11 +44,17 @@ public enum EnergyCalculator {
     /// Awake-but-idle costs slightly more than true basal metabolism.
     static let restingMultiplier = 1.1
 
+    /// - Parameter measuredMaintenance: A maintenance figure observed from
+    ///   intake against weight change, which replaces the formula's when given.
+    ///   The activity table is still computed, because it is what makes the
+    ///   measured number legible — "you burn like someone a level above what
+    ///   you picked" is the useful reading of it.
     public static func profile(
         for metrics: BodyMetrics,
         activityLevel: ActivityLevel,
         goal: Goal,
-        formula: BMRFormula = .automatic
+        formula: BMRFormula = .automatic,
+        measuredMaintenance: Double? = nil
     ) -> EnergyProfile {
         let resolvedFormula = formula.resolved(for: metrics)
         let bmr = resolvedFormula.basalMetabolicRate(for: metrics)
@@ -53,7 +65,7 @@ public enum EnergyCalculator {
             }
         )
 
-        let maintenance = bmr * activityLevel.multiplier
+        let maintenance = measuredMaintenance ?? bmr * activityLevel.multiplier
         let rawTarget = maintenance * goal.calorieMultiplier
 
         // A deficit must never push intake under the medically safe floor.
@@ -72,7 +84,8 @@ public enum EnergyCalculator {
             formulaUsed: resolvedFormula,
             activityLevel: activityLevel,
             goal: goal,
-            wasClampedToSafeMinimum: clamped
+            wasClampedToSafeMinimum: clamped,
+            isMaintenanceMeasured: measuredMaintenance != nil
         )
     }
 }
