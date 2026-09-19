@@ -58,9 +58,20 @@ cannot explain where a number came from, it does not show it.**
 
 ### Training
 
-- **Workout** — build splits, see coverage per muscle group, work a session as a
-  checklist, log sets with weight and reps, log cardio. 138 exercises in the
-  catalogue.
+- **A catalogue of 138 exercises** — barbell, dumbbell, machine, cable and
+  bodyweight, each one already mapped to the muscle regions it actually works
+  and how much of the effort goes where. Search it, filter it by group or
+  equipment, and add your own if the rack in your gym is not in it.
+- **A week you build once** — name your training days, give each one its muscle
+  groups and its exercises, and run it every week. Start from a template if you
+  would rather not: Push / Pull / Legs, Upper / Lower, Arnold, or one group a
+  day. The app tells you which groups the week never touches.
+- **Set logging** — on the day, the session opens as a checklist. Log each set's
+  weight and reps as you finish it, or seconds for a hold, with the exercise's
+  logger pre-filled with what you lifted last time, because that is nearly always
+  what you are about to lift. Estimated 1RM comes along for free.
+- **Cardio too** — distance, duration, effort, and reusable protocols for
+  intervals you repeat.
 - **PRs** — every record the sets produced, per exercise, with cardio records and
   protocols alongside. Deleting a session never deletes the PRs it produced.
 - **Rest timer** — presets, a Live Activity on the Lock Screen, a Control Center
@@ -115,13 +126,23 @@ guessing from your BMI.
 
 <img src="docs/screenshots/workout.png" width="260" align="right" alt="The workout screen">
 
-Build a split once. On the day, the session opens as a checklist in muscle
-blocks, with coverage per group so you can see what the week has missed. Log a
-set — weight, reps — and start the rest timer from the same screen without
-leaving it.
+**Build your week once.** Add a training day, name it, pick its muscle groups,
+then pull exercises into it from the catalogue — 138 of them, searchable, filtered
+by group or by equipment, or your own if what you use is not there. Four
+templates are there to start from if you would rather not begin with a blank
+week. The coverage bars show what each muscle region gets and which groups the
+week never touches, so a split that quietly skips rear delts says so.
 
-Anything that beats your previous best lands on the PRs page by itself. Nothing
-is entered twice.
+**Then just train it.** On the day, that day's session opens as a checklist in
+muscle blocks. Tap an exercise, log the set — weight and reps, or seconds for a
+plank — and it is ticked off. The logger opens **pre-filled with what you lifted
+last time**, because the overwhelmingly common case is the same weight again, and
+it says when that was. Start the rest timer from the same place without leaving it. Cardio logs
+distance, duration and effort, with protocols for intervals you repeat.
+
+Anything that beats your previous best lands on the PRs page by itself, with the
+estimated 1RM worked out for you. Nothing is entered twice — and deleting a
+session never deletes the records it produced.
 
 <img src="docs/screenshots/records.png" width="260" align="right" alt="The PRs screen">
 <br clear="right">
