@@ -36,7 +36,8 @@ cannot explain where a number came from, it does not show it.**
 - [Features](#features)
 - [How you actually use it](#how-you-actually-use-it)
 - [On the wrist](#on-the-wrist)
-- [Install and build](#install-and-build)
+- [Install it on your iPhone](#install-it-on-your-iphone)
+- [Build it from source](#build-it-from-source)
 - [The technical side](#the-technical-side)
 - [Contributing](#contributing)
 
@@ -225,7 +226,53 @@ devices avoid holding a list and disagreeing about it.
 
 ---
 
-## Install and build
+## Install it on your iPhone
+
+No Mac needed for this route, and no Xcode. Download the `.ipa` and sideload it.
+
+### 1. Get the app
+
+Download **`Senku.ipa`** from the [Releases page](../../releases/latest).
+
+### 2. Set up SideStore
+
+[SideStore](https://sidestore.io) installs apps on an iPhone using your own Apple
+ID, without jailbreaking — it re-signs the app as though you had built it
+yourself. It matters here because Apple only lets a free Apple ID run a
+self-signed app for **seven days**, and SideStore renews that for you in the
+background instead of leaving you to reinstall every week.
+
+Follow the official guide — it covers the pairing file and the WireGuard setup,
+which are the fiddly parts:
+
+**https://docs.sidestore.io/docs/installation/prerequisites**
+
+### 3. Install the .ipa
+
+1. Get `Senku.ipa` onto the phone — AirDrop it, or save it to Files.
+2. Open **SideStore** ▸ **My Apps** ▸ **+** (top left).
+3. Pick `Senku.ipa` and let it install.
+4. First launch only: **Settings ▸ General ▸ VPN & Device Management**, and trust
+   your Apple ID.
+
+### 4. Let it renew itself
+
+Open SideStore every so often — it refreshes the seven-day signature in the
+background, and the app keeps working. If you ever see *"Unable to Verify App"*,
+the signature lapsed: open SideStore and hit **Refresh All**.
+
+A free Apple ID allows three sideloaded apps at once. Senku counts as one.
+
+> **Two things to check after installing.** If the widgets are blank, the App
+> Group did not survive re-signing — it is the only place Senku keeps data, so
+> the app will look fine and everything around it will look empty. And
+> sideloaders have a patchy record with embedded watch apps: if the watch app
+> never appears or never updates, install it straight to the watch instead, as
+> [docs/BUILD.md](docs/BUILD.md) describes.
+
+---
+
+## Build it from source
 
 ### What you need
 
@@ -237,11 +284,11 @@ A free Apple ID is enough. Everything works on a personal team, including the
 App Group the widgets and watch read through; iCloud does not, which is why the
 backup story is an export you own.
 
-### Get it running
+### In Xcode
 
 ```sh
-git clone https://github.com/<you>/senku.git
-cd senku
+git clone https://github.com/kowsyap/project-senku.git
+cd project-senku
 open Senku/Senku.xcodeproj
 ```
 
@@ -252,8 +299,8 @@ an iPhone simulator, and press Run.
 
 ```sh
 # The logic, on the host — no simulator, ~0.01s
-cd SenkuCore && swift test        # 171 tests
-cd ../SenkuUI  && swift test      # 73 tests
+cd SenkuCore && swift test        # 172 tests
+cd ../SenkuUI  && swift test      # 79 tests
 
 # The app. Note the *generic* destination — a named device breaks the
 # watch link; docs/BUILD.md explains why.
@@ -270,6 +317,22 @@ through the same importer a real backup uses:
 ```sh
 SIMCTL_CHILD_SENKU_SAMPLE=1 xcrun simctl launch booted pk.Senku
 ```
+
+### Make your own .ipa
+
+```sh
+cd Senku
+xcodebuild -project Senku.xcodeproj -scheme Senku \
+  -configuration Release -destination 'generic/platform=iOS' \
+  -archivePath /tmp/Senku.xcarchive -allowProvisioningUpdates archive
+
+mkdir -p /tmp/ipa/Payload
+cp -R /tmp/Senku.xcarchive/Products/Applications/Senku.app /tmp/ipa/Payload/
+cd /tmp/ipa && zip -qry ~/Desktop/Senku.ipa Payload
+```
+
+An `.ipa` is a zip with the app inside a folder called `Payload`; no export step
+is needed, because the sideloader re-signs it anyway.
 
 More — the watch pairing, the debug hooks, the entitlement notes — is in
 [docs/BUILD.md](docs/BUILD.md).
