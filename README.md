@@ -242,10 +242,11 @@ yourself. It matters here because Apple only lets a free Apple ID run a
 self-signed app for **seven days**, and SideStore renews that for you in the
 background instead of leaving you to reinstall every week.
 
-Follow the official guide — it covers the pairing file and the WireGuard setup,
-which are the fiddly parts:
+Follow the official guide, in order. The first page is the fiddly one — the
+pairing file and the WireGuard setup — and the second installs SideStore itself:
 
-**https://docs.sidestore.io/docs/installation/prerequisites**
+1. **Prerequisites** — https://docs.sidestore.io/docs/installation/prerequisites
+2. **Install SideStore** — https://docs.sidestore.io/docs/installation/install
 
 ### 3. Install the .ipa
 
