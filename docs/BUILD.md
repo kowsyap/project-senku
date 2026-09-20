@@ -129,6 +129,35 @@ Seeding a profile from outside the app does not work: `defaults write` against
 the container is discarded by the preference daemon, and `simctl spawn defaults
 write` is refused by the sandbox. Use the sample data or the Quick calc screen.
 
+## Packaging an .ipa
+
+For sideloading with SideStore, AltStore or similar. An `.ipa` is a zip with the
+app inside a folder called `Payload`, so no export step is needed — the sideloader
+strips the signature and re-signs with your own Apple ID anyway.
+
+```sh
+cd Senku
+xcodebuild -project Senku.xcodeproj -scheme Senku \
+  -configuration Release -destination 'generic/platform=iOS' \
+  -archivePath /tmp/Senku.xcarchive -allowProvisioningUpdates archive
+
+mkdir -p /tmp/ipa/Payload
+cp -R /tmp/Senku.xcarchive/Products/Applications/Senku.app /tmp/ipa/Payload/
+cd /tmp/ipa && zip -qry <repo>/dist/Senku.ipa Payload
+```
+
+`dist/` is ignored by git. The package carries the widgets, the watch app and
+the watch complication, all four bundles signed with `group.pk.Senku`.
+
+Two things to check after a sideloaded install:
+
+- **Empty widgets** mean the App Group did not survive re-signing. It is the only
+  place Senku keeps data, so the app will look fine and everything around it will
+  look blank.
+- **A watch app that never updates.** Sideloaders have a patchy record with
+  embedded WatchKit apps and may quietly drop it. Installing straight to the watch
+  with `devicectl` bypasses that entirely — see above.
+
 ## Entitlements
 
 `SENKU_ENTITLEMENTS` selects the entitlement file. `AppGroup` is the default;

@@ -14,6 +14,9 @@ xcuserdata/
 *.dSYM.zip
 *.dSYM
 
+# Packaged builds — see docs/BUILD.md
+dist/
+
 # Swift Package Manager
 .build/
 .swiftpm/
