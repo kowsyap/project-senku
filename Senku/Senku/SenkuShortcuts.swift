@@ -24,15 +24,23 @@ import SenkuUI
 /// has to be in the list — "what's my weight", "how much do I weigh", "how
 /// heavy am I" are three different keys to the same door. Every phrase must
 /// contain `\(.applicationName)`; that is Apple's rule, not a house style, and
-/// an intent whose phrases omit it is silently dropped.
+/// an intent whose phrases omit it is silently dropped. It is also the thing
+/// users trip over first — "what's my water intake" reaches nothing, because
+/// Siri has no idea which app was meant. So the phrasings here are deliberately
+/// redundant: the same question asked six ways costs nothing but a line each,
+/// and the one that is missing is the one somebody will actually say.
 struct SenkuShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: WeightQueryIntent(),
             phrases: [
                 "What's my weight in \(.applicationName)",
+                "What is my weight in \(.applicationName)",
                 "How much do I weigh in \(.applicationName)",
+                "How heavy am I in \(.applicationName)",
                 "Check my weight in \(.applicationName)",
+                "Show my weight in \(.applicationName)",
+                "My weight in \(.applicationName)",
                 "\(.applicationName) weight"
             ],
             shortTitle: "My weight",
@@ -42,9 +50,15 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: WaterQueryIntent(),
             phrases: [
+                "What's my water intake in \(.applicationName)",
+                "What is my water intake in \(.applicationName)",
+                "What's my water in \(.applicationName)",
                 "How much water have I had in \(.applicationName)",
                 "How much water have I drunk in \(.applicationName)",
+                "How much water have I logged in \(.applicationName)",
                 "Check my water in \(.applicationName)",
+                "Show my water in \(.applicationName)",
+                "My water intake in \(.applicationName)",
                 "\(.applicationName) water"
             ],
             shortTitle: "My water",
@@ -54,8 +68,13 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: ProteinQueryIntent(),
             phrases: [
+                "What's my protein intake in \(.applicationName)",
+                "What's my protein in \(.applicationName)",
                 "How much protein have I had in \(.applicationName)",
+                "How much protein have I eaten in \(.applicationName)",
+                "How much protein do I have left in \(.applicationName)",
                 "Check my protein in \(.applicationName)",
+                "My protein in \(.applicationName)",
                 "\(.applicationName) protein"
             ],
             shortTitle: "My protein",
@@ -65,9 +84,15 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: IntakeQueryIntent(),
             phrases: [
+                "What's my calorie intake in \(.applicationName)",
+                "What's my intake in \(.applicationName)",
                 "What have I eaten in \(.applicationName)",
                 "How many calories have I had in \(.applicationName)",
+                "How many calories have I eaten in \(.applicationName)",
+                "How many calories do I have left in \(.applicationName)",
                 "Check my food in \(.applicationName)",
+                "Check my macros in \(.applicationName)",
+                "My intake in \(.applicationName)",
                 "\(.applicationName) food"
             ],
             shortTitle: "My food",
@@ -78,7 +103,8 @@ struct SenkuShortcuts: AppShortcutsProvider {
             intent: LogProteinIntent(),
             phrases: [
                 "Log protein in \(.applicationName)",
-                "Add protein in \(.applicationName)"
+                "Add protein in \(.applicationName)",
+                "Log protein grams in \(.applicationName)"
             ],
             shortTitle: "Log protein",
             systemImageName: "plus.circle.fill"
@@ -99,7 +125,8 @@ struct SenkuShortcuts: AppShortcutsProvider {
             phrases: [
                 "Log water in \(.applicationName)",
                 "Log a glass of water in \(.applicationName)",
-                "Add water in \(.applicationName)"
+                "Add water in \(.applicationName)",
+                "I drank water in \(.applicationName)"
             ],
             shortTitle: "Log water",
             systemImageName: "drop.circle.fill"
