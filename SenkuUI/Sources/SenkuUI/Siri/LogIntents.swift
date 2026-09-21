@@ -25,10 +25,22 @@ public struct LogProteinIntent: AppIntent {
     public static let description = IntentDescription("Adds protein to today's total.")
     public static let openAppWhenRun = false
 
-    @Parameter(title: "Grams", controlStyle: .field, inclusiveRange: (1, 500))
+    /// Deliberately left unset by the empty initialiser.
+    ///
+    /// Assigning a default here is what made "log protein in Senku" silently
+    /// record thirty grams: a parameter that already has a value is a question
+    /// already answered, so nothing was asked and nothing was listened for.
+    /// Unset, it is resolved — either from the number you said in the sentence,
+    /// or by `requestValueDialog` asking for it.
+    @Parameter(
+        title: "Grams",
+        controlStyle: .field,
+        inclusiveRange: (1, 500),
+        requestValueDialog: "How many grams of protein?"
+    )
     public var grams: Double
 
-    public init() { self.grams = 30 }
+    public init() {}
     public init(grams: Double) { self.grams = grams }
 
     @MainActor
@@ -53,10 +65,15 @@ public struct LogCaloriesIntent: AppIntent {
     public static let description = IntentDescription("Adds calories to today's total.")
     public static let openAppWhenRun = false
 
-    @Parameter(title: "Calories", controlStyle: .field, inclusiveRange: (1, 5000))
+    @Parameter(
+        title: "Calories",
+        controlStyle: .field,
+        inclusiveRange: (1, 5000),
+        requestValueDialog: "How many calories?"
+    )
     public var calories: Double
 
-    public init() { self.calories = 200 }
+    public init() {}
     public init(calories: Double) { self.calories = calories }
 
     @MainActor

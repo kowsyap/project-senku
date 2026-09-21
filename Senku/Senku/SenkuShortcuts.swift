@@ -102,9 +102,12 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: LogProteinIntent(),
             phrases: [
+                // The number is captured from the sentence itself. Said
+                // without one, the intent asks for it instead.
+                "Log \(\.$grams) grams of protein in \(.applicationName)",
+                "Add \(\.$grams) grams of protein in \(.applicationName)",
                 "Log protein in \(.applicationName)",
-                "Add protein in \(.applicationName)",
-                "Log protein grams in \(.applicationName)"
+                "Add protein in \(.applicationName)"
             ],
             shortTitle: "Log protein",
             systemImageName: "plus.circle.fill"
@@ -113,6 +116,8 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: LogCaloriesIntent(),
             phrases: [
+                "Log \(\.$calories) calories in \(.applicationName)",
+                "Add \(\.$calories) calories in \(.applicationName)",
                 "Log calories in \(.applicationName)",
                 "Add calories in \(.applicationName)"
             ],
