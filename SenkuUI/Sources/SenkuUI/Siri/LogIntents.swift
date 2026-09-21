@@ -45,10 +45,16 @@ public struct LogProteinIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
+        Trace.intent("logProtein: asked for \(grams) g")
+
         let store = IntakeStore()
+        let before = store.entries.count
         guard store.addProtein(grams) else {
+            Trace.intent("logProtein: refused \(grams)")
             return .result(dialog: "That is not an amount I can log.")
         }
+        Trace.intent("logProtein: entries \(before) -> \(store.entries.count),"
+            + " suite=\(SenkuStorage.isShared ? "group" : "standard")")
 
         Self.publish()
 
@@ -78,10 +84,16 @@ public struct LogCaloriesIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
+        Trace.intent("logCalories: asked for \(calories)")
+
         let store = IntakeStore()
+        let before = store.entries.count
         guard store.addCalories(calories) else {
+            Trace.intent("logCalories: refused \(calories)")
             return .result(dialog: "That is not an amount I can log.")
         }
+        Trace.intent("logCalories: entries \(before) -> \(store.entries.count),"
+            + " suite=\(SenkuStorage.isShared ? "group" : "standard")")
 
         Self.publish()
 

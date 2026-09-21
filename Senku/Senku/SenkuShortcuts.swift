@@ -102,12 +102,21 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: LogProteinIntent(),
             phrases: [
-                // The number is captured from the sentence itself. Said
-                // without one, the intent asks for it instead.
-                "Log \(\.$grams) grams of protein in \(.applicationName)",
+                // App name first, and "log" kept away from "in".
+                //
+                // "Log twenty grams of protein in Senku" is heard by Siri as
+                // "log in to Senku" — it answered "I can't log in to Senku" and
+                // the intent was never called. The two words are adjacent in
+                // the only sentence anybody would say, so the sentence has to
+                // change: lead with the app, or use a verb that is not "log".
+                "\(.applicationName) add \(\.$grams) grams of protein",
+                "\(.applicationName) log \(\.$grams) grams of protein",
+                "\(.applicationName) protein \(\.$grams) grams",
                 "Add \(\.$grams) grams of protein in \(.applicationName)",
-                "Log protein in \(.applicationName)",
-                "Add protein in \(.applicationName)"
+                "Record \(\.$grams) grams of protein in \(.applicationName)",
+                "\(.applicationName) add protein",
+                "Add protein in \(.applicationName)",
+                "Record protein in \(.applicationName)"
             ],
             shortTitle: "Log protein",
             systemImageName: "plus.circle.fill"
@@ -116,9 +125,11 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: LogCaloriesIntent(),
             phrases: [
-                "Log \(\.$calories) calories in \(.applicationName)",
+                "\(.applicationName) add \(\.$calories) calories",
+                "\(.applicationName) log \(\.$calories) calories",
                 "Add \(\.$calories) calories in \(.applicationName)",
-                "Log calories in \(.applicationName)",
+                "Record \(\.$calories) calories in \(.applicationName)",
+                "\(.applicationName) add calories",
                 "Add calories in \(.applicationName)"
             ],
             shortTitle: "Log calories",
@@ -128,10 +139,11 @@ struct SenkuShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: LogWaterIntent(),
             phrases: [
-                "Log water in \(.applicationName)",
-                "Log a glass of water in \(.applicationName)",
+                "\(.applicationName) add water",
+                "\(.applicationName) log water",
                 "Add water in \(.applicationName)",
-                "I drank water in \(.applicationName)"
+                "Record water in \(.applicationName)",
+                "Add a glass of water in \(.applicationName)"
             ],
             shortTitle: "Log water",
             systemImageName: "drop.circle.fill"

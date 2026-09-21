@@ -127,7 +127,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// turned up twenty seconds later, once the system had cleaned up after the
     /// process that was supposed to have handled it.
     public func alert() {
-        RestTrace.note("alert: session=\(session.map { String($0.state.rawValue) } ?? "none")")
+        Trace.rest("alert: session=\(session.map { String($0.state.rawValue) } ?? "none")")
         lastLanding = LandingReport(heldSession: session?.state == .running, chimeSounded: nil)
 
         playHaptics()
@@ -188,7 +188,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     private static let clickGap: TimeInterval = 0.06
 
     public func end() {
-        RestTrace.note("end: releasing session")
+        Trace.rest("end: releasing session")
         alarm?.invalidate()
         alarm = nil
         landing = .none
@@ -225,7 +225,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
         // So the crossing is not a cancellation. Whoever notices it first does
         // the landing, `land()` runs once, and nothing here cuts it short.
         if timer.hasFinished(at: now) {
-            RestTrace.note("sync: finished, landing=\(landing)")
+            Trace.rest("sync: finished, landing=\(landing)")
             switch landing {
             case .booked: land()
             case .done: break
@@ -259,10 +259,10 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// and fifteen seconds is long enough for both to finish and be noticed.
     private func land() {
         guard landing != .done else {
-            RestTrace.note("land: already done, ignoring")
+            Trace.rest("land: already done, ignoring")
             return
         }
-        RestTrace.note("land: firing")
+        Trace.rest("land: firing")
         landing = .done
 
         alert()
@@ -296,7 +296,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// surfaces when this session ends. The alternative is an app that assumes
     /// it made a sound and leaves you with none.
     private func soundLanded(_ sounded: Bool) {
-        RestTrace.note("soundLanded: \(sounded)")
+        Trace.rest("soundLanded: \(sounded)")
         lastLanding?.chimeSounded = sounded
 
         guard sounded else {
@@ -315,7 +315,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
     /// until the session ends, and the alert waiting behind it only appears
     /// once it does.
     private func windDown(after seconds: TimeInterval = 2) {
-        RestTrace.note("windDown: in \(seconds)s")
+        Trace.rest("windDown: in \(seconds)s")
         alarm?.invalidate()
 
         let closing = Timer(timeInterval: seconds, repeats: false) { [weak self] _ in
@@ -344,7 +344,7 @@ public final class RestRuntimeSession: NSObject, @preconcurrency WKExtendedRunti
 
     private func scheduleAlarm(at date: Date) {
         guard landing != .booked(date) else { return }
-        RestTrace.note("scheduleAlarm: in \(date.timeIntervalSinceNow)s")
+        Trace.rest("scheduleAlarm: in \(date.timeIntervalSinceNow)s")
         alarm?.invalidate()
         landing = .booked(date)
         // A new rest: last time's outcome is not this rest's news.

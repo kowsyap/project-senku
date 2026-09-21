@@ -21,6 +21,12 @@ public enum SenkuStorage {
         return group
     }()
 
+    /// Whether the shared container was actually available, or the fallback is
+    /// in use. Worth being able to ask: a write to `.standard` succeeds, and is
+    /// then invisible to every other process — which looks exactly like a write
+    /// that never happened.
+    public static let isShared: Bool = UserDefaults(suiteName: appGroup) != nil
+
     /// Moves a profile saved before the App Group existed into it, once.
     ///
     /// Without this, turning on the group would silently look like the user's
