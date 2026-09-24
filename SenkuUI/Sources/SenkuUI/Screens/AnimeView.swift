@@ -57,7 +57,7 @@ public struct AnimeView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button { isAdding = true } label: {
-                    Label("Add", systemImage: "plus")
+                    StackedActionLabel("Add", symbol: "plus")
                 }
             }
         }
@@ -248,7 +248,7 @@ public struct AnimeView: View {
                 Label("Reverse order", systemImage: "arrow.up.arrow.down")
             }
         } label: {
-            Label("Sort", systemImage: reversed ? "arrow.up" : "arrow.down")
+            StackedActionLabel("Sort", symbol: reversed ? "arrow.up" : "arrow.down")
         }
     }
 
@@ -268,7 +268,7 @@ public struct AnimeView: View {
         } description: {
             Text("What you are watching, what you mean to watch, and what you gave up on.")
         } actions: {
-            Button("Add a series") { isAdding = true }
+            Button("Add a Series") { isAdding = true }
                 .buttonStyle(.borderedProminent)
         }
     }
@@ -422,7 +422,7 @@ struct AnimeEditor: View {
             }
         }
         .dismissableKeyboard()
-        .navigationTitle(isNew ? "Add a series" : entry.title)
+        .navigationTitle(isNew ? "Add a Series" : entry.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

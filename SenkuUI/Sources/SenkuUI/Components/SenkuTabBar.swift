@@ -218,12 +218,11 @@ struct SenkuTabBar: View {
                 .onEnded { drag in
                     let landed = tab(atX: drag.location.x) ?? selection
 
-
-                    guard landed != selection else {
-                        withAnimation(Self.settle) { dragX = nil }
-                        return
-                    }
-
+                    // Landing on the tab you are already on is not nothing:
+                    // it means "take me back to the front of this one". It is
+                    // written through like any other landing so that whoever
+                    // owns the binding can act on it — the pill simply has
+                    // nowhere to travel.
                     Feedback.control()
                     // Both in one transaction. Clearing the drag first puts the
                     // pill back on the old tab for a frame, so it travelled
@@ -262,7 +261,7 @@ struct SenkuTabBar: View {
                         .frame(height: 21)
                 }
 
-                Text(tab.title)
+                Text(tab.shortTitle)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .lineLimit(1)
                     .fixedSize()
@@ -293,7 +292,8 @@ struct SenkuTabBar: View {
         .accessibilityLabel(tab.title)
         .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : [.isButton])
         .accessibilityAction {
-            guard tab != selection else { return }
+            // Same as a tap: re-activating the current tab asks for its front
+            // page, and is passed on rather than swallowed.
             Feedback.control()
             withAnimation(Self.settle) { selection = tab }
         }

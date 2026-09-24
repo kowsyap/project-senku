@@ -537,7 +537,7 @@ private struct RecordDetailSheet: View {
                     Button {
                         isAdding = true
                     } label: {
-                        Image(systemName: "plus")
+                        StackedActionLabel("Add", symbol: "plus")
                     }
                     .accessibilityLabel("Add another record for this exercise")
                 }
@@ -684,7 +684,7 @@ private struct RecordValueEditor: View {
             ScrollView { fields }
                 .background(.background)
                 .dismissableKeyboard()
-                .navigationTitle("New record")
+                .navigationTitle("New Record")
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
@@ -857,7 +857,7 @@ private struct RecordEditor: View {
                     ) { picked in
                         chosen = picked
                     }
-                    .navigationTitle("Pick an exercise")
+                    .navigationTitle("Pick an Exercise")
                     #if os(iOS)
                     .navigationBarTitleDisplayMode(.inline)
                     #endif

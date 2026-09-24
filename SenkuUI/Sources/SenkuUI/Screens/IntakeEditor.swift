@@ -56,7 +56,7 @@ struct IntakeEditor: View {
                         // logging food. Whatever it reads lands in the fields
                         // below and is yours to correct before anything is
                         // saved.
-                        Text("Fills in the fields below. A packet is transcribed exactly; a plate is estimated, and worth checking.")
+                        Text("To get estimates")
                     }
                 }
                 #endif
@@ -115,7 +115,7 @@ struct IntakeEditor: View {
                     }
                 }
             }
-            .navigationTitle(editing == nil ? "Log food" : "Edit")
+            .navigationTitle(editing == nil ? "Log Food" : "Edit")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -127,10 +127,11 @@ struct IntakeEditor: View {
                 }
             }
             .task {
-                // Hidden rather than disabled where the model is not there: on
-                // iOS 26 it cannot read an image at all, and on a device
-                // without the assets it would only fail on the tap.
-                if #available(iOS 27, *) { canReadPhotos = FoodPhotoEstimator.isAvailable }
+                // Shown only once Gemini is set up: a key saved and the switch
+                // on. Hidden rather than disabled, because a button that
+                // explains why it cannot be pressed is a button asking to be
+                // pressed.
+                if #available(iOS 27, *) { canReadPhotos = GeminiAccount.isActive }
             }
             #endif
             .toolbar {
@@ -251,6 +252,16 @@ struct IntakeSettingsView: View {
 
     var body: some View {
         Form {
+            #if os(iOS)
+            if #available(iOS 27, *) {
+                Section {
+                    NavigationLink("Photo reading") { FoodIntelligenceSettings() }
+                } footer: {
+                    Text("Reading macros with AI.")
+                }
+            }
+            #endif
+
             Section {
                 if store.favourites.isEmpty {
                     Text("Nothing saved yet.")
@@ -293,10 +304,11 @@ struct IntakeSettingsView: View {
             } header: {
                 Text("Quick add")
             } footer: {
-                Text("The menu on the food screen. Ordered by how often you log each one, so what you eat most sits first.")
+                Text("The menu on the food screen.")
             }
+
         }
-        .navigationTitle("Food settings")
+        .navigationTitle("Food Settings")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -390,7 +402,7 @@ private struct FavouriteEditor: View {
                     }
                 }
             }
-            .navigationTitle(favourite == nil ? "New quick-add" : "Edit")
+            .navigationTitle(favourite == nil ? "New Quick-Add" : "Edit")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

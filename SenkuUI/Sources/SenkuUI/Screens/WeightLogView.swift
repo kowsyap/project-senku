@@ -144,12 +144,12 @@ public struct WeightLogView: View {
             #if !os(watchOS)
             ToolbarItem(placement: .primaryAction) {
                 Button { isShowingSettings = true } label: {
-                    Label("Settings", systemImage: "gearshape")
+                    StackedActionLabel("Settings", symbol: "gearshape")
                 }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button { isShowingHistory = true } label: {
-                    Label("History", systemImage: "clock.arrow.circlepath")
+                    StackedActionLabel("History", symbol: "clock.arrow.circlepath")
                 }
                 .disabled(store.weighIns.isEmpty)
             }
@@ -170,6 +170,7 @@ public struct WeightLogView: View {
         .navigationDestination(isPresented: $isShowingSettings) {
             WeightSettingsView(reminding: $isReminding)
         }
+        .senkuPushed(isShowingHistory, isShowingSettings)
         #endif
         .sheet(isPresented: $isAdding) {
             // Seeded from the last weigh-in, not the day's mean: logging 307
@@ -555,7 +556,7 @@ private struct WeighInEditor: View {
             }
             .background(.background)
             .dismissableKeyboard()
-            .navigationTitle("Log weight")
+            .navigationTitle("Log Weight")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

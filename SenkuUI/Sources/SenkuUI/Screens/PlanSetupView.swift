@@ -30,7 +30,7 @@ public struct PlanSetupView: View {
             }
         }
         .senkuBottomBarInset()
-        .navigationTitle("Your week")
+        .navigationTitle("Your Week")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -40,7 +40,7 @@ public struct PlanSetupView: View {
                     Button {
                         isAddingDay = true
                     } label: {
-                        Label("Add day", systemImage: "plus")
+                        StackedActionLabel("Add", symbol: "plus")
                     }
                 }
             }

@@ -50,7 +50,7 @@ public struct WaterView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { isShowingSettings = true } label: {
-                    Label("Settings", systemImage: "gearshape")
+                    StackedActionLabel("Settings", symbol: "gearshape")
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -81,6 +81,7 @@ public struct WaterView: View {
         .navigationDestination(isPresented: $isShowingSettings) {
             WaterSettingsView(store: store)
         }
+        .senkuPushed(isShowingStreaks, isShowingSettings)
     }
 
     // MARK: - The number
@@ -486,7 +487,7 @@ private struct CustomAmountSheet: View {
                 }
             }
             .dismissableKeyboard()
-            .navigationTitle("Log a drink")
+            .navigationTitle("Log a Drink")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -540,7 +541,7 @@ private struct WaterGoalEditor: View {
             }
         }
         .dismissableKeyboard()
-        .navigationTitle("Daily target")
+        .navigationTitle("Daily Target")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

@@ -69,7 +69,7 @@ public struct IntakeView: View {
             if today != nil {
                 ToolbarItem(placement: .primaryAction) {
                     Button { isShowingSettings = true } label: {
-                        Label("Settings", systemImage: "gearshape")
+                        StackedActionLabel("Settings", symbol: "gearshape")
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
@@ -95,6 +95,7 @@ public struct IntakeView: View {
         .navigationDestination(isPresented: $isShowingSettings) {
             IntakeSettingsView(store: store)
         }
+        .senkuPushed(isShowingStreaks, isShowingSettings)
     }
 
     private func loggedBody(_ day: IntakeDay) -> some View {
@@ -663,9 +664,9 @@ public struct IntakeView: View {
         ContentUnavailableView {
             Label("No targets yet", systemImage: "fork.knife")
         } description: {
-            Text("Work out your numbers in Quick calc and save them, and this screen will show what you have eaten against them.")
+            Text("Work out your numbers in the macro calculator and save them, and this screen will show what you have eaten against them.")
         } actions: {
-            Button("Open quick calc", action: onOpenCalculator)
+            Button("Open the macro calculator", action: onOpenCalculator)
                 .buttonStyle(.borderedProminent)
         }
     }
