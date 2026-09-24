@@ -19,6 +19,7 @@ import os
 enum Trace {
     private static let restLog = Logger(subsystem: "pk.Senku", category: "rest")
     private static let intentLog = Logger(subsystem: "pk.Senku", category: "intent")
+    private static let foodLog = Logger(subsystem: "pk.Senku", category: "food")
 
     static func rest(_ message: @autoclosure () -> String) {
         emit(restLog, "rest", message())
@@ -26,6 +27,14 @@ enum Trace {
 
     static func intent(_ message: @autoclosure () -> String) {
         emit(intentLog, "intent", message())
+    }
+
+    /// Reading a photograph has the same shape of problem again: the model
+    /// answers inside a call you cannot step into, and a wrong number looks
+    /// exactly like a right one by the time it reaches a text field. What the
+    /// model actually said is the only thing worth arguing from.
+    static func food(_ message: @autoclosure () -> String) {
+        emit(foodLog, "food", message())
     }
 
     private static func emit(_ log: Logger, _ category: String, _ text: String) {
