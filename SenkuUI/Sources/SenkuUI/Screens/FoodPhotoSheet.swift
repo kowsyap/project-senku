@@ -19,10 +19,15 @@ struct FoodPhotoSheet: View {
     let onRead: (FoodEstimate) -> Void
     let onClose: () -> Void
 
-    private enum Phase: Equatable {
+    // Not Equatable any more: it carries a CGImage now, and nothing here
+    // compares phases.
+    private enum Phase {
         case choosing
+        /// Photographed, not yet sent. The one moment where you can tell it
+        /// something the picture cannot show.
+        case note(CGImage, CGImagePropertyOrientation?)
         case reading
-        case failed(FoodPhotoEstimator.Failure)
+        case failed(title: String, detail: String)
         /// A label has been transcribed, and now needs the one thing a
         /// photograph of a packet cannot tell anybody: how much you ate.
         case quantity(FoodEstimate)
@@ -33,18 +38,20 @@ struct FoodPhotoSheet: View {
     @State private var picked: PhotosPickerItem?
     @State private var servings = 1
     @State private var eaten: Double?
+    @State private var note = ""
 
     var body: some View {
         NavigationStack {
             Group {
                 switch phase {
                 case .choosing: chooser
+                case .note(let image, let orientation): noteBody(image, orientation)
                 case .reading: reading
-                case .failed(let failure): failedBody(failure)
+                case .failed(let title, let detail): failedBody(title, detail)
                 case .quantity(let label): quantityBody(label)
                 }
             }
-            .navigationTitle("From a photo")
+            .navigationTitle("From a Photo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -56,7 +63,8 @@ struct FoodPhotoSheet: View {
             CameraPicker { image, orientation in
                 isShowingCamera = false
                 guard let image else { return }
-                read(image, orientation)
+                note = ""
+                phase = .note(image, orientation)
             }
             .ignoresSafeArea()
         }
@@ -112,6 +120,32 @@ struct FoodPhotoSheet: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Anything it cannot see
+
+    private func noteBody(_ image: CGImage, _ orientation: CGImagePropertyOrientation?) -> some View {
+        Form {
+            Section {
+                TextField("Fried in plenty of oil, cream on top…", text: $note, axis: .vertical)
+                    .lineLimit(2 ... 5)
+                    .textInputAutocapitalization(.sentences)
+            } header: {
+                Text("Anything it cannot see")
+            } footer: {
+                // The genuinely useful things here are the ones no photograph
+                // carries: fat absorbed in cooking, butter stirred through,
+                // what is underneath. Optional, because most of the time there
+                // is nothing to add and a required field would be skipped
+                // blank anyway.
+                Text("Optional. Cooking fat, hidden ingredients — what the picture leaves out.")
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Read") { read(image, orientation) }
+            }
+        }
+    }
+
     // MARK: - Reading
 
     private var reading: some View {
@@ -120,27 +154,29 @@ struct FoodPhotoSheet: View {
             Text("Reading the photo…")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            Text("On this device. The picture is not sent anywhere.")
+            // Told the truth for whichever reader is actually running. The
+            // local promise is the app's whole position on this, so it is not
+            // left standing on a screen where it has stopped being true.
+            Text(GeminiAccount.isActive
+                 ? "Sending it to Google, because Gemini is switched on."
+                 : "On this device. The picture is not sent anywhere.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func failedBody(_ failure: FoodPhotoEstimator.Failure) -> some View {
+    private func failedBody(_ title: String, _ detail: String) -> some View {
         VStack(spacing: 14) {
             Image(systemName: "eye.slash")
                 .font(.system(size: 36))
                 .foregroundStyle(.secondary)
 
-            Text(failure == .modelUnavailable
-                 ? "The model is not ready."
-                 : "Could not read that one.")
+            Text(title)
                 .font(.headline)
 
-            Text(failure == .modelUnavailable
-                 ? "Apple Intelligence has to be on, and its model downloaded, before this can run."
-                 : "Try a clearer shot of the plate, or log it by hand.")
+            Text(detail)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -154,6 +190,35 @@ struct FoodPhotoSheet: View {
             .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Says which thing went wrong, because the four of them want four
+    /// different responses from you: wait, fix the key, retake the shot, or
+    /// give up and type it.
+    private func describe(_ error: Error) -> (String, String) {
+        switch error {
+        case FoodPhotoEstimator.Failure.modelUnavailable:
+            return ("The model is not ready.",
+                    "Apple Intelligence has to be on, and its model downloaded, before this can run.")
+        case GeminiFailure.busy:
+            return ("Google is busy.",
+                    "It answered that it is under load, three times. Nothing is wrong with the photo — wait a moment and try again.")
+        case GeminiFailure.rateLimited:
+            return ("Too many in a row.",
+                    "The free tier allows a few requests a minute. Wait a minute and try again.")
+        case GeminiFailure.unauthorized:
+            return ("Google refused the key.",
+                    "Check it under Photo reading. It has to be a Google AI Studio key.")
+        case GeminiFailure.noKey:
+            return ("No key saved.",
+                    "Add one under Photo reading, or switch Gemini off to read on the phone.")
+        case GeminiFailure.http(let code):
+            return ("Google could not be reached.",
+                    "It answered \(code). Try again, or switch Gemini off to read on the phone.")
+        default:
+            return ("Could not read that one.",
+                    "Try a clearer shot of the plate, or log it by hand.")
+        }
     }
 
     // MARK: - How much of it
@@ -176,12 +241,21 @@ struct FoodPhotoSheet: View {
                     LabeledContent("Calories", value: "\(Int(calories.rounded())) kcal")
                 }
             } header: {
-                Text(label.basis == .per100g ? "The label, per 100 g" : "The label, per serving")
+                if label.basis == .per100g {
+                    Text("Per 100 g")
+                } else if let grams = label.servingGrams {
+                    Text("Per serving — about \(Int(grams.rounded())) g")
+                } else {
+                    Text("Per serving")
+                }
             } footer: {
-                // Named as a transcription rather than a reading, because the
-                // honest claim here is stronger than anywhere else in the
-                // feature: these are the packet's numbers, not anybody's guess.
-                Text("Read off the packet, not estimated. Correct anything that came out wrong on the next screen.")
+                // The claim is different for each, and the difference is the
+                // whole point: a packet's numbers are the packet's, and a
+                // plate's are somebody's guess. Saying so is what earns the
+                // trust the exact case deserves.
+                Text(label.source == .panel
+                     ? "Read off the packet, not estimated. Correct anything that came out wrong on the next screen."
+                     : "Estimated from the photo, including the serving size. Worth correcting on the next screen.")
             }
 
             if label.basis == .perServing {
@@ -204,8 +278,11 @@ struct FoodPhotoSheet: View {
                 } header: {
                     Text("How many")
                 } footer: {
-                    Text(label.servingGrams.map { "One serving is \(Int($0.rounded())) g on the packet." }
-                         ?? "Multiplied from the per-serving column.")
+                    Text(label.servingGrams.map { grams in
+                        label.source == .panel
+                            ? "One serving is \(Int(grams.rounded())) g on the packet."
+                            : "One serving is the portion in the photo, about \(Int(grams.rounded())) g."
+                    } ?? "Counted in servings of what was read.")
                 }
             } else {
                 Section {
@@ -267,28 +344,24 @@ struct FoodPhotoSheet: View {
         phase = .reading
         Task {
             do {
-                let estimate = try await FoodPhotoEstimator.estimate(image, orientation: orientation)
+                let estimate = try await FoodPhotoEstimator.estimate(image, orientation: orientation, note: note)
                 guard estimate.proposal() != nil else {
-                    phase = .failed(.unreadable)
+                    let (title, detail) = describe(FoodPhotoEstimator.Failure.unreadable)
+                    phase = .failed(title: title, detail: detail)
                     return
                 }
                 Feedback.control()
-                // A label is exact about a quantity nobody has named yet, so it
-                // stops here. A plate is already an estimate of what is in
-                // front of you and goes straight to the editor.
-                if estimate.basis.needsQuantity {
-                    servings = 1
-                    eaten = estimate.servingGrams
-                    phase = .quantity(estimate)
-                } else {
-                    Trace.food("plate: straight to the editor, no scaling")
-                    finish(estimate)
-                }
-            } catch let failure as FoodPhotoEstimator.Failure {
-                phase = .failed(failure)
+                // Both kinds stop here now. A packet states a serving and a
+                // plate estimates one, so in either case the figures on screen
+                // describe one of something and the only open question is how
+                // many of them you had.
+                servings = 1
+                eaten = estimate.servingGrams
+                phase = .quantity(estimate)
             } catch {
                 Trace.food("sheet: \(error)")
-                phase = .failed(.unreadable)
+                let (title, detail) = describe(error)
+                phase = .failed(title: title, detail: detail)
             }
         }
     }
@@ -300,13 +373,15 @@ struct FoodPhotoSheet: View {
             let source = CGImageSourceCreateWithData(data as CFData, nil),
             let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
         else {
-            phase = .failed(.unreadable)
+            let (title, detail) = describe(FoodPhotoEstimator.Failure.unreadable)
+            phase = .failed(title: title, detail: detail)
             return
         }
 
         let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
         let raw = properties?[kCGImagePropertyOrientation] as? UInt32
-        read(image, raw.flatMap(CGImagePropertyOrientation.init(rawValue:)))
+        note = ""
+        phase = .note(image, raw.flatMap(CGImagePropertyOrientation.init(rawValue:)))
     }
 }
 

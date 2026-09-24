@@ -42,7 +42,13 @@ enum FoodPhotoEstimator {
     /// real combination, and a button that fails when tapped is worse than a
     /// button that was never offered.
     static var isAvailable: Bool {
+        // Either brain will do. Somebody who has switched Gemini on should get
+        // the button on a device whose local model never arrived.
+        #if os(iOS)
+        GeminiAccount.isActive || SystemLanguageModel.default.isAvailable
+        #else
         SystemLanguageModel.default.isAvailable
+        #endif
     }
 
     /// What the model is told before it is shown anything.
@@ -51,73 +57,14 @@ enum FoodPhotoEstimator {
     /// load-bearing one. `IntakeEntry` keeps a packet figure and a derived
     /// figure apart on purpose, and a model that helpfully computed 4/4/9 into
     /// `enteredCalories` would collapse that distinction while looking correct.
-    /// What the model is told when it is reading a panel that Vision has
-    /// already turned into text.
-    ///
-    /// The line mapping is spelled out because the failure it fixes was
-    /// specific: shown a tin of tuna, the model returned the saturated fat
-    /// where the total fat belonged. A Nutrition Facts panel indents its
-    /// sub-lines, and indentation does not survive being read into a list of
-    /// strings, so the relationship has to be stated rather than seen.
-    private static let panelInstructions = """
-        You are given lines of text read off a nutrition panel by a text \
-        recogniser. The lines may be out of order, and a panel printed in two \
-        columns may arrive interleaved.
-
-        Map exactly these lines and no others:
-
-        - "Total Fat" is the fat. "Saturated Fat", "Sat. Fat" and "Trans Fat" \
-          are indented underneath it and are NOT the fat figure.
-        - "Total Carbohydrate" or "Total Carb." is the carbohydrate. "Dietary \
-          Fiber", "Total Sugars" and "Added Sugars" are indented underneath it \
-          and are NOT the carbohydrate figure.
-        - "Protein" is the protein.
-        - "Dietary Fiber" is the fibre.
-        - "Calories" is the calorie figure.
-        - "Serving size", where it gives a weight in brackets such as \
-          "1/2 cup (85g)", gives `servingGrams` — the number in grams, 85, not \
-          the cup measure.
-
-        Set `basis` to "perServing" when the figures are headed \
-        "Amount/serving", "per serving" or "per portion", and "per100g" when \
-        they are headed per 100 g or per 100 ml.
-
-        If a figure is not in the text, return zero for it. Do not estimate, \
-        do not infer it from the product name, and do not calculate it from \
-        the other figures. A zero is a blank somebody will fill in; a plausible \
-        invented number is one they will not notice is wrong.
-
-        Ignore sodium, cholesterol, vitamins and percentages entirely.
-
-        Name the food from the product name if one appears, otherwise leave \
-        the name empty.
-        """
-
-    /// What the model is told when it is looking at food rather than a packet.
-    private static let plateInstructions = """
-        You are shown a photograph of food. Estimate the macronutrients of the \
-        portion in the picture, not of a standard serving of that dish.
-
-        Set `basis` to "plate" and `servingGrams` to zero.
-
-        Leave the calorie figure at zero: something downstream derives it from \
-        the macros, and it needs to know the number was not measured.
-
-        Name the food plainly, as somebody would say it: "chicken and rice", \
-        not "grilled poultry with steamed grains".
-
-        If the picture is not food, or you cannot tell what it is, return zero \
-        for every macro and leave the name empty. A refusal is more useful \
-        than a guess.
-        """
-
     /// The reading, or a `Failure`.
     ///
     /// Never writes anything. What comes back is a draft for ``IntakeEditor``,
     /// and the person holding the phone is the one who decides it happened.
     static func estimate(
         _ image: CGImage,
-        orientation: CGImagePropertyOrientation? = nil
+        orientation: CGImagePropertyOrientation? = nil,
+        note: String = ""
     ) async throws -> FoodEstimate {
         guard isAvailable else { throw Failure.modelUnavailable }
 
@@ -128,33 +75,48 @@ enum FoodPhotoEstimator {
         Trace.food("ocr: \(lines.count) line(s), panel=\(isPanel)")
         if isPanel { Trace.food("ocr: \(lines.joined(separator: " | "))") }
 
-        let raw: GeneratedFood
+        var estimate: FoodEstimate
         do {
-            raw = isPanel
-                ? try await readPanel(lines)
-                : try await readPlate(image, orientation)
+            #if os(iOS)
+            if GeminiAccount.isActive {
+                Trace.food("provider: gemini (\(GeminiFoodReader.model))")
+                estimate = isPanel
+                    ? try await GeminiFoodReader.readPanel(lines, note: note)
+                    : try await GeminiFoodReader.readPlate(image, orientation: orientation, note: note)
+            } else {
+                Trace.food("provider: on-device")
+                let raw = isPanel
+                    ? try await readPanel(lines, note: note)
+                    : try await readPlate(image, orientation, note: note)
+                estimate = raw.estimate
+            }
+            #else
+            // No Gemini off the phone: the reader needs UIKit to turn a
+            // CGImage into something sendable, and nothing but the phone asks.
+            Trace.food("provider: on-device")
+            let raw = isPanel
+                ? try await readPanel(lines, note: note)
+                : try await readPlate(image, orientation, note: note)
+            estimate = raw.estimate
+            #endif
         } catch {
-            // The reason, not just the fact. A session can refuse for reasons
+            // The reason, not just the fact. A reader can refuse for reasons
             // that have nothing to do with the photograph — a guardrail, a
-            // context window, assets still unpacking — and every one of them
-            // reached the screen as "could not read that one" until this line
-            // existed.
+            // context window, assets still unpacking, a rejected key — and
+            // every one of them reached the screen as "could not read that
+            // one" until this line existed.
             Trace.food("model failed: \(error)")
             throw error
         }
 
         // Logged before anything interprets it: every later number is derived
         // from these, so when one comes out wrong this is the line that says
-        // whether the model misread the packet or we mishandled what it read.
-        Trace.food(
-            """
-            read: name=\(raw.name.isEmpty ? "-" : raw.name) basis=\(raw.basis) \
-            p=\(raw.proteinG) c=\(raw.carbsG) f=\(raw.fatG) fib=\(raw.fiberG) \
-            kcal=\(raw.labelCalories) serving=\(raw.servingGrams)
-            """
-        )
+        // whether the reader misread the packet or we mishandled what it read.
+        // Which of the two jobs this was, recorded here rather than inferred
+        // from `basis` — both report per-serving figures now.
+        estimate.source = isPanel ? .panel : .plate
+        Trace.food(estimate.traceLine)
 
-        let estimate = raw.estimate
         guard !estimate.isEmpty else {
             Trace.food("read: nothing in it, refusing")
             throw Failure.unreadable
@@ -175,11 +137,12 @@ enum FoodPhotoEstimator {
     }
 
     /// The packet path: the model never sees the photograph, only the words.
-    private static func readPanel(_ lines: [String]) async throws -> GeneratedFood {
-        let session = LanguageModelSession(model: model, instructions: panelInstructions)
+    private static func readPanel(_ lines: [String], note: String) async throws -> GeneratedFood {
+        let session = LanguageModelSession(model: model, instructions: FoodPrompts.panel)
         let response = try await session.respond(generating: GeneratedFood.self) {
             "Lines read off the panel:"
             lines.joined(separator: "\n")
+            if !note.isEmpty { FoodPrompts.note(note) }
         }
         return response.content
     }
@@ -187,12 +150,14 @@ enum FoodPhotoEstimator {
     /// The plate path, where there is nothing written down to read.
     private static func readPlate(
         _ image: CGImage,
-        _ orientation: CGImagePropertyOrientation?
+        _ orientation: CGImagePropertyOrientation?,
+        note: String
     ) async throws -> GeneratedFood {
-        let session = LanguageModelSession(model: model, instructions: plateInstructions)
+        let session = LanguageModelSession(model: model, instructions: FoodPrompts.plate)
         let response = try await session.respond(generating: GeneratedFood.self) {
             Attachment(image, orientation: orientation).label("meal")
             "What is in this photograph, and what are its macros?"
+            if !note.isEmpty { FoodPrompts.note(note) }
         }
         return response.content
     }

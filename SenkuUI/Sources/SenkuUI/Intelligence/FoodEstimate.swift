@@ -42,6 +42,21 @@ struct FoodEstimate: Equatable, Sendable {
     /// dinner.
     var basis: Basis = .plate
 
+    /// Where the figures came from, which `basis` no longer tells you.
+    ///
+    /// Both a packet and a plate now report per-serving figures so that both
+    /// can be counted in servings. That makes `basis` a statement about the
+    /// arithmetic and nothing else — and the one thing left worth saying on
+    /// screen is whether these numbers were read or guessed, which is this.
+    var source: Source = .plate
+
+    enum Source: Equatable, Sendable {
+        /// Transcribed off a nutrition panel. Exact.
+        case panel
+        /// Estimated from a photograph of food. Not exact, and said so.
+        case plate
+    }
+
     /// Grams in one serving, where the label said so — "per serving (30 g)".
     /// Lets the scaling step offer servings as well as grams.
     var servingGrams: Double?
@@ -128,6 +143,30 @@ struct FoodEstimate: Equatable, Sendable {
             fiberG: fiberG,
             enteredCalories: calories
         )
+    }
+
+    /// One line for the log.
+    ///
+    /// Assembled in pieces rather than one interpolated literal: the whole
+    /// thing in a single string defeated the type checker outright, and a
+    /// diagnostic-free compile error is a worse debugging session than the one
+    /// this line exists to prevent.
+    var traceLine: String {
+        func figure(_ value: Double?) -> String {
+            guard let value else { return "-" }
+            return String(value)
+        }
+
+        var parts: [String] = ["read:"]
+        parts.append("name=" + (name.isEmpty ? "-" : name))
+        parts.append("basis=" + basis.rawValue)
+        parts.append("p=" + String(proteinG))
+        parts.append("c=" + String(carbsG))
+        parts.append("f=" + String(fatG))
+        parts.append("fib=" + figure(fiberG))
+        parts.append("kcal=" + figure(calories))
+        parts.append("serving=" + figure(servingGrams))
+        return parts.joined(separator: " ")
     }
 
     /// Whether there is anything in here worth opening an editor for.
