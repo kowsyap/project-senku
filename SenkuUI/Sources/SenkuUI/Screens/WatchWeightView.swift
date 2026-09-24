@@ -164,7 +164,7 @@ private struct WatchWeighInEditor: View {
                 .tint(Senku.Palette.protein)
             }
             .padding(.horizontal, 6)
-            .navigationTitle("Weigh in")
+            .navigationTitle("Weigh In")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)

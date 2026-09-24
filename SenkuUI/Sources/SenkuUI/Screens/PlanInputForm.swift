@@ -4,14 +4,14 @@ import SenkuCore
 
 /// The inputs behind a plan: who you are, and what you are trying to do.
 ///
-/// Shared by the quick calculator, where it is the whole screen, and by the
+/// Shared by the macro calculator, where it is the whole screen, and by the
 /// profile editor, where it sits in a sheet. Keeping it in one place means the
 /// two never drift apart.
 public struct PlanInputForm: View {
     @Bindable private var draft: PlanDraft
 
     /// Whether to ask for a name. Only a *saved* profile has a use for one —
-    /// the quick calculator writes nothing down, so asking a stranger's name
+    /// the macro calculator writes nothing down, so asking a stranger's name
     /// there would be a question with no purpose.
     private let includesName: Bool
 

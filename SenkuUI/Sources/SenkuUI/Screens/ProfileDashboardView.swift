@@ -40,7 +40,7 @@ public struct ProfileDashboardView: View {
                 } label: {
                     StackedActionLabel("Edit", symbol: "slider.horizontal.3")
                 }
-                .accessibilityLabel("Edit profile")
+                .accessibilityLabel("Edit Profile")
             }
         }
         .sheet(item: $editingDraft) { draft in
@@ -125,7 +125,7 @@ private struct ProfileEditorSheet: View {
             }
             .background(.background)
             .dismissableKeyboard()
-            .navigationTitle("Edit profile")
+            .navigationTitle("Edit Profile")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

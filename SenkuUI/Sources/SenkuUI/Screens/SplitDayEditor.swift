@@ -50,7 +50,7 @@ struct SplitDayEditor: View {
                 strandedSection
             }
         }
-        .navigationTitle(isNew ? "New day" : day.name)
+        .navigationTitle(isNew ? "New Day" : day.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

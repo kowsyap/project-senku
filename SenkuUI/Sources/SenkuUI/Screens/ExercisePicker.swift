@@ -77,7 +77,7 @@ public struct ExercisePicker: View {
             }
         }
         .searchable(text: $search, prompt: "Search all exercises")
-        .navigationTitle(group == nil ? "Muscle group" : "")
+        .navigationTitle(group == nil ? "Muscle Group" : "")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -561,7 +561,7 @@ struct CustomExerciseEditor: View {
                     Text("Senku scores coverage from these. Because you picked them rather than the catalogue, anything measured from this exercise is an estimate.")
                 }
             }
-            .navigationTitle("Your exercise")
+            .navigationTitle("Your Exercise")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
