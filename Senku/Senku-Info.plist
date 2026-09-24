@@ -11,6 +11,10 @@
 		     can rely on. -->
 		<string>audio</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>To read the macros off a photograph of your food. The picture is read on this device and is not sent anywhere.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>To read the macros off a photograph you have already taken. The picture is read on this device and is not sent anywhere.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

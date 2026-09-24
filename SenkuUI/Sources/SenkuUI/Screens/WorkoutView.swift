@@ -68,7 +68,7 @@ public struct WorkoutView: View {
                 Button {
                     isCalculatingPlates = true
                 } label: {
-                    Label("Plates", systemImage: "circle.hexagongrid.fill")
+                    StackedActionLabel("Plates", symbol: "circle.hexagongrid.fill")
                 }
             }
 
@@ -77,16 +77,18 @@ public struct WorkoutView: View {
                     Button {
                         isShowingHistory = true
                     } label: {
-                        Label("Logged workouts", systemImage: "clock.arrow.circlepath")
+                        StackedActionLabel("History", symbol: "clock.arrow.circlepath")
                     }
+                    .accessibilityLabel("Logged workouts")
                     .disabled(workouts.history.isEmpty)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         isSettingUp = true
                     } label: {
-                        Label("Edit my week", systemImage: "slider.horizontal.3")
+                        StackedActionLabel("Week", symbol: "slider.horizontal.3")
                     }
+                    .accessibilityLabel("Edit my week")
                 }
             }
         }
@@ -103,6 +105,7 @@ public struct WorkoutView: View {
                 unitSystem: unitSystem
             )
         }
+        .senkuPushed(isCalculatingPlates, isSettingUp, isShowingHistory)
         .sheet(item: $reviewing) { session in
             NavigationStack {
                 WorkoutSummaryView(

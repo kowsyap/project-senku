@@ -21,6 +21,13 @@ struct IntakeEditor: View {
     @State private var calories: Double?
     @State private var saveAsFavourite = false
     @State private var loaded = false
+    #if os(iOS)
+    @State private var isShowingPhoto = false
+    /// Resolved once rather than read in `body`: the answer involves the model
+    /// assets on disk, and a form that asks about them on every keystroke is a
+    /// form that stutters.
+    @State private var canReadPhotos = false
+    #endif
 
     private var derivedCalories: Double {
         (protein ?? 0) * CaloriesPerGram.protein
@@ -35,6 +42,25 @@ struct IntakeEditor: View {
     var body: some View {
         NavigationStack {
             Form {
+                #if os(iOS)
+                if canReadPhotos, editing == nil {
+                    Section {
+                        Button {
+                            isShowingPhoto = true
+                        } label: {
+                            Label("Read a packet or a plate", systemImage: "camera")
+                        }
+                    } footer: {
+                        // Lives here rather than in the toolbar because it is
+                        // a way of filling this form in, not a separate way of
+                        // logging food. Whatever it reads lands in the fields
+                        // below and is yours to correct before anything is
+                        // saved.
+                        Text("To get estimates")
+                    }
+                }
+                #endif
+
                 Section {
                     TextField(Self.defaultName, text: $name)
                         #if os(iOS)
@@ -89,11 +115,25 @@ struct IntakeEditor: View {
                     }
                 }
             }
-            .navigationTitle(editing == nil ? "Log food" : "Edit")
+            .navigationTitle(editing == nil ? "Log Food" : "Edit")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .dismissableKeyboard()
+            #if os(iOS)
+            .sheet(isPresented: $isShowingPhoto) {
+                if #available(iOS 27, *) {
+                    FoodPhotoSheet(onRead: fill) { isShowingPhoto = false }
+                }
+            }
+            .task {
+                // Shown only once Gemini is set up: a key saved and the switch
+                // on. Hidden rather than disabled, because a button that
+                // explains why it cannot be pressed is a button asking to be
+                // pressed.
+                if #available(iOS 27, *) { canReadPhotos = GeminiAccount.isActive }
+            }
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onClose)
@@ -147,6 +187,24 @@ struct IntakeEditor: View {
         }
     }
 
+    #if os(iOS)
+    /// Takes what the camera read and puts it in the fields.
+    ///
+    /// Overwrites rather than merges: a reading is a description of one thing,
+    /// and half of it against half of what you had typed would be a fourth
+    /// thing that never existed.
+    @available(iOS 27, *)
+    private func fill(_ estimate: FoodEstimate) {
+        guard let proposal = estimate.proposal() else { return }
+        name = proposal.name ?? ""
+        protein = proposal.proteinG
+        carbs = proposal.carbsG
+        fat = proposal.fatG
+        fibre = proposal.fiberG
+        calories = proposal.enteredCalories
+    }
+    #endif
+
     private func save() {
         guard let entry = try? IntakeEntry(
             id: editing?.id ?? UUID(),
@@ -194,6 +252,16 @@ struct IntakeSettingsView: View {
 
     var body: some View {
         Form {
+            #if os(iOS)
+            if #available(iOS 27, *) {
+                Section {
+                    NavigationLink("Photo reading") { FoodIntelligenceSettings() }
+                } footer: {
+                    Text("Reading macros with AI.")
+                }
+            }
+            #endif
+
             Section {
                 if store.favourites.isEmpty {
                     Text("Nothing saved yet.")
@@ -236,10 +304,11 @@ struct IntakeSettingsView: View {
             } header: {
                 Text("Quick add")
             } footer: {
-                Text("The menu on the food screen. Ordered by how often you log each one, so what you eat most sits first.")
+                Text("The menu on the food screen.")
             }
+
         }
-        .navigationTitle("Food settings")
+        .navigationTitle("Food Settings")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -333,7 +402,7 @@ private struct FavouriteEditor: View {
                     }
                 }
             }
-            .navigationTitle(favourite == nil ? "New quick-add" : "Edit")
+            .navigationTitle(favourite == nil ? "New Quick-Add" : "Edit")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

@@ -47,7 +47,7 @@ struct TabBarEditor: View {
                 Text("Up to \(layout.slots) in the navbar on this screen. Drag to arrange.")
             }
         }
-        .navigationTitle("Navbar settings")
+        .navigationTitle("Navbar Settings")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

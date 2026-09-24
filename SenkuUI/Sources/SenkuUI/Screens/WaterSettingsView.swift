@@ -117,7 +117,7 @@ struct WaterSettingsView: View {
             remindingCreatine = CreatineReminder.isOn
         }
         #endif
-        .navigationTitle("Water settings")
+        .navigationTitle("Water Settings")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

@@ -9,7 +9,7 @@ import UIKit
 /// The app's entry screen.
 ///
 /// Three tabs. "Me" is a profile that persists and improves over time, while
-/// "Quick calc" is for the friend who asks a question in the gym — no account,
+/// "Macro calculator" is for the friend who asks a question in the gym — no account,
 /// no onboarding, nothing written down. The two audiences genuinely differ.
 ///
 /// "Rest" sits alongside them rather than inside either, because it is the one
@@ -110,7 +110,7 @@ public struct RootView: View {
         var title: String {
             switch self {
             case .me: "Me"
-            case .quickCalc: "Quick calc"
+            case .quickCalc: "Macro Calculator"
             case .rest: "Rest"
             case .workout: "Workout"
             case .weight: "Weight"
@@ -123,6 +123,18 @@ public struct RootView: View {
         }
 
         /// An image from the package's assets, where a glyph will not do.
+        /// What the tab bar calls it.
+        ///
+        /// The bar lays each item out at its natural width — `fixedSize()` on a
+        /// single line — so a long name does not truncate, it pushes the other
+        /// five out of the row. Only one name is long enough to need this.
+        var shortTitle: String {
+            switch self {
+            case .quickCalc: "Macros"
+            default: title
+            }
+        }
+
         var mark: String? {
             self == .me ? "GokuMark" : nil
         }
@@ -643,6 +655,19 @@ public struct RootView: View {
     /// Never the raw selection: taking the current tab out of the bar would
     /// otherwise leave a selection with no page behind it, and every page
     /// hidden is a blank screen.
+    /// Bumped for a tab each time it is opened, and used as that page's `id`.
+    ///
+    /// Changing the id rebuilds the navigation stack from scratch, which is
+    /// the only thing that reliably clears it: the screens push settings and
+    /// history with `navigationDestination(isPresented:)`, and those are not
+    /// in a `NavigationPath` to be emptied. Rebuilding drops the scroll
+    /// position too, which is what tapping a tab is understood to do.
+    @State private var rootResets: [Tab: Int] = [:]
+
+    /// The tabs currently showing something pushed on top of their front page,
+    /// as the screens themselves report it — see ``SenkuStackDepthKey``.
+    @State private var deepTabs: Set<Tab> = []
+
     private var visibleTab: Tab {
         barTabs.contains(selection) ? selection : .more
     }
@@ -656,6 +681,12 @@ public struct RootView: View {
     private func show(_ tab: Tab) {
         if barTabs.contains(tab) {
             moreDestination = nil
+            // Opening a tab means opening its front page, not wherever it was
+            // abandoned — coming back to Food should not land on the settings
+            // screen you were last reading. Only when there is something to
+            // come back from, though: rebuilding a stack already at its front
+            // moves nothing and reads as a flicker.
+            if deepTabs.contains(tab) { rootResets[tab, default: 0] += 1 }
             selection = tab
         } else {
             moreDestination = tab
@@ -687,7 +718,7 @@ public struct RootView: View {
     private var meScreen: some View {
         profileTab
             .senkuBottomBarInset()
-            .navigationTitle(store.hasProfile ? "My plan" : "Senku")
+            .navigationTitle(store.hasProfile ? "My Plan" : "Senku")
     }
 
     @ViewBuilder
@@ -706,7 +737,7 @@ public struct RootView: View {
             show(.me)
         }
         .senkuBottomBarInset()
-            .navigationTitle("Quick calc")
+            .navigationTitle("Macro Calculator")
     }
 
     @ViewBuilder
@@ -862,6 +893,12 @@ public struct RootView: View {
                             screen(tab)
                                 .senkuWordmark()
                         }
+                        .id(rootResets[tab] ?? 0)
+                    }
+                }
+                .onPreferenceChange(SenkuStackDepthKey.self) { depth in
+                    Task { @MainActor in
+                        if depth > 0 { deepTabs.insert(tab) } else { deepTabs.remove(tab) }
                     }
                 }
             }
@@ -992,9 +1029,9 @@ public struct RootView: View {
         ContentUnavailableView {
             Label("No profile yet", systemImage: "person.crop.circle.dashed")
         } description: {
-            Text("Work out your numbers in Quick calc, then save them here to keep them.")
+            Text("Work out your numbers in the macro calculator, then save them here to keep them.")
         } actions: {
-            Button("Open quick calc") {
+            Button("Open the macro calculator") {
                 show(.quickCalc)
             }
             .buttonStyle(.borderedProminent)
@@ -1041,7 +1078,7 @@ private struct AdaptiveTabs<
             Tab("Me", systemImage: "person.fill", value: RootView.Tab.me) { me }
                 .customizationID("senku.tab.me")
 
-            Tab("Quick calc", systemImage: "function", value: RootView.Tab.quickCalc) { quickCalc }
+            Tab("Macro Calculator", systemImage: "function", value: RootView.Tab.quickCalc) { quickCalc }
                 .customizationID("senku.tab.quickCalc")
 
             // Never hideable: this is the screen reached mid-set, and a rest

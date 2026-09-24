@@ -13,7 +13,7 @@ import SenkuCore
 /// gets its identity from `ObjectIdentifier` for free.
 @Observable
 public final class PlanDraft: Identifiable {
-    /// What to call this person. Empty for the quick calculator, which is for
+    /// What to call this person. Empty for the macro calculator, which is for
     /// someone who is not saving anything; the profile editor asks for it.
     public var name: String
 

@@ -2,7 +2,7 @@
 import SwiftUI
 import SenkuCore
 
-/// The quick calculator: fill in, read the answer, walk away.
+/// The macro calculator: fill in, read the answer, walk away.
 ///
 /// This is the screen for the friend who asks a question in the gym. Nothing is
 /// written to disk and no account is implied; saving is offered only as a
@@ -190,10 +190,10 @@ public struct CalculatorView: View {
 
 }
 
-#Preview("Quick calc") {
+#Preview("Macro Calculator") {
     NavigationStack {
         CalculatorView(draft: PlanDraft(goal: .moderateCut)) { _ in }
-            .navigationTitle("Quick calc")
+            .navigationTitle("Macro Calculator")
     }
 }
 #endif

@@ -58,14 +58,14 @@ struct PlateCalculatorView: View {
         // a weight from one rack to another, where it may not even be loadable;
         // the bar is the honest place to start again.
         .onChange(of: plates.unit) { _, _ in target = set.bar }
-        .navigationTitle("Plate calculator")
+        .navigationTitle("Plate Calculator")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { isEditingRack = true } label: {
-                    Label("Rack", systemImage: "gearshape")
+                    StackedActionLabel("Rack", symbol: "gearshape")
                 }
             }
         }

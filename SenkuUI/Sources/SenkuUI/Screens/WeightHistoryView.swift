@@ -44,7 +44,7 @@ struct WeightHistoryView: View {
                 }
             }
         }
-        .navigationTitle("\(store.weighIns.count) weigh-ins")
+        .navigationTitle("\(store.weighIns.count) Weigh-Ins")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -87,7 +87,7 @@ struct WeightSettingsView: View {
             }
             #endif
         }
-        .navigationTitle("Weight settings")
+        .navigationTitle("Weight Settings")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

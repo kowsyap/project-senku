@@ -66,7 +66,7 @@ struct WorkoutSessionView: View {
                     workouts.addExercise(exercise.id)
                     isAdding = false
                 }
-                .navigationTitle("Add to today")
+                .navigationTitle("Add to Today")
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
