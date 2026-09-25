@@ -43,7 +43,7 @@ public enum Display {
             : clock(seconds)
     }
 
-    /// One set, however it was measured: "60 kg×8", "60s", "+10 kg · 60s".
+    /// One set, however it was measured: "60 kg×8", "×12", "60s", "+10 kg · 60s".
     public static func set(
         weightKG: Double,
         reps: Int,
@@ -51,6 +51,10 @@ public enum Display {
         in system: UnitSystem
     ) -> String {
         guard let seconds else {
+            // Nothing on the bar is not a weight of zero. A pull-up is its
+            // reps, and "0 kg×12" reads as a failed lift rather than twelve
+            // pull-ups — the same reason a held set below drops a zero.
+            guard weightKG > 0 else { return "×\(reps)" }
             return "\(mass(weightKG, in: system, decimals: 0))×\(reps)"
         }
         guard weightKG > 0 else { return hold(seconds) }

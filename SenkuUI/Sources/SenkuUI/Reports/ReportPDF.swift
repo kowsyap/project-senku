@@ -411,7 +411,7 @@ public enum ReportPDF {
                         detail = "done, nothing logged"
                     } else {
                         detail = entry.sets
-                            .map { "\(Display.mass($0.weightKG, in: unitSystem, decimals: 0))×\($0.reps)" }
+                            .map { Display.set(weightKG: $0.weightKG, reps: $0.reps, seconds: $0.seconds, in: unitSystem) }
                             .joined(separator: "  ")
                     }
                     out.append(body("   \(library.name(of: entry.exerciseID))   \(detail)\n"))
