@@ -20,6 +20,7 @@ enum Trace {
     private static let restLog = Logger(subsystem: "pk.Senku", category: "rest")
     private static let intentLog = Logger(subsystem: "pk.Senku", category: "intent")
     private static let foodLog = Logger(subsystem: "pk.Senku", category: "food")
+    private static let syncLog = Logger(subsystem: "pk.Senku", category: "sync")
 
     static func rest(_ message: @autoclosure () -> String) {
         emit(restLog, "rest", message())
@@ -35,6 +36,16 @@ enum Trace {
     /// model actually said is the only thing worth arguing from.
     static func food(_ message: @autoclosure () -> String) {
         emit(foodLog, "food", message())
+    }
+
+    /// The watch link, which fails the same silent way as everything else here.
+    ///
+    /// Every send is guarded on a session being activated, the watch being
+    /// paired, and the app being installed on it — and each of those returns
+    /// without a word. A phone that believes there is no watch app and a watch
+    /// that never receives look identical from either screen.
+    static func sync(_ message: @autoclosure () -> String) {
+        emit(syncLog, "sync", message())
     }
 
     private static func emit(_ log: Logger, _ category: String, _ text: String) {

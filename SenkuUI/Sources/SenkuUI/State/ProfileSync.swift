@@ -297,9 +297,16 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         latest = profile
 
         #if os(iOS)
-        guard let session, session.activationState == .activated else { return }
+        guard let session, session.activationState == .activated else {
+            Trace.sync("send profile: session not activated")
+            return
+        }
         // Nothing to talk to: no watch paired, or Senku not installed on it.
-        guard session.isPaired, session.isWatchAppInstalled else { return }
+        guard session.isPaired, session.isWatchAppInstalled else {
+            Trace.sync("send profile: refused — paired=\(session.isPaired) installed=\(session.isWatchAppInstalled)")
+            return
+        }
+        Trace.sync("send profile: reachable=\(session.isReachable)")
 
         // A cleared profile is sent as an *empty value under the key*, never as
         // an empty context. The difference is the whole safety of this: absence
@@ -452,7 +459,15 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: Error?
     ) {
-        guard activationState == .activated else { return }
+        guard activationState == .activated else {
+            Trace.sync("activation failed: state=\(activationState.rawValue) error=\(error.map(String.init(describing:)) ?? "none")")
+            return
+        }
+        #if os(iOS)
+        Trace.sync("activated: paired=\(session.isPaired) installed=\(session.isWatchAppInstalled) reachable=\(session.isReachable)")
+        #else
+        Trace.sync("activated on watch: reachable=\(session.isReachable)")
+        #endif
 
         // Whatever the counterpart last sent is waiting in the context on
         // activation, so a watch that was off when the profile changed still
@@ -473,6 +488,7 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     }
 
     public func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
+        Trace.sync("received context: \(context.keys.sorted().joined(separator: ","))")
         receive(context)
     }
 
@@ -513,6 +529,9 @@ public final class ProfileSync: NSObject, WCSessionDelegate, @unchecked Sendable
     #if os(iOS)
     /// A newly paired or freshly installed watch has nothing. Push to it.
     public func sessionWatchStateDidChange(_ session: WCSession) {
+        #if os(iOS)
+        Trace.sync("watch state changed: paired=\(session.isPaired) installed=\(session.isWatchAppInstalled)")
+        #endif
         answerRefresh()
     }
     #endif
