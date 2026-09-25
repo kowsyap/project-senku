@@ -280,6 +280,7 @@ public struct RootView: View {
             default: break
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: ReminderRoute.didTap), perform: follow)
         .task {
             // The phone publishes the profile; the watch picks it up whenever
             // it next runs. Started here rather than in the app entry point so
@@ -678,6 +679,20 @@ public struct RootView: View {
     /// deep link or an in-app jump has to land there rather than selecting a
     /// tab that is not on screen. Every `selection =` in this file goes through
     /// here for that reason.
+    /// Opens the screen a tapped reminder was about.
+    ///
+    /// Routed through ``show(_:)`` like every other jump, so a reminder for a
+    /// screen the bar is not carrying lands under More rather than selecting a
+    /// tab that is not on it.
+    private func follow(_ note: Notification) {
+        switch note.object as? ReminderRoute {
+        case .water: show(.water)
+        case .weight: show(.weight)
+        case .rest: show(.rest)
+        case nil: break
+        }
+    }
+
     private func show(_ tab: Tab) {
         if barTabs.contains(tab) {
             moreDestination = nil

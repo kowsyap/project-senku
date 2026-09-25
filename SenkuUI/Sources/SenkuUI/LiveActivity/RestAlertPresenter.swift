@@ -47,11 +47,21 @@ final class RestAlertPresenter: NSObject, @preconcurrency UNUserNotificationCent
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        guard response.actionIdentifier == WaterReminders.logActionID else { return }
+        if response.actionIdentifier == WaterReminders.logActionID {
+            let store = WaterStore()
+            let container = store.settings.containers.first
+            store.add(millilitres: container?.millilitres ?? 250, container: container)
+            return
+        }
 
-        let store = WaterStore()
-        let container = store.settings.containers.first
-        store.add(millilitres: container?.millilitres ?? 250, container: container)
+        // Tapping the notification itself, rather than one of its buttons.
+        // Every reminder here is about a particular screen, and opening the
+        // app wherever it was last left makes the tap an errand you then have
+        // to run yourself.
+        #if !os(watchOS)
+        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
+        ReminderRoute.from(identifier: response.notification.request.identifier)?.post()
+        #endif
     }
 
     func userNotificationCenter(
