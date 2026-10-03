@@ -16,6 +16,7 @@ struct WorkoutSessionView: View {
     @Bindable var cardioRecords: CardioRecordStore
     @Bindable var library: ExerciseLibrary
     let unitSystem: UnitSystem
+    let target: RepTarget
     let onFinish: (WorkoutSession) -> Void
 
     @State private var logging: LoggingTarget?
@@ -51,7 +52,8 @@ struct WorkoutSessionView: View {
                         workouts: workouts,
                         records: records,
                         library: library,
-                        unitSystem: unitSystem
+                        unitSystem: unitSystem,
+                        target: self.target
                     )
                 }
             }
@@ -291,10 +293,18 @@ struct WorkoutSessionView: View {
                 // button is the tint. That is why these rows were green on a
                 // green-accented tab despite being told to be primary: they
                 // were obeying, and primary *was* green.
-                Text(library.name(of: entry.exerciseID))
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(entry.isSkipped ? Color.secondary : Color.primary)
-                    .strikethrough(entry.isSkipped)
+                HStack(spacing: 6) {
+                    Text(library.name(of: entry.exerciseID))
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(entry.isSkipped ? Color.secondary : Color.primary)
+                        .strikethrough(entry.isSkipped)
+
+                    if stepUp(for: entry) != nil {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .foregroundStyle(Senku.Palette.surplus)
+                            .accessibilityLabel("Ready to go heavier")
+                    }
+                }
 
                 Text(detail(for: entry))
                     .font(.caption)
@@ -311,6 +321,8 @@ struct WorkoutSessionView: View {
             }
         }
         .padding(.vertical, 2)
+        // Tappable across its width, not only on the text.
+        .contentShape(Rectangle())
     }
 
     private func mark(for entry: WorkoutEntry) -> String {
@@ -354,7 +366,17 @@ struct WorkoutSessionView: View {
             seconds: best.seconds,
             in: unitSystem
         )
-        return "Last: \(figure), \(session.date.formatted(.relative(presentation: .named)))"
+        let when = "Last: \(figure), \(session.date.formatted(.relative(presentation: .named)))"
+        guard let stepUp = stepUp(for: entry) else { return when }
+        return "\(when) · \(stepUp.hint(in: unitSystem))"
+    }
+
+    /// Only before today's first set: once you are lifting, the row shows
+    /// what you are doing, and the logger has already offered the weight.
+    private func stepUp(for entry: WorkoutEntry) -> StepUp? {
+        guard entry.sets.isEmpty, !entry.isSkipped, !entry.isMarkedDone, entry.cardio == nil
+        else { return nil }
+        return StepUp.earned(for: entry.exerciseID, in: workouts, target: target, unitSystem: unitSystem)
     }
 
     /// Finish and discard, side by side.
@@ -407,6 +429,7 @@ private struct SetLogger: View {
     @Bindable var records: RecordStore
     @Bindable var library: ExerciseLibrary
     let unitSystem: UnitSystem
+    let target: RepTarget
 
     @State private var weight: Double = 0
     @State private var reps: Int = 8
@@ -504,6 +527,7 @@ private struct SetLogger: View {
             if !isBodyweight {
                 LabeledContent("Weight") {
                     HStack {
+                        weightStepButton(-1)
                         TextField(
                             "Weight",
                             value: $weight,
@@ -512,10 +536,16 @@ private struct SetLogger: View {
                         #if os(iOS)
                         .keyboardType(.decimalPad)
                         #endif
-                        .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: 90)
+                        // Sized for three digits and a half — "142.5" — so the
+                        // minus sits beside the number rather than across an
+                        // empty field from it.
+                        .multilineTextAlignment(.center)
+                        .monospacedDigit()
+                        .frame(width: 60)
                         Text(unitSystem.massLabel)
                             .foregroundStyle(.secondary)
+                        weightStepButton(1)
+                            .padding(.leading, 4)
                     }
                 }
             }
@@ -541,7 +571,36 @@ private struct SetLogger: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(Senku.Palette.protein)
+        } footer: {
+            if let stepUp, entry?.sets.isEmpty ?? true {
+                Label(stepUp.explanation(target: target, in: unitSystem), systemImage: "arrow.up.circle.fill")
+            }
         }
+    }
+
+    /// One plate pair either way — 2.5 kg or 5 lb — for the change that is
+    /// nearly always one step, with the field still there for a bigger jump.
+    /// Snaps to the step, so a typed 41 goes to 42.5 or 40 rather than 43.5.
+    private func weightStepButton(_ direction: Double) -> some View {
+        let step = unitSystem == .metric ? 2.5 : 5
+        return Button {
+            Feedback.control()
+            let snapped = direction > 0
+                ? (weight / step + 0.001).rounded(.down) * step + step
+                : (weight / step - 0.001).rounded(.up) * step - step
+            weight = max(0, snapped)
+        } label: {
+            Image(systemName: direction > 0 ? "plus.circle.fill" : "minus.circle.fill")
+                .font(.title2)
+                .foregroundStyle(Senku.Palette.protein)
+        }
+        .buttonStyle(.borderless)
+        .disabled(direction < 0 && weight <= 0)
+        .accessibilityLabel(direction > 0 ? "Increase weight" : "Decrease weight")
+    }
+
+    private var stepUp: StepUp? {
+        StepUp.earned(for: exerciseID, in: workouts, target: target, unitSystem: unitSystem)
     }
 
     /// What to open on.
@@ -558,6 +617,11 @@ private struct SetLogger: View {
             weight = converted(last.weightKG)
             reps = max(1, last.reps)
             if let held = last.seconds { seconds = held }
+        } else if let stepUp {
+            // Earned last time, so the next weight up is what to open on —
+            // ahead of the record, which is a figure already beaten.
+            weight = converted(stepUp.toKG)
+            reps = stepUp.isBodyweight ? target.reps + 1 : target.reps
         } else if let record = records.book.records(for: exerciseID).best {
             weight = converted(record.weightKG)
             reps = max(1, record.reps)
@@ -817,6 +881,46 @@ private struct CardioLogger: View {
         Feedback.control()
         newRecord = workouts.logCardio(effort, for: exerciseID, records: cardioRecords)
         dismiss()
+    }
+}
+
+/// "Go heavier": the last time this exercise was done, it met the target.
+///
+/// The step is the smallest one nearly every gym can make — 2.5 kg, or 5 lb —
+/// whatever the exercise. A machine with a 5 kg stack will need the figure
+/// changing, and that is one edit in the logger rather than a setting per
+/// exercise. A bodyweight movement steps up in reps instead.
+struct StepUp {
+    let fromKG: Double
+    let toKG: Double
+
+    var isBodyweight: Bool { fromKG == 0 }
+
+    static func earned(
+        for exerciseID: String,
+        in workouts: WorkoutStore,
+        target: RepTarget,
+        unitSystem: UnitSystem
+    ) -> StepUp? {
+        guard let (_, last) = workouts.lastEntry(forExercise: exerciseID),
+              let top = last.earnedStepUp(for: target)
+        else { return nil }
+
+        guard top > 0 else { return StepUp(fromKG: 0, toKG: 0) }
+        let step = unitSystem == .metric ? 2.5 : Convert.kilograms(fromPounds: 5)
+        return StepUp(fromKG: top, toKG: top + step)
+    }
+
+    /// "try 42.5 kg" — short enough for the checklist row.
+    func hint(in system: UnitSystem) -> String {
+        isBodyweight ? "try more reps" : "try \(Display.lifted(toKG, in: system))"
+    }
+
+    func explanation(target: RepTarget, in system: UnitSystem) -> String {
+        let hit = "Last time you did \(target.sets)×\(target.reps)"
+        return isBodyweight
+            ? "\(hit). Go for more reps."
+            : "\(hit) at \(Display.lifted(fromKG, in: system)). Go up to \(Display.lifted(toKG, in: system))."
     }
 }
 #endif

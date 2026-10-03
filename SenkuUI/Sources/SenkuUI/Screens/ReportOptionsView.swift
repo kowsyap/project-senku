@@ -24,7 +24,8 @@ struct ReportOptionsView: View {
                     Toggle("Workouts", isOn: $selection.workouts)
                     Toggle("Water", isOn: $selection.water)
                     Toggle("Food", isOn: $selection.food)
-                    Toggle("Anime", isOn: $selection.anime)
+                    Toggle(WatchlistName.shared.title, isOn: $selection.anime)
+                    Toggle("Dues", isOn: $selection.dues)
                 } header: {
                     Text("In the report")
                 } footer: {
@@ -74,6 +75,7 @@ struct ReportOptionsView: View {
     private var allOn: Bool {
         selection.profile && selection.weight && selection.records && selection.plan
             && selection.workouts && selection.water && selection.food && selection.anime
+            && selection.dues
     }
 
     /// Charts and the backup are left alone: they are not sections, and
@@ -87,6 +89,7 @@ struct ReportOptionsView: View {
         selection.water = value
         selection.food = value
         selection.anime = value
+        selection.dues = value
     }
 }
 #endif

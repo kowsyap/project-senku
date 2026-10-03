@@ -55,10 +55,10 @@ public enum Display {
             // reps, and "0 kg×12" reads as a failed lift rather than twelve
             // pull-ups — the same reason a held set below drops a zero.
             guard weightKG > 0 else { return "×\(reps)" }
-            return "\(mass(weightKG, in: system, decimals: 0))×\(reps)"
+            return "\(lifted(weightKG, in: system))×\(reps)"
         }
         guard weightKG > 0 else { return hold(seconds) }
-        return "+\(mass(weightKG, in: system, decimals: 0)) · \(hold(seconds))"
+        return "+\(lifted(weightKG, in: system)) · \(hold(seconds))"
     }
 
     /// "22 min · 7.0 km/h · 12%" — a cardio session in one line.
@@ -85,6 +85,18 @@ public enum Display {
     public static func mass(_ kilograms: Double, in system: UnitSystem, decimals: Int = 1) -> String {
         let value = system == .metric ? kilograms : Convert.pounds(fromKilograms: kilograms)
         return String(format: "%.\(decimals)f %@", value, system.massLabel)
+    }
+
+    /// A weight on the bar: as precise as the plates make it, and no more.
+    ///
+    /// "60 kg", "17.5 kg", "18.75 kg" — never "17.50", and never rounded to a
+    /// whole number, which turned a logged 17.5 into an 18 that was not lifted.
+    public static func lifted(_ kilograms: Double, in system: UnitSystem) -> String {
+        let value = system == .metric ? kilograms : Convert.pounds(fromKilograms: kilograms)
+        var number = String(format: "%.2f", value)
+        while number.hasSuffix("0") { number.removeLast() }
+        if number.hasSuffix(".") { number.removeLast() }
+        return "\(number) \(system.massLabel)"
     }
 
     /// A signed rate of change, used for weekly weight projections.

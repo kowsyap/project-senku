@@ -16,6 +16,7 @@ import SenkuCore
 /// cross on purpose, with a tap.
 struct TabBarEditor: View {
     @Bindable var layout: TabLayout
+    @Bindable private var watchlist = WatchlistName.shared
 
     var body: some View {
         List {
@@ -39,6 +40,22 @@ struct TabBarEditor: View {
                 }
             } header: {
                 Text("Under More")
+            }
+
+            // The one tab whose name is yours: what it holds is up to you, so
+            // what it is called should be too.
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: RootView.Tab.anime.symbol)
+                        .foregroundStyle(RootView.Tab.anime.tint)
+                        .frame(width: 24)
+                    TextField(WatchlistName.fallback, text: $watchlist.name)
+                        .submitLabel(.done)
+                }
+            } header: {
+                Text("Watchlist name")
+            } footer: {
+                Text("Anime, K-dramas, Films, Shows — whatever you keep on it.")
             }
 
             Section {

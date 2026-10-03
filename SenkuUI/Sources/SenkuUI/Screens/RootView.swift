@@ -37,6 +37,7 @@ public struct RootView: View {
     @State private var cardioPlans = CardioProtocolStore()
     @State private var cardioRecords = CardioRecordStore()
     @State private var anime = AnimeStore()
+    @State private var dueDates = DueDateStore()
     @State private var water = WaterStore()
     @State private var intake = IntakeStore()
     @State private var records = RecordStore()
@@ -83,6 +84,10 @@ public struct RootView: View {
     /// Which three screens the bar is carrying, and what More is showing.
     @State private var layout = TabLayout()
     @State private var moreDestination: Tab?
+    /// Navbar Settings, pushed from More. State rather than a plain link so
+    /// that tapping More again can close it, the way it closes any other page
+    /// opened from there.
+    @State private var isEditingBar = false
 
     public enum Tab: String, Hashable, Identifiable, Sendable, CaseIterable {
         case me
@@ -94,6 +99,7 @@ public struct RootView: View {
         case food
         case records
         case anime
+        case dueDates
         /// Not a screen: the way to the screens the bar has no room for.
         case more
 
@@ -107,6 +113,7 @@ public struct RootView: View {
         /// colour that screen already uses — the rest timer's blue, the weight
         /// trend's blue-green, the PR headline's violet — rather than a palette
         /// invented for the bar.
+        @MainActor
         var title: String {
             switch self {
             case .me: "Me"
@@ -117,7 +124,8 @@ public struct RootView: View {
             case .water: "Water"
             case .food: "Food"
             case .records: "PRs"
-            case .anime: "Anime"
+            case .anime: WatchlistName.shared.title
+            case .dueDates: "Dues"
             case .more: "More"
             }
         }
@@ -128,6 +136,7 @@ public struct RootView: View {
         /// The bar lays each item out at its natural width — `fixedSize()` on a
         /// single line — so a long name does not truncate, it pushes the other
         /// five out of the row. Only one name is long enough to need this.
+        @MainActor
         var shortTitle: String {
             switch self {
             case .quickCalc: "Macros"
@@ -160,6 +169,7 @@ public struct RootView: View {
             case .food: "fork.knife"
             case .records: "trophy"
             case .anime: "sparkles.tv"
+            case .dueDates: "calendar.badge.clock"
             case .more: "ellipsis.circle"
             }
         }
@@ -167,7 +177,7 @@ public struct RootView: View {
         /// Every screen, in the order they are listed wherever all of them
         /// appear — the sidebar on iPad, and the More list on a phone. "More"
         /// is not in it, because it is not a screen.
-        public static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime]
+        public static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime, .dueDates]
 
         /// One hue each, spread around the wheel.
         ///
@@ -192,6 +202,7 @@ public struct RootView: View {
             case .water: Color(red: 0.25, green: 0.60, blue: 0.94)      // azure
             case .records: Color(red: 0.35, green: 0.39, blue: 0.85)    // indigo
             case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)      // pink
+            case .dueDates: Color(red: 0.55, green: 0.74, blue: 0.20)   // lime
             case .more: Color(red: 0.45, green: 0.50, blue: 0.58)        // slate
             }
         }
@@ -261,7 +272,7 @@ public struct RootView: View {
             #endif
         }
         .id(generation)
-        .tint(selection.tint)
+        .tint(accent)
         .animation(.easeInOut(duration: 0.2), value: selection)
         .onOpenURL { url in
             if RestDeepLink.handle(url) != nil {
@@ -319,6 +330,10 @@ public struct RootView: View {
             // starts on, and the first run after a day the goal was met is
             // exactly when the reminders need putting back.
             restoreWaterReminders()
+            refreshDueReminders()
+        }
+        .onChange(of: dueDates.items) { _, _ in
+            refreshDueReminders()
         }
         // Taking the current screen out of the bar would otherwise leave the
         // pager on a page that no longer exists — which looks like the app
@@ -344,6 +359,10 @@ public struct RootView: View {
                 intake.reload()
                 weightLog.reload()
                 restoreWaterReminders()
+                // Rebuilt on every return, because what is due moves with the
+                // calendar: yesterday's "due tomorrow" is today's "due today",
+                // and a bill that went overdue overnight needs its nudge.
+                refreshDueReminders()
             }
 
             // Republished whenever the app comes forward, which is the cheapest
@@ -465,8 +484,13 @@ public struct RootView: View {
                 cardioPlans: cardioPlans,
                 anime: anime,
                 water: water,
-                intake: intake
+                intake: intake,
+                dueDates: dueDates,
+                watchlist: WatchlistName.shared,
+                settingsTo: SenkuStorage.shared
             )
+
+            if summary.settingsRestored { reloadSettings() }
 
             if summary.profileReplaced {
                 // The same nudge every other profile edit gives: the watch is
@@ -480,6 +504,30 @@ public struct RootView: View {
         } catch {
             importFailure = error.localizedDescription
         }
+    }
+
+    /// Re-reads everything that caches a setting, after a restore wrote new
+    /// ones underneath it — and books the reminders those settings switch on,
+    /// since a switch restored to "on" with nothing scheduled behind it would
+    /// be a reminder that never comes.
+    private func reloadSettings() {
+        layout = TabLayout()
+        water.reload()
+        #if os(iOS)
+        reportSelection = ReportSelection.load()
+        #endif
+        // Rebuilds the screens, so the ones holding their own copy — the plate
+        // calculator, the streaks — read the restored one.
+        generation = UUID()
+        restoreWaterReminders()
+
+        #if canImport(UserNotifications) && !os(macOS)
+        let takesCreatine = water.settings.takesCreatine
+        Task {
+            if WeightReminder.isOn { await WeightReminder.enable() }
+            await CreatineReminder.refresh(takesCreatine: takesCreatine)
+        }
+        #endif
     }
 
     /// Everything, gone — and the screens rebuilt around the absence.
@@ -501,6 +549,7 @@ public struct RootView: View {
         cardioPlans = CardioProtocolStore()
         cardioRecords = CardioRecordStore()
         anime = AnimeStore()
+        dueDates = DueDateStore()
         water = WaterStore()
         intake = IntakeStore()
         profileEditionID = UUID()
@@ -538,6 +587,7 @@ public struct RootView: View {
             anime: anime,
             water: water,
             intake: intake,
+            dues: dueDates,
             unitSystem: store.profile?.unitSystem ?? UnitPreference.current,
             selection: reportSelection
         )
@@ -570,7 +620,10 @@ public struct RootView: View {
             cardioPlans: cardioPlans,
             anime: anime,
             water: water,
-            intake: intake
+            intake: intake,
+            dueDates: dueDates,
+            watchlist: WatchlistName.shared,
+            settingsFrom: SenkuStorage.shared
         )
 
         let formatter = DateFormatter()
@@ -621,6 +674,13 @@ public struct RootView: View {
         #endif
     }
 
+    private func refreshDueReminders() {
+        #if canImport(UserNotifications) && !os(macOS)
+        let items = dueDates.items
+        Task { await DueReminders.refresh(items) }
+        #endif
+    }
+
     private func publishWater() {
         #if os(iOS)
         // Read before publishing rather than trusting what is in memory. The
@@ -646,6 +706,14 @@ public struct RootView: View {
             intake: IntakeSummary(store: intake, profile: store.profile)
         )
         #endif
+    }
+
+    /// The colour the app is drawn in: the screen's own, even when it was
+    /// opened from More. Following the selection alone painted every page
+    /// under More in More's slate, so Water opened from there was not blue.
+    private var accent: Color {
+        guard selection == .more, let moreDestination else { return selection.tint }
+        return moreDestination.tint
     }
 
     /// Me, the ones you chose, and More — in that order.
@@ -696,6 +764,9 @@ public struct RootView: View {
     private func show(_ tab: Tab) {
         if barTabs.contains(tab) {
             moreDestination = nil
+            // Tapping More is "back to the More list", whatever was opened
+            // from it — Navbar Settings included.
+            if tab == .more { isEditingBar = false }
             // Opening a tab means opening its front page, not wherever it was
             // abandoned — coming back to Food should not land on the settings
             // screen you were last reading. Only when there is something to
@@ -725,6 +796,7 @@ public struct RootView: View {
         case .food: foodScreen
         case .records: recordsScreen
         case .anime: animeScreen
+        case .dueDates: dueDatesScreen
         case .more: EmptyView()   // the list itself, not a destination
         }
     }
@@ -829,7 +901,13 @@ public struct RootView: View {
     @ViewBuilder
     private var animeScreen: some View {
         AnimeView(store: anime)
-            .navigationTitle("Anime")
+            .navigationTitle(WatchlistName.shared.title)
+    }
+
+    @ViewBuilder
+    private var dueDatesScreen: some View {
+        DueDatesView(store: dueDates)
+            .navigationTitle("Dues")
     }
 
     @ViewBuilder
@@ -879,6 +957,8 @@ public struct RootView: View {
                 stack(.records)
             } anime: {
                 stack(.anime)
+            } dueDates: {
+                stack(.dueDates)
             }
         } else {
             legacyTabs
@@ -971,11 +1051,23 @@ public struct RootView: View {
                 }
 
                 Section {
-                    NavigationLink {
-                        TabBarEditor(layout: layout)
+                    Button {
+                        isEditingBar = true
                     } label: {
-                        Label("Choose what is in the bar", systemImage: "slider.horizontal.3")
+                        HStack(spacing: 12) {
+                            Image(systemName: "slider.horizontal.3")
+                                .foregroundStyle(Tab.more.tint)
+                                .frame(width: 26)
+                            Text("Navbar Settings")
+                                .foregroundStyle(Color.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .senkuBottomBarInset()
@@ -984,6 +1076,9 @@ public struct RootView: View {
             .navigationDestination(item: $moreDestination) { tab in
                 // The same screen it would be in the bar, one level deeper.
                 screen(tab)
+            }
+            .navigationDestination(isPresented: $isEditingBar) {
+                TabBarEditor(layout: layout)
             }
         }
     }
@@ -1069,7 +1164,8 @@ private struct AdaptiveTabs<
     Water: View,
     Food: View,
     Records: View,
-    Anime: View
+    Anime: View,
+    DueDates: View
 >: View {
     @Binding var selection: RootView.Tab
 
@@ -1082,6 +1178,7 @@ private struct AdaptiveTabs<
     @ViewBuilder var food: Food
     @ViewBuilder var records: Records
     @ViewBuilder var anime: Anime
+    @ViewBuilder var dueDates: DueDates
 
     /// What the user has moved, pinned or hidden. Versioned, because a stored
     /// customization is keyed by the identifiers below: renaming one silently
@@ -1124,8 +1221,11 @@ private struct AdaptiveTabs<
             Tab("PRs", systemImage: "trophy", value: RootView.Tab.records) { records }
                 .customizationID("senku.tab.records")
 
-            Tab("Anime", systemImage: "sparkles.tv", value: RootView.Tab.anime) { anime }
+            Tab(WatchlistName.shared.title, systemImage: "sparkles.tv", value: RootView.Tab.anime) { anime }
                 .customizationID("senku.tab.anime")
+
+            Tab("Dues", systemImage: "calendar.badge.clock", value: RootView.Tab.dueDates) { dueDates }
+                .customizationID("senku.tab.dueDates")
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabViewCustomization($customization)

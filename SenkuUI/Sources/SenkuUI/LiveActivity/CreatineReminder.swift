@@ -6,8 +6,8 @@ import UserNotifications
 ///
 /// One repeating trigger, like the weigh-in reminder and for the same reason:
 /// the 64-request budget is shared across the whole app, and a month of
-/// individual days would spend half of it on one habit. This is request number
-/// two of an app-wide fourteen — see `WaterReminders` for the arithmetic.
+/// individual days would spend half of it on one habit. One request, as
+/// `NotificationBudget` allots it.
 ///
 /// Ten in the morning because creatine works by saturation rather than by
 /// timing: the dose matters, the hour does not, so the reminder goes where it

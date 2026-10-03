@@ -39,4 +39,17 @@ import SenkuCore
         #expect(text.hasPrefix("+10"))
         #expect(text.contains("45s"))
     }
+
+    /// The bug this was written for: 17.5 kg logged, "18 kg" shown.
+    @Test func aHalfKiloIsNotRoundedAway() {
+        #expect(Display.set(weightKG: 17.5, reps: 10, seconds: nil, in: .metric) == "17.5 kg×10")
+        #expect(Display.set(weightKG: 18.75, reps: 10, seconds: nil, in: .metric) == "18.75 kg×10")
+        #expect(Display.set(weightKG: 60, reps: 8, seconds: nil, in: .metric) == "60 kg×8")
+    }
+
+    /// Pounds are stored as kilograms; 45 lb has to come back as 45, not 45.01.
+    @Test func poundsComeBackWhole() {
+        let kg = Convert.kilograms(fromPounds: 45)
+        #expect(Display.set(weightKG: kg, reps: 5, seconds: nil, in: .imperial) == "45 lb×5")
+    }
 }

@@ -30,6 +30,9 @@ public enum DataReset {
         // counting down for a timer nothing in the app remembers starting.
         #if canImport(UserNotifications) && !os(macOS)
         RestNotifications.cancel()
+        // Due-date reminders likewise: a wiped list should not keep reminding
+        // you about a bill it no longer has.
+        Task { await DueReminders.cancelAll() }
         #endif
     }
 }

@@ -19,10 +19,10 @@ import SenkuCore
 /// topped up. They fire every day for as long as they exist and occupy eight of
 /// the sixty-four permanently.
 ///
-/// Ceiling, stated so it can be checked: **`maxSlots` (12) water + 1 weigh-in +
-/// 1 rest = 14 of 64.** The rest timer is the one that must never be crowded
-/// out, and it always fires within minutes, so even a full queue could not
-/// displace it.
+/// The ceiling is `NotificationBudget`'s, not this file's: every feature's
+/// share of the 64 is declared there and checked by a test. The rest timer is
+/// the one that must never be crowded out, and it always fires within minutes,
+/// so even a full queue could not displace it.
 ///
 /// ## Stopping once the target is met
 ///
@@ -37,7 +37,7 @@ public enum WaterReminders {
 
     /// A ceiling with room to spare, and the reason there is one: an hourly
     /// window of fourteen hours would otherwise book fourteen.
-    static let maxSlots = 12
+    static let maxSlots = NotificationBudget.allocation(.water)
 
     /// The hours a reminder can land on, from the settings.
     static func slots(_ settings: WaterStore.Settings) -> [DateComponents] {

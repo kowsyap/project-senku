@@ -44,8 +44,19 @@ public struct SplitDay: Identifiable, Codable, Hashable, Sendable {
 public struct TrainingPlan: Codable, Hashable, Sendable {
     public var days: [SplitDay]
 
-    public init(days: [SplitDay] = []) {
+    /// What a finished exercise looks like — the bar for "go heavier".
+    public var target: RepTarget
+
+    public init(days: [SplitDay] = [], target: RepTarget = .standard) {
         self.days = days
+        self.target = target
+    }
+
+    /// Plans saved before the target existed get the standard one.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        days = try container.decode([SplitDay].self, forKey: .days)
+        target = try container.decodeIfPresent(RepTarget.self, forKey: .target) ?? .standard
     }
 
     public var isEmpty: Bool { days.isEmpty }

@@ -34,6 +34,7 @@ public enum ReportPDF {
         anime: AnimeStore,
         water: WaterStore,
         intake: IntakeStore,
+        dues: DueDateStore? = nil,
         unitSystem: UnitSystem,
         selection: ReportSelection = ReportSelection()
     ) -> URL? {
@@ -47,6 +48,7 @@ public enum ReportPDF {
             anime: anime,
             water: water,
             intake: intake,
+            dues: dues,
             unitSystem: unitSystem,
             selection: selection
         )
@@ -239,6 +241,7 @@ public enum ReportPDF {
         anime: AnimeStore,
         water: WaterStore,
         intake: IntakeStore,
+        dues: DueDateStore?,
         unitSystem: UnitSystem,
         selection: ReportSelection
     ) -> [Block] {
@@ -559,7 +562,7 @@ public enum ReportPDF {
 
         // MARK: Anime
         if !anime.entries.isEmpty, selection.anime {
-            out.append(heading("Anime"))
+            out.append(heading(WatchlistName.current()))
             for status in AnimeStatus.allCases {
                 let shown = anime.list(status: status, sort: .title)
                 guard !shown.isEmpty else { continue }
@@ -574,6 +577,63 @@ public enum ReportPDF {
                     out.append(body(line + "\n"))
                 }
                 out.append(body("\n"))
+            }
+        }
+
+        // MARK: Dues
+        if let dues, !dues.items.isEmpty, selection.dues {
+            out.append(heading("Dues"))
+
+            let totals = DueMonthTotals(dues.items)
+            if totals.hasAmounts {
+                var line = "This month: \(DueFormat.money(totals.toPay)) left to pay"
+                if totals.paid > 0 { line += ", \(DueFormat.money(totals.paid)) paid" }
+                out.append(body(line + "\n\n"))
+            }
+
+            // What is on the list: one line each, the next date first, since
+            // that is the column a reader runs down.
+            for item in dues.sorted {
+                let next = item.nextOpen().map { DueFormat.date($0) } ?? "Done"
+                let parts = [
+                    item.title,
+                    item.category.isEmpty ? nil : item.category,
+                    item.repeatSummary,
+                    DueFormat.amount(item),
+                ].compactMap { $0 }
+                out.append(body("\(next.padding(toLength: 12, withPad: " ", startingAt: 0)) \(parts.joined(separator: " · "))\n"))
+            }
+
+            // What was paid, a month at a time with the month's total.
+            let log = dues.log
+            if !log.isEmpty {
+                out.append(subheading("\nPaid"))
+                let calendar = Calendar.current
+                var month: Date?
+                var rows: [String] = []
+                var total = 0.0
+
+                func flush() {
+                    guard let month else { return }
+                    let sum = total > 0 ? "   \(DueFormat.money(total))" : ""
+                    out.append(subheading(month.formatted(.dateTime.month(.wide).year()) + sum))
+                    for row in rows { out.append(body(row + "\n")) }
+                    out.append(body("\n"))
+                }
+
+                for row in log {
+                    let start = calendar.dateInterval(of: .month, for: row.entry.doneAt)?.start
+                    if start != month {
+                        flush()
+                        month = start
+                        rows = []
+                        total = 0
+                    }
+                    let amount = row.entry.amount.map { "   \(DueFormat.money($0))" } ?? ""
+                    rows.append("\(DueFormat.date(row.entry.doneAt))  \(row.item.title)\(amount)")
+                    total += row.entry.amount ?? 0
+                }
+                flush()
             }
         }
 

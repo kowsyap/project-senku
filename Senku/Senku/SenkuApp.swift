@@ -17,6 +17,7 @@ struct SenkuApp: App {
         #if os(iOS)
         MainActor.assumeIsolated {
             PhoneSync.start()
+            NumberFieldCursor.install()
             #if DEBUG
             SampleData.loadIfAsked()
             #endif

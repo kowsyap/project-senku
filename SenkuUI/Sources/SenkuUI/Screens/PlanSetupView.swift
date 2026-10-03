@@ -15,6 +15,8 @@ public struct PlanSetupView: View {
     @State private var editing: SplitDay?
     @State private var isAddingDay = false
     @State private var deleting: SplitDay?
+    @State private var isSwitching = false
+    @State private var switchingTo: SplitTemplate?
 
     public init(store: TrainingPlanStore, library: ExerciseLibrary) {
         self.store = store
@@ -73,6 +75,37 @@ public struct PlanSetupView: View {
         } message: {
             Text("Workouts you have already logged are kept.")
         }
+        .sheet(isPresented: $isSwitching) {
+            NavigationStack {
+                List {
+                    templateSection { switchingTo = $0 }
+                }
+                .navigationTitle("Change Split")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { isSwitching = false }
+                    }
+                }
+                // An alert, not a dialog: this throws away every exercise
+                // picked for every day, and should stop you and be read.
+                .alert(
+                    "Switch to \(switchingTo?.name ?? "")?",
+                    isPresented: Binding(get: { switchingTo != nil }, set: { if !$0 { switchingTo = nil } })
+                ) {
+                    Button("Switch", role: .destructive) {
+                        if let switchingTo { store.adopt(switchingTo) }
+                        switchingTo = nil
+                        isSwitching = false
+                    }
+                    Button("Keep my week", role: .cancel) { switchingTo = nil }
+                } message: {
+                    Text("Your current days and the exercises in them are replaced. Workouts you have already logged are kept.")
+                }
+            }
+        }
     }
 
     // MARK: - Starting from nothing
@@ -86,29 +119,7 @@ public struct PlanSetupView: View {
     /// shoulders.
     private var templateChooser: some View {
         List {
-            Section {
-                ForEach(SplitTemplate.allCases) { template in
-                    Button {
-                        store.adopt(template)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(template.name)
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text(template.detail)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            groupRow(template.days.flatMap(\.groups))
-                                .padding(.top, 2)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-            } header: {
-                Text("Start from a shape")
-            } footer: {
-                Text("These set the days and the muscles. You pick the exercises.")
-            }
+            templateSection { store.adopt($0) }
 
             Section {
                 Button {
@@ -117,6 +128,33 @@ public struct PlanSetupView: View {
                     Label("Build my own", systemImage: "square.and.pencil")
                 }
             }
+        }
+    }
+
+    /// The templates, shared by the first visit and by switching later.
+    private func templateSection(onPick: @escaping (SplitTemplate) -> Void) -> some View {
+        Section {
+            ForEach(SplitTemplate.allCases) { template in
+                Button {
+                    onPick(template)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(template.name)
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        Text(template.detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        groupRow(template.days.flatMap(\.groups))
+                            .padding(.top, 2)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        } header: {
+            Text("Start from a shape")
+        } footer: {
+            Text("These set the days and the muscles. You pick the exercises.")
         }
     }
 
@@ -152,8 +190,41 @@ public struct PlanSetupView: View {
                     Text("Not in your week")
                 }
             }
-        }
 
+            targetSection
+
+            Section {
+                Button {
+                    isSwitching = true
+                } label: {
+                    Label("Change split", systemImage: "arrow.triangle.2.circlepath")
+                }
+            }
+        }
+    }
+
+    /// The sets and reps every exercise aims for. Hit them at one weight and
+    /// the workout offers the next weight up.
+    private var targetSection: some View {
+        let target = store.plan.target
+        return Section {
+            Stepper(value: Binding(
+                get: { target.sets },
+                set: { store.setTarget(RepTarget(sets: $0, reps: target.reps)) }
+            ), in: RepTarget.setRange) {
+                LabeledContent("Sets", value: "\(target.sets)")
+            }
+            Stepper(value: Binding(
+                get: { target.reps },
+                set: { store.setTarget(RepTarget(sets: target.sets, reps: $0)) }
+            ), in: RepTarget.repRange) {
+                LabeledContent("Reps", value: "\(target.reps)")
+            }
+        } header: {
+            Text("Target per exercise")
+        } footer: {
+            Text("Do \(target.sets) sets of \(target.reps) at one weight to get a progressive overload suggestion next time.")
+        }
     }
 
     private func dayRow(_ day: SplitDay) -> some View {

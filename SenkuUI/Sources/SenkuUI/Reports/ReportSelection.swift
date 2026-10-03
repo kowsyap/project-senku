@@ -18,6 +18,7 @@ public struct ReportSelection: Codable, Hashable, Sendable {
     public var water = true
     public var food = true
     public var anime = true
+    public var dues = true
 
     /// Charts alongside the figures. Separate from the sections rather than one
     /// per section: it is a question about how the report should look, not
@@ -31,9 +32,28 @@ public struct ReportSelection: Codable, Hashable, Sendable {
 
     public init() {}
 
+    /// Missing switches come back on rather than throwing the whole choice
+    /// away: a selection saved before Dues existed has no `dues` in it, and
+    /// failing to read it would quietly turn back on everything else that had
+    /// been switched off.
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        profile = try c.decodeIfPresent(Bool.self, forKey: .profile) ?? true
+        weight = try c.decodeIfPresent(Bool.self, forKey: .weight) ?? true
+        records = try c.decodeIfPresent(Bool.self, forKey: .records) ?? true
+        plan = try c.decodeIfPresent(Bool.self, forKey: .plan) ?? true
+        workouts = try c.decodeIfPresent(Bool.self, forKey: .workouts) ?? true
+        water = try c.decodeIfPresent(Bool.self, forKey: .water) ?? true
+        food = try c.decodeIfPresent(Bool.self, forKey: .food) ?? true
+        anime = try c.decodeIfPresent(Bool.self, forKey: .anime) ?? true
+        dues = try c.decodeIfPresent(Bool.self, forKey: .dues) ?? true
+        charts = try c.decodeIfPresent(Bool.self, forKey: .charts) ?? true
+        backup = try c.decodeIfPresent(Bool.self, forKey: .backup) ?? true
+    }
+
     /// Every section off — the state the Export button refuses.
     public var isEmpty: Bool {
-        !profile && !weight && !records && !plan && !workouts && !water && !food && !anime
+        !profile && !weight && !records && !plan && !workouts && !water && !food && !anime && !dues
     }
 
     /// Nothing at all to share, report or backup.

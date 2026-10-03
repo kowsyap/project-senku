@@ -54,6 +54,12 @@ public struct SenkuImportDocument: Codable, Sendable {
     public var cardioRecords: [CardioRecord]?
     public var cardioPlans: [CardioProtocol]?
     public var anime: [AnimeEntry]?
+    public var dueDates: [DueItem]?
+    /// What the watch list is called — a setting, but one you typed, and a
+    /// restore that turned "K-dramas" back into "Watchlist" would be losing it.
+    public var watchlistName: String?
+    /// Settings, copied as stored — see `SettingsBackup` for what and why.
+    public var settings: SettingsBackup?
     public var water: [DrinkEntry]?
     public var intake: [MealEntry]?
     public var favourites: [FoodFavourite]?
@@ -209,7 +215,10 @@ public struct SenkuImportDocument: Codable, Sendable {
         cardioPlans: CardioProtocolStore,
         anime: AnimeStore,
         water: WaterStore,
-        intake: IntakeStore
+        intake: IntakeStore,
+        dueDates: DueDateStore? = nil,
+        watchlist: WatchlistName? = nil,
+        settingsFrom: UserDefaults? = nil
     ) -> SenkuImportDocument {
         var document = SenkuImportDocument()
         document.schemaVersion = 1
@@ -243,6 +252,9 @@ public struct SenkuImportDocument: Codable, Sendable {
         document.cardioRecords = cardioRecords.records
         document.cardioPlans = cardioPlans.protocols
         document.anime = anime.entries
+        document.dueDates = dueDates?.items
+        document.watchlistName = watchlist?.name
+        document.settings = settingsFrom.map { SettingsBackup.capture(from: $0) }
         document.water = water.entries.map {
             DrinkEntry(id: $0.id, date: $0.date, millilitres: $0.millilitres, containerID: $0.containerID)
         }
@@ -339,6 +351,9 @@ public struct ImportSummary: Sendable {
     public var cardioSkipped = 0
     public var animeAdded = 0
     public var animeSkipped = 0
+    public var dueDatesAdded = 0
+    public var settingsRestored = false
+    public var dueDatesSkipped = 0
     public var waterAdded = 0
     public var waterSkipped = 0
     public var mealsAdded = 0
@@ -350,6 +365,7 @@ public struct ImportSummary: Sendable {
         !profileReplaced && !planReplaced
             && weighInsAdded == 0 && recordsAdded == 0 && exercisesAdded == 0
             && workoutsAdded == 0 && cardioAdded == 0 && animeAdded == 0
+            && dueDatesAdded == 0 && !settingsRestored
             && waterAdded == 0
             && mealsAdded == 0
     }
@@ -367,6 +383,8 @@ public struct ImportSummary: Sendable {
         if workoutsAdded > 0 { parts.append("\(workoutsAdded) workout\(workoutsAdded == 1 ? "" : "s")") }
         if cardioAdded > 0 { parts.append("\(cardioAdded) cardio entr\(cardioAdded == 1 ? "y" : "ies")") }
         if animeAdded > 0 { parts.append("\(animeAdded) anime") }
+        if settingsRestored { parts.append("your settings") }
+        if dueDatesAdded > 0 { parts.append("\(dueDatesAdded) due\(dueDatesAdded == 1 ? "" : "s")") }
         if waterAdded > 0 { parts.append("\(waterAdded) drink\(waterAdded == 1 ? "" : "s")") }
         if mealsAdded > 0 { parts.append("\(mealsAdded) meal\(mealsAdded == 1 ? "" : "s")") }
         return "Imported " + parts.formatted(.list(type: .and))
@@ -376,7 +394,7 @@ public struct ImportSummary: Sendable {
         var lines: [String] = []
 
         let skipped = weighInsSkipped + recordsSkipped + exercisesSkipped
-            + workoutsSkipped + cardioSkipped + animeSkipped + waterSkipped + mealsSkipped
+            + workoutsSkipped + cardioSkipped + animeSkipped + dueDatesSkipped + waterSkipped + mealsSkipped
         if skipped > 0 {
             lines.append("\(skipped) already there, left alone.")
         }
@@ -412,7 +430,10 @@ public enum SenkuImporter {
         cardioPlans: CardioProtocolStore,
         anime: AnimeStore,
         water: WaterStore,
-        intake: IntakeStore
+        intake: IntakeStore,
+        dueDates: DueDateStore? = nil,
+        watchlist: WatchlistName? = nil,
+        settingsTo: UserDefaults? = nil
     ) -> ImportSummary {
         var summary = ImportSummary()
 
@@ -520,6 +541,9 @@ public enum SenkuImporter {
             // intent was "make this device look like that one".
             for day in plans.days { plans.delete(day) }
             for day in plan.days { plans.add(day) }
+            // The target travels with the plan. Copying the days alone put
+            // every restore back on 3×10, whatever it had been set to.
+            plans.setTarget(plan.target)
             summary.planReplaced = true
         }
 
@@ -557,6 +581,27 @@ public enum SenkuImporter {
             }
             anime.restore(series)
             summary.animeAdded += 1
+        }
+
+        if let watchlist, let name = document.watchlistName {
+            watchlist.name = name
+        }
+
+        // Replaced, like the plan: a backup's settings are the settings of the
+        // device it came from. The caller re-reads the stores that cache them.
+        if let settingsTo, let settings = document.settings, settings.apply(to: settingsTo) {
+            summary.settingsRestored = true
+        }
+
+        if let dueDates {
+            for item in document.dueDates ?? [] {
+                guard dueDates.item(item.id) == nil else {
+                    summary.dueDatesSkipped += 1
+                    continue
+                }
+                dueDates.restore(item)
+                summary.dueDatesAdded += 1
+            }
         }
 
         for drink in document.water ?? [] {

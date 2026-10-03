@@ -31,8 +31,15 @@ public final class TrainingPlanStore {
 
     // MARK: - Editing
 
+    /// Replaces every day with the template's. Also how a split is switched
+    /// later — so the target, which is about you rather than the split, stays.
     public func adopt(_ template: SplitTemplate) {
-        plan = template.plan
+        plan = TrainingPlan(days: template.days, target: plan.target)
+        persist()
+    }
+
+    public func setTarget(_ target: RepTarget) {
+        plan.target = target
         persist()
     }
 

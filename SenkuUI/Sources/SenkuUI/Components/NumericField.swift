@@ -120,8 +120,16 @@ public struct NumericField: View {
         .onTapGesture { isEditing = true }
         .onAppear { text = formatted(value) }
         .onChange(of: value) { _, newValue in
-            // Track the slider while it moves, but never fight the typist.
-            if !isEditing { text = formatted(newValue) }
+            // Track the slider while it moves, but never fight the typist —
+            // which is told apart by whether the new value is the one the text
+            // already says. Typing "70" sets 70 and matches, so it is left
+            // alone; a quick-add's "+" clearing the value mid-edit does not
+            // match, and has to empty the field. Ignoring that case left "700"
+            // sitting in the box after it was logged, and then wrote it back
+            // into the value when the keyboard closed.
+            if !isEditing || newValue != Self.parse(text, into: -.infinity ... .infinity) {
+                text = formatted(newValue)
+            }
         }
         .onChange(of: text) { _, typed in
             // Commit while typing, not only on blur. Committing only on blur

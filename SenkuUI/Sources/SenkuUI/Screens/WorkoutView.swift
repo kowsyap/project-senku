@@ -53,6 +53,7 @@ public struct WorkoutView: View {
                     cardioRecords: cardioRecords,
                     library: library,
                     unitSystem: unitSystem,
+                    target: plans.plan.target,
                     onFinish: { finished = $0 }
                 )
             } else if plans.readyDays.isEmpty {

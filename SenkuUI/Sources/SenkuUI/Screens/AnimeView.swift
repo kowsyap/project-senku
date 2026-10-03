@@ -2,7 +2,10 @@
 import SwiftUI
 import SenkuCore
 
-/// The anime list: what you are watching, what is waiting, what is behind you.
+/// The watch list: what you are watching, what is waiting, what is behind you.
+///
+/// Anime, K-dramas, films, web series — whatever you keep. The tab takes the
+/// name you give it; see ``WatchlistName``.
 ///
 /// One search field does titles and genres together, because being asked which
 /// kind of thing you are looking for before you look is a question with no good
@@ -228,6 +231,8 @@ public struct AnimeView: View {
                 .foregroundStyle(tint(for: entry.status))
         }
         .padding(.vertical, 2)
+        // Tappable across its width, not only on the text.
+        .contentShape(Rectangle())
     }
 
     private var sortMenu: some View {
@@ -268,7 +273,7 @@ public struct AnimeView: View {
         } description: {
             Text("What you are watching, what you mean to watch, and what you gave up on.")
         } actions: {
-            Button("Add a Series") { isAdding = true }
+            Button("Add a Title") { isAdding = true }
                 .buttonStyle(.borderedProminent)
         }
     }
@@ -422,7 +427,7 @@ struct AnimeEditor: View {
             }
         }
         .dismissableKeyboard()
-        .navigationTitle(isNew ? "Add a Series" : entry.title)
+        .navigationTitle(isNew ? "Add a Title" : entry.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -455,29 +460,26 @@ struct AnimeEditor: View {
             Toggle("Count season by season", isOn: $detailBySeason)
 
             if detailBySeason {
+                // Numbered only. A name per season was one more field to fill
+                // in for almost no gain; titles saved before are kept in the
+                // data, just not shown.
                 ForEach($entry.seasons) { $season in
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text(season.name)
-                                .font(.subheadline.weight(.semibold))
-                            Spacer()
-                            Button {
-                                entry.seasons.removeAll { $0.id == season.id }
-                                renumber()
-                            } label: {
-                                Image(systemName: "minus.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                            .buttonStyle(.plain)
+                    HStack(spacing: 12) {
+                        Text("Season \(season.number)")
+                        Spacer()
+                        episodeField($season.episodes)
+                        Text("eps")
+                            .foregroundStyle(.secondary)
+                        Button {
+                            entry.seasons.removeAll { $0.id == season.id }
+                            renumber()
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundStyle(.secondary)
                         }
-
-                        TextField("Season name (optional)", text: $season.title)
-
-                        LabeledContent("Episodes") {
-                            episodeField($season.episodes)
-                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Remove season \(season.number)")
                     }
-                    .padding(.vertical, 2)
                 }
 
                 Button {
