@@ -10,8 +10,10 @@ Functional requirements and acceptance criteria for Senku.
 - A checked box means the criterion is implemented and covered by a test or by
   a named type in the source.
 
-**Status:** 6 of 6 features delivered. Two acceptance criteria remain open and
-are tracked in [ROADMAP.md](ROADMAP.md) M9.
+**Status:** F1–F6 delivered; two of their acceptance criteria remain open and
+are tracked in [ROADMAP.md](ROADMAP.md) M9. F7 (Apple Health) is specified and
+not started. Everything else agreed but not yet built is under
+[Planned](#planned).
 
 | ID | Feature | Depends on |
 | --- | --- | --- |
@@ -21,6 +23,7 @@ are tracked in [ROADMAP.md](ROADMAP.md) M9.
 | [F4](#f4--water-tracking) | Water tracking | S1, S2 |
 | [F5](#f5--protein-and-macro-intake) | Protein and macro intake | S1 |
 | [F6](#f6--anime-log) | Anime log | S1 |
+| [F7](#f7--apple-health-planned) | Apple Health — planned | F1, F3, F4, F5 |
 
 ---
 
@@ -94,6 +97,9 @@ Current budget: 12 water slots, 1 weigh-in, 1 creatine, 1 rest — 15 at worst.
   restores its state.
 - **S5-R4** A screen that performs work on appearing must not do so while it is
   mounted but not visible.
+- **S5-R5** Settings that belong to no single screen live on one Settings page
+  under More — the navbar editor today, Apple Health once F7 exists. Settings
+  tied to a screen stay behind that screen's own gear.
 
 ---
 
@@ -169,7 +175,9 @@ PersonalRecord
 - **F2-R1** Logged and manual records are stored separately and never blended.
   The headline is the better of the two, and states which it is.
 - **F2-R2** Heaviest weight and best estimated 1RM are reported separately. The
-  estimate uses Epley (`w × (1 + reps/30)`) and names it.
+  estimate uses Epley (`w × (1 + reps/30)`) and names it. A set of more than 10
+  reps is estimated as 10 reps at its weight and shown as a lower bound (`≥`),
+  never discarded and never extrapolated.
 - **F2-R3** The records list is a superset of the current splits. Editing a
   split never removes a record.
 - **F2-R4** Deleting a workout session must not delete the records it produced.
@@ -182,6 +190,11 @@ PersonalRecord
 - **F2-R7** Cardio records are held alongside, with reusable protocols.
 - **F2-R8** The list can be filtered by muscle group and by recency, including a
   stale filter of no new record in 60 days.
+- **F2-R9** A set is a record if it is heavier than any before, has more reps at
+  the heaviest weight, or implies a better estimated single. The reps rule
+  holds past the estimate's 10-rep limit, where two sets estimate alike.
+- **F2-R10** A logged set and a record of the same lift give the same estimate:
+  the formula is written once.
 
 ### Acceptance
 
@@ -193,6 +206,9 @@ PersonalRecord
 - [x] Deleting a session preserves its records; deleting one set detaches it —
       `RecordStore.detachRecords(fromSets:)`
 - [x] Deleting a referenced custom exercise is refused on both screens
+- [x] 35 kg × 10 followed by 40 kg × 15 moves the estimate to ≥ 53.3 kg —
+      `PersonalRecordTests`
+- [x] 40 kg × 15 is a record over 40 kg × 12 — `PersonalRecordTests`
 
 ---
 
@@ -205,8 +221,9 @@ PersonalRecord
 ```
 Exercise                       // catalogue: bundled, read-only
   id, name, equipment
+  aliases: [String]                         // other names, for search
   contributions: [MuscleRegion: Double]     // 0…1 per region
-  isCustom: Bool
+  isTimed, isCustom: Bool
 
 SplitDay                       // user-defined
   name, groups: [WorkoutGroup], exerciseIDs: [ExerciseID]
@@ -223,8 +240,9 @@ LoggedSet
 
 A two-level taxonomy, bundled as data in `SenkuCore`:
 
-- **Group** — back, biceps, triceps, chest, legs, shoulders, abs, cardio.
-- **Region** — 25 in total; each carries a share of its group, summing to 100%
+- **Group** — back, biceps, triceps, forearms, chest, legs, shoulders, abs,
+  cardio.
+- **Region** — 28 in total; each carries a share of its group, summing to 100%
   per group.
 - **Contribution** — each exercise contributes 0–1 per region, where 1 is a
   primary target.
@@ -246,6 +264,28 @@ A two-level taxonomy, bundled as data in `SenkuCore`:
 - **F3-R8** Timed holds are stored as seconds and must not be recorded as reps.
 - **F3-R9** Logging a set starts the rest timer without a further action.
 - **F3-R10** Starting templates are offered for a new plan.
+- **F3-R11** Search matches an exercise by its name or any of its other names,
+  ignoring case, spacing, hyphens and a trailing plural, and a result found by
+  another name shows which one.
+- **F3-R12** A custom exercise may be marked timed, and stays timed through a
+  backup and restore.
+- **F3-R13** Forearms are a group of their own. Adding a group must not change
+  the coverage of any existing group, and a week without forearm work is not
+  reported as a gap.
+- **F3-R14** The exercise picker opened on a split day's group may leave it for
+  any other group; an exercise from a group the day does not include is listed
+  under "Also in this day".
+- **F3-R15** A muscle group is chosen either on a body map (the default) or on
+  the ring, with a switch between them that is remembered and backed up.
+  - The body drawn is the profile's sex, front and back, the other side small in
+    the corner and swapped on a tap.
+  - Every muscle region is reachable from the map; tapping a muscle chooses its
+    group.
+  - Cardio, which no body drawing has, is a heart the size of a ring disc, in
+    the same corner in both styles, standing on the same line as the figures.
+  - Muscles are drawn in their group's colour, the same as the ring's discs.
+- **F3-R16** The ring can be turned by dragging. It settles with a group at the
+  top, and a tap still chooses a group.
 
 ### Two-way behaviour with F2
 
@@ -267,6 +307,16 @@ A two-level taxonomy, bundled as data in `SenkuCore`:
 - [x] Logging a set starts the rest timer without a second tap
 - [x] Cardio is a group without muscles: always 100%, logged as time and the
       machine's own metrics
+- [x] "skullcrushers", "dead hangs" and "RDL" each find their exercise —
+      `ExerciseSearchTests`
+- [x] A barbell curl covers biceps exactly as it did before forearms existed —
+      `ForearmTests`
+- [x] A timed custom exercise survives a backup — `BackupRoundTripTests`
+- [x] Every region except cardio's is on the body, for both sexes, and the heart
+      reaches cardio — `BodyMapTests`
+- [x] The heart stands on the line the figures do — `BodyMapTests`
+- [x] Dragging round the ring turns it the right way, across the wrap, and not
+      at all near the centre — `RingTurnTests`
 - [x] Every rule above is covered by the `SenkuCore` suite
 
 ---
@@ -390,9 +440,66 @@ AnimeEntry
 
 ---
 
+## F7 — Apple Health (planned)
+
+**Purpose.** Write what Senku records into Apple Health, so it sits beside what
+the phone and watch measure. Senku stays the source of record: nothing is read
+back.
+
+### Requirements
+
+- **F7-R1** The first step is a sideloaded build that writes one water sample.
+  If HealthKit does not survive SideStore's re-signing on a free Apple ID, the
+  feature stops there.
+- **F7-R2** Written, each as it is logged: water; each food entry as one food
+  correlation of protein, carbohydrate, fat, fibre (when set) and energy; weight;
+  body fat when entered rather than estimated; height when changed.
+- **F7-R3** Energy is one figure per entry — the packet's if typed, otherwise
+  the macros' — never both.
+- **F7-R4** A finished session is written as a strength workout from start to
+  finish, with active energy estimated as `(MET − 1) × weight × hours`. MET is
+  chosen on the finish screen (light 3.5, vigorous 6.0, Compendium of Physical
+  Activities), the duration can be corrected there, and nothing is written
+  without confirmation.
+- **F7-R5** Editing or deleting an entry replaces or removes its Health sample.
+- **F7-R6** Never written: restored backups, sample data, BMI, lean or fat mass,
+  estimated body fat, sets, reps and records.
+- **F7-R7** On and off overall and per category, on the Settings page (S5-R5).
+  Permission is asked when it is first turned on, not at launch, and the app
+  works unchanged without it.
+
+### Acceptance
+
+- [ ] A sideloaded build writes a water sample and the permission prompt
+      appears — open, F7
+- [ ] Water, food and body samples appear in Health and follow edits and
+      deletions — open, F7
+- [ ] A finished session writes one workout with its estimated energy, only
+      after confirmation — open, F7
+- [ ] PROJECT.md's HealthKit non-goal reads "write-only; never reads" — open, F7
+
+---
+
 ## Open criteria
 
 | Criterion | Feature | Tracked as |
 | --- | --- | --- |
 | Reminder suppressed on a day already logged | F1 | M9 |
 | A past day can be corrected | F5 | M9 |
+| Every F7 acceptance criterion | F7 | M10 |
+
+---
+
+## Planned
+
+Agreed, not started, and not yet specified as features of their own.
+
+| Item | Area | Notes |
+| --- | --- | --- |
+| Shin region and Tibialis Raise | F3 | Needs a muscle region for the front of the shin before the exercise can be scored honestly |
+| Sets-per-week volume guidance | F3 | M9 |
+| User-settable day boundary | S3 | M9 — midnight by default, 03:00 as the alternative |
+| Watch complications for water and food | F4, F5 | M9 |
+| Loan / EMI tracker | new | Amount, rate, tenure, principal and interest split, prepayment effect; arithmetic only |
+| Expense tracker | new | Dated entries; receipt reading through the existing Vision pipeline |
+| Wardrobe | new | Catalogue the clothes, then suggest outfits by occasion |

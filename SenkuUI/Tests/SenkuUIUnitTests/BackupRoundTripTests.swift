@@ -86,6 +86,24 @@ import SenkuCore
         #expect(new.plans.days.count == 3)
     }
 
+    /// A hold restored as reps would ask for a rep count on the next dead hang.
+    @Test func aTimedCustomExerciseStaysTimed() throws {
+        var old = Device()
+        let flexors = try #require(old.library.catalogue.region("forearm.flexors"))
+        old.library.add(try #require(
+            Exercise.custom(name: "Plate pinch", equipment: .bodyweight, regions: [flexors], isTimed: true)
+        ))
+        old.library.add(try #require(
+            Exercise.custom(name: "Gripper", equipment: .bodyweight, regions: [flexors])
+        ))
+
+        var new = Device()
+        new.restore(try old.backup())
+
+        #expect(new.library.custom.first { $0.name == "Plate pinch" }?.isTimed == true)
+        #expect(new.library.custom.first { $0.name == "Gripper" }?.isTimed == false)
+    }
+
     @Test func theWatchlistNameComesBack() throws {
         var old = Device()
         old.watchlist.name = "K-dramas"

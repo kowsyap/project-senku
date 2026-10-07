@@ -62,10 +62,11 @@ public struct LoggedSet: Identifiable, Codable, Hashable, Sendable {
 
     public var isTimed: Bool { seconds != nil }
 
-    /// Nil for a hold: Epley counts repetitions, and a plank has none.
+    /// Nil for a hold: Epley counts repetitions, and a plank has none. Worked
+    /// exactly as a record's is, rep limit included.
     public var estimatedOneRepMax: Double? {
         guard !isTimed else { return nil }
-        return weightKG * (1 + Double(reps) / 30)
+        return PersonalRecord.epley(weightKG: weightKG, reps: min(reps, PersonalRecord.estimateRepLimit))
     }
 }
 

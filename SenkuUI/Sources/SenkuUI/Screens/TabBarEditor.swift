@@ -4,8 +4,9 @@ import SenkuCore
 
 /// What the bar carries, in what order — and the order of everything else.
 ///
-/// Reached from "More", which is where somebody goes when the bar does not have
-/// what they want: the moment they are most likely to want to change it.
+/// Reached from Settings under "More", which is where somebody goes when the bar
+/// does not have what they want: the moment they are most likely to want to
+/// change it.
 ///
 /// ## Why two lists rather than one with a line through it
 ///
@@ -64,7 +65,7 @@ struct TabBarEditor: View {
                 Text("Up to \(layout.slots) in the navbar on this screen. Drag to arrange.")
             }
         }
-        .navigationTitle("Navbar Settings")
+        .navigationTitle("Navbar")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

@@ -36,6 +36,11 @@ struct SplitDayEditor: View {
         day.exerciseIDs.compactMap { library.exercise($0) }
     }
 
+    private var addTitle: String {
+        let name = day.name.trimmingCharacters(in: .whitespaces)
+        return name.isEmpty ? "Add Exercise" : "Add to \(name)"
+    }
+
     private var canSave: Bool {
         !day.name.trimmingCharacters(in: .whitespaces).isEmpty && !day.groups.isEmpty
     }
@@ -74,7 +79,10 @@ struct SplitDayEditor: View {
                     day.exerciseIDs.append(exercise.id)
                     adding = nil
                 }
-                .navigationTitle("Add to \(group.title)")
+                // The day, not the group: the picker opens on the group but
+                // can leave it, and "Add to Legs" over a page of biceps would
+                // be wrong. The group is still named by the glyph in the list.
+                .navigationTitle(addTitle)
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
@@ -111,11 +119,11 @@ struct SplitDayEditor: View {
         }
     }
 
-    /// The seven groups as a wrapping row of glyphs, tapped to include.
+    /// The groups as a wrapping row of glyphs, tapped to include.
     ///
     /// Multi-select and order-free: "chest and triceps" is the same day as
     /// "triceps and chest", and making it a list with checkmarks would spend a
-    /// screenful on seven words the icons already say.
+    /// screenful on words the icons already say.
     private var groupSection: some View {
         Section {
             LazyVGrid(

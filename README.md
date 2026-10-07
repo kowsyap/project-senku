@@ -61,10 +61,12 @@ cannot explain where a number came from, it does not show it.**
 
 ### Training
 
-- **A catalogue of 138 exercises** — barbell, dumbbell, machine, cable and
-  bodyweight, each one already mapped to the muscle regions it actually works
-  and how much of the effort goes where. Search it, filter it by group or
-  equipment, and add your own if the rack in your gym is not in it.
+- **A catalogue of 160 exercises** — barbell, dumbbell, kettlebell, machine,
+  cable and bodyweight, each one already mapped to the muscle regions it
+  actually works and how much of the effort goes where. Search it by the name
+  you actually use — "skull crusher", "RDL", "OHP" — filter it by group or
+  equipment, and add your own, timed or not, if the rack in your gym is not in
+  it.
 - **A week you build once** — name your training days, give each one its muscle
   groups and its exercises, and run it every week. Start from a template if you
   would rather not: Push / Pull / Legs, Upper / Lower, Arnold, or one group a
@@ -130,7 +132,7 @@ guessing from your BMI.
 <img src="docs/screenshots/workout.png" width="260" align="right" alt="The workout screen">
 
 **Build your week once.** Add a training day, name it, pick its muscle groups,
-then pull exercises into it from the catalogue — 138 of them, searchable, filtered
+then pull exercises into it from the catalogue — 160 of them, searchable, filtered
 by group or by equipment, or your own if what you use is not there. Four
 templates are there to start from if you would rather not begin with a blank
 week. The coverage bars show what each muscle region gets and which groups the
@@ -204,8 +206,8 @@ After a fortnight it offers you the maintenance figure your own data supports.
 <img src="docs/screenshots/more.png" width="260" align="right" alt="The More screen">
 
 Under *More* sit the plate calculator, the anime list, the streak page, the PDF
-export and the navbar settings — and which screens live there rather than in the
-bar is entirely your call.
+export and Settings, where the navbar is arranged — and which screens live there
+rather than in the bar is entirely your call.
 
 <br clear="right">
 

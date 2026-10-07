@@ -5,7 +5,7 @@ import Foundation
 /// A wrapper around a string rather than an enum, because the catalogue is
 /// data. A group added to the JSON should appear in the app without a Swift
 /// change — abs were added exactly that way — and, more importantly, an unknown
-/// group must not fail the decode of the whole file. The seven that exist today
+/// group must not fail the decode of the whole file. The ones that exist today
 /// are named as constants for call sites that legitimately know them.
 public struct WorkoutGroup: RawRepresentable, Hashable, Codable, Sendable, Identifiable {
     public let rawValue: String
@@ -22,6 +22,12 @@ public struct WorkoutGroup: RawRepresentable, Hashable, Codable, Sendable, Ident
     public static let tricep = WorkoutGroup("tricep")
     public static let legs = WorkoutGroup("legs")
     public static let abs = WorkoutGroup("abs")
+
+    /// Its own group rather than a region of biceps. Forearm muscles are
+    /// separate muscles, and folding them into biceps would have re-split that
+    /// group's shares — moving every arm day's figure without a single set
+    /// changing.
+    public static let forearm = WorkoutGroup("forearm")
 
     /// Conditioning. A group by the app's reckoning and not by anatomy, which
     /// is why it is kept out of the muscle ring and given its own place: what
@@ -51,6 +57,7 @@ public struct Equipment: RawRepresentable, Hashable, Codable, Sendable {
     public static let machine = Equipment("machine")
     public static let cable = Equipment("cable")
     public static let bodyweight = Equipment("bodyweight")
+    public static let kettlebell = Equipment("kettlebell")
 
     public var title: String {
         rawValue.prefix(1).uppercased() + rawValue.dropFirst()
@@ -121,6 +128,14 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
     /// the app says so rather than presenting it as catalogue fact.
     public let isCustom: Bool
 
+    /// What people actually call it, where that is not its name.
+    ///
+    /// The catalogue names a movement by what it is — "Lying EZ-Bar Triceps
+    /// Extension" — because that is unambiguous. Nobody searches for that; they
+    /// type "skull crusher". Search reads these, and the info sheet shows them,
+    /// so the formal name and the gym name lead to the same exercise.
+    public let aliases: [String]
+
     public init(
         id: String,
         name: String,
@@ -131,7 +146,8 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
         contributions: [String: Double],
         cardioMetrics: [CardioMetric] = [],
         isTimed: Bool = false,
-        isCustom: Bool = false
+        isCustom: Bool = false,
+        aliases: [String] = []
     ) {
         self.id = id
         self.name = name
@@ -143,6 +159,7 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
         self.cardioMetrics = cardioMetrics
         self.isTimed = isTimed
         self.isCustom = isCustom
+        self.aliases = aliases
     }
 
     public init(from decoder: any Decoder) throws {
@@ -157,9 +174,45 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
         cardioMetrics = try container.decodeIfPresent([CardioMetric].self, forKey: .cardioMetrics) ?? []
         isTimed = try container.decodeIfPresent(Bool.self, forKey: .isTimed) ?? false
         isCustom = try container.decodeIfPresent(Bool.self, forKey: .isCustom) ?? false
+        aliases = try container.decodeIfPresent([String].self, forKey: .aliases) ?? []
     }
 
     public var isCardio: Bool { workoutGroup == .cardio }
+
+    // MARK: - Search
+
+    /// Whether a search should find this exercise, by its name or another one.
+    public func matches(_ query: String) -> Bool {
+        let needle = Self.searchKey(query)
+        guard !needle.isEmpty else { return false }
+        return Self.key(Self.searchKey(name), contains: needle) || alias(matching: query) != nil
+    }
+
+    /// The other name a search found this by, when its own name did not match —
+    /// so a search for "skull crusher" can say why it shows a triceps extension.
+    public func alias(matching query: String) -> String? {
+        let needle = Self.searchKey(query)
+        guard !needle.isEmpty, !Self.key(Self.searchKey(name), contains: needle) else { return nil }
+        return aliases.first { Self.key(Self.searchKey($0), contains: needle) }
+    }
+
+    /// Letters and digits only, lowercased and without accents.
+    ///
+    /// Spacing and hyphens are how the same word gets written three ways —
+    /// "pull-up", "pull up", "pullup" — and a search that cared would fail the
+    /// person who typed the one the catalogue did not.
+    static func searchKey(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+            .filter { $0.isLetter || $0.isNumber }
+    }
+
+    /// Contains, forgiving a plural: "skullcrushers" is a search for the
+    /// exercise, not for a longer word that happens not to exist.
+    private static func key(_ haystack: String, contains needle: String) -> Bool {
+        if haystack.contains(needle) { return true }
+        guard needle.count > 3, needle.hasSuffix("s") else { return false }
+        return haystack.contains(needle.dropLast())
+    }
 
     /// Builds one from muscles the user chose.
     ///
@@ -167,10 +220,15 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
     /// between them, which is the most that can be claimed for a movement
     /// nobody has classified: it says "this trains these", not "this trains
     /// these in these proportions", because the user was not asked that.
+    ///
+    /// `isTimed` is the one thing about it the user is asked rather than
+    /// guessed: whether it is held or repeated decides what the logger asks
+    /// for, and a dead hang logged as reps is a record of nothing.
     public static func custom(
         name: String,
         equipment: Equipment,
         regions: [MuscleRegion],
+        isTimed: Bool = false,
         id: String = "custom.\(UUID().uuidString)"
     ) -> Exercise? {
         guard !regions.isEmpty else { return nil }
@@ -187,6 +245,7 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
             targetMuscles: regions.map(\.name),
             workoutGroup: regions[0].workoutGroup,
             contributions: contributions,
+            isTimed: isTimed,
             isCustom: true
         )
     }

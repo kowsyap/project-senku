@@ -43,6 +43,8 @@ public struct SettingsBackup: Codable, Equatable, Sendable {
         // The bar.
         "senku.tabs.visible.v2",
         "senku.tabs.hidden.v1",
+        // Ring or body, in the exercise picker.
+        "senku.picker.groupStyle.v1",
         // Reminder switches. Restoring one also books it — see RootView.
         "senku.weightReminder.v1",
         "senku.creatineReminder.v1",

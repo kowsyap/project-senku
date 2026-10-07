@@ -5,6 +5,7 @@
     "back",
     "bicep",
     "tricep",
+    "forearm",
     "chest",
     "legs",
     "shoulder",
@@ -82,6 +83,24 @@
       "id": "tricep.medialHead",
       "name": "Triceps medial head",
       "workoutGroup": "tricep",
+      "groupShare": 0.25
+    },
+    {
+      "id": "forearm.flexors",
+      "name": "Grip & wrist flexors",
+      "workoutGroup": "forearm",
+      "groupShare": 0.45
+    },
+    {
+      "id": "forearm.brachioradialis",
+      "name": "Brachioradialis",
+      "workoutGroup": "forearm",
+      "groupShare": 0.3
+    },
+    {
+      "id": "forearm.extensors",
+      "name": "Wrist extensors",
+      "workoutGroup": "forearm",
       "groupShare": 0.25
     },
     {
@@ -181,7 +200,11 @@
         "tricep.medialHead": 0.35,
         "shoulder.frontDelts": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Bench",
+        "Flat Bench"
+      ]
     },
     {
       "id": "catalogue.bench.dumbbell",
@@ -200,7 +223,11 @@
         "tricep.medialHead": 0.3,
         "shoulder.frontDelts": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "DB Bench",
+        "Dumbbell Press"
+      ]
     },
     {
       "id": "catalogue.bench.inclineBarbell",
@@ -219,7 +246,10 @@
         "shoulder.frontDelts": 0.55,
         "tricep.lateralHead": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Incline Bench"
+      ]
     },
     {
       "id": "catalogue.bench.inclineDumbbell",
@@ -238,7 +268,10 @@
         "shoulder.frontDelts": 0.5,
         "tricep.lateralHead": 0.3
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Incline DB Press"
+      ]
     },
     {
       "id": "catalogue.bench.declineBarbell",
@@ -257,7 +290,10 @@
         "tricep.lateralHead": 0.4,
         "shoulder.frontDelts": 0.2
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Decline Bench"
+      ]
     },
     {
       "id": "catalogue.chestPress.machine",
@@ -295,7 +331,10 @@
         "tricep.lateralHead": 0.4,
         "shoulder.frontDelts": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Press-Up"
+      ]
     },
     {
       "id": "catalogue.dip.chest",
@@ -350,7 +389,11 @@
         "chest.lower": 0.2,
         "shoulder.frontDelts": 0.1
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Machine Fly",
+        "Butterfly"
+      ]
     },
     {
       "id": "catalogue.cableFly.lowToHigh",
@@ -441,7 +484,11 @@
         "bicep.biceps": 0.3,
         "bicep.brachialis": 0.2
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Lat Pulldown",
+        "Pulldown"
+      ]
     },
     {
       "id": "catalogue.latPulldown.neutral",
@@ -460,7 +507,11 @@
         "bicep.biceps": 0.4,
         "bicep.brachialis": 0.3
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "V-Bar Pulldown",
+        "Close-Grip Pulldown"
+      ]
     },
     {
       "id": "catalogue.straightArmPulldown",
@@ -476,7 +527,10 @@
         "back.lats": 0.9,
         "back.midBack": 0.2
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Straight-Arm Pulldown"
+      ]
     },
     {
       "id": "catalogue.row.barbellBentOver",
@@ -496,7 +550,11 @@
         "back.lowerBack": 0.3,
         "bicep.biceps": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Barbell Row",
+        "BB Row"
+      ]
     },
     {
       "id": "catalogue.row.pendlay",
@@ -574,7 +632,11 @@
         "back.upperTraps": 0.25,
         "bicep.biceps": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Cable Row",
+        "Low Row"
+      ]
     },
     {
       "id": "catalogue.row.tBar",
@@ -645,7 +707,11 @@
         "legs.glutes": 0.45,
         "legs.hamstrings": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Hyperextension",
+        "Roman Chair"
+      ]
     },
     {
       "id": "catalogue.curl.barbell",
@@ -702,12 +768,14 @@
       "equipment": "dumbbell",
       "targetMuscles": [
         "Brachialis",
-        "Biceps"
+        "Biceps",
+        "Brachioradialis"
       ],
       "workoutGroup": "bicep",
       "contributions": {
         "bicep.brachialis": 1.0,
-        "bicep.biceps": 0.65
+        "bicep.biceps": 0.65,
+        "forearm.brachioradialis": 0.6
       },
       "isCustom": false
     },
@@ -741,7 +809,10 @@
         "bicep.biceps": 1.0,
         "bicep.brachialis": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Scott Curl"
+      ]
     },
     {
       "id": "catalogue.curl.cable",
@@ -808,7 +879,10 @@
         "tricep.medialHead": 0.85,
         "tricep.longHead": 0.45
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Rope Pushdown"
+      ]
     },
     {
       "id": "catalogue.tricepsExtension.overheadCable",
@@ -825,7 +899,10 @@
         "tricep.lateralHead": 0.55,
         "tricep.medialHead": 0.45
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Cable Overhead Extension"
+      ]
     },
     {
       "id": "catalogue.tricepsExtension.skullCrusher",
@@ -842,7 +919,12 @@
         "tricep.lateralHead": 0.65,
         "tricep.medialHead": 0.5
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Skull Crusher",
+        "French Press",
+        "Lying Triceps Extension"
+      ]
     },
     {
       "id": "catalogue.tricepsExtension.overheadDumbbell",
@@ -859,7 +941,11 @@
         "tricep.lateralHead": 0.55,
         "tricep.medialHead": 0.45
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Dumbbell Overhead Extension",
+        "Seated French Press"
+      ]
     },
     {
       "id": "catalogue.bench.closeGrip",
@@ -879,7 +965,10 @@
         "chest.mid": 0.55,
         "shoulder.frontDelts": 0.25
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "CGBP"
+      ]
     },
     {
       "id": "catalogue.dip.triceps",
@@ -955,7 +1044,12 @@
         "tricep.lateralHead": 0.4,
         "tricep.medialHead": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "OHP",
+        "Military Press",
+        "Standing Press"
+      ]
     },
     {
       "id": "catalogue.press.dumbbellShoulder",
@@ -974,7 +1068,11 @@
         "tricep.lateralHead": 0.35,
         "tricep.medialHead": 0.3
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Seated Dumbbell Press",
+        "DB Shoulder Press"
+      ]
     },
     {
       "id": "catalogue.press.machineShoulder",
@@ -1027,7 +1125,12 @@
         "shoulder.sideDelts": 1.0,
         "shoulder.frontDelts": 0.1
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Side Raise",
+        "Side Lateral Raise",
+        "Lat Raise"
+      ]
     },
     {
       "id": "catalogue.lateralRaise.cable",
@@ -1105,7 +1208,11 @@
         "back.midBack": 0.35,
         "back.upperTraps": 0.15
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Rear Delt Machine",
+        "Rear Delt Fly"
+      ]
     },
     {
       "id": "catalogue.facePull",
@@ -1143,7 +1250,11 @@
         "legs.adductors": 0.3,
         "back.lowerBack": 0.2
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Squat",
+        "Back Squat"
+      ]
     },
     {
       "id": "catalogue.squat.front",
@@ -1238,7 +1349,11 @@
         "legs.hamstrings": 0.3,
         "legs.adductors": 0.2
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "BSS",
+        "Rear-Foot-Elevated Split Squat"
+      ]
     },
     {
       "id": "catalogue.walkingLunge",
@@ -1271,7 +1386,10 @@
       "contributions": {
         "legs.quads": 1.0
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Quad Extension"
+      ]
     },
     {
       "id": "catalogue.deadlift.conventional",
@@ -1289,7 +1407,8 @@
         "legs.hamstrings": 0.8,
         "back.lowerBack": 0.7,
         "back.upperTraps": 0.3,
-        "legs.quads": 0.25
+        "legs.quads": 0.25,
+        "forearm.flexors": 0.3
       },
       "isCustom": false
     },
@@ -1309,7 +1428,11 @@
         "legs.glutes": 0.85,
         "back.lowerBack": 0.45
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "RDL",
+        "Romanian Deadlift"
+      ]
     },
     {
       "id": "catalogue.deadlift.romanianDumbbell",
@@ -1327,7 +1450,11 @@
         "legs.glutes": 0.8,
         "back.lowerBack": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "DB RDL",
+        "RDL"
+      ]
     },
     {
       "id": "catalogue.goodMorning",
@@ -1359,7 +1486,10 @@
       "contributions": {
         "legs.hamstrings": 1.0
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Hamstring Curl"
+      ]
     },
     {
       "id": "catalogue.legCurl.lying",
@@ -1373,7 +1503,10 @@
       "contributions": {
         "legs.hamstrings": 1.0
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Hamstring Curl"
+      ]
     },
     {
       "id": "catalogue.nordicHamstringCurl",
@@ -1455,7 +1588,10 @@
         "legs.abductors": 1.0,
         "legs.glutes": 0.3
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Abductor Machine"
+      ]
     },
     {
       "id": "catalogue.hipAdduction.machine",
@@ -1469,7 +1605,10 @@
       "contributions": {
         "legs.adductors": 1.0
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Adductor Machine"
+      ]
     },
     {
       "id": "catalogue.calfRaise.standing",
@@ -1624,7 +1763,10 @@
         "abs.lower": 0.9,
         "abs.obliques": 0.35
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Ab Roller"
+      ]
     },
     {
       "id": "catalogue.abs.plank",
@@ -1744,6 +1886,10 @@
         "speed",
         "incline",
         "distance"
+      ],
+      "aliases": [
+        "Jog",
+        "Jogging"
       ]
     },
     {
@@ -1808,6 +1954,10 @@
       "cardioMetrics": [
         "distance",
         "split"
+      ],
+      "aliases": [
+        "Rower",
+        "Erg"
       ]
     },
     {
@@ -1830,6 +1980,9 @@
       "cardioMetrics": [
         "speed",
         "incline"
+      ],
+      "aliases": [
+        "12-3-30"
       ]
     },
     {
@@ -1852,6 +2005,10 @@
       "cardioMetrics": [
         "level",
         "floors"
+      ],
+      "aliases": [
+        "StairMaster",
+        "Stepmill"
       ]
     },
     {
@@ -1869,7 +2026,10 @@
         "cardio.conditioning": 1.0
       },
       "isCustom": false,
-      "cardioMetrics": []
+      "cardioMetrics": [],
+      "aliases": [
+        "Jump Rope"
+      ]
     },
     {
       "id": "catalogue.cardio.swim",
@@ -1910,6 +2070,9 @@
       "cardioMetrics": [
         "resistance",
         "distance"
+      ],
+      "aliases": [
+        "Cross Trainer"
       ]
     },
     {
@@ -1976,7 +2139,11 @@
         "back.lats": 0.6,
         "bicep.biceps": 0.4
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Australian Pull-Up",
+        "Body Row"
+      ]
     },
     {
       "id": "catalogue.rackPull",
@@ -1994,7 +2161,8 @@
         "back.upperTraps": 0.7,
         "back.midBack": 0.6,
         "back.lowerBack": 0.8,
-        "legs.glutes": 0.35
+        "legs.glutes": 0.35,
+        "forearm.flexors": 0.3
       },
       "isCustom": false
     },
@@ -2138,12 +2306,16 @@
       "equipment": "barbell",
       "targetMuscles": [
         "Brachialis",
-        "Biceps"
+        "Biceps",
+        "Brachioradialis",
+        "Wrist extensors"
       ],
-      "workoutGroup": "bicep",
+      "workoutGroup": "forearm",
       "contributions": {
         "bicep.brachialis": 1.0,
-        "bicep.biceps": 0.45
+        "bicep.biceps": 0.45,
+        "forearm.brachioradialis": 0.8,
+        "forearm.extensors": 0.5
       },
       "isCustom": false
     },
@@ -2255,7 +2427,8 @@
         "legs.quads": 0.6,
         "legs.adductors": 0.7,
         "back.lowerBack": 0.7,
-        "back.upperTraps": 0.4
+        "back.upperTraps": 0.4,
+        "forearm.flexors": 0.3
       },
       "isCustom": false
     },
@@ -2366,7 +2539,12 @@
         "distance",
         "rounds"
       ],
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Assault Bike",
+        "Echo Bike",
+        "Fan Bike"
+      ]
     },
     {
       "id": "catalogue.cardio.skiErg",
@@ -2488,7 +2666,10 @@
       "contributions": {
         "bicep.biceps": 1.0
       },
-      "isCustom": false
+      "isCustom": false,
+      "aliases": [
+        "Bayesian Curl"
+      ]
     },
     {
       "id": "catalogue.curl.drag",
@@ -2567,6 +2748,444 @@
       },
       "isTimed": true,
       "isCustom": false
+    },
+    {
+      "id": "catalogue.forearm.deadHang",
+      "name": "Dead Hang",
+      "description": "Hanging from a bar at arm's length for time — the grip is the whole exercise.",
+      "equipment": "bodyweight",
+      "targetMuscles": [
+        "Grip & wrist flexors"
+      ],
+      "workoutGroup": "forearm",
+      "contributions": {
+        "forearm.flexors": 1.0
+      },
+      "isCustom": false,
+      "isTimed": true,
+      "aliases": [
+        "Bar Hang",
+        "Hang"
+      ]
+    },
+    {
+      "id": "catalogue.forearm.wristCurl",
+      "name": "Wrist Curl",
+      "description": "Forearms resting on a bench, palms up, curling the weight with the wrists alone.",
+      "equipment": "dumbbell",
+      "targetMuscles": [
+        "Grip & wrist flexors"
+      ],
+      "workoutGroup": "forearm",
+      "contributions": {
+        "forearm.flexors": 1.0
+      },
+      "isCustom": false,
+      "aliases": [
+        "Forearm Curl"
+      ]
+    },
+    {
+      "id": "catalogue.forearm.reverseWristCurl",
+      "name": "Reverse Wrist Curl",
+      "description": "The wrist curl palms down, which turns it over to the back of the forearm.",
+      "equipment": "dumbbell",
+      "targetMuscles": [
+        "Wrist extensors"
+      ],
+      "workoutGroup": "forearm",
+      "contributions": {
+        "forearm.extensors": 1.0,
+        "forearm.brachioradialis": 0.3
+      },
+      "isCustom": false,
+      "aliases": [
+        "Wrist Extension"
+      ]
+    },
+    {
+      "id": "catalogue.forearm.farmersCarry",
+      "name": "Farmer's Carry",
+      "description": "Walking with a heavy weight in each hand for time — grip first, then traps and trunk.",
+      "equipment": "dumbbell",
+      "targetMuscles": [
+        "Grip & wrist flexors",
+        "Upper traps",
+        "Obliques"
+      ],
+      "workoutGroup": "forearm",
+      "contributions": {
+        "forearm.flexors": 1.0,
+        "back.upperTraps": 0.5,
+        "abs.obliques": 0.3
+      },
+      "isCustom": false,
+      "isTimed": true,
+      "aliases": [
+        "Farmer's Walk",
+        "Loaded Carry"
+      ]
+    },
+    {
+      "id": "catalogue.forearm.zottmanCurl",
+      "name": "Zottman Curl",
+      "description": "Curled up palms up, turned over at the top and lowered palms down — biceps on the way up, forearms on the way down.",
+      "equipment": "dumbbell",
+      "targetMuscles": [
+        "Brachioradialis",
+        "Biceps",
+        "Brachialis"
+      ],
+      "workoutGroup": "forearm",
+      "contributions": {
+        "forearm.brachioradialis": 0.9,
+        "forearm.extensors": 0.5,
+        "bicep.biceps": 0.7,
+        "bicep.brachialis": 0.6
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.row.meadows",
+      "name": "Meadows Row",
+      "description": "A one-arm row from the end of a landmine bar, standing side-on in a staggered stance.",
+      "equipment": "barbell",
+      "targetMuscles": [
+        "Lats",
+        "Mid back",
+        "Rear delts"
+      ],
+      "workoutGroup": "back",
+      "contributions": {
+        "back.lats": 0.9,
+        "back.midBack": 0.8,
+        "back.upperTraps": 0.3,
+        "shoulder.rearDelts": 0.35,
+        "bicep.biceps": 0.3
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.row.seal",
+      "name": "Seal Row",
+      "description": "A barbell row lying face down on a raised bench, which takes the lower back out of it entirely.",
+      "equipment": "barbell",
+      "targetMuscles": [
+        "Mid back",
+        "Lats",
+        "Rear delts"
+      ],
+      "workoutGroup": "back",
+      "contributions": {
+        "back.midBack": 1.0,
+        "back.lats": 0.75,
+        "shoulder.rearDelts": 0.45,
+        "back.upperTraps": 0.3,
+        "bicep.biceps": 0.3
+      },
+      "isCustom": false,
+      "aliases": [
+        "Prone Row",
+        "Bench Row"
+      ]
+    },
+    {
+      "id": "catalogue.latPulldown.singleArm",
+      "name": "Single-Arm Lat Pulldown",
+      "description": "A one-handed pulldown, free to follow the arm's own path down to the side.",
+      "equipment": "cable",
+      "targetMuscles": [
+        "Lats",
+        "Biceps"
+      ],
+      "workoutGroup": "back",
+      "contributions": {
+        "back.lats": 1.0,
+        "back.midBack": 0.25,
+        "bicep.biceps": 0.3,
+        "bicep.brachialis": 0.2
+      },
+      "isCustom": false,
+      "aliases": [
+        "One-Arm Lat Pulldown"
+      ]
+    },
+    {
+      "id": "catalogue.muscleUp",
+      "name": "Muscle-Up",
+      "description": "A pull-up that carries on over the bar into a dip — the pull and the press in one rep.",
+      "equipment": "bodyweight",
+      "targetMuscles": [
+        "Lats",
+        "Triceps",
+        "Lower chest",
+        "Biceps"
+      ],
+      "workoutGroup": "back",
+      "contributions": {
+        "back.lats": 1.0,
+        "back.midBack": 0.35,
+        "bicep.biceps": 0.4,
+        "tricep.lateralHead": 0.5,
+        "tricep.medialHead": 0.4,
+        "chest.lower": 0.4
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.deadlift.trapBar",
+      "name": "Trap Bar Deadlift",
+      "description": "A deadlift from inside a hexagonal bar, which sits the load at the hips and lets the knees do more.",
+      "equipment": "barbell",
+      "targetMuscles": [
+        "Glutes",
+        "Quads",
+        "Hamstrings",
+        "Lower back"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.glutes": 0.9,
+        "legs.quads": 0.65,
+        "legs.hamstrings": 0.6,
+        "back.lowerBack": 0.5,
+        "back.upperTraps": 0.35,
+        "forearm.flexors": 0.3
+      },
+      "isCustom": false,
+      "aliases": [
+        "Hex Bar Deadlift"
+      ]
+    },
+    {
+      "id": "catalogue.lunge.reverse",
+      "name": "Reverse Lunge",
+      "description": "A lunge stepping backwards, which keeps the front shin upright and puts more of it on the glutes.",
+      "equipment": "dumbbell",
+      "targetMuscles": [
+        "Glutes",
+        "Quads",
+        "Hamstrings"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.glutes": 0.9,
+        "legs.quads": 0.75,
+        "legs.hamstrings": 0.3,
+        "legs.adductors": 0.2
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.squat.pendulum",
+      "name": "Pendulum Squat",
+      "description": "A squat on a swinging arm that keeps the torso upright and the quads under load at depth.",
+      "equipment": "machine",
+      "targetMuscles": [
+        "Quads",
+        "Glutes"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.quads": 1.0,
+        "legs.glutes": 0.55,
+        "legs.adductors": 0.25
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.squat.belt",
+      "name": "Belt Squat",
+      "description": "A squat with the load hung from a hip belt, so the legs work and the spine carries nothing.",
+      "equipment": "machine",
+      "targetMuscles": [
+        "Quads",
+        "Glutes",
+        "Adductors"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.quads": 0.95,
+        "legs.glutes": 0.7,
+        "legs.adductors": 0.35,
+        "legs.hamstrings": 0.2
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.kickback.cableGlute",
+      "name": "Cable Glute Kickback",
+      "description": "A straight-backed hip extension against an ankle cuff on a low cable.",
+      "equipment": "cable",
+      "targetMuscles": [
+        "Glutes"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.glutes": 1.0,
+        "legs.hamstrings": 0.3
+      },
+      "isCustom": false,
+      "aliases": [
+        "Glute Kickback",
+        "Donkey Kick"
+      ]
+    },
+    {
+      "id": "catalogue.kettlebell.swing",
+      "name": "Kettlebell Swing",
+      "description": "A hip hinge snapped into a swing to chest height — the hips drive it and the arms only guide it.",
+      "equipment": "kettlebell",
+      "targetMuscles": [
+        "Glutes",
+        "Hamstrings",
+        "Lower back"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.glutes": 1.0,
+        "legs.hamstrings": 0.7,
+        "back.lowerBack": 0.45,
+        "forearm.flexors": 0.2
+      },
+      "isCustom": false,
+      "aliases": [
+        "KB Swing",
+        "Russian Swing"
+      ]
+    },
+    {
+      "id": "catalogue.boxJump",
+      "name": "Box Jump",
+      "description": "A two-footed jump onto a box, stepping down rather than jumping off.",
+      "equipment": "bodyweight",
+      "targetMuscles": [
+        "Quads",
+        "Glutes",
+        "Calves"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.quads": 0.6,
+        "legs.glutes": 0.6,
+        "legs.calves": 0.5
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.tricepsExtension.dumbbellSkullCrusher",
+      "name": "Dumbbell Skull Crusher",
+      "description": "A lying extension with a dumbbell in each hand, lowered beside the head.",
+      "equipment": "dumbbell",
+      "targetMuscles": [
+        "Triceps long head",
+        "Triceps lateral head"
+      ],
+      "workoutGroup": "tricep",
+      "contributions": {
+        "tricep.longHead": 0.9,
+        "tricep.lateralHead": 0.6,
+        "tricep.medialHead": 0.5
+      },
+      "isCustom": false,
+      "aliases": [
+        "Lying Dumbbell Triceps Extension"
+      ]
+    },
+    {
+      "id": "catalogue.press.tate",
+      "name": "Tate Press",
+      "description": "Lying with the dumbbells end to end over the chest, elbows flared, extending toward the ceiling.",
+      "equipment": "dumbbell",
+      "targetMuscles": [
+        "Triceps lateral head",
+        "Triceps medial head"
+      ],
+      "workoutGroup": "tricep",
+      "contributions": {
+        "tricep.lateralHead": 0.85,
+        "tricep.medialHead": 0.75,
+        "tricep.longHead": 0.45
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.abs.pallofPress",
+      "name": "Pallof Press",
+      "description": "Pressing a cable handle out from the chest against a pull to the side — rotation resisted, not performed.",
+      "equipment": "cable",
+      "targetMuscles": [
+        "Obliques"
+      ],
+      "workoutGroup": "abs",
+      "contributions": {
+        "abs.obliques": 1.0,
+        "abs.upper": 0.3,
+        "abs.lower": 0.3
+      },
+      "isCustom": false,
+      "aliases": [
+        "Anti-Rotation Press"
+      ]
+    },
+    {
+      "id": "catalogue.abs.dragonFlag",
+      "name": "Dragon Flag",
+      "description": "Lying on a bench and holding on behind the head, lowering a rigid body from the shoulders.",
+      "equipment": "bodyweight",
+      "targetMuscles": [
+        "Lower abs",
+        "Upper abs"
+      ],
+      "workoutGroup": "abs",
+      "contributions": {
+        "abs.lower": 1.0,
+        "abs.upper": 0.75,
+        "abs.obliques": 0.3
+      },
+      "isCustom": false
+    },
+    {
+      "id": "catalogue.abs.vUp",
+      "name": "V-Up",
+      "description": "Legs and torso lifted together to meet over the hips.",
+      "equipment": "bodyweight",
+      "targetMuscles": [
+        "Upper abs",
+        "Lower abs"
+      ],
+      "workoutGroup": "abs",
+      "contributions": {
+        "abs.lower": 0.9,
+        "abs.upper": 0.85,
+        "abs.obliques": 0.2
+      },
+      "isCustom": false,
+      "aliases": [
+        "Jackknife"
+      ]
+    },
+    {
+      "id": "catalogue.cardio.battleRopes",
+      "name": "Battle Ropes",
+      "description": "Two heavy ropes driven in waves, slams or circles — conditioning from the shoulders down.",
+      "equipment": "bodyweight",
+      "targetMuscles": [
+        "Heart and lungs",
+        "Shoulders"
+      ],
+      "workoutGroup": "cardio",
+      "contributions": {
+        "cardio.conditioning": 1.0,
+        "shoulder.frontDelts": 0.3
+      },
+      "isCustom": false,
+      "cardioMetrics": [
+        "rounds"
+      ],
+      "aliases": [
+        "Battle Rope"
+      ]
     }
   ]
 }

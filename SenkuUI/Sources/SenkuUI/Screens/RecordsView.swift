@@ -421,14 +421,9 @@ private struct RecordDetailSheet: View {
 
     private func row(for record: PersonalRecord) -> some View {
         HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(lift(record))
-                    .font(.subheadline.weight(.medium))
-                    .monospacedDigit()
-                Text(estimateNote(record))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+            Text(lift(record))
+                .font(.subheadline.weight(.medium))
+                .monospacedDigit()
 
             Spacer(minLength: 8)
 
@@ -445,31 +440,6 @@ private struct RecordDetailSheet: View {
             .foregroundStyle(.tertiary)
             .accessibilityLabel("Delete this record")
         }
-    }
-
-    /// What one record implies as a single, said per row.
-    ///
-    /// Without this the "Estimated 1RM" above looks stuck: a heavier lift for
-    /// fewer reps can imply a *lower* single than a lighter set for eight, so
-    /// adding a record legitimately leaves the figure where it was. Showing
-    /// each row's own estimate makes it obvious which set the headline came
-    /// from, and why a new one did not take it.
-    private func estimateNote(_ record: PersonalRecord) -> String {
-        let logged = record.source.isLogged ? "From a logged set · " : ""
-
-        if record.isTimed {
-            return logged + "Held"
-        }
-        guard !record.isBodyweightOnly else {
-            return logged + "No weight to estimate from"
-        }
-        guard record.isReliableEstimate else {
-            return logged + "Past 10 reps — no estimate"
-        }
-        guard let estimate = record.estimatedOneRepMax else {
-            return logged + "No estimate for this"
-        }
-        return logged + "≈ \(Display.tidyMass(estimate, in: unitSystem)) single"
     }
 
     private func lift(_ record: PersonalRecord) -> String {
@@ -498,9 +468,10 @@ private struct RecordDetailSheet: View {
                             )
                         }
                         if let best = entry.bestEstimated, let estimate = best.estimatedOneRepMax {
+                            let single = Display.tidyMass(estimate, in: unitSystem)
                             StatRow(
-                                "Estimated 1RM",
-                                value: Display.tidyMass(estimate, in: unitSystem),
+                                "Estimated 1 Rep Max",
+                                value: best.isEstimateLowerBound ? "≥ \(single)" : single,
                                 detail: "Epley, from \(lift(best))"
                             )
                         }

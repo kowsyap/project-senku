@@ -83,22 +83,47 @@ public struct PersonalRecord: Hashable, Codable, Sendable, Identifiable {
     /// Whether this record carries no external load — a bodyweight set.
     public var isBodyweightOnly: Bool { weightKG == 0 }
 
-    /// Estimated one-rep max, by **Epley**: `w × (1 + reps/30)`.
+    /// Past this many reps Epley stops being worth trusting.
+    public static let estimateRepLimit = 10
+
+    /// **Epley**: `w × (1 + reps/30)`, and a single as itself.
+    ///
+    /// The one place the formula is written, so a logged set and a record can
+    /// never disagree about what the same lift implies.
+    public static func epley(weightKG: Double, reps: Int) -> Double {
+        reps <= 1 ? weightKG : weightKG * (1 + Double(reps) / 30)
+    }
+
+    /// The reps the estimate is worked from: the set's own, up to
+    /// ``estimateRepLimit``.
+    ///
+    /// Epley is reasonable up to about ten reps; past that every formula in the
+    /// literature starts guessing. But a set of fifteen is not *no* evidence —
+    /// whoever moved 40 kg fifteen times could certainly have moved it ten — so
+    /// it is counted as ten. That keeps the formula inside the range it holds,
+    /// and can only understate the single, never flatter it. Discarding such
+    /// sets instead left the estimate on an older, weaker set: 35 × 10 standing
+    /// as the best after a 40 × 15.
+    public var estimateReps: Int { min(reps, Self.estimateRepLimit) }
+
+    /// Estimated one-rep max, by ``epley(weightKG:reps:)`` on
+    /// ``estimateReps``.
     ///
     /// Named on screen wherever it is shown, because it is an estimate with a
-    /// formula behind it and not a lift that happened. Epley is the common
-    /// choice and is reasonable up to about ten reps; past that every formula
-    /// in the literature starts guessing, which is why ``isReliableEstimate``
-    /// exists rather than a silent extrapolation.
+    /// formula behind it and not a lift that happened — and, for a set past
+    /// the limit, said to be a floor: see ``isEstimateLowerBound``.
     /// Nil for a hold, where a rep-count formula has nothing to work with.
     public var estimatedOneRepMax: Double? {
         guard !isTimed else { return nil }
-        return reps == 1 ? weightKG : weightKG * (1 + Double(reps) / 30)
+        return Self.epley(weightKG: weightKG, reps: estimateReps)
     }
 
-    /// Whether the estimate is worth trusting. A set of twenty tells you about
-    /// endurance, not about a single.
-    public var isReliableEstimate: Bool { !isTimed && reps <= 10 }
+    /// Whether the set's own rep count is inside the range Epley holds.
+    public var isReliableEstimate: Bool { !isTimed && reps <= Self.estimateRepLimit }
+
+    /// Whether the estimate is a floor: worked from fewer reps than were done,
+    /// so the true single is at least this and probably more.
+    public var isEstimateLowerBound: Bool { !isTimed && reps > Self.estimateRepLimit }
 }
 
 /// Every record for one exercise, and what the headline should be.
@@ -146,11 +171,12 @@ public struct ExerciseRecords: Hashable, Sendable, Identifiable {
     /// The figure to lead with: the longest hold, or the heaviest set.
     public var best: PersonalRecord? { isTimed ? longestHold : heaviest }
 
-    /// The best estimated single, from sets in the range where the estimate
-    /// means something.
+    /// The best estimated single, from every set with a weight to estimate
+    /// from. Sets past the rep limit take part, counted at the limit — see
+    /// ``PersonalRecord/estimateReps``.
     public var bestEstimated: PersonalRecord? {
         records
-            .filter(\.isReliableEstimate)
+            .filter { $0.estimatedOneRepMax != nil && !$0.isBodyweightOnly }
             .max { ($0.estimatedOneRepMax ?? 0) < ($1.estimatedOneRepMax ?? 0) }
     }
 
@@ -218,9 +244,11 @@ public struct RecordBook: Sendable {
 
     /// Whether a set would beat what is already recorded.
     ///
-    /// Beating means either more weight than has ever been on the bar, or a
-    /// better estimated single — a set of 100×5 is a record over 100×3 even
-    /// though the weight is unchanged, and the app would be wrong to ignore it.
+    /// Beating means more weight than has ever been on the bar, more reps at
+    /// that heaviest weight, or a better estimated single — a set of 100×5 is
+    /// a record over 100×3 even though the weight is unchanged, and the app
+    /// would be wrong to ignore it. The reps rule is what keeps that true past
+    /// the estimate's rep limit, where 40×15 and 40×12 estimate the same.
     public func wouldBeRecord(
         exerciseID: String,
         weightKG: Double,
@@ -241,9 +269,12 @@ public struct RecordBook: Sendable {
         guard let heaviest = existing.heaviest else { return true }
 
         if weightKG > heaviest.weightKG { return true }
+        if abs(weightKG - heaviest.weightKG) < 0.01, reps > heaviest.reps { return true }
 
-        guard reps <= 10 else { return false }
-        let candidate = reps == 1 ? weightKG : weightKG * (1 + Double(reps) / 30)
+        let candidate = PersonalRecord.epley(
+            weightKG: weightKG,
+            reps: min(reps, PersonalRecord.estimateRepLimit)
+        )
         let best = existing.bestEstimated?.estimatedOneRepMax ?? 0
         return candidate > best
     }

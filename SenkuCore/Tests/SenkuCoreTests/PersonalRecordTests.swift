@@ -68,13 +68,37 @@ struct PersonalRecordTests {
         #expect(records.heaviest?.id == five.id)
     }
 
-    @Test("A twenty-rep set never becomes the estimated max")
-    func unreliableSetsAreExcludedFromTheEstimate() throws {
+    @Test("A twenty-five-rep set counts as ten, and does not flatter")
+    func highRepSetsCountAtTheLimit() throws {
         let single = try record(100, 1)
-        let endurance = try record(70, 25)  // would estimate ~128 if trusted
+        let endurance = try record(70, 25)  // ~128 if all 25 were trusted; ~93.3 at ten
 
         let records = ExerciseRecords(exerciseID: "catalogue.bench.flat", records: [single, endurance])
         #expect(records.bestEstimated?.id == single.id)
+        expectClose(try #require(endurance.estimatedOneRepMax), 70 * (1 + 10.0 / 30), tolerance: 0.001)
+    }
+
+    /// The case that showed the old rule was wrong: shrugs, done for high reps,
+    /// where discarding every set past ten left last week's weaker set as the
+    /// best estimate after a heavier, longer one.
+    @Test("A heavier set past ten reps replaces a weaker estimate")
+    func aHeavierHighRepSetMovesTheEstimate() throws {
+        let lastWeek = try record(35, 10, daysAgo: 7)  // ≈ 46.7
+        let thisWeek = try record(40, 15)              // counted as 40 × 10 ≈ 53.3
+
+        let records = ExerciseRecords(exerciseID: "catalogue.bench.flat", records: [lastWeek, thisWeek])
+        #expect(records.bestEstimated?.id == thisWeek.id)
+        expectClose(try #require(thisWeek.estimatedOneRepMax), 53.333, tolerance: 0.001)
+
+        // And it says it is a floor, where the 35 × 10 is not.
+        #expect(thisWeek.isEstimateLowerBound)
+        #expect(!lastWeek.isEstimateLowerBound)
+    }
+
+    @Test("A bodyweight set has nothing to estimate from")
+    func bodyweightIsNotAnEstimate() throws {
+        let records = ExerciseRecords(exerciseID: "catalogue.bench.flat", records: [try record(0, 12)])
+        #expect(records.bestEstimated == nil)
     }
 
     @Test("A heavier lift does not always raise the estimated single")
@@ -117,6 +141,23 @@ struct PersonalRecordTests {
     func sameWeightMoreRepsIsARecord() throws {
         let book = RecordBook([try record(100, 3)])
         #expect(book.wouldBeRecord(exerciseID: "catalogue.bench.flat", weightKG: 100, reps: 5))
+    }
+
+    @Test("More reps at the heaviest weight is a record past ten reps too")
+    func moreRepsPastTheLimitIsARecord() throws {
+        // Both estimate as 40 × 10, so only the reps rule can tell them apart.
+        let book = RecordBook([try record(40, 12)])
+        #expect(book.wouldBeRecord(exerciseID: "catalogue.bench.flat", weightKG: 40, reps: 15))
+        #expect(!book.wouldBeRecord(exerciseID: "catalogue.bench.flat", weightKG: 40, reps: 11))
+    }
+
+    @Test("A logged set and a record agree on the same lift")
+    func loggedSetAndRecordAgree() throws {
+        for (weight, reps) in [(100.0, 1), (100, 5), (40, 15)] {
+            let set = try LoggedSet(weightKG: weight, reps: reps)
+            let record = try record(weight, reps)
+            expectClose(try #require(set.estimatedOneRepMax), try #require(record.estimatedOneRepMax), tolerance: 0.0001)
+        }
     }
 
     @Test("A lighter, easier set is not")

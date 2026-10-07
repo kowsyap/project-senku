@@ -45,11 +45,12 @@ Milestones in delivery order. Each one ends with something usable on a device.
 
 ## M4 — Exercises and records (F2)
 
-- [x] Exercise catalogue: 138 entries, bundled as data
-- [x] Muscle taxonomy: 8 groups, 25 regions, per-exercise contributions
-- [x] Custom exercises, marked as user-classified
+- [x] Exercise catalogue: 160 entries, bundled as data, searchable by other names
+- [x] Muscle taxonomy: 9 groups, 28 regions, per-exercise contributions; forearms
+      a group of their own
+- [x] Custom exercises, marked as user-classified, optionally timed
 - [x] Personal records per exercise, logged and manual kept distinct
-- [x] Estimated 1RM by Epley
+- [x] Estimated 1RM by Epley, sets past 10 reps counted as 10 and shown as a floor
 - [x] Cardio records and reusable cardio protocols
 - [x] Filters: muscle group, recency, stale
 
@@ -63,6 +64,9 @@ Milestones in delivery order. Each one ends with something usable on a device.
 - [x] Timed holds logged as seconds, not reps
 - [x] Cardio logging
 - [x] Rest timer started from the set logger
+- [x] Group chosen on a body map (male or female, front and back) or a ring that
+      turns by dragging
+- [x] A split day's picker can leave its group for any other
 
 ## M6 — Water (F4)
 
@@ -95,7 +99,7 @@ Milestones in delivery order. Each one ends with something usable on a device.
 - [x] PDF report with charts and a section picker
 - [x] JSON export and import
 - [x] Anime log (F6)
-- [x] Customisable navigation bar
+- [x] Customisable navigation bar, under a Settings page in More
 
 ## M9 — Backlog
 
@@ -104,6 +108,14 @@ Milestones in delivery order. Each one ends with something usable on a device.
 - [ ] Sets-per-week volume guidance
 - [ ] Watch complications for water and food
 - [ ] Weigh-in reminder suppressed on a day already logged
+- [ ] Shin region, so a Tibialis Raise can be scored
+
+## M10 — Apple Health (F7)
+
+- [ ] Sideload test: one water sample through SideStore on a free Apple ID
+- [ ] Water, food and body written as logged, following edits and deletions
+- [ ] Workouts with confirmed, MET-estimated active energy
+- [ ] Apple Health section on the Settings page
 
 ---
 
@@ -121,3 +133,4 @@ Milestones in delivery order. Each one ends with something usable on a device.
 | M7 — Food | ✅ |
 | M8 — Watch, widgets and export | ✅ |
 | M9 — Backlog | in progress |
+| M10 — Apple Health | planned |

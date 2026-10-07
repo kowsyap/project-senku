@@ -99,6 +99,9 @@ extension WorkoutGroup {
         case .shoulder: "figure.arms.open"
         case .bicep: "dumbbell.fill"
         case .tricep: "figure.cooldown"
+        // Only seen if the drawn artwork is missing: hanging from a bar, since
+        // the grip is what forearm work is trained by.
+        case .forearm: "figure.climbing"
         case .legs: "figure.stair.stepper"
         case .abs: "figure.core.training"
         case .cardio: "heart.fill"
@@ -116,6 +119,9 @@ extension WorkoutGroup {
         case .shoulder: Senku.Palette.carbs
         case .bicep: Color(red: 0.62, green: 0.45, blue: 0.92)
         case .tricep: Color(red: 0.25, green: 0.72, blue: 0.75)
+        // Leather brown — a chalked grip — and clear of the carbs amber
+        // shoulders already wear.
+        case .forearm: Color(red: 0.72, green: 0.50, blue: 0.34)
         case .legs: Senku.Palette.fat
         case .abs: Color(red: 0.95, green: 0.55, blue: 0.62)
         case .cardio: Color(red: 0.91, green: 0.19, blue: 0.24)

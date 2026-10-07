@@ -78,11 +78,19 @@ public struct TrainingPlan: Codable, Hashable, Sendable {
     /// Muscles only. Cardio's absence is not a hole in a lifting plan — plenty
     /// of people deliberately do none — and listing it as one would turn a
     /// genuine warning ("nothing here trains legs") into a nag to be ignored.
+    ///
+    /// Forearms are left out for the same reason. Every pull trains the grip,
+    /// and a week with no wrist curls in it is the usual week, not a mistake —
+    /// so a plan that was complete before forearms became a group stays
+    /// complete after.
     public var untrainedGroups: [WorkoutGroup] {
         let trained = trainedGroups
         return ExerciseCatalogue.bundled.workoutGroups
-            .filter { $0.isMuscle && !trained.contains($0) }
+            .filter { $0.isMuscle && !Self.optionalGroups.contains($0) && !trained.contains($0) }
     }
+
+    /// Muscle groups whose absence from a week is not worth pointing out.
+    static let optionalGroups: Set<WorkoutGroup> = [.forearm]
 }
 
 /// The shapes people actually train, offered as starting points.

@@ -155,6 +155,14 @@ import Testing
         #expect(SplitTemplate.bodyPart.plan.untrainedGroups.isEmpty)
         #expect(!SplitTemplate.pushPullLegs.plan.trainedGroups.contains(.cardio))
     }
+
+    /// Forearms are a muscle group, but a week without a forearm day is the
+    /// ordinary week — the grip is trained by every pull in it.
+    @Test func forearmsAreNotAGap() {
+        let plan = TrainingPlan(days: [SplitDay(name: "Arms", groups: [.bicep, .tricep])])
+        #expect(!plan.untrainedGroups.contains(.forearm))
+        #expect(plan.untrainedGroups.contains(.legs))
+    }
 }
 
 @Suite struct ContributorTests {

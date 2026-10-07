@@ -4,7 +4,7 @@ import SenkuCore
 
 /// Choosing an exercise: muscle group first, then the movement.
 ///
-/// Two steps rather than one long list. Seventy-six exercises in a single
+/// Two steps rather than one long list. A hundred and sixty exercises in a single
 /// alphabetical column is a scroll nobody reads, and the first thing anyone
 /// knows when they pick an exercise is which muscle they are there for — so
 /// that is the question asked first. Search is still there for the person who
@@ -30,21 +30,30 @@ public struct ExercisePicker: View {
     /// attempts rather than a list of lifts.
     private let hidden: Set<String>
 
-    /// The group the caller fixed, if it fixed one. Distinct from ``group``,
-    /// which is where the user currently is.
-    private let pinnedGroup: WorkoutGroup?
-
     @State private var group: WorkoutGroup?
     @State private var search = ""
     @State private var info: Exercise?
     @State private var isCreating = false
+    /// Ring or body, for choosing the group. Remembered, because whichever one
+    /// somebody prefers they will prefer every time.
+    @AppStorage(GroupPickerStyle.storageKey, store: SenkuStorage.shared)
+    private var groupStyle: GroupPickerStyle = .body
+    /// How far the ring has been turned by hand, in radians. Kept while the
+    /// picker is open, so going into a group and back finds it where you left
+    /// it; a new picker starts from the anatomical order again.
+    @State private var ringRotation: Double = 0
+    /// The previous touch point of a turn in progress. Turning is summed from
+    /// one point to the next rather than measured from where the finger began,
+    /// so a drag that goes more than halfway round keeps going the same way.
+    @State private var lastRingPoint: CGPoint?
 
     public init(
         library: ExerciseLibrary,
         hidden: Set<String> = [],
         /// Opens straight into one group, for a caller that already knows which
         /// muscle is being filled — "add to chest" should not begin by asking
-        /// which muscle you meant.
+        /// which muscle you meant. A starting point, not a fence: the chevron
+        /// still leads out to the other groups.
         startingIn group: WorkoutGroup? = nil,
         deletionRefusal: @escaping (Exercise) -> String? = { _ in nil },
         onPick: @escaping (Exercise) -> Void
@@ -53,7 +62,6 @@ public struct ExercisePicker: View {
         self.hidden = hidden
         self.deletionRefusal = deletionRefusal
         self.onPick = onPick
-        self.pinnedGroup = group
         _group = State(initialValue: group)
     }
 
@@ -63,8 +71,11 @@ public struct ExercisePicker: View {
 
     private var searchResults: [Exercise] {
         guard !search.isEmpty else { return [] }
+        // By any name it goes by, not only the catalogue's: "skull crusher"
+        // has to find the lying triceps extension, or search fails the one
+        // person who knew exactly what they wanted.
         return library.all
-            .filter { !hidden.contains($0.id) && $0.name.localizedCaseInsensitiveContains(search) }
+            .filter { !hidden.contains($0.id) && $0.matches(search) }
             .sorted { $0.name < $1.name }
     }
 
@@ -82,12 +93,12 @@ public struct ExercisePicker: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
-            // Only when there is somewhere to go back *to*. Opened from a
-            // workout day the group is the caller's, not a step the user took,
-            // and a chevron there would offer to undo something they never did
-            // — landing them in a group picker they did not ask for, with no
-            // way back to the day.
-            if group != nil, pinnedGroup == nil, search.isEmpty {
+            // Shown even when the caller chose the group. It used to be hidden
+            // there, on the grounds that the user never stepped into it — but
+            // a leg day that wants a forearm finisher is a real day, and
+            // search was the only way out, which nobody finds. The sheet's own
+            // Done still returns to the day from either level.
+            if group != nil, search.isEmpty {
                 ToolbarItem(placement: .cancellationAction) {
                     // A chevron, as a pushed screen would have. The word
                     // "Groups" named where the tap goes, but this is the one
@@ -140,39 +151,82 @@ public struct ExercisePicker: View {
 
     /// The groups, arranged as a ring around one.
     ///
-    /// Seven is the number that makes this work: six around one, at sixty
-    /// degrees apart, which is the only tidy arrangement of seven things and
-    /// happens to be what the body offers.
-    ///
     /// Chest is the centre, and the ring runs clockwise from noon —
-    /// shoulders, biceps, abs, legs, back, triceps. It reads as a body rather
-    /// than a list: shoulders on top, abs low on the front, legs at the bottom,
+    /// shoulders, biceps, forearms, abs, legs, back, triceps. It reads as a
+    /// body rather than a list: shoulders on top, the arm running down the
+    /// right from biceps to forearm, abs low on the front, legs at the bottom,
     /// and back and triceps up the left where the posterior work belongs.
     ///
-    /// The ring is not load-bearing: a catalogue with any other number of
-    /// groups falls back to a grid rather than a broken circle.
+    /// It was six around one until forearms became a group. Seven spaces the
+    /// ring at a seventh of a turn instead of a sixth, which is less tidy on
+    /// paper and reads just the same in the hand.
+    ///
+    /// The ring is not load-bearing: a catalogue whose groups are not exactly
+    /// these falls back to a grid rather than a ring with a hole in it.
     private var groupPicker: some View {
-        // Cardio is not a muscle and does not belong in a ring of them. It sits
-        // below, as a bar rather than a disc, so the shape itself says "this is
-        // a different kind of thing" before the heart on it is even read.
+        // Cardio is not a muscle and does not belong in a ring of them. It
+        // stands apart as a heart in the corner — the same place in both
+        // styles — so the shape itself says "this is a different kind of
+        // thing" before its name is even read.
         let muscles = library.catalogue.workoutGroups.filter(\.isMuscle)
         let others = library.catalogue.workoutGroups.filter { !$0.isMuscle }
-        let ringOrder: [WorkoutGroup] = [.shoulder, .bicep, .abs, .legs, .back, .tricep]
-        let canRing = muscles.count == 7 && Set(muscles) == Set(ringOrder + [.chest])
+        let ringOrder: [WorkoutGroup] = [.shoulder, .bicep, .forearm, .abs, .legs, .back, .tricep]
+        let canRing = muscles.count == ringOrder.count + 1 && Set(muscles) == Set(ringOrder + [.chest])
 
-        return ScrollView {
-            VStack(spacing: 14) {
-                if canRing {
-                    ring(around: .chest, others: ringOrder)
-                } else {
-                    grid(muscles)
-                }
+        // Cardio is the heart in the corner, in both styles; any other group
+        // that is not a muscle keeps a bar of its own under the ring.
+        let bars = others.filter { $0 != .cardio }
+        let pick: (WorkoutGroup) -> Void = { picked in
+            withAnimation(.snappy(duration: 0.2)) { group = picked }
+        }
 
-                ForEach(others) { other in
-                    wideButton(other)
+        return VStack(spacing: 0) {
+            // Outside the scroll view, so the switch stays put and the ring
+            // can be centred in exactly the space below it.
+            Picker("Choose by", selection: $groupStyle.animation(.snappy(duration: 0.2))) {
+                ForEach(GroupPickerStyle.allCases) { style in
+                    Text(style.title).tag(style)
                 }
             }
-            .padding(.bottom, 12)
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            GeometryReader { geometry in
+                ScrollView {
+                    switch groupStyle {
+                    case .body:
+                        BodyMapPicker(available: geometry.size, onPick: pick)
+                    case .ring:
+                        VStack(spacing: 14) {
+                            if canRing {
+                                ring(around: .chest, others: ringOrder)
+                            } else {
+                                grid(muscles)
+                            }
+
+                            ForEach(bars) { other in
+                                wideButton(other)
+                            }
+                        }
+                        // At least as tall as the space, so a ring smaller
+                        // than it sits in the middle of it.
+                        .frame(maxWidth: .infinity, minHeight: geometry.size.height)
+                    }
+                }
+                // Cardio's heart: the same tile as the ring's discs, in the
+                // same corner whichever style is showing, so it is one fixed
+                // thing rather than part of either.
+                .overlay(alignment: .bottomLeading) {
+                    if others.contains(.cardio) {
+                        tileButton(.cardio, diameter: Self.ringTile)
+                            .padding(.leading, 22)
+                            // Standing on the same line as the body map's
+                            // figures, in both styles.
+                            .padding(.bottom, BodyMapPicker.groundInset(in: geometry.size))
+                    }
+                }
+            }
         }
         .background(.background)
     }
@@ -209,26 +263,63 @@ public struct ExercisePicker: View {
     }
 
     private func ring(around centre: WorkoutGroup, others: [WorkoutGroup]) -> some View {
-        let radius: CGFloat = 108
-        let tile: CGFloat = 86
+        // Sized so neighbours sit as far apart as the six-group ring's did —
+        // a seventh tile narrows the gap between centres, so the tiles shrink
+        // and the ring widens to win it back. 346 points still fits a 375-point
+        // phone.
+        let radius: CGFloat = 124
+        let tile = Self.ringTile
+        let side = 2 * radius + tile + 20
+        let centrePoint = CGPoint(x: side / 2, y: side / 2)
+        let step = 2 * Double.pi / Double(max(others.count, 1))
 
-        return ZStack {
+        return RingLayout(radius: radius, rotation: ringRotation) {
             tileButton(centre, diameter: tile)
-
-            ForEach(Array(others.enumerated()), id: \.element) { index, candidate in
-                // Clockwise from noon: shoulders at the top, arms down the
-                // right, legs at the bottom, back and abs up the left.
-                let angle = Angle.degrees(Double(index) * 60 - 90)
+            ForEach(others) { candidate in
                 tileButton(candidate, diameter: tile)
-                    .offset(
-                        x: radius * cos(angle.radians),
-                        y: radius * sin(angle.radians)
-                    )
             }
         }
-        .frame(width: 2 * radius + tile + 20, height: 2 * radius + tile + 20)
+        .frame(width: side, height: side)
+        .contentShape(Rectangle())
+        // Turned by dragging round it. High priority so a drag that starts on
+        // a tile turns the ring instead of being lost to the tile's button or
+        // the scroll view; a tap moves too little to count as a drag, so it
+        // still picks the group.
+        .highPriorityGesture(
+            DragGesture(minimumDistance: 6)
+                .onChanged { value in
+                    let previous = lastRingPoint ?? value.startLocation
+                    lastRingPoint = value.location
+                    ringRotation += Self.turn(from: previous, to: value.location, around: centrePoint)
+                }
+                .onEnded { value in
+                    lastRingPoint = nil
+                    // A flick carries on a little, at most two places, and the
+                    // ring always settles with a group exactly at the top.
+                    let fling = Self.turn(from: value.location, to: value.predictedEndLocation, around: centrePoint)
+                    let carried = ringRotation + min(max(fling, -2 * step), 2 * step)
+                    withAnimation(.spring(duration: 0.5, bounce: 0.2)) {
+                        ringRotation = (carried / step).rounded() * step
+                    }
+                }
+        )
+        // A tick each time a group passes the top.
+        .sensoryFeedback(.selection, trigger: Int((ringRotation / step).rounded()))
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
+    }
+
+    /// A disc in the ring — and the cardio heart, which is sized to match.
+    static let ringTile: CGFloat = 78
+
+    /// The angle swept going from one point to the next, seen from the centre.
+    ///
+    /// Zero near the centre itself, where a finger's smallest movement is a
+    /// huge angle and the ring would lurch.
+    nonisolated static func turn(from a: CGPoint, to b: CGPoint, around centre: CGPoint) -> Double {
+        let u = CGVector(dx: a.x - centre.x, dy: a.y - centre.y)
+        let v = CGVector(dx: b.x - centre.x, dy: b.y - centre.y)
+        guard hypot(u.dx, u.dy) > 30, hypot(v.dx, v.dy) > 30 else { return 0 }
+        return atan2(u.dx * v.dy - u.dy * v.dx, u.dx * v.dx + u.dy * v.dy)
     }
 
     private func grid(_ groups: [WorkoutGroup]) -> some View {
@@ -338,6 +429,14 @@ public struct ExercisePicker: View {
                         .font(.body.weight(.medium))
                         .foregroundStyle(Color.primary)
                         .multilineTextAlignment(.leading)
+                    // Why it is here at all, when the search was for a name
+                    // that is not this one's: "skull" turning up "Lying EZ-Bar
+                    // Triceps Extension" otherwise looks like a wrong result.
+                    if let alias = exercise.alias(matching: search) {
+                        Text("Also called \(alias)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     Text(subtitle(for: exercise))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
@@ -362,6 +461,64 @@ public struct ExercisePicker: View {
 }
 
 /// What the ⓘ shows: how it is done, and what it trains.
+/// The two ways of choosing a group: the ring of discs, or the body.
+enum GroupPickerStyle: String, CaseIterable, Identifiable {
+    // Body first: it is the default, and the switch lists it first.
+    case body
+    case ring
+
+    static let storageKey = "senku.picker.groupStyle.v1"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .ring: "Groups"
+        case .body: "Body"
+        }
+    }
+}
+
+/// One view in the middle and the rest on a circle round it, turned by
+/// `rotation`.
+///
+/// A layout rather than offsets on a stack, because a layout's animatable data
+/// is the angle itself: when the ring springs to rest, each tile travels along
+/// the circle. Animated offsets would move them in straight lines, cutting
+/// across the middle on any turn of more than a place or two. The tiles are
+/// moved round, never rotated, so their labels stay upright.
+private struct RingLayout: Layout {
+    var radius: CGFloat
+    /// Radians, clockwise. Zero puts the first ring view at noon.
+    var rotation: Double
+
+    var animatableData: Double {
+        get { rotation }
+        set { rotation = newValue }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let centre = CGPoint(x: bounds.midX, y: bounds.midY)
+        guard let middle = subviews.first else { return }
+        middle.place(at: centre, anchor: .center, proposal: .unspecified)
+
+        let ring = subviews.dropFirst()
+        let step = 2 * Double.pi / Double(max(ring.count, 1))
+        for (index, subview) in ring.enumerated() {
+            let angle = Double(index) * step - .pi / 2 + rotation
+            subview.place(
+                at: CGPoint(x: centre.x + radius * cos(angle), y: centre.y + radius * sin(angle)),
+                anchor: .center,
+                proposal: .unspecified
+            )
+        }
+    }
+}
+
 struct ExerciseInfoSheet: View {
     let exercise: Exercise
     let library: ExerciseLibrary
@@ -392,6 +549,13 @@ struct ExerciseInfoSheet: View {
                              : exercise.description)
                             .font(.callout)
                             .frame(maxWidth: .infinity, alignment: .leading)
+
+                        if !exercise.aliases.isEmpty {
+                            Text("Also called \(exercise.aliases.joined(separator: ", "))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
 
                     Card("Trains") {
@@ -412,6 +576,11 @@ struct ExerciseInfoSheet: View {
                     Card("Equipment") {
                         StatRow("Uses", value: exercise.equipment.title)
                         StatRow("Group", value: exercise.workoutGroup.title)
+                        // Cardio is always logged as time and its own metrics,
+                        // so the line would only ever say the same thing.
+                        if !exercise.isCardio {
+                            StatRow("Logged as", value: exercise.isTimed ? "Time held" : "Reps")
+                        }
                     }
 
                     if exercise.isCustom {
@@ -484,8 +653,9 @@ struct CustomExerciseEditor: View {
     @State private var chosenGroup: WorkoutGroup
     @State private var equipment: Equipment = .barbell
     @State private var regionIDs: Set<String> = []
+    @State private var isTimed = false
 
-    private let equipmentChoices: [Equipment] = [.barbell, .dumbbell, .machine, .cable, .bodyweight]
+    private let equipmentChoices: [Equipment] = [.barbell, .dumbbell, .kettlebell, .machine, .cable, .bodyweight]
 
     init(
         library: ExerciseLibrary,
@@ -532,6 +702,18 @@ struct CustomExerciseEditor: View {
                     }
                 }
 
+                // Not offered for cardio, which is logged as time already and
+                // would only be asking the same question twice.
+                if chosenGroup != .cardio {
+                    Section {
+                        Toggle("Timed", isOn: $isTimed)
+                    } footer: {
+                        Text(isTimed
+                             ? "Sets are logged as seconds held — a dead hang, a carry, a plank."
+                             : "Sets are logged as reps. Turn this on for something you hold rather than repeat.")
+                    }
+                }
+
                 Section {
                     ForEach(regions) { region in
                         Button {
@@ -575,7 +757,8 @@ struct CustomExerciseEditor: View {
                         guard let exercise = Exercise.custom(
                             name: name.trimmingCharacters(in: .whitespaces),
                             equipment: equipment,
-                            regions: picked
+                            regions: picked,
+                            isTimed: isTimed && chosenGroup != .cardio
                         ) else { return }
                         onSave(exercise)
                     }

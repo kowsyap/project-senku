@@ -196,10 +196,13 @@ public struct SenkuImportDocument: Codable, Sendable {
 
     public struct CustomExerciseEntry: Codable, Sendable {
         public var name: String
-        /// `barbell`, `dumbbell`, `machine`, `cable`, `bodyweight`.
+        /// `barbell`, `dumbbell`, `kettlebell`, `machine`, `cable`, `bodyweight`.
         public var equipment: String
         /// Region ids from the catalogue, e.g. `chest.upper`.
         public var regionIDs: [String]
+        /// Held rather than repeated. Optional so a backup written before the
+        /// field existed still reads, as reps — which is what it was then.
+        public var isTimed: Bool?
     }
 
     /// Everything on this device, for a backup that restores exactly.
@@ -241,7 +244,8 @@ public struct SenkuImportDocument: Codable, Sendable {
             CustomExerciseEntry(
                 name: exercise.name,
                 equipment: exercise.equipment.rawValue,
-                regionIDs: Array(exercise.contributions.keys)
+                regionIDs: Array(exercise.contributions.keys),
+                isTimed: exercise.isTimed ? true : nil
             )
         }
 
@@ -491,7 +495,8 @@ public enum SenkuImporter {
             guard let exercise = Exercise.custom(
                 name: entry.name,
                 equipment: Equipment(entry.equipment),
-                regions: regions
+                regions: regions,
+                isTimed: entry.isTimed ?? false
             ) else {
                 summary.problems.append("“\(entry.name)”: could not be built.")
                 continue

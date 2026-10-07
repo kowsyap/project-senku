@@ -84,10 +84,10 @@ public struct RootView: View {
     /// Which three screens the bar is carrying, and what More is showing.
     @State private var layout = TabLayout()
     @State private var moreDestination: Tab?
-    /// Navbar Settings, pushed from More. State rather than a plain link so
-    /// that tapping More again can close it, the way it closes any other page
-    /// opened from there.
-    @State private var isEditingBar = false
+    /// Settings, pushed from More. State rather than a plain link so that
+    /// tapping More again can close it — and anything opened inside it, such as
+    /// the navbar editor — the way it closes any other page opened from there.
+    @State private var isShowingSettings = false
 
     public enum Tab: String, Hashable, Identifiable, Sendable, CaseIterable {
         case me
@@ -244,6 +244,9 @@ public struct RootView: View {
     public var body: some View {
         GeometryReader { window in
             shell
+                // For the exercise picker's body map, wherever it is opened:
+                // the body drawn is the profile's.
+                .environment(\.senkuBodySex, store.profile?.metrics.sex ?? .male)
                 // How many tabs this screen can carry, asked of the window
                 // rather than of the bar — the bar hugs its contents now, so
                 // asking it how much room it has would be a circle.
@@ -765,8 +768,8 @@ public struct RootView: View {
         if barTabs.contains(tab) {
             moreDestination = nil
             // Tapping More is "back to the More list", whatever was opened
-            // from it — Navbar Settings included.
-            if tab == .more { isEditingBar = false }
+            // from it — Settings included.
+            if tab == .more { isShowingSettings = false }
             // Opening a tab means opening its front page, not wherever it was
             // abandoned — coming back to Food should not land on the settings
             // screen you were last reading. Only when there is something to
@@ -1023,7 +1026,7 @@ public struct RootView: View {
         NavigationStack {
             List {
                 Section {
-                    // In the order set in Navbar settings, not the canonical
+                    // In the order set in the navbar editor, not the canonical
                     // one — the list is arrangeable for the same reason the bar
                     // is.
                     ForEach(layout.others.filter { !barTabs.contains($0) }) { tab in
@@ -1052,13 +1055,13 @@ public struct RootView: View {
 
                 Section {
                     Button {
-                        isEditingBar = true
+                        isShowingSettings = true
                     } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "slider.horizontal.3")
+                            Image(systemName: "gearshape")
                                 .foregroundStyle(Tab.more.tint)
                                 .frame(width: 26)
-                            Text("Navbar Settings")
+                            Text("Settings")
                                 .foregroundStyle(Color.primary)
                             Spacer()
                             Image(systemName: "chevron.right")
@@ -1077,8 +1080,8 @@ public struct RootView: View {
                 // The same screen it would be in the bar, one level deeper.
                 screen(tab)
             }
-            .navigationDestination(isPresented: $isEditingBar) {
-                TabBarEditor(layout: layout)
+            .navigationDestination(isPresented: $isShowingSettings) {
+                SettingsView(layout: layout)
             }
         }
     }
