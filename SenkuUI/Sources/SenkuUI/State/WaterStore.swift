@@ -174,6 +174,54 @@ public final class WaterStore {
         persistEntries()
     }
 
+    // MARK: - A past day's total
+
+    /// Everything drunk on a day.
+    public func total(on day: Date) -> Double {
+        entries.filter { calendar.isDate($0.date, inSameDayAs: day) }.reduce(0) { $0 + $1.millilitres }
+    }
+
+    /// Makes a day's total exactly `target` — for a day that has passed, from
+    /// the streak screen.
+    ///
+    /// Up adds the difference as a drink at noon that day. Down takes it off
+    /// the day's latest drinks first, shrinking the one where it runs out, so
+    /// the earlier drinks of the day are left as they were logged.
+    public func setTotal(_ target: Double, on day: Date) {
+        reload()
+        let target = max(0, target)
+        let onDay = entries
+            .filter { calendar.isDate($0.date, inSameDayAs: day) }
+            .sorted { $0.date > $1.date }
+        let current = onDay.reduce(0) { $0 + $1.millilitres }
+
+        if target > current {
+            // A drink is at most five litres, so a larger difference is
+            // logged as more than one.
+            var remaining = target - current
+            let noon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
+            while remaining > 0.5 {
+                let amount = min(remaining, 5000)
+                guard let entry = try? WaterEntry(date: noon, millilitres: amount) else { break }
+                entries.append(entry)
+                remaining -= amount
+            }
+        } else {
+            var excess = current - target
+            for drink in onDay where excess > 0.5 {
+                if drink.millilitres <= excess + 0.001 {
+                    entries.removeAll { $0.id == drink.id }
+                    excess -= drink.millilitres
+                } else if let index = entries.firstIndex(where: { $0.id == drink.id }) {
+                    entries[index].millilitres -= excess
+                    excess = 0
+                }
+            }
+        }
+        entries.sort { $0.date > $1.date }
+        persistEntries()
+    }
+
     // MARK: - Creatine
 
     public func tookCreatine(on date: Date = .now) -> Bool {

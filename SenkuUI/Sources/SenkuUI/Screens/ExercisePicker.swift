@@ -69,6 +69,16 @@ public struct ExercisePicker: View {
         library.exercises(in: group).filter { !hidden.contains($0.id) }
     }
 
+    /// An opaque sheet colour. `.background` inside a sheet resolves to the
+    /// sheet's own glass, so it cannot be used to replace it.
+    static var solidSheet: Color {
+        #if canImport(UIKit)
+        Color(uiColor: .systemBackground)
+        #else
+        Color(nsColor: .windowBackgroundColor)
+        #endif
+    }
+
     private var searchResults: [Exercise] {
         guard !search.isEmpty else { return [] }
         // By any name it goes by, not only the catalogue's: "skull crusher"
@@ -133,6 +143,10 @@ public struct ExercisePicker: View {
             )
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
+            // Solid, not the half-height sheet's default glass: in dark mode
+            // the glass came out a washed grey with the list showing through,
+            // and the grey text and the Done on it all but disappeared.
+            .presentationBackground(Self.solidSheet)
         }
         .sheet(isPresented: $isCreating) {
             CustomExerciseEditor(library: library, group: group) { created in
@@ -439,7 +453,7 @@ public struct ExercisePicker: View {
                     }
                     Text(subtitle(for: exercise))
                         .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -569,7 +583,7 @@ struct ExerciseInfoSheet: View {
 
                         Text("How much of each muscle this movement trains, where 100% means it is *the* exercise for it.")
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
@@ -620,7 +634,11 @@ struct ExerciseInfoSheet: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
+                    // The text colour rather than the page's accent: the PR
+                    // page's indigo, on a dark button, was barely there.
                     Button("Done", action: onClose)
+                        .fontWeight(.semibold)
+                        .tint(.primary)
                 }
             }
             .confirmationDialog(

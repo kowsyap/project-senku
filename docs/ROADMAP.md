@@ -103,7 +103,8 @@ Milestones in delivery order. Each one ends with something usable on a device.
 
 ## M9 — Backlog
 
-- [ ] Edit a past day's food and water
+- [x] Set a past day's protein, calories, water and creatine, from Streaks
+- [ ] Edit a past entry of food and water
 - [ ] User-settable day boundary (default midnight, 03:00 alternative)
 - [ ] Sets-per-week volume guidance
 - [ ] Watch complications for water and food

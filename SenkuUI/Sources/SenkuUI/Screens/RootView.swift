@@ -247,6 +247,9 @@ public struct RootView: View {
                 // For the exercise picker's body map, wherever it is opened:
                 // the body drawn is the profile's.
                 .environment(\.senkuBodySex, store.profile?.metrics.sex ?? .male)
+                // For estimating a workout's energy: the latest weigh-in, or
+                // the profile's weight before there is one.
+                .environment(\.senkuBodyWeightKG, weightLog.series.latest?.weightKG ?? store.profile?.metrics.weightKG)
                 // How many tabs this screen can carry, asked of the window
                 // rather than of the bar — the bar hugs its contents now, so
                 // asking it how much room it has would be a circle.
@@ -327,6 +330,9 @@ public struct RootView: View {
             publishWeight()
             publishWater()
             publishIntake()
+            // Anything logged from a widget, Siri or the watch while the app
+            // was closed reaches Health here.
+            syncHealth()
             #endif
 
             // Also at launch: `scenePhase` does not announce the value it
@@ -380,15 +386,40 @@ public struct RootView: View {
             }
             #endif
         }
-        .onChange(of: weightLog.weighIns) { _, _ in publishWeight() }
-        .onChange(of: water.entries) { _, _ in publishWater() }
-        .onChange(of: intake.entries) { _, _ in publishIntake() }
+        .onChange(of: weightLog.weighIns) { _, _ in
+            publishWeight()
+            #if os(iOS)
+            syncHealth()
+            #endif
+        }
+        .onChange(of: water.entries) { _, _ in
+            publishWater()
+            #if os(iOS)
+            syncHealth()
+            #endif
+        }
+        .onChange(of: intake.entries) { _, _ in
+            publishIntake()
+            #if os(iOS)
+            syncHealth()
+            #endif
+        }
         .onChange(of: profileEditionID) { _, _ in
             publishWeight()
             // A new profile is new targets, and the watch draws its rings
             // against them.
             publishIntake()
+            #if os(iOS)
+            syncHealth()
+            #endif
         }
+        #if os(iOS)
+        // A deleted session takes its workout out of Health with it.
+        .onChange(of: workouts.history) { _, _ in syncHealth() }
+        // A kind just switched on in Settings: write what it covers straight
+        // away rather than waiting for the next thing to be logged.
+        .onChange(of: HealthSync.shared.settings) { _, _ in syncHealth() }
+        #endif
         .onReceive(NotificationCenter.default.publisher(for: .senkuImportRequested)) { _ in
             isShowingDataMenu = true
         }
@@ -684,6 +715,24 @@ public struct RootView: View {
         #endif
     }
 
+    #if os(iOS)
+    /// Apple Health brought in line with the logs, for whichever kinds are on.
+    /// The sync works out the difference itself, so calling this more often
+    /// than strictly needed costs a comparison and nothing else.
+    private func syncHealth() {
+        let water = water.entries
+        let food = intake.entries
+        let weighIns = weightLog.weighIns
+        let profile = store.profile
+        let sessions = workouts.history
+        Task {
+            await HealthSync.shared.reconcile(
+                water: water, food: food, weighIns: weighIns, profile: profile, sessions: sessions
+            )
+        }
+    }
+    #endif
+
     private func publishWater() {
         #if os(iOS)
         // Read before publishing rather than trusting what is in memory. The
@@ -885,17 +934,9 @@ public struct RootView: View {
     private var foodScreen: some View {
         IntakeView(
             store: intake,
-            profile: store.profile,
-            weights: weightLog
+            profile: store.profile
         ) {
             show(.quickCalc)
-        } onAdoptMaintenance: { measured in
-            guard var profile = store.profile else { return }
-            profile.measuredMaintenanceCalories = measured
-            store.save(profile)
-            // Every target in the app moves with it, and the watch is
-            // holding a copy of the old ones.
-            profileEditionID = UUID()
         }
         .navigationTitle("Food")
     }
@@ -1081,7 +1122,14 @@ public struct RootView: View {
                 screen(tab)
             }
             .navigationDestination(isPresented: $isShowingSettings) {
-                SettingsView(layout: layout)
+                SettingsView(
+                    layout: layout,
+                    water: water,
+                    intake: intake,
+                    plans: plans,
+                    library: library,
+                    unitSystem: store.profile?.unitSystem ?? UnitPreference.current
+                )
             }
         }
     }
@@ -1128,7 +1176,19 @@ public struct RootView: View {
     @ViewBuilder
     private var profileTab: some View {
         if let profile = store.profile {
-            ProfileDashboardView(profile: profile) { updated in
+            ProfileDashboardView(
+                profile: profile,
+                weights: weightLog,
+                intake: intake,
+                onAdoptMaintenance: { measured in
+                    guard var profile = store.profile else { return }
+                    profile.measuredMaintenanceCalories = measured
+                    store.save(profile)
+                    // Every target in the app moves with it, and the watch is
+                    // holding a copy of the old ones.
+                    profileEditionID = UUID()
+                }
+            ) { updated in
                 store.save(updated)
                 profileEditionID = UUID()
             }

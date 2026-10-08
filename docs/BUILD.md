@@ -174,6 +174,13 @@ SenkuWatchWidgets.appex  ['group.pk.Senku']
 
 `SenkuStorage.migrateIfNeeded` carries a profile saved before the group into it.
 
+**HealthKit works on a free account**, verified 2026-10-07: the team profile for
+`pk.Senku` accepts `com.apple.developer.healthkit`, and a build installed with
+`devicectl` asks for permission and writes samples the Health app shows. Only the
+phone app carries it; the watch and widgets write nothing to Health. Whether it
+survives a sideloader's re-signing is not yet known — an unsigned `.ipa` carries
+no entitlements for SideStore to copy.
+
 **iCloud does not.** Adding `com.apple.developer.ubiquity-kvstore-identifier`
 fails at signing with *"Personal development teams … do not support the iCloud
 capability"*, which rules out `NSUbiquitousKeyValueStore`, CloudKit and

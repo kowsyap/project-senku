@@ -27,23 +27,9 @@ public struct StartRestIntent: AppIntent {
     public func perform() async throws -> some IntentResult {
         // Reuse whatever interval was last set, so the control matches what the
         // user has actually been resting for rather than guessing a default.
-        let previous = RestTimerStore.load()
-        var timer = (try? RestTimer(duration: previous?.duration ?? RestPreset.ninetySeconds.duration))
-            ?? RestTimer(preset: .ninetySeconds)
-
-        timer.start(at: .now)
-        RestTimerStore.save(timer)
-
-        #if os(iOS)
-        RestActivityController.shared.sync(with: timer)
-        // A rest started from the widget or the Dynamic Island still has to
-        // chime on a silenced phone, so it holds the audio session too.
-        RestChime.sync(with: timer)
-        #endif
-        #if canImport(UserNotifications) && !os(macOS)
-        RestNotifications.sync(with: timer)
-        #endif
-
+        // The same start as logging a set — the Live Activity, the chime that
+        // still sounds on a silenced phone, the notification — written once.
+        RestTimerStore.startAtLastInterval()
         return .result()
     }
 }

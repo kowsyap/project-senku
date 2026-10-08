@@ -242,6 +242,22 @@ public struct WorkoutSession: Identifiable, Codable, Hashable, Sendable {
         finishedAt.map { $0.timeIntervalSince(date) }
     }
 
+    /// From the first thing logged to the last. A set counts at the moment it
+    /// was logged; cardio from when it began — its logged moment less its
+    /// time — to when it ended. Nil with nothing logged.
+    public var loggedSpan: DateInterval? {
+        var moments: [Date] = []
+        for entry in entries {
+            moments += entry.sets.map(\.completedAt)
+            if let cardio = entry.cardio {
+                moments.append(cardio.completedAt.addingTimeInterval(-cardio.seconds))
+                moments.append(cardio.completedAt)
+            }
+        }
+        guard let first = moments.min(), let last = moments.max() else { return nil }
+        return DateInterval(start: first, end: last)
+    }
+
     /// The exercises actually performed — which is what coverage must be scored
     /// against, rather than the ones that were planned.
     ///

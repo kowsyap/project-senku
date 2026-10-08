@@ -121,7 +121,8 @@ public struct WorkoutView: View {
                 WorkoutSummaryView(
                     session: session,
                     library: library,
-                    unitSystem: unitSystem
+                    unitSystem: unitSystem,
+                    sendsToHealthOnDone: true
                 )
             }
         }

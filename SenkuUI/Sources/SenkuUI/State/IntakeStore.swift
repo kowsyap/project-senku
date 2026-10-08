@@ -156,6 +156,95 @@ public final class IntakeStore {
         return add(entry)
     }
 
+    // MARK: - A past day's total
+
+    /// The two figures the streak screen tracks.
+    public enum DayFigure: Sendable {
+        case protein
+        case calories
+
+        func value(of entry: IntakeEntry) -> Double {
+            switch self {
+            case .protein: entry.proteinG
+            case .calories: entry.calories
+            }
+        }
+
+        /// A quick entry of this figure alone — "+40 g protein", "+500 kcal"
+        /// — which is the only kind a correction may shrink. A meal carries
+        /// other numbers, and lowering protein must never take its carbs with
+        /// it.
+        func isQuickEntry(_ entry: IntakeEntry) -> Bool {
+            switch self {
+            case .protein:
+                entry.proteinG > 0 && entry.carbsG == 0 && entry.fatG == 0
+                    && (entry.fiberG ?? 0) == 0 && entry.enteredCalories == nil
+            case .calories:
+                entry.enteredCalories != nil
+                    && entry.proteinG == 0 && entry.carbsG == 0 && entry.fatG == 0
+            }
+        }
+    }
+
+    private func entries(on day: Date) -> [IntakeEntry] {
+        entries.filter { calendar.isDate($0.date, inSameDayAs: day) }.sorted { $0.date > $1.date }
+    }
+
+    public func total(_ figure: DayFigure, on day: Date) -> Double {
+        entries(on: day).reduce(0) { $0 + figure.value(of: $1) }
+    }
+
+    /// The lowest a day's figure can be set to: what its meals account for,
+    /// which only editing those meals can change.
+    public func floor(_ figure: DayFigure, on day: Date) -> Double {
+        entries(on: day).filter { !figure.isQuickEntry($0) }.reduce(0) { $0 + figure.value(of: $1) }
+    }
+
+    /// Makes a day's figure exactly `target`, down to its ``floor(_:on:)``.
+    ///
+    /// Up adds a quick entry at noon that day. Down shrinks that day's quick
+    /// entries of the same figure, latest first, and leaves meals alone.
+    public func setTotal(_ figure: DayFigure, _ target: Double, on day: Date) {
+        reload()
+        let target = max(floor(figure, on: day), target)
+        let current = total(figure, on: day)
+        let noon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
+
+        if target > current {
+            var remaining = target - current
+            while remaining > 0.05 {
+                switch figure {
+                case .protein:
+                    let grams = min(remaining, 1000)
+                    guard let entry = try? IntakeEntry(date: noon, proteinG: grams) else { return }
+                    entries.append(entry)
+                    remaining -= grams
+                case .calories:
+                    guard let entry = try? IntakeEntry(date: noon, enteredCalories: remaining) else { return }
+                    entries.append(entry)
+                    remaining = 0
+                }
+            }
+        } else {
+            var excess = current - target
+            for entry in entries(on: day) where figure.isQuickEntry(entry) && excess > 0.05 {
+                let value = figure.value(of: entry)
+                if value <= excess + 0.001 {
+                    entries.removeAll { $0.id == entry.id }
+                    excess -= value
+                } else if let index = entries.firstIndex(where: { $0.id == entry.id }) {
+                    switch figure {
+                    case .protein: entries[index].proteinG -= excess
+                    case .calories: entries[index].enteredCalories = value - excess
+                    }
+                    excess = 0
+                }
+            }
+        }
+        entries.sort { $0.date > $1.date }
+        persistEntries()
+    }
+
     public func update(_ entry: IntakeEntry) {
         reload()
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }

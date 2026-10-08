@@ -2,19 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIBackgroundModes</key>
-	<array>
-		<!-- So the rest timer can sound its own chime with the phone locked.
-		     See `RestChime` for why the notification alone is not enough:
-		     notification sounds obey the ring switch, and a chime that goes
-		     silent exactly when the phone is in a pocket is a chime nobody
-		     can rely on. -->
-		<string>audio</string>
-	</array>
-	<key>NSCameraUsageDescription</key>
-	<string>To read the macros off a photograph of your food. The picture is read on this device and is not sent anywhere.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>To read the macros off a photograph you have already taken. The picture is read on this device and is not sent anywhere.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -25,6 +12,16 @@
 				<string>senku</string>
 			</array>
 		</dict>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>To read the macros off a photograph of your food. The picture is read on this device and is not sent anywhere.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>To save the water, food, weight and workouts you log in Senku to Apple Health. Senku only writes; it never reads your Health data.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>To read the macros off a photograph you have already taken. The picture is read on this device and is not sent anywhere.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
 	</array>
 </dict>
 </plist>

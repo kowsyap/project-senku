@@ -50,7 +50,7 @@ public struct WaterView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { isShowingSettings = true } label: {
-                    StackedActionLabel("Settings", symbol: "gearshape")
+                    StackedActionLabel("Adjust", symbol: "slider.horizontal.3")
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -370,7 +370,16 @@ public struct WaterView: View {
                 detail: "Days you hit the target",
                 symbol: "drop.fill",
                 tint: Senku.Palette.deficit,
-                days: metWaterDays()
+                days: metWaterDays(),
+                backfill: .amount(
+                    unit: "ml",
+                    // Your smallest container: the step a glass is.
+                    step: store.settings.containers.map(\.millilitres).min() ?? 250,
+                    total: { store.total(on: $0) },
+                    // Every drink can be taken back, so a day can go to zero.
+                    floor: { _ in 0 },
+                    set: { ml, day in store.setTotal(ml, on: day) }
+                )
             )
         ]
 
@@ -382,7 +391,11 @@ public struct WaterView: View {
                     detail: "Days you took it",
                     symbol: "pills.fill",
                     tint: Senku.Palette.surplus,
-                    days: store.creatineDays
+                    days: store.creatineDays,
+                    backfill: .taken(
+                        isTaken: { day in store.tookCreatine(on: day) },
+                        set: { taken, day in store.setCreatine(taken, on: day) }
+                    )
                 )
             )
         }

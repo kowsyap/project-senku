@@ -65,10 +65,13 @@ struct PlateCalculatorView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { isEditingRack = true } label: {
-                    StackedActionLabel("Rack", symbol: "gearshape")
+                    StackedActionLabel("Rack", symbol: "slider.horizontal.3")
                 }
             }
         }
+        // The rack can be edited from Settings too, on its own copy of the
+        // store; read it fresh each time this opens.
+        .onAppear { plates.reload() }
         .sheet(isPresented: $isEditingRack) {
             PlateRackEditor(plates: plates, unitSystem: unit) { isEditingRack = false }
         }

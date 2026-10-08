@@ -193,6 +193,8 @@ public struct PlanSetupView: View {
 
             targetSection
 
+            RestAfterSetSection()
+
             Section {
                 Button {
                     isSwitching = true

@@ -79,10 +79,11 @@ struct WorkoutSessionView: View {
                 }
             }
         }
-        .confirmationDialog(
+        // An alert, like the app's other "are you sure" questions — a dialog
+        // sliding up from the button reads as a menu of choices.
+        .alert(
             "Finish this workout?",
-            isPresented: $isConfirmingFinish,
-            titleVisibility: .visible
+            isPresented: $isConfirmingFinish
         ) {
             Button("Finish") {
                 if let done = workouts.finish() { onFinish(done) }
@@ -113,6 +114,12 @@ struct WorkoutSessionView: View {
     private var progressSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
+                // How long you have been at it, at the head of the card: the
+                // one figure on this screen that changes while you rest.
+                SessionClock(since: live.date)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 4)
+
                 HStack {
                     ForEach(live.groups) { group in
                         GroupGlyph(group: group, size: 24)
@@ -415,6 +422,46 @@ struct WorkoutSessionView: View {
     }
 }
 
+/// Time since the session began — since the split day was chosen — as
+/// hours, minutes and seconds.
+///
+/// Minutes and seconds for the first hour, hours added from then on. Digits
+/// of equal width, so the seconds tick without the rest shuffling sideways.
+///
+/// Stops at three hours, in red. Past that it is almost certainly not a
+/// session any more but one nobody finished — the same mark the Apple Health
+/// card questions a duration at — and a clock climbing on into the evening
+/// would only be counting the time since you went home.
+private struct SessionClock: View {
+    let since: Date
+
+    private static let limit = WorkoutEnergy.longest
+
+    var body: some View {
+        TimelineView(.periodic(from: since, by: 1)) { context in
+            let elapsed = max(0, context.date.timeIntervalSince(since))
+            let isOver = elapsed >= Self.limit
+            let shown = min(elapsed, Self.limit)
+
+            HStack(spacing: 8) {
+                Image(systemName: "stopwatch")
+                    .font(.title3)
+                    .foregroundStyle(isOver ? Senku.Palette.warning : .secondary)
+                Text(Duration.seconds(shown.rounded(.down)).formatted(.time(
+                    pattern: shown >= 3600 ? .hourMinuteSecond : .minuteSecond
+                )))
+                    .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(isOver ? Senku.Palette.warning : .primary)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(isOver
+                ? "At the gym for over 3 hours"
+                : "At the gym for \(Duration.seconds(elapsed).formatted(.units(allowed: [.hours, .minutes], width: .wide)))")
+        }
+    }
+}
+
 /// Logging sets for one exercise.
 ///
 /// Opens on the weight and reps you used last time. That is not a convenience —
@@ -648,6 +695,15 @@ private struct SetLogger: View {
 
         Feedback.control()
         newRecord = workouts.log(set, for: exerciseID, records: records)
+        #if os(iOS)
+        // The set is done, so the rest begins: the Rest tab's own timer, at
+        // the length set in Settings, counting on the lock screen while you
+        // stay here. Logging the next set starts it again from that set.
+        let restAfterSet = RestAfterSet.load()
+        if restAfterSet.isOn {
+            RestTimerStore.start(seconds: restAfterSet.seconds)
+        }
+        #endif
     }
 }
 
@@ -669,10 +725,37 @@ struct WorkoutSummaryView: View {
     }
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.senkuBodyWeightKG) private var weightKG
 
     let session: WorkoutSession
     @Bindable var library: ExerciseLibrary
     let unitSystem: UnitSystem
+
+    #if os(iOS)
+    /// What Done will send to Apple Health — only on the summary that follows
+    /// finishing, with Workouts switched on and the session not already sent.
+    /// Reopening an old session from history sends nothing: looking at it is
+    /// not a decision to put it in Health.
+    @State private var healthDraft: HealthWorkoutDraft?
+    #endif
+
+    init(
+        session: WorkoutSession,
+        library: ExerciseLibrary,
+        unitSystem: UnitSystem,
+        sendsToHealthOnDone: Bool = false
+    ) {
+        self.session = session
+        self.library = library
+        self.unitSystem = unitSystem
+        #if os(iOS)
+        let health = HealthSync.shared
+        if sendsToHealthOnDone, health.settings.isOn(.workouts), !health.hasWritten(session),
+           let window = WorkoutEnergy.window(for: session) {
+            _healthDraft = State(initialValue: HealthWorkoutDraft(session: session, window: window))
+        }
+        #endif
+    }
 
     private var performed: [Exercise] {
         session.performedExerciseIDs.compactMap { library.exercise($0) }
@@ -689,6 +772,12 @@ struct WorkoutSummaryView: View {
             } header: {
                 Text(session.date.formatted(date: .complete, time: .omitted))
             }
+
+            #if os(iOS)
+            if let healthDraft {
+                HealthWorkoutSection(draft: healthDraft, unitSystem: unitSystem)
+            }
+            #endif
 
             Section {
                 // Scored on what was performed, not what was planned — a
@@ -729,9 +818,138 @@ struct WorkoutSummaryView: View {
         #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
+                // Done is the confirmation: it sends what the Apple Health
+                // card shows. Swiping the sheet away is the way to skip.
+                Button("Done") {
+                    #if os(iOS)
+                    healthDraft?.send(weightKG: weightKG)
+                    #endif
+                    dismiss()
+                }
             }
         }
+    }
+}
+
+#if os(iOS)
+/// A finished session as it will go to Apple Health: when it started, how long
+/// it ran, and how hard. Held by the summary, so its Done can send what the
+/// card shows.
+///
+/// Light by default every time. It is the safer guess — a session with rests
+/// between sets is nearer the Compendium's light figure, and overstating what
+/// was burned invites eating it back — so Vigorous is a choice made for the
+/// session in front of you, not a setting that quietly carries over.
+@MainActor
+@Observable
+final class HealthWorkoutDraft {
+    let session: WorkoutSession
+    let start: Date
+    var minutes: Int
+    var effort: WorkoutEnergy.Effort = .light
+
+    init(session: WorkoutSession, window: (start: Date, duration: TimeInterval, basis: WorkoutEnergy.DurationBasis)) {
+        self.session = session
+        self.start = window.start
+        self.minutes = max(1, Int((window.duration / 60).rounded()))
+    }
+
+    var duration: TimeInterval { TimeInterval(minutes) * 60 }
+
+    func kilocalories(weightKG: Double?) -> Double {
+        WorkoutEnergy.activeKilocalories(effort: effort, weightKG: weightKG ?? 0, duration: duration)
+    }
+
+    /// Under five minutes is not the session, so it is not sent.
+    var canSend: Bool { WorkoutEnergy.check(duration) != .tooShort }
+
+    /// Hands the session to the sync, which carries on after the summary has
+    /// closed.
+    func send(weightKG: Double?) {
+        guard canSend else { return }
+        let session = session, start = start, duration = duration
+        let kilocalories = kilocalories(weightKG: weightKG)
+        Task {
+            await HealthSync.shared.write(session, start: start, duration: duration, kilocalories: kilocalories)
+        }
+    }
+}
+
+/// What the summary's Done will send to Apple Health, laid out first.
+///
+/// The duration is first logged set to last — or the session's clock, when the
+/// sets were logged too close together to say — so it is shown, checked and
+/// editable; and the effort is the one part no clock can know.
+private struct HealthWorkoutSection: View {
+    @Bindable var draft: HealthWorkoutDraft
+    let unitSystem: UnitSystem
+
+    @Environment(\.senkuBodyWeightKG) private var weightKG
+
+    var body: some View {
+        Section {
+            // Light on one side, Vigorous on the other, the switch between
+            // them — two choices read as a sentence rather than a control.
+            HStack(spacing: 12) {
+                Text(WorkoutEnergy.Effort.light.title)
+                    .fontWeight(draft.effort == .light ? .semibold : .regular)
+                    .foregroundStyle(draft.effort == .light ? Color.primary : Color.secondary)
+                Toggle("Vigorous", isOn: Binding(
+                    get: { draft.effort == .vigorous },
+                    set: { draft.effort = $0 ? .vigorous : .light }
+                ))
+                .labelsHidden()
+                .tint(RootView.Tab.workout.tint)
+                Text(WorkoutEnergy.Effort.vigorous.title)
+                    .fontWeight(draft.effort == .vigorous ? .semibold : .regular)
+                    .foregroundStyle(draft.effort == .vigorous ? Color.primary : Color.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+
+            // The duration and anything wrong with it, as one row.
+            VStack(alignment: .leading, spacing: 4) {
+                Stepper(value: $draft.minutes, in: 1...600, step: 5) {
+                    LabeledContent("Duration", value: "\(draft.minutes) min")
+                }
+                switch WorkoutEnergy.check(draft.duration) {
+                case .tooShort:
+                    Text("Under 5 minutes — set how long you actually trained.")
+                        .font(.footnote)
+                        .foregroundStyle(Senku.Palette.warning)
+                case .unusuallyLong:
+                    Text("Over 3 hours — check this is the session, not when finish was tapped.")
+                        .font(.footnote)
+                        .foregroundStyle(Senku.Palette.caution)
+                case .plausible:
+                    EmptyView()
+                }
+            }
+
+            if weightKG != nil {
+                LabeledContent("Energy", value: "≈ \(Int(draft.kilocalories(weightKG: weightKG).rounded())) kcal")
+            } else {
+                Text("Log a weigh-in to estimate the energy. The workout is still sent without it.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Apple Health")
+        }
+    }
+}
+#endif
+
+private struct SenkuBodyWeightKey: EnvironmentKey {
+    static let defaultValue: Double? = nil
+}
+
+extension EnvironmentValues {
+    /// The latest body weight, in kilograms, for estimating a workout's energy.
+    /// Set once at the root; nil until there is a weigh-in or a profile.
+    public var senkuBodyWeightKG: Double? {
+        get { self[SenkuBodyWeightKey.self] }
+        set { self[SenkuBodyWeightKey.self] = newValue }
     }
 }
 

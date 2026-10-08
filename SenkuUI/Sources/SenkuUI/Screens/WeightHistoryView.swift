@@ -66,7 +66,15 @@ struct WeightHistoryView: View {
 
 /// The weight screen's one setting.
 struct WeightSettingsView: View {
-    @Binding var reminding: Bool
+    /// Held here rather than by the weight screen, so the page behaves the
+    /// same opened from the weight screen's gear or from Settings.
+    @State private var reminding: Bool = {
+        #if canImport(UserNotifications) && !os(macOS)
+        WeightReminder.isOn
+        #else
+        false
+        #endif
+    }()
 
     var body: some View {
         Form {
@@ -92,6 +100,20 @@ struct WeightSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .senkuBottomBarInset()
+        #if canImport(UserNotifications) && !os(macOS)
+        .onChange(of: reminding) { _, wanted in
+            Task {
+                if wanted {
+                    // Put back if permission is refused, rather than left on
+                    // and silent — a switch that lies is worse than no switch.
+                    let granted = await WeightReminder.enable()
+                    if !granted { reminding = false }
+                } else {
+                    WeightReminder.disable()
+                }
+            }
+        }
+        #endif
     }
 }
 #endif

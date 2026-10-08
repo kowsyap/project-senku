@@ -9,15 +9,24 @@ import SenkuCore
 /// slider first. Editing is there when you want it, one tap away.
 public struct ProfileDashboardView: View {
     private let profile: ProfileStore.Profile
+    private let weights: WeightLogStore?
+    private let intake: IntakeStore?
+    private let onAdoptMaintenance: ((Double?) -> Void)?
     private let onSave: (ProfileStore.Profile) -> Void
 
     @State private var editingDraft: PlanDraft?
 
     public init(
         profile: ProfileStore.Profile,
+        weights: WeightLogStore? = nil,
+        intake: IntakeStore? = nil,
+        onAdoptMaintenance: ((Double?) -> Void)? = nil,
         onSave: @escaping (ProfileStore.Profile) -> Void
     ) {
         self.profile = profile
+        self.weights = weights
+        self.intake = intake
+        self.onAdoptMaintenance = onAdoptMaintenance
         self.onSave = onSave
     }
 
@@ -25,7 +34,24 @@ public struct ProfileDashboardView: View {
         ScrollView {
             VStack(spacing: Senku.Metrics.stackSpacing) {
                 detailsCard
-                ResultsView(plan: profile.plan, unitSystem: profile.unitSystem)
+                ResultsView(plan: profile.plan, unitSystem: profile.unitSystem, showsAdvisories: false)
+
+                // What the scale says, after the plan it would change.
+                if let weights, let intake, let onAdoptMaintenance {
+                    MaintenanceCard(
+                        profile: profile,
+                        weights: weights,
+                        intake: intake,
+                        unitSystem: profile.unitSystem,
+                        onAdopt: onAdoptMaintenance
+                    )
+                }
+
+                // The notes on the plan, last: read once the numbers are known.
+                ForEach(profile.plan.advisories) { advisory in
+                    AdvisoryBanner(advisory)
+                }
+
                 lastUpdated
             }
             .padding()

@@ -19,18 +19,6 @@ public struct WeightLogView: View {
     @State private var isShowingHistory = false
     @State private var isShowingSettings = false
     #endif
-    /// Declared on every platform, because the settings page binds to it on
-    /// every platform — where there are no notifications to book it simply
-    /// stays false, which is cheaper than a second settings view that differs
-    /// by one row.
-    @State private var isReminding = {
-        #if canImport(UserNotifications) && !os(macOS)
-        WeightReminder.isOn
-        #else
-        false
-        #endif
-    }()
-
     @State private var window: Window = .threeMonths
 
     private let profile: ProfileStore.Profile?
@@ -114,20 +102,6 @@ public struct WeightLogView: View {
             ScrollView { content }
         }
         .background(.background)
-        #if canImport(UserNotifications) && !os(macOS)
-        .onChange(of: isReminding) { _, wanted in
-            Task {
-                if wanted {
-                    // Put back if permission is refused, rather than left on
-                    // and silent — a switch that lies is worse than no switch.
-                    let granted = await WeightReminder.enable()
-                    if !granted { isReminding = false }
-                } else {
-                    WeightReminder.disable()
-                }
-            }
-        }
-        #endif
         .task {
             // The chart begins where the profile does, so the first reading you
             // log is a second point on a line rather than a lone dot.
@@ -144,7 +118,7 @@ public struct WeightLogView: View {
             #if !os(watchOS)
             ToolbarItem(placement: .primaryAction) {
                 Button { isShowingSettings = true } label: {
-                    StackedActionLabel("Settings", symbol: "gearshape")
+                    StackedActionLabel("Adjust", symbol: "slider.horizontal.3")
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -168,7 +142,7 @@ public struct WeightLogView: View {
             WeightHistoryView(store: store, unitSystem: unitSystem)
         }
         .navigationDestination(isPresented: $isShowingSettings) {
-            WeightSettingsView(reminding: $isReminding)
+            WeightSettingsView()
         }
         .senkuPushed(isShowingHistory, isShowingSettings)
         #endif

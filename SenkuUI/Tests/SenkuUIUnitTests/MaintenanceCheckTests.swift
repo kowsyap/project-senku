@@ -23,8 +23,8 @@ import SenkuCore
         )
     }
 
-    /// Weighs every day for a fortnight, losing `weeklyKG` a week.
-    private func weights(weeklyKG: Double, days: Int = 16) throws -> WeightLogStore {
+    /// Weighs every day for three weeks and a day, losing `weeklyKG` a week.
+    private func weights(weeklyKG: Double, days: Int = 22) throws -> WeightLogStore {
         let store = WeightLogStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
         for ago in stride(from: days, through: 0, by: -1) {
             let weight = 84 + weeklyKG / 7 * Double(days - ago)
@@ -33,19 +33,20 @@ import SenkuCore
         return store
     }
 
+    /// Food on the `loggedDays` days before today — today is never counted.
     private func intake(calories: Double, loggedDays: Int) throws -> IntakeStore {
         let store = IntakeStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
-        for ago in 0 ..< loggedDays {
+        for ago in 1 ... max(1, loggedDays) where loggedDays > 0 {
             store.add(try IntakeEntry(date: day(ago), carbsG: calories / 4))
         }
         return store
     }
 
-    @Test func aFortnightOfBothProducesAFinding() throws {
+    @Test func threeWeeksOfBothProducesAFinding() throws {
         let finding = MaintenanceCheck.finding(
             profile: try profile(),
             weights: try weights(weeklyKG: -0.5),
-            intake: try intake(calories: 2600, loggedDays: 14)
+            intake: try intake(calories: 2600, loggedDays: 21)
         )
 
         let result = try #require(finding)
@@ -53,7 +54,7 @@ import SenkuCore
         // so maintenance is around 3,150 — well clear of the ~2,790 this
         // profile's formula predicts, which is what makes it worth saying.
         #expect(abs(result.measured - 3150) < 30)
-        #expect(result.loggedDays == 14)
+        #expect(result.loggedDays == 21)
     }
 
     /// Four days of food is an estimate of what you eat on days you remember
@@ -72,7 +73,7 @@ import SenkuCore
         let finding = MaintenanceCheck.finding(
             profile: try profile(),
             weights: try weights(weeklyKG: -0.5, days: 5),
-            intake: try intake(calories: 2200, loggedDays: 14)
+            intake: try intake(calories: 2200, loggedDays: 21)
         )
 
         #expect(finding == nil)
@@ -82,7 +83,7 @@ import SenkuCore
         let finding = MaintenanceCheck.finding(
             profile: nil,
             weights: try weights(weeklyKG: -0.5),
-            intake: try intake(calories: 2200, loggedDays: 14)
+            intake: try intake(calories: 2200, loggedDays: 21)
         )
 
         #expect(finding == nil)
@@ -97,7 +98,7 @@ import SenkuCore
         let finding = MaintenanceCheck.finding(
             profile: profile,
             weights: try weights(weeklyKG: 0),
-            intake: try intake(calories: formulaMaintenance, loggedDays: 14)
+            intake: try intake(calories: formulaMaintenance, loggedDays: 21)
         )
 
         #expect(finding == nil)
@@ -119,8 +120,45 @@ import SenkuCore
         let againstFormula = MaintenanceCheck.finding(
             profile: profile,
             weights: try weights(weeklyKG: -0.5),
-            intake: try intake(calories: 2600, loggedDays: 14)
+            intake: try intake(calories: 2600, loggedDays: 21)
         )
         #expect(try #require(againstFormula).formula == formula.rounded())
+    }
+
+    /// The bug this window fixed: months of dieting, then three weeks eating
+    /// at the formula's maintenance and holding steady. Only the three weeks
+    /// count, and they agree with the formula — so there is nothing to say.
+    @Test func aDietThatEndedBeforeTheWindowDoesNotCount() throws {
+        let profile = try profile()
+        let store = WeightLogStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
+        for ago in stride(from: 112, through: 23, by: -1) {
+            store.add(try WeighIn(date: day(ago), weightKG: 92 - 0.5 / 7 * Double(112 - ago)))
+        }
+        for ago in stride(from: 22, through: 0, by: -1) {
+            store.add(try WeighIn(date: day(ago), weightKG: 84))
+        }
+
+        let finding = MaintenanceCheck.finding(
+            profile: profile,
+            weights: store,
+            intake: try intake(calories: profile.plan.energy.maintenanceCalories, loggedDays: 21)
+        )
+        #expect(finding == nil)
+    }
+
+    /// Today is still being logged; a breakfast-only day must not drag the
+    /// average down.
+    @Test func todayIsNotCounted() throws {
+        let food = try intake(calories: 2600, loggedDays: 21)
+        let without = try #require(MaintenanceCheck.finding(
+            profile: try profile(), weights: try weights(weeklyKG: -0.5), intake: food
+        ))
+
+        food.add(try IntakeEntry(date: .now, carbsG: 300 / 4))
+        let with = try #require(MaintenanceCheck.finding(
+            profile: try profile(), weights: try weights(weeklyKG: -0.5), intake: food
+        ))
+        #expect(with.measured == without.measured)
+        #expect(with.loggedDays == 21)
     }
 }

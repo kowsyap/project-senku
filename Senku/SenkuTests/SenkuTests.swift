@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import SenkuCore
 @testable import SenkuUI
@@ -15,10 +16,10 @@ struct SenkuBundleTests {
         let catalogue = ExerciseCatalogue.bundled
 
         #expect(!catalogue.exercises.isEmpty)
-        #expect(!catalogue.groups.isEmpty)
+        #expect(!catalogue.workoutGroups.isEmpty)
         // Cardio is a group with one region and no muscles — the shape the
         // coverage maths depends on.
-        #expect(catalogue.groups.contains { !$0.isMuscle })
+        #expect(catalogue.workoutGroups.contains { !$0.isMuscle })
     }
 
     @Test func theAppGroupIsReachable() {

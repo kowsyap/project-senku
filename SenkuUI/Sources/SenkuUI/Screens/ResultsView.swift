@@ -6,7 +6,12 @@ public struct ResultsView: View {
     private let plan: NutritionPlan
     private let unitSystem: UnitSystem
 
-    public init(plan: NutritionPlan, unitSystem: UnitSystem = .metric) {
+    /// False where the caller places the advisories itself — the Me page puts
+    /// them last, after the maintenance figure they sit beside.
+    private let showsAdvisories: Bool
+
+    public init(plan: NutritionPlan, unitSystem: UnitSystem = .metric, showsAdvisories: Bool = true) {
+        self.showsAdvisories = showsAdvisories
         self.plan = plan
         self.unitSystem = unitSystem
     }
@@ -17,7 +22,7 @@ public struct ResultsView: View {
     public var body: some View {
         VStack(spacing: Senku.Metrics.stackSpacing) {
             targetCard
-            if !plan.advisories.isEmpty {
+            if showsAdvisories, !plan.advisories.isEmpty {
                 advisoriesCard
             }
             energyCard

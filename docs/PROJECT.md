@@ -26,7 +26,7 @@ measured inputs are kept distinct from estimated ones.
 | Social features, feeds, sharing | Single-user application by design |
 | A food database | Licensed data; quick-adds cover recurring items |
 | Cloud sync | Export and import cover backup and transfer |
-| HealthKit integration | Single source of truth for body weight |
+| Reading from HealthKit | Senku is the source of record: it writes to Apple Health (F7) and never reads back |
 | Coaching or automatic plan changes | Every adjustment is user-confirmed |
 
 ## Principles

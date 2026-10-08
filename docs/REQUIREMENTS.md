@@ -98,8 +98,12 @@ Current budget: 12 water slots, 1 weigh-in, 1 creatine, 1 rest — 15 at worst.
 - **S5-R4** A screen that performs work on appearing must not do so while it is
   mounted but not visible.
 - **S5-R5** Settings that belong to no single screen live on one Settings page
-  under More — the navbar editor today, Apple Health once F7 exists. Settings
-  tied to a screen stay behind that screen's own gear.
+  under More — the navbar editor and Apple Health. Settings tied to a screen
+  stay behind that screen's own button — Adjust, with the sliders icon (Week
+  on Workout, Rack on the plate calculator) — and the Settings page links to
+  each of those pages (Workout, Weight, Water, Food, Plates) rather than holding a
+  second copy. The rest that follows a logged set is a Workout setting, on the
+  Week page.
 
 ---
 
@@ -129,10 +133,11 @@ WeighIn
   another.
 - **F1-R4** The profile weight never changes without explicit user action.
   Adopting the trend is an offered, single-purpose edit.
-- **F1-R5** Adaptive maintenance becomes available only when all of the
-  following hold: at least 8 weigh-ins across 14 days, food logged on at least
-  10 of the last 14 days, and a difference of at least 100 kcal from the
-  formula plan.
+- **F1-R5** Adaptive maintenance reads food and weight over the same window:
+  the 21 full days ending yesterday. It becomes available only when all of the
+  following hold within it: at least 8 weigh-ins spanning at least 14 days,
+  food logged on at least 15 of the 21 days, and a difference of at least
+  100 kcal from the formula plan.
 - **F1-R6** Adaptive maintenance shows its arithmetic — observed change, the
   7,700 kcal/kg assumption, the implied daily delta — and applies only on
   acceptance.
@@ -353,7 +358,8 @@ WaterSettings { containers, goalOverrideML?, takesCreatine, reminder settings }
 
 ### Acceptance
 
-- [x] A past day can be marked "never logged" but not filled in
+- [x] A past day can be corrected from the streak screen: water's total set by
+      amount or container, creatine marked taken or not
 - [x] Reminders stop once the goal is met and are restored on foreground —
       `WaterReminders.refresh`, `RootView.restoreWaterReminders()`
 - [x] Pending requests stay within the S2-R1 budget: 15 at worst
@@ -399,8 +405,10 @@ FoodFavourite { id, name, macros }
 - [x] A day with no entries reads as "nothing logged" — `IntakeStoreTests`
 - [x] Tomorrow cannot be logged
 - [x] A meal logged on the watch reaches the phone
-- [ ] A past day can be corrected — open, M9. A day can currently be marked
-      "never logged" so a streak survives, but a wrong figure cannot be edited
+- [x] A past day's protein, calories, water and creatine can be set from the
+      streak screen: the day's total is shown, edited or added to, and saved
+      only on OK. Lowering trims quick entries and the latest drinks, never a
+      meal — `BackfillTests`. Editing a past meal itself is still open, M9
 
 ---
 
@@ -456,11 +464,15 @@ back.
   body fat when entered rather than estimated; height when changed.
 - **F7-R3** Energy is one figure per entry — the packet's if typed, otherwise
   the macros' — never both.
-- **F7-R4** A finished session is written as a strength workout from start to
-  finish, with active energy estimated as `(MET − 1) × weight × hours`. MET is
-  chosen on the finish screen (light 3.5, vigorous 6.0, Compendium of Physical
-  Activities), the duration can be corrected there, and nothing is written
-  without confirmation.
+- **F7-R4** A finished session is written as a strength workout, timed from
+  its first logged set to its last — or start to finish when the sets were
+  logged within 5 minutes of each other — with active energy estimated as
+  `(MET − 1) × weight × hours`. Effort is Light (3.5) by default every time, or
+  Vigorous (6.0), from the Compendium of Physical Activities; the figure is
+  marked as an estimate (≈), and the duration can be corrected. It is written when
+  the summary that follows finishing is closed with Done; swiping it away, a
+  duration under 5 minutes, or reopening a session from history writes
+  nothing.
 - **F7-R5** Editing or deleting an entry replaces or removes its Health sample.
 - **F7-R6** Never written: restored backups, sample data, BMI, lean or fat mass,
   estimated body fat, sets, reps and records.
@@ -470,13 +482,16 @@ back.
 
 ### Acceptance
 
-- [ ] A sideloaded build writes a water sample and the permission prompt
-      appears — open, F7
-- [ ] Water, food and body samples appear in Health and follow edits and
-      deletions — open, F7
+- [x] A build installed on a free Apple ID writes a water sample and the
+      permission prompt appears — verified on device, 2026-10-07
+- [ ] The same through a SideStore install — open, F7; the `.ipa` must carry
+      its entitlements first
+- [x] Water, food and body are worked out as new, edited or removed before
+      anything is sent — `HealthSyncPlanTests`
+- [x] Food and body samples appear in Health — verified on device, 2026-10-07
 - [ ] A finished session writes one workout with its estimated energy, only
       after confirmation — open, F7
-- [ ] PROJECT.md's HealthKit non-goal reads "write-only; never reads" — open, F7
+- [x] PROJECT.md's HealthKit non-goal reads "write-only; never reads"
 
 ---
 
@@ -485,7 +500,7 @@ back.
 | Criterion | Feature | Tracked as |
 | --- | --- | --- |
 | Reminder suppressed on a day already logged | F1 | M9 |
-| A past day can be corrected | F5 | M9 |
+| A past entry can be edited | F4, F5 | M9 |
 | Every F7 acceptance criterion | F7 | M10 |
 
 ---

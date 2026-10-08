@@ -54,8 +54,8 @@ cannot explain where a number came from, it does not show it.**
   minimum; protein, carbs, fat, fibre and water; BMI, lean and fat mass, healthy
   weight range; projected weekly change and time to target. Advisories whenever
   the plan deserves a caveat.
-- **Adaptive maintenance** — after 14 days with enough weigh-ins and enough
-  logged food, the app compares what you ate against what the scale did and
+- **Adaptive maintenance** — after three weeks with enough weigh-ins and
+  enough logged food, the app compares what you ate against what the scale did and
   offers the maintenance figure *that* implies. It is a button you press, never
   a target that changes behind your back.
 
@@ -201,7 +201,7 @@ its own streak.
 
 Weigh in, and the weight page fits a trend line and tells you the rate per week
 it implies — not the difference between two mornings, which is mostly water.
-After a fortnight it offers you the maintenance figure your own data supports.
+After three weeks it offers you the maintenance figure your own data supports.
 
 <img src="docs/screenshots/more.png" width="260" align="right" alt="The More screen">
 

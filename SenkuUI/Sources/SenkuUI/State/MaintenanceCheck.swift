@@ -13,12 +13,26 @@ import SenkuCore
 /// believed regardless of the small print beside it, so the honest thing is to
 /// show nothing until the data can carry it.
 ///
+/// ## One window for both
+///
+/// Food and weight are read over the same days: the last three weeks, ending
+/// yesterday. The weight trend once came from every weigh-in ever logged while
+/// the food came from the last fortnight — so three months of dieting followed
+/// by two weeks at maintenance read as two weeks of eating that somehow still
+/// lost weight, and offered a maintenance figure far too high. And today is
+/// left out because it is not over: at ten in the morning it is a day of
+/// breakfast, and counting it drags the average down.
+///
+/// Three weeks rather than two: long enough that one salty meal or a day of
+/// water does not swing the trend, short enough to follow a change of diet
+/// within the month.
+///
 /// Three conditions, all of which have to hold:
 ///
-/// - **A fortnight of weight**, at least 8 readings across at least 14 days.
-///   That is `AdaptiveMaintenance`'s own threshold, and it exists because a
-///   shorter window is dominated by water rather than by tissue.
-/// - **Food logged on most of those days** — 10 of the last 14. An average over
+/// - **Weight across the window**, at least 8 readings spanning at least 14
+///   days of it. That is `AdaptiveMaintenance`'s own threshold, and it exists
+///   because a shorter stretch is dominated by water rather than by tissue.
+/// - **Food logged on most of those days** — 15 of the 21. An average over
 ///   four days is not an estimate of what you eat, it is an estimate of what
 ///   you eat on days you remember to open an app, and those are not the same
 ///   thing.
@@ -28,9 +42,10 @@ import SenkuCore
 ///   looking responsive while telling you nothing.
 @MainActor
 public enum MaintenanceCheck {
-    /// Days of food logging required, out of the last fortnight.
-    public static let requiredLoggedDays = 10
-    public static let window = 14
+    /// The days measured: this many full days, ending yesterday.
+    public static let window = 21
+    /// Days of food logging required within them — about seventy per cent.
+    public static let requiredLoggedDays = 15
 
     /// What the screens need to draw the card, or nil when it is too early.
     public struct Finding: Sendable {
@@ -63,10 +78,19 @@ public enum MaintenanceCheck {
             formula: profile.formula
         )
 
-        guard let average = intake.log.averageCalories(days: window, endingOn: date),
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: date)
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today),
+              let firstDay = calendar.date(byAdding: .day, value: -window, to: today)
+        else { return nil }
+        // Weigh-ins from the same days the food is averaged over, and none
+        // from today.
+        let recent = WeightSeries(weights.weighIns.filter { $0.date >= firstDay && $0.date < today })
+
+        guard let average = intake.log.averageCalories(days: window, endingOn: yesterday),
               average.loggedDays >= requiredLoggedDays,
               let estimate = AdaptiveMaintenance.estimate(
-                  from: weights.series,
+                  from: recent,
                   intakeCalories: average.calories,
                   plan: formulaPlan
               ),
