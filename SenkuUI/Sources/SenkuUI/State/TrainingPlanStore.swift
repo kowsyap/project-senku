@@ -77,6 +77,7 @@ public final class TrainingPlanStore {
     public func remove(exercise id: String, from dayID: UUID) {
         guard let index = plan.days.firstIndex(where: { $0.id == dayID }) else { return }
         plan.days[index].exerciseIDs.removeAll { $0 == id }
+        plan.days[index].targets[id] = nil
         persist()
     }
 
@@ -84,6 +85,7 @@ public final class TrainingPlanStore {
         var changed = false
         for index in plan.days.indices where plan.days[index].exerciseIDs.contains(id) {
             plan.days[index].exerciseIDs.removeAll { $0 == id }
+            plan.days[index].targets[id] = nil
             changed = true
         }
         guard changed else { return }

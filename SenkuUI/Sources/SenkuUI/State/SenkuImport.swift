@@ -482,29 +482,7 @@ public enum SenkuImporter {
             }
         }
 
-        for entry in document.customExercises ?? [] {
-            let regions = entry.regionIDs.compactMap { library.catalogue.region($0) }
-            guard !regions.isEmpty else {
-                summary.problems.append("“\(entry.name)”: no muscle in \(entry.regionIDs.joined(separator: ", ")).")
-                continue
-            }
-            guard !library.all.contains(where: { $0.name.lowercased() == entry.name.lowercased() }) else {
-                summary.exercisesSkipped += 1
-                continue
-            }
-            guard let exercise = Exercise.custom(
-                name: entry.name,
-                equipment: Equipment(entry.equipment),
-                regions: regions,
-                isTimed: entry.isTimed ?? false
-            ) else {
-                summary.problems.append("“\(entry.name)”: could not be built.")
-                continue
-            }
-
-            library.add(exercise)
-            summary.exercisesAdded += 1
-        }
+        importCustomExercises(document, into: library, summary: &summary)
 
         for entry in document.records ?? [] {
             // Against the library rather than the catalogue, so a record can
@@ -540,17 +518,7 @@ public enum SenkuImporter {
             }
         }
 
-        if let plan = document.plan, !plan.days.isEmpty {
-            // Replaced, not merged. Two plans interleaved is not a plan, and a
-            // file carrying one was written by the exporter, which means the
-            // intent was "make this device look like that one".
-            for day in plans.days { plans.delete(day) }
-            for day in plan.days { plans.add(day) }
-            // The target travels with the plan. Copying the days alone put
-            // every restore back on 3×10, whatever it had been set to.
-            plans.setTarget(plan.target)
-            summary.planReplaced = true
-        }
+        importPlan(document, library: library, plans: plans, summary: &summary)
 
         for session in document.workouts ?? [] {
             guard !workouts.contains(session.id) else {
@@ -645,5 +613,117 @@ public enum SenkuImporter {
         }
 
         return summary
+    }
+
+    /// Only the plan, and the custom exercises it may name — what "Import a
+    /// plan" on the Week page brings in, whatever else the file carries.
+    public static func applyPlan(
+        _ document: SenkuImportDocument,
+        library: ExerciseLibrary,
+        plans: TrainingPlanStore
+    ) -> ImportSummary {
+        var summary = ImportSummary()
+        importCustomExercises(document, into: library, summary: &summary)
+        importPlan(document, library: library, plans: plans, summary: &summary)
+        return summary
+    }
+
+    /// Before the plan, so the plan can name them.
+    private static func importCustomExercises(
+        _ document: SenkuImportDocument,
+        into library: ExerciseLibrary,
+        summary: inout ImportSummary
+    ) {
+        for entry in document.customExercises ?? [] {
+            let regions = entry.regionIDs.compactMap { library.catalogue.region($0) }
+            guard !regions.isEmpty else {
+                summary.problems.append("“\(entry.name)”: no muscle in \(entry.regionIDs.joined(separator: ", ")).")
+                continue
+            }
+            guard !library.all.contains(where: { $0.name.lowercased() == entry.name.lowercased() }) else {
+                summary.exercisesSkipped += 1
+                continue
+            }
+            guard let exercise = Exercise.custom(
+                name: entry.name,
+                equipment: Equipment(entry.equipment),
+                regions: regions,
+                isTimed: entry.isTimed ?? false
+            ) else {
+                summary.problems.append("“\(entry.name)”: could not be built.")
+                continue
+            }
+
+            library.add(exercise)
+            summary.exercisesAdded += 1
+        }
+    }
+
+    private static func importPlan(
+        _ document: SenkuImportDocument,
+        library: ExerciseLibrary,
+        plans: TrainingPlanStore,
+        summary: inout ImportSummary
+    ) {
+        if let plan = document.plan, !plan.days.isEmpty {
+            // Replaced, not merged. Two plans interleaved is not a plan, and a
+            // file carrying one means "this is my week now" — whether the
+            // exporter wrote it or a person did.
+            let days = plan.days.map { resolve($0, in: library, problems: &summary.problems) }
+            for day in plans.days { plans.delete(day) }
+            for day in days { plans.add(day) }
+            // The target travels with the plan. Copying the days alone put
+            // every restore back on 3×10, whatever it had been set to.
+            plans.setTarget(plan.target)
+            summary.planReplaced = true
+        }
+    }
+
+    /// A day as the app stores it, from a day as a file says it.
+    ///
+    /// An exported day comes back unchanged: its exercises are ids and its
+    /// groups are the app's own. A day written by hand — or by a tool reading
+    /// someone's spreadsheet — can name exercises the way people do, "Bench
+    /// Press", "RDL", or a custom exercise added earlier in the same file, and
+    /// groups as "Biceps" or "shoulders". What cannot be matched is named in
+    /// `problems` and left out, rather than costing the rest of the day.
+    ///
+    /// Groups left out are taken from the exercises, in the order they come.
+    static func resolve(
+        _ day: SplitDay,
+        in library: ExerciseLibrary,
+        problems: inout [String]
+    ) -> SplitDay {
+        var exerciseIDs: [String] = []
+        var targets: [String: RepTarget] = [:]
+        for reference in day.exerciseIDs {
+            switch library.exercise(named: reference) {
+            case .found(let exercise):
+                if !exerciseIDs.contains(exercise.id) { exerciseIDs.append(exercise.id) }
+                // Written against the name the file used; kept against the id.
+                if let target = day.targets[reference] { targets[exercise.id] = target }
+            case .missing:
+                problems.append("\(day.name): no exercise called “\(reference)”.")
+            case .ambiguous(let names):
+                problems.append("\(day.name): “\(reference)” could be \(names.joined(separator: " or ")).")
+            }
+        }
+
+        var groups: [WorkoutGroup] = []
+        for written in day.groups {
+            guard let group = WorkoutGroup.named(written.rawValue, among: library.catalogue.workoutGroups) else {
+                problems.append("\(day.name): no muscle group called “\(written.rawValue)”.")
+                continue
+            }
+            if !groups.contains(group) { groups.append(group) }
+        }
+        if groups.isEmpty {
+            for id in exerciseIDs {
+                guard let group = library.exercise(id)?.workoutGroup, !groups.contains(group) else { continue }
+                groups.append(group)
+            }
+        }
+
+        return SplitDay(id: day.id, name: day.name, groups: groups, exerciseIDs: exerciseIDs, targets: targets)
     }
 }

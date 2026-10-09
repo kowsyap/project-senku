@@ -128,4 +128,100 @@ import SenkuCore
         #expect(abs(drawn.minX) < 0.001 && abs(drawn.minY) < 0.001)
         #expect(abs(drawn.maxX - 50) < 0.001 && abs(drawn.maxY - 100) < 0.001)
     }
+
+    // MARK: - Highlighting
+
+    private func part(_ id: String) throws -> BodyMapPart {
+        try #require((BodyMapPart.front + BodyMapPart.back).first { $0.id == id })
+    }
+
+    /// The parts are finer than the picker's areas, from the same drawing:
+    /// every one has to exist in both bodies, and be more than nothing.
+    @Test(arguments: Sex.allCases)
+    func everyPartIsDrawn(for sex: Sex) throws {
+        let art = try #require(art)
+        for side in BodySide.allCases {
+            let drawn = art.side(side, for: sex)
+            for part in BodyMapPart.parts(on: side) {
+                for slug in part.slugs {
+                    #expect(drawn.parts[slug] != nil, "\(sex) \(part.id): no slug \(slug)")
+                }
+                #expect(!part.path(in: drawn).isEmpty, "\(sex) \(part.id) draws nothing")
+            }
+        }
+    }
+
+    /// Every muscle region the catalogue scores has a part of its own or
+    /// shares one — nothing an exercise trains is left off the body.
+    @Test func everyRegionHasAPart() {
+        let mapped = Set((BodyMapPart.front + BodyMapPart.back).flatMap(\.regionIDs))
+        for region in ExerciseCatalogue.bundled.muscleRegions where region.workoutGroup.isMuscle {
+            #expect(mapped.contains(region.id), "\(region.id) has no part")
+        }
+    }
+
+    /// The chest's heads sit where the muscle has them: the clavicular along
+    /// the top, the abdominal along the bottom, the sternocostal between —
+    /// on both sides, mirrored, for both bodies.
+    @Test(arguments: Sex.allCases)
+    func theChestHeadsSitWhereTheMuscleHasThem(for sex: Sex) throws {
+        let drawn = try #require(art).side(.front, for: sex)
+        let chest = try #require(drawn.parts["chest"]).boundingRect
+        let upper = try part("front.chest.upper").path(in: drawn).boundingRect
+        let mid = try part("front.chest.mid").path(in: drawn).boundingRect
+        let lower = try part("front.chest.lower").path(in: drawn).boundingRect
+
+        #expect(abs(upper.minY - chest.minY) < 2)     // reaches the top
+        #expect(abs(lower.maxY - chest.maxY) < 2)     // reaches the bottom
+        #expect(upper.midY < mid.midY && mid.midY < lower.midY)
+        // Both pieces carry each head, so each spans both sides of the body.
+        for head in [upper, mid, lower] {
+            #expect(head.minX < drawn.frame.midX && head.maxX > drawn.frame.midX)
+        }
+    }
+
+    /// The point of the heads: an incline press and a decline press light
+    /// different parts of the chest.
+    @Test func inclineAndDeclineLightDifferentBands() throws {
+        let catalogue = ExerciseCatalogue.bundled
+        let incline = try #require(catalogue.exercises.first { $0.name == "Incline Barbell Bench Press" })
+        let decline = try #require(catalogue.exercises.first { $0.name == "Decline Barbell Bench Press" })
+        let upper = try part("front.chest.upper")
+        let lower = try part("front.chest.lower")
+        #expect((upper.share(of: incline.contributions) ?? 0) > (upper.share(of: decline.contributions) ?? 0))
+        #expect((lower.share(of: decline.contributions) ?? 0) > (lower.share(of: incline.contributions) ?? 0))
+    }
+
+    @Test func aPartTakesItsHardestWorkedRegion() throws {
+        let bench = try #require(ExerciseCatalogue.bundled.exercise("catalogue.bench.flat"))
+        #expect(try part("front.chest.mid").share(of: bench.contributions) == 1.0)
+        #expect(try part("back.triceps.lateral").share(of: bench.contributions) == 0.4)
+        #expect(try part("back.lats").share(of: bench.contributions) == nil)
+    }
+
+    /// A bench press lends the triceps 40% — not enough on its own to call
+    /// them trained; two pressing movements are.
+    @Test func trainedMeansHalfAnExercisesWorth() throws {
+        let bench = try #require(ExerciseCatalogue.bundled.exercise("catalogue.bench.flat"))
+        let planned: Set<WorkoutGroup> = [.chest, .tricep]
+
+        let one = BodyMapPart.coverage(of: [bench])
+        #expect(try part("front.chest.mid").state(coverage: one, plannedGroups: planned) == .trained)
+        #expect(try part("back.triceps.lateral").state(coverage: one, plannedGroups: planned) == .missed)
+
+        let two = BodyMapPart.coverage(of: [bench, bench])
+        #expect(try part("back.triceps.lateral").state(coverage: two, plannedGroups: planned) == .trained)
+    }
+
+    /// Red is for the day's own groups; a muscle nobody planned stays grey.
+    @Test func onlyPlannedGroupsShowAsMissed() throws {
+        let nothing = BodyMapPart.coverage(of: [])
+        #expect(try part("front.quads").state(coverage: nothing, plannedGroups: [.chest]) == nil)
+        #expect(try part("front.chest.upper").state(coverage: nothing, plannedGroups: [.chest]) == .missed)
+    }
+
+    @Test func coverageIsCappedAtWhole() throws {
+        let bench = try #require(ExerciseCatalogue.bundled.exercise("catalogue.bench.flat"))
+        #expect(BodyMapPart.coverage(of: [bench, bench, bench])["chest.mid"] == 1)
+    }
 }

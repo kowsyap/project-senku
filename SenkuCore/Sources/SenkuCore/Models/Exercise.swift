@@ -38,6 +38,20 @@ public struct WorkoutGroup: RawRepresentable, Hashable, Codable, Sendable, Ident
     /// Whether this is a muscle group at all.
     public var isMuscle: Bool { self != .cardio }
 
+    /// The group a person means by a word: "chest", "Biceps", "shoulders".
+    ///
+    /// For a plan written by hand, where nobody knows the group is stored as
+    /// the singular "bicep". Case, spacing and a plural `s` either way are
+    /// forgiven; anything else is not a group.
+    public static func named(_ word: String, among groups: [WorkoutGroup]) -> WorkoutGroup? {
+        let key = Exercise.searchKey(word)
+        guard !key.isEmpty else { return nil }
+        return groups.first { group in
+            let raw = Exercise.searchKey(group.rawValue)
+            return raw == key || raw + "s" == key || raw == key + "s"
+        }
+    }
+
     /// "Upper chest" from "chest.upper" — for a heading, when the catalogue has
     /// no prettier name to offer.
     public var title: String {
@@ -196,12 +210,30 @@ public struct Exercise: Hashable, Codable, Sendable, Identifiable {
         return aliases.first { Self.key(Self.searchKey($0), contains: needle) }
     }
 
+    /// Whether this exercise goes by `reference` — its id, its name or one of
+    /// its other names, whole rather than in part.
+    ///
+    /// Stricter than ``matches(_:)``, which is a search and happy to find
+    /// "curl" in every curl. A plan says one exercise, and a match on part of
+    /// a name would put the wrong one in it.
+    public func isNamed(_ reference: String) -> Bool {
+        if reference == id { return true }
+        let key = Self.searchKey(reference)
+        guard !key.isEmpty else { return false }
+        return ([name] + aliases).contains { Self.same(Self.searchKey($0), key) }
+    }
+
+    /// Equal, forgiving a plural on either side.
+    private static func same(_ lhs: String, _ rhs: String) -> Bool {
+        lhs == rhs || lhs + "s" == rhs || lhs == rhs + "s"
+    }
+
     /// Letters and digits only, lowercased and without accents.
     ///
     /// Spacing and hyphens are how the same word gets written three ways —
     /// "pull-up", "pull up", "pullup" — and a search that cared would fail the
     /// person who typed the one the catalogue did not.
-    static func searchKey(_ text: String) -> String {
+    public static func searchKey(_ text: String) -> String {
         text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
             .filter { $0.isLetter || $0.isNumber }
     }
@@ -284,6 +316,13 @@ public struct ExerciseCatalogue: Codable, Sendable {
     /// condition worth handling — the file ships inside the package — so it
     /// traps with the reason rather than returning an empty catalogue that
     /// would quietly make every coverage figure zero.
+    /// The catalogue file itself, byte for byte — for handing to a tool that
+    /// reads the same format, such as the plan-import skill.
+    public static var bundledData: Data? {
+        Bundle.module.url(forResource: "ExerciseCatalogue", withExtension: "json")
+            .flatMap { try? Data(contentsOf: $0) }
+    }
+
     public static let bundled: ExerciseCatalogue = {
         guard let url = Bundle.module.url(forResource: "ExerciseCatalogue", withExtension: "json") else {
             preconditionFailure("ExerciseCatalogue.json is missing from the SenkuCore bundle")

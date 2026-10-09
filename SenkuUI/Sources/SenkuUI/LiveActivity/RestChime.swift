@@ -22,9 +22,16 @@ import SenkuCore
 /// chime is scheduled on the same session to fire at the deadline.
 ///
 /// That is a real cost and worth naming: the audio session stays active for the
-/// length of the rest, which is minutes, and it ducks other audio when the
-/// chime lands. It is started only while a rest is actually running and torn
-/// down the moment one is not — an idle session earns none of this.
+/// length of the rest, which is minutes. It is started only while a rest is
+/// actually running and torn down the moment one is not — an idle session
+/// earns none of this.
+///
+/// ## Music during the rest
+///
+/// The session is held *mixed*, so music plays on at its own volume through
+/// the rest. It used to be held ducking from the start, which turned your music
+/// down for the whole rest rather than for the chime. Ducking is switched on
+/// just before the chime and released with the session after it.
 ///
 /// The notification stays scheduled either way. If iOS takes the session back,
 /// or the app is force quit, the alert still arrives; this only makes it louder
@@ -45,6 +52,12 @@ public enum RestChime {
     /// Gives the audio session back once the chime has rung out.
     private static var release: Task<Void, Never>?
 
+    /// Turns other audio down just before the chime.
+    private static var duck: Task<Void, Never>?
+
+    /// Whether a rest is holding the audio session open.
+    public static var isHolding: Bool { silence != nil }
+
     /// Starts holding the session, and books the chime for the deadline.
     public static func schedule(at deadline: Date) {
         let delay = deadline.timeIntervalSinceNow
@@ -54,7 +67,10 @@ public enum RestChime {
               let player = try? AVAudioPlayer(contentsOf: url)
         else { return }
 
-        activate()
+        // A chime that just rang may have left the session ducking, and ducking
+        // only lets go when the session does — so it is handed back first.
+        if silence == nil { deactivate() }
+        activate(ducking: false)
         holdSession()
 
         player.prepareToPlay()
@@ -67,6 +83,16 @@ public enum RestChime {
 
         release?.cancel()
         release = nil
+
+        // The app is kept running by the silent loop, so a sleeping task wakes
+        // on time in the background too. Should it not, the chime still sounds
+        // — over the music rather than with it lowered.
+        duck?.cancel()
+        duck = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(max(0, delay - 0.4)))
+            guard !Task.isCancelled else { return }
+            activate(ducking: true)
+        }
     }
 
     /// The rest reached its deadline: let the chime ring out, then let go.
@@ -112,6 +138,8 @@ public enum RestChime {
     public static func cancel() {
         release?.cancel()
         release = nil
+        duck?.cancel()
+        duck = nil
 
         chime?.stop()
         chime = nil
@@ -138,12 +166,16 @@ public enum RestChime {
         try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
     }
 
-    private static func activate() {
+    /// `.playback` is what makes this audible on a silenced phone. Mixed, it
+    /// leaves other audio exactly as it was; ducking lowers it — for the chime,
+    /// never for the rest — rather than stopping it.
+    private static func activate(ducking: Bool) {
         let session = AVAudioSession.sharedInstance()
-        // `.playback` is what makes this audible on a silenced phone;
-        // `.duckOthers` drops a podcast for the length of the chime rather than
-        // stopping it.
-        try? session.setCategory(.playback, mode: .default, options: [.duckOthers])
+        try? session.setCategory(
+            .playback,
+            mode: .default,
+            options: ducking ? [.mixWithOthers, .duckOthers] : [.mixWithOthers]
+        )
         try? session.setActive(true)
     }
 

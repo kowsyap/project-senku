@@ -25,11 +25,36 @@
 
   "customExercises": [
     {
-      "name": "Landmine press",
-      "equipment": "barbell",
-      "regionIDs": ["shoulder.frontDelts", "chest.upper"]
+      "name": "Towel Row",
+      "equipment": "bodyweight",
+      "regionIDs": ["back.lats", "forearm.flexors"]
     }
   ],
+
+  "plan": {
+    "target": { "sets": 3, "minReps": 8, "maxReps": 12 },
+    "days": [
+      {
+        "name": "Push",
+        "groups": ["chest", "shoulders", "triceps"],
+        "exercises": [
+          { "name": "Bench", "sets": 5, "reps": 5 },
+          "Incline Bench",
+          { "name": "OHP", "sets": 4, "minReps": 6, "maxReps": 8 },
+          { "name": "Skull Crusher", "maxReps": 15 }
+        ]
+      },
+      {
+        "name": "Pull",
+        "groups": ["back", "biceps"],
+        "exerciseIDs": ["Towel Row", "Lat Pulldown", "Hammer Curl"]
+      },
+      {
+        "name": "Legs",
+        "exerciseIDs": ["catalogue.squat.back", "Barbell Romanian Deadlift", "Lying Leg Curl"]
+      }
+    ]
+  },
 
   "records": [
     { "exerciseID": "catalogue.bench.flat", "weightKG": 100, "reps": 5, "date": "2026-08-30" },

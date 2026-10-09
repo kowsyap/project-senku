@@ -167,7 +167,7 @@ public struct WorkoutView: View {
                         if isDone {
                             reviewing = workouts.lastSession(forDay: day.id)
                         } else {
-                            workouts.start(day)
+                            workouts.start(day, target: plans.plan.target)
                         }
                     } label: {
                         dayCard(day, isDone: isDone)

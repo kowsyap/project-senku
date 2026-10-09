@@ -20,10 +20,17 @@ import SenkuUI
 /// ```
 /// SIMCTL_CHILD_SENKU_SAMPLE=1 xcrun simctl launch <device> pk.Senku
 /// ```
+///
+/// Or a path, for another person's data — the README screenshots are made
+/// from `docs/screenshots/make_persona.py` this way:
+///
+/// ```
+/// SIMCTL_CHILD_SENKU_SAMPLE=/path/to/maya.json xcrun simctl launch <device> pk.Senku
+/// ```
 enum SampleData {
     @MainActor
     static func loadIfAsked() {
-        guard ProcessInfo.processInfo.environment["SENKU_SAMPLE"] != nil else { return }
+        guard let asked = ProcessInfo.processInfo.environment["SENKU_SAMPLE"] else { return }
 
         let profiles = ProfileStore()
         let intake = IntakeStore()
@@ -31,11 +38,15 @@ enum SampleData {
         // since the importer merges rather than replaces.
         guard profiles.profile == nil || intake.entries.isEmpty else { return }
 
-        guard let url = Bundle.main.url(forResource: "sample-data", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let document = try? SenkuImportDocument.decode(data)
-        else {
-            NSLog("SENKU_SAMPLE: sample-data.json is missing or will not decode")
+        let url = asked.hasPrefix("/")
+            ? URL(fileURLWithPath: asked)
+            : Bundle.main.url(forResource: "sample-data", withExtension: "json")
+        let document: SenkuImportDocument
+        do {
+            guard let url else { throw CocoaError(.fileNoSuchFile) }
+            document = try SenkuImportDocument.decode(try Data(contentsOf: url))
+        } catch {
+            NSLog("SENKU_SAMPLE: \(asked) is missing or will not decode: \(error)")
             return
         }
 
@@ -51,7 +62,9 @@ enum SampleData {
             cardioPlans: CardioProtocolStore(),
             anime: AnimeStore(),
             water: WaterStore(),
-            intake: intake
+            intake: intake,
+            dueDates: DueDateStore(),
+            watchlist: WatchlistName.shared
         )
 
         NSLog("SENKU_SAMPLE: \(summary.detail ?? "nothing imported")")

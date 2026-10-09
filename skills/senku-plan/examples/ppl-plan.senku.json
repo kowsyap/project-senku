@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "plan": {
+    "target": { "sets": 3, "minReps": 8, "maxReps": 12 },
+    "days": [
+      {
+        "name": "Push",
+        "groups": ["chest", "shoulder", "tricep"],
+        "exercises": [
+          { "name": "Barbell Bench Press", "sets": 4, "minReps": 6, "maxReps": 8 },
+          "Incline Dumbbell Press",
+          { "name": "Barbell Overhead Press", "reps": 8 },
+          { "name": "Dumbbell Lateral Raise", "minReps": 12, "maxReps": 15 },
+          { "name": "Rope Triceps Pushdown", "reps": 12 }
+        ]
+      },
+      {
+        "name": "Pull",
+        "groups": ["back", "bicep"],
+        "exercises": [
+          { "name": "Conventional Deadlift", "reps": 5 },
+          "Pull-Up",
+          { "name": "Barbell Bent-Over Row", "sets": 4, "reps": 8 },
+          { "name": "Face Pull", "reps": 15 },
+          { "name": "Hammer Curl", "minReps": 10, "maxReps": 12 }
+        ]
+      },
+      {
+        "name": "Legs",
+        "groups": ["legs", "abs"],
+        "exercises": [
+          { "name": "Barbell Back Squat", "sets": 4, "minReps": 6, "maxReps": 8 },
+          { "name": "Barbell Romanian Deadlift", "minReps": 8, "maxReps": 10 },
+          { "name": "Leg Press", "minReps": 10, "maxReps": 12 },
+          { "name": "Seated Calf Raise", "sets": 4, "reps": 15 },
+          "Plank"
+        ]
+      }
+    ]
+  }
+}

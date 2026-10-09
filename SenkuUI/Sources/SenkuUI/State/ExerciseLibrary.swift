@@ -39,6 +39,39 @@ public final class ExerciseLibrary {
         exercise(id)?.name ?? id
     }
 
+    /// What a plan written by hand can mean by an exercise.
+    public enum Reference: Equatable {
+        case found(Exercise)
+        case missing
+        /// More than one exercise goes by that name — "Hammer Curl" as an
+        /// other name of two. Better said than guessed.
+        case ambiguous([String])
+    }
+
+    /// The exercise a plan means: by id, then by name, then by another name.
+    ///
+    /// Names before aliases, so an exercise called what you typed beats one
+    /// that is merely also known by it.
+    public func exercise(named reference: String) -> Reference {
+        if let exact = exercise(reference) { return .found(exact) }
+
+        let key = reference.trimmingCharacters(in: .whitespacesAndNewlines)
+        let byName = all.filter { $0.isNamed(key) }
+        let direct = byName.filter { Self.sameName($0.name, key) }
+        let candidates = direct.isEmpty ? byName : direct
+
+        switch candidates.count {
+        case 0: return .missing
+        case 1: return .found(candidates[0])
+        default: return .ambiguous(candidates.map(\.name))
+        }
+    }
+
+    private static func sameName(_ name: String, _ reference: String) -> Bool {
+        let lhs = Exercise.searchKey(name), rhs = Exercise.searchKey(reference)
+        return lhs == rhs || lhs + "s" == rhs || lhs == rhs + "s"
+    }
+
     /// Everything filed under a group, custom exercises last — they are yours,
     /// and easier to find at the end of a list you already know.
     public func exercises(in group: WorkoutGroup) -> [Exercise] {

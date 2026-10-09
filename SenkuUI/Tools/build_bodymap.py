@@ -232,6 +232,43 @@ UPPER_BACK = {
     "female": {"lats": [1, 3], "upper-back-scapular": [0, 2]},
 }
 
+# Muscles the library draws as several pieces that Senku scores as different
+# regions, split into their own keys. Indices found by rendering each piece
+# numbered; the two bodies number them differently.
+#   abs      top three rows above the navel, and the long piece below it
+#   forearm  front: the large outer piece is brachioradialis, the strands the
+#            wrist flexors (the back's pieces are all extensors, left whole)
+#   triceps  back: the large inner piece is the long head, the outer ones the
+#            lateral (upper) and medial (lower) heads
+SPLITS = {
+    "male": {
+        "front": {
+            "abs": {"abs-upper": [0, 1, 2, 4, 5, 6], "abs-lower": [3, 7]},
+            "forearm": {"forearm-brachioradialis": [0, 3], "forearm-flexors": [1, 2, 4, 5]},
+        },
+        "back": {
+            "triceps": {"triceps-long": [1, 4], "triceps-lateral": [0, 3], "triceps-medial": [2, 5]},
+        },
+    },
+    "female": {
+        "front": {
+            "abs": {"abs-upper": [0, 2, 3, 4, 5, 7], "abs-lower": [1, 6]},
+            "forearm": {"forearm-brachioradialis": [2, 7], "forearm-flexors": [0, 1, 3, 4, 5, 6]},
+        },
+        "back": {
+            "triceps": {"triceps-long": [2, 3], "triceps-lateral": [0, 4], "triceps-medial": [1, 5]},
+        },
+    },
+}
+
+def split_pieces(parts, sex, side):
+    for slug, split in SPLITS[sex][side].items():
+        pieces = parts.pop(slug)
+        used = sorted(i for idx in split.values() for i in idx)
+        assert used == list(range(len(pieces))), f"{sex} {side} {slug}: {len(pieces)} pieces, split covers {used}"
+        for key, idx in split.items():
+            parts[key] = [pieces[i] for i in idx]
+
 def split_upper_back(parts, sex):
     upper = parts.pop("upper-back")
     split = UPPER_BACK[sex]
@@ -243,6 +280,8 @@ def split_upper_back(parts, sex):
 def body(here, sex, front_ts, back_ts, wrapper):
     front, back = read_parts(f"{here}/{front_ts}"), read_parts(f"{here}/{back_ts}")
     split_upper_back(back, sex)
+    split_pieces(front, sex, "front")
+    split_pieces(back, sex, "back")
     outlines, frames = read_outlines(f"{here}/{wrapper}"), read_frames(f"{here}/{wrapper}")
     return {"front": framed_side(front, outlines["front"], frames["front"]),
             "back": framed_side(back, outlines["back"], frames["back"])}

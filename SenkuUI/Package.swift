@@ -18,7 +18,12 @@ let package = Package(
         .target(
             name: "SenkuUI",
             dependencies: [.product(name: "SenkuCore", package: "SenkuCore")],
-            resources: [.process("Resources")]
+            resources: [
+                .process("Resources"),
+                // The plan-import skill, kept as a folder so the app can hand
+                // it out whole. Mirrored from skills/ by `senku_plan.py sync`.
+                .copy("PlanSkill"),
+            ]
         ),
 
         // Stores, importer, plate maths, tab layout, and the sample file —

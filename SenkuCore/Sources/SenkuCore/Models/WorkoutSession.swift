@@ -99,18 +99,26 @@ public struct WorkoutEntry: Identifiable, Codable, Hashable, Sendable {
     /// the first should stop nagging.
     public var isSkipped: Bool
 
+    /// The sets and reps aimed for, copied from the plan when the session
+    /// started — so changing the plan later does not rewrite whether last
+    /// month's exercise was finished. Nil for sessions from before targets
+    /// travelled with them, which finish at ``setsForDone``.
+    public var target: RepTarget?
+
     public init(
         exerciseID: String,
         sets: [LoggedSet] = [],
         cardio: CardioEffort? = nil,
         isMarkedDone: Bool = false,
-        isSkipped: Bool = false
+        isSkipped: Bool = false,
+        target: RepTarget? = nil
     ) {
         self.exerciseID = exerciseID
         self.sets = sets
         self.cardio = cardio
         self.isMarkedDone = isMarkedDone
         self.isSkipped = isSkipped
+        self.target = target
     }
 
     public init(from decoder: any Decoder) throws {
@@ -120,39 +128,38 @@ public struct WorkoutEntry: Identifiable, Codable, Hashable, Sendable {
         cardio = try container.decodeIfPresent(CardioEffort.self, forKey: .cardio)
         isMarkedDone = try container.decodeIfPresent(Bool.self, forKey: .isMarkedDone) ?? false
         isSkipped = try container.decodeIfPresent(Bool.self, forKey: .isSkipped) ?? false
+        target = try container.decodeIfPresent(RepTarget.self, forKey: .target)
     }
 
-    /// Three sets is a finished exercise unless you say otherwise.
-    ///
-    /// Not configurable, and deliberately so: three working sets is what the
-    /// overwhelming majority of programmes prescribe, and the exercise can be
-    /// ticked off by hand at any point — so the one case a setting would serve
-    /// is already served by a tap, without a screen of numbers to fill in
-    /// first.
+    /// Three sets is a finished exercise when nothing says otherwise — the
+    /// figure for sessions saved before the plan's target travelled with them.
     public static let setsForDone = 3
+
+    /// How many sets finish this exercise.
+    public var setsToFinish: Int { target?.sets ?? Self.setsForDone }
 
     /// Anything logged at all. This is what coverage counts: one set of rows
     /// trains lats whether or not three were planned.
     public var hasAnyWork: Bool { !sets.isEmpty || cardio != nil || isMarkedDone }
 
-    /// Finished: three sets logged, cardio logged, or ticked off by hand.
+    /// Finished: the target's sets logged, cardio logged, or ticked off by hand.
     ///
     /// A hand-ticked exercise counts for coverage as well. It says "I did this
     /// and did not write down the numbers", and a muscle trained without a
     /// record of the weight is still a muscle trained — treating it as untrained
     /// would make the honest option the one that costs you.
     public var isDone: Bool {
-        isMarkedDone || cardio != nil || sets.count >= Self.setsForDone
+        isMarkedDone || cardio != nil || sets.count >= setsToFinish
     }
 
     public var isOutstanding: Bool { !isDone && !isSkipped }
 
     /// "2/3" while it is being worked through, and just the count once it is
-    /// past three — a fourth set is not a failure to stop at three.
+    /// past the target — a fourth set is not a failure to stop at three.
     public var setProgress: String {
-        sets.count >= Self.setsForDone
+        sets.count >= setsToFinish
             ? "\(sets.count)"
-            : "\(sets.count)/\(Self.setsForDone)"
+            : "\(sets.count)/\(setsToFinish)"
     }
 
     /// Weight moved, in kilogram-reps. The usual definition of volume, and the
@@ -211,14 +218,17 @@ public struct WorkoutSession: Identifiable, Codable, Hashable, Sendable {
         self.finishedAt = finishedAt
     }
 
-    /// Builds the checklist from a day's picks.
-    public init(startingFrom day: SplitDay, at date: Date = .now) {
+    /// Builds the checklist from a day's picks, each with its target: the
+    /// exercise's own on that day, or the plan's.
+    public init(startingFrom day: SplitDay, target: RepTarget = .standard, at date: Date = .now) {
         self.init(
             date: date,
             dayID: day.id,
             dayName: day.name,
             groups: day.groups,
-            entries: day.exerciseIDs.map { WorkoutEntry(exerciseID: $0) }
+            entries: day.exerciseIDs.map {
+                WorkoutEntry(exerciseID: $0, target: day.target(for: $0, plan: target))
+            }
         )
     }
 
@@ -319,9 +329,9 @@ public struct WorkoutSession: Identifiable, Codable, Hashable, Sendable {
         entries[index].isSkipped = skipped
     }
 
-    public mutating func addExercise(_ exerciseID: String) {
+    public mutating func addExercise(_ exerciseID: String, target: RepTarget? = nil) {
         guard !entries.contains(where: { $0.exerciseID == exerciseID }) else { return }
-        entries.append(WorkoutEntry(exerciseID: exerciseID))
+        entries.append(WorkoutEntry(exerciseID: exerciseID, target: target))
     }
 
     public mutating func removeExercise(_ exerciseID: String) {

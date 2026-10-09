@@ -52,6 +52,8 @@ public struct RootView: View {
     @State private var isImporting = false
     @State private var importSummary: ImportSummary?
     @State private var importFailure: String?
+    /// A plan file opened through the hidden importer, waiting on its preview.
+    @State private var planPreview: PlanImportPreview?
     @State private var isShowingDataMenu = false
     @State private var isConfirmingReset = false
     @State private var isConfirmingResetAgain = false
@@ -298,6 +300,18 @@ public struct RootView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: ReminderRoute.didTap), perform: follow)
+        #if DEBUG
+        // Debug builds only: open a plan file as though it had just been
+        // picked, so a UI test can reach the preview past the system file
+        // picker, which it cannot drive.
+        //
+        //     SIMCTL_CHILD_SENKU_PLAN_FILE=/path/plan.json xcrun simctl launch <device> pk.Senku
+        .task {
+            if let path = ProcessInfo.processInfo.environment["SENKU_PLAN_FILE"] {
+                importFile(.success([URL(fileURLWithPath: path)]))
+            }
+        }
+        #endif
         .task {
             // The phone publishes the profile; the watch picks it up whenever
             // it next runs. Started here rather than in the app entry point so
@@ -467,6 +481,18 @@ public struct RootView: View {
             ShareSheet(urls: report.urls)
         }
         #endif
+        .sheet(isPresented: Binding(get: { planPreview != nil }, set: { if !$0 { planPreview = nil } })) {
+            if let planPreview {
+                NavigationStack {
+                    PlanImportPreviewSheet(preview: planPreview, library: library) {
+                        importSummary = planPreview.apply(library: library, plans: plans)
+                        self.planPreview = nil
+                    } onCancel: {
+                        self.planPreview = nil
+                    }
+                }
+            }
+        }
         .fileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.json],
@@ -505,7 +531,18 @@ public struct RootView: View {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
 
-            let document = try SenkuImportDocument.decode(try Data(contentsOf: url))
+            let data = try Data(contentsOf: url)
+
+            // A plan and nothing else — what the AI converters make — is shown
+            // before it replaces the week, as the Import a Plan page does. A
+            // backup still restores in one go: it is a whole device, and a
+            // preview of every section would be a second app.
+            if PlanImportPreview.isPlanOnly(data) {
+                planPreview = try PlanImportPreview.make(from: data, library: library)
+                return
+            }
+
+            let document = try SenkuImportDocument.decode(data)
             let summary = SenkuImporter.apply(
                 document,
                 profiles: store,
@@ -536,7 +573,7 @@ public struct RootView: View {
         } catch is CancellationError {
             return
         } catch {
-            importFailure = error.localizedDescription
+            importFailure = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
     }
 

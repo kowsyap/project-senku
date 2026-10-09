@@ -31,6 +31,8 @@ public struct ExercisePicker: View {
     private let hidden: Set<String>
 
     @State private var group: WorkoutGroup?
+    /// The one group this picker offers, when it was opened for one.
+    private let fence: WorkoutGroup?
     @State private var search = ""
     @State private var info: Exercise?
     @State private var isCreating = false
@@ -50,11 +52,12 @@ public struct ExercisePicker: View {
     public init(
         library: ExerciseLibrary,
         hidden: Set<String> = [],
-        /// Opens straight into one group, for a caller that already knows which
-        /// muscle is being filled — "add to chest" should not begin by asking
-        /// which muscle you meant. A starting point, not a fence: the chevron
-        /// still leads out to the other groups.
-        startingIn group: WorkoutGroup? = nil,
+        /// Offers one group and nothing else, for a caller that already knows
+        /// which muscle is being filled — "add to chest" shows chest, and its
+        /// search looks in chest. A day that wants something from outside its
+        /// muscles has its own way in, the Other card, which opens on the
+        /// groups.
+        within group: WorkoutGroup? = nil,
         deletionRefusal: @escaping (Exercise) -> String? = { _ in nil },
         onPick: @escaping (Exercise) -> Void
     ) {
@@ -62,6 +65,7 @@ public struct ExercisePicker: View {
         self.hidden = hidden
         self.deletionRefusal = deletionRefusal
         self.onPick = onPick
+        self.fence = group
         _group = State(initialValue: group)
     }
 
@@ -86,6 +90,7 @@ public struct ExercisePicker: View {
         // person who knew exactly what they wanted.
         return library.all
             .filter { !hidden.contains($0.id) && $0.matches(search) }
+            .filter { fence == nil || $0.workoutGroup == fence }
             .sorted { $0.name < $1.name }
     }
 
@@ -97,18 +102,14 @@ public struct ExercisePicker: View {
                 exerciseList
             }
         }
-        .searchable(text: $search, prompt: "Search all exercises")
+        .searchable(text: $search, prompt: fence.map { "Search \($0.title)" } ?? "Search all exercises")
         .navigationTitle(group == nil ? "Muscle Group" : "")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
-            // Shown even when the caller chose the group. It used to be hidden
-            // there, on the grounds that the user never stepped into it — but
-            // a leg day that wants a forearm finisher is a real day, and
-            // search was the only way out, which nobody finds. The sheet's own
-            // Done still returns to the day from either level.
-            if group != nil, search.isEmpty {
+            // Not for a fenced picker: it has nowhere else to go.
+            if fence == nil, group != nil, search.isEmpty {
                 ToolbarItem(placement: .cancellationAction) {
                     // A chevron, as a pushed screen would have. The word
                     // "Groups" named where the tap goes, but this is the one
@@ -581,10 +582,23 @@ struct ExerciseInfoSheet: View {
                             )
                         }
 
-                        Text("How much of each muscle this movement trains, where 100% means it is *the* exercise for it.")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        // The same percentages, on the body: only what this
+                        // works is coloured, yellow for a little, red for the
+                        // muscle it is *the* exercise for.
+                        if (BodyMapPart.front + BodyMapPart.back).contains(where: { $0.share(of: exercise.contributions) != nil }) {
+                            BodyHighlight { part in
+                                part.share(of: exercise.contributions).map(BodyHighlight.heat)
+                            }
+                            .frame(height: 230)
+                            .padding(.top, 6)
+
+                            HStack(spacing: 14) {
+                                BodyHighlightKey(color: BodyHighlight.heat(0.2), label: "Little")
+                                BodyHighlightKey(color: BodyHighlight.heat(0.6), label: "Some")
+                                BodyHighlightKey(color: BodyHighlight.heat(1), label: "Most")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
                     }
 
                     Card("Equipment") {

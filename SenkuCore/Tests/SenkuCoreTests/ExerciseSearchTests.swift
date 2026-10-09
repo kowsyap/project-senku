@@ -138,4 +138,27 @@ struct ForearmTests {
         #expect(decoded.aliases.isEmpty)
         #expect(!decoded.isTimed)
     }
+
+    /// A plan names one exercise, so a name has to match whole — "curl" is a
+    /// search for every curl and the name of none of them.
+    @Test("A plan's name matches whole, not in part")
+    func namedMatchesWhole() throws {
+        let bench = try #require(catalogue.exercise("catalogue.bench.flat"))
+        #expect(bench.isNamed("Barbell Bench Press"))
+        #expect(bench.isNamed("bench"))
+        #expect(bench.isNamed("flat-bench"))
+        #expect(bench.isNamed("catalogue.bench.flat"))
+        #expect(!bench.isNamed("press"))
+        #expect(!bench.isNamed(""))
+    }
+
+    @Test("Groups are found by the words people use for them")
+    func groupsByEverydayName() {
+        let groups = catalogue.workoutGroups
+        #expect(WorkoutGroup.named("Biceps", among: groups) == .bicep)
+        #expect(WorkoutGroup.named("shoulders", among: groups) == .shoulder)
+        #expect(WorkoutGroup.named("Leg", among: groups) == .legs)
+        #expect(WorkoutGroup.named("CHEST", among: groups) == .chest)
+        #expect(WorkoutGroup.named("glutes", among: groups) == nil)
+    }
 }

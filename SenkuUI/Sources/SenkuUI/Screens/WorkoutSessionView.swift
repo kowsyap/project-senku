@@ -20,6 +20,8 @@ struct WorkoutSessionView: View {
     let onFinish: (WorkoutSession) -> Void
 
     @State private var logging: LoggingTarget?
+    /// The exercise whose info sheet is open.
+    @State private var info: Exercise?
     @State private var isAdding = false
     @State private var isConfirmingFinish = false
     @State private var isConfirmingDiscard = false
@@ -36,6 +38,18 @@ struct WorkoutSessionView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .sheet(item: $info) { exercise in
+            ExerciseInfoSheet(
+                exercise: exercise,
+                library: library,
+                refusal: nil,
+                onDelete: nil,
+                onClose: { info = nil }
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(ExercisePicker.solidSheet)
+        }
         .sheet(item: $logging) { target in
             NavigationStack {
                 if library.exercise(target.id)?.isCardio == true {
@@ -53,7 +67,7 @@ struct WorkoutSessionView: View {
                         records: records,
                         library: library,
                         unitSystem: unitSystem,
-                        target: self.target
+                        target: live.entry(target.id)?.target ?? self.target
                     )
                 }
             }
@@ -65,7 +79,7 @@ struct WorkoutSessionView: View {
                     library: library,
                     hidden: Set(live.entries.map(\.exerciseID))
                 ) { exercise in
-                    workouts.addExercise(exercise.id)
+                    workouts.addExercise(exercise.id, target: target)
                     isAdding = false
                 }
                 .navigationTitle("Add to Today")
@@ -326,6 +340,23 @@ struct WorkoutSessionView: View {
                     .monospacedDigit()
                     .foregroundStyle(Color.secondary)
             }
+
+            // What the exercise is, without leaving the session — the same
+            // sheet as the exercise list's. Its own button, so tapping it
+            // does not open the set logger the rest of the row opens.
+            if let exercise = library.exercise(entry.exerciseID) {
+                Button {
+                    info = exercise
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Senku.Palette.protein)
+                        .frame(width: 30, height: 34)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("About \(exercise.name)")
+            }
         }
         .padding(.vertical, 2)
         // Tappable across its width, not only on the text.
@@ -383,7 +414,7 @@ struct WorkoutSessionView: View {
     private func stepUp(for entry: WorkoutEntry) -> StepUp? {
         guard entry.sets.isEmpty, !entry.isSkipped, !entry.isMarkedDone, entry.cardio == nil
         else { return nil }
-        return StepUp.earned(for: entry.exerciseID, in: workouts, target: target, unitSystem: unitSystem)
+        return StepUp.earned(for: entry.exerciseID, in: workouts, target: entry.target ?? target, unitSystem: unitSystem)
     }
 
     /// Finish and discard, side by side.
@@ -668,7 +699,9 @@ private struct SetLogger: View {
             // Earned last time, so the next weight up is what to open on —
             // ahead of the record, which is a figure already beaten.
             weight = converted(stepUp.toKG)
-            reps = stepUp.isBodyweight ? target.reps + 1 : target.reps
+            // Back to the bottom of the range at the new weight; a bodyweight
+            // movement goes one past the top instead.
+            reps = stepUp.isBodyweight ? target.topReps + 1 : target.reps
         } else if let record = records.book.records(for: exerciseID).best {
             weight = converted(record.weightKG)
             reps = max(1, record.reps)
@@ -795,6 +828,27 @@ struct WorkoutSummaryView: View {
                             .foregroundStyle(group.tint)
                     }
                 }
+
+                // The same, on the body: green for what was trained, red for
+                // what the day's groups asked for and did not get.
+                let regionCoverage = BodyMapPart.coverage(of: performed)
+                let planned = Set(session.groups)
+                VStack(spacing: 8) {
+                    BodyHighlight { part in
+                        switch part.state(coverage: regionCoverage, plannedGroups: planned) {
+                        case .trained: BodyHighlight.trained
+                        case .missed: BodyHighlight.missed
+                        case nil: nil
+                        }
+                    }
+                    .frame(height: 230)
+
+                    HStack(spacing: 14) {
+                        BodyHighlightKey(color: BodyHighlight.trained, label: "Trained")
+                        BodyHighlightKey(color: BodyHighlight.missed, label: "Not trained")
+                    }
+                }
+                .padding(.vertical, 6)
             } header: {
                 Text("What you trained")
             }
@@ -1135,7 +1189,7 @@ struct StepUp {
     }
 
     func explanation(target: RepTarget, in system: UnitSystem) -> String {
-        let hit = "Last time you did \(target.sets)×\(target.reps)"
+        let hit = "Last time you did \(target.sets)×\(target.topReps)"
         return isBodyweight
             ? "\(hit). Go for more reps."
             : "\(hit) at \(Display.lifted(fromKG, in: system)). Go up to \(Display.lifted(toKG, in: system))."

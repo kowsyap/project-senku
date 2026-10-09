@@ -2,12 +2,12 @@
 
 # SENKU
 
-**S**ets · **E**nergy · **N**utrition · **K**ilos · **U**tility
+**S**trength · **E**nergy · **N**utrition · **K**nowledge · **U**tility
 
 **A science-based training and nutrition companion for iPhone and Apple Watch —
 one that shows its work.**
 
-<img src="docs/screenshots/me.png" width="230" alt="The Me screen"> <img src="docs/screenshots/workout.png" width="230" alt="The workout screen"> <img src="docs/screenshots/water.png" width="230" alt="The water screen"> <img src="docs/screenshots/food.png" width="230" alt="The food screen">
+<img src="docs/screenshots/me.png" width="230" alt="The Me screen"> <img src="docs/screenshots/workout.png" width="230" alt="A workout in progress"> <img src="docs/screenshots/picker.png" width="230" alt="Picking a muscle on the body"> <img src="docs/screenshots/share.png" width="230" alt="A personal record as a share card">
 
 </div>
 
@@ -17,7 +17,7 @@ Most macro calculators hand you a number with no explanation — no indication o
 which formula produced it, and no warning when it is a bad idea for you
 specifically. Senku names the formula it used, keeps what you *measured* separate
 from what it *estimated*, clamps a deficit that lands below the safe floor and
-says that it did, and — once there is a fortnight of food and weigh-ins to work
+says that it did, and — once there are three weeks of food and weigh-ins to work
 from — replaces the population average with the maintenance figure your own scale
 implies.
 
@@ -40,6 +40,7 @@ cannot explain where a number came from, it does not show it.**
 - [Build it from source](#build-it-from-source)
 - [The technical side](#the-technical-side)
 - [Contributing](#contributing)
+- [Credits](#credits)
 
 ---
 
@@ -55,9 +56,9 @@ cannot explain where a number came from, it does not show it.**
   weight range; projected weekly change and time to target. Advisories whenever
   the plan deserves a caveat.
 - **Adaptive maintenance** — after three weeks with enough weigh-ins and
-  enough logged food, the app compares what you ate against what the scale did and
-  offers the maintenance figure *that* implies. It is a button you press, never
-  a target that changes behind your back.
+  enough logged food, the Me page compares what you ate against what the scale did
+  and offers the maintenance figure *that* implies. It is a button you press,
+  never a target that changes behind your back.
 
 ### Training
 
@@ -67,20 +68,48 @@ cannot explain where a number came from, it does not show it.**
   you actually use — "skull crusher", "RDL", "OHP" — filter it by group or
   equipment, and add your own, timed or not, if the rack in your gym is not in
   it.
+- **Pick muscles on a body** — tap the muscle on a front or back figure, drawn
+  for your sex, or spin a ring of muscle groups if you would rather. Every
+  exercise's info sheet colours the muscles it works on the same figure, yellow
+  for a little to red for most — down to the three heads of the chest.
 - **A week you build once** — name your training days, give each one its muscle
   groups and its exercises, and run it every week. Start from a template if you
   would rather not: Push / Pull / Legs, Upper / Lower, Arnold, or one group a
-  day. The app tells you which groups the week never touches.
+  day. The app tells you which groups the week never touches, and an Other card
+  takes the finisher from outside the day's muscles.
+- **Sets and rep ranges** — one target for the week, 3 × 8–12 say, and any
+  exercise can have its own: 5 × 5 squats, 4 × 12–20 lateral raises. An exercise
+  is done at its sets; reach the top of the range on every set at one weight and
+  the next session offers a heavier one, back at the bottom.
 - **Set logging** — on the day, the session opens as a checklist. Log each set's
   weight and reps as you finish it, or seconds for a hold, with the exercise's
   logger pre-filled with what you lifted last time, because that is nearly always
-  what you are about to lift. Estimated 1RM comes along for free.
+  what you are about to lift. A clock runs from the moment you pick the day, and
+  logging a set can start your rest by itself. Estimated 1RM comes along for
+  free.
+- **Bring your own programme** — a plan in Excel, PDF, Word, a photo or text
+  becomes a file Senku imports: every exercise matched to the catalogue, sets
+  and rep ranges kept, anything unknown added as your own. *Import a Plan* on
+  the Week page hands out the two ways to make one — a prompt to paste into any
+  AI chat, or [the skill](skills/senku-plan) for any AI that takes skills,
+  started with `/senku-plan` — and shows the week the file makes, laid out like
+  yours, before anything is replaced.
+- **A summary at the end** — the session's sets and time, a body map of what got
+  trained and what was planned but missed, and the workout's energy, sent to
+  Apple Health when you press Done.
 - **Cardio too** — distance, duration, effort, and reusable protocols for
   intervals you repeat.
-- **PRs** — every record the sets produced, per exercise, with cardio records and
-  protocols alongside. Deleting a session never deletes the PRs it produced.
+- **PRs** — every record the sets produced, per exercise, newest first, with
+  cardio records and protocols alongside, and each exercise's info a tap away. A record you add by hand has to beat
+  your best, so the page only ever goes up. Deleting a session never deletes the
+  PRs it produced.
+- **Share a PR** — swipe a record left, or tap share on its page, for a card
+  sized for an Instagram or WhatsApp story: the lift, how much it beat the last
+  one, the estimated 1RM, every record on the way there, and the muscles it
+  trains. Drawn on the phone; only the picture leaves it.
 - **Rest timer** — presets, a Live Activity on the Lock Screen, a Control Center
   control, a chime that reaches you on a locked phone, and haptics on the watch.
+  Your music keeps playing at its own volume and dips only for the chime.
 - **Plate calculator** — type a weight, get the per-side stack drawn to scale, in
   kg or lb, with ± steppers that snap to what is actually loadable and a rack
   editor for the plates you own.
@@ -100,6 +129,11 @@ cannot explain where a number came from, it does not show it.**
 
 - **Weight** — a trend line fitted by least squares rather than joining dots, the
   rate per week that implies, a reminder, and full history.
+- **Apple Health** — water, food, weight and workouts written to Health as you
+  log them, each switched on separately. Write only: Senku never reads your
+  Health data. Edit or delete something in Senku and Health follows.
+- **Streaks** — protein, calories, water and creatine, with any past day you
+  forgot to log set right from the streak page.
 - **Anime** — because a personal app is allowed to hold unrelated parts of a
   life. Seasons or totals, statuses, search, sorting, posters.
 - **Export** — a PDF report with vector charts and a picker for which sections go
@@ -107,6 +141,8 @@ cannot explain where a number came from, it does not show it.**
 - **A navbar that is yours** — four tabs visible (three on a small phone) and the
   rest under More; you choose which and in what order, and you switch pages by
   dragging the glass pill with your finger.
+- **One Settings page** — the navbar, Apple Health, and a way into every
+  screen's own settings, which also sit on each screen behind its Adjust button.
 
 ---
 
@@ -119,7 +155,9 @@ cannot explain where a number came from, it does not show it.**
 Sex, age, height, weight, activity level, goal. The app returns the whole ladder
 — maintenance at every activity level, your target, the macros that follow — and
 keeps it. Every other screen derives from this one: your water goal, your protein
-ring, the rate your weight page measures you against.
+ring, the rate your weight page measures you against. Once you have three weeks
+of food and weigh-ins, this is also where the maintenance your own data implies
+turns up.
 
 Switch formula here if you disagree with the default, and enter a measured body
 fat if you have one — the app will use Katch-McArdle and say so rather than
@@ -129,28 +167,61 @@ guessing from your BMI.
 
 ### 2. Train — *Workout* → *PRs*
 
-<img src="docs/screenshots/workout.png" width="260" align="right" alt="The workout screen">
+<img src="docs/screenshots/picker.png" width="260" align="right" alt="Picking a muscle on the body">
 
 **Build your week once.** Add a training day, name it, pick its muscle groups,
-then pull exercises into it from the catalogue — 160 of them, searchable, filtered
-by group or by equipment, or your own if what you use is not there. Four
-templates are there to start from if you would rather not begin with a blank
-week. The coverage bars show what each muscle region gets and which groups the
-week never touches, so a split that quietly skips rear delts says so.
+then pull exercises into it from the catalogue — tap a muscle on the body, or
+search 160 of them by name, filtered by group or by equipment, or add your own if
+what you use is not there. Four templates are there to start from if you would
+rather not begin with a blank week. Give the week a target — 3 × 8–12 — and any
+exercise that differs its own. The coverage bars show what each muscle region
+gets and which groups the week never touches, so a split that quietly skips rear
+delts says so.
+
+<br clear="right">
+
+<img src="docs/screenshots/import.png" width="260" align="right" alt="Import a Plan">
+
+**Or bring the week you already have.** A programme from a coach or a
+spreadsheet goes through *Import a Plan*: copy the prompt into any AI chat with
+the plan attached, or give your AI the skill and type `/senku-plan`. It matches
+every exercise to the catalogue, asks when a name could mean two, and hands back
+a file. Importing shows that week first — every day, its muscles and coverage,
+every exercise with its sets and reps — and replaces yours only when you say.
+
+<br clear="right">
+
+<img src="docs/screenshots/workout.png" width="260" align="right" alt="A workout in progress">
 
 **Then just train it.** On the day, that day's session opens as a checklist in
 muscle blocks. Tap an exercise, log the set — weight and reps, or seconds for a
 plank — and it is ticked off. The logger opens **pre-filled with what you lifted
 last time**, because the overwhelmingly common case is the same weight again, and
-it says when that was. Start the rest timer from the same place without leaving it. Cardio logs
-distance, duration and effort, with protocols for intervals you repeat.
+it says when that was. The rest timer starts from the same place, or by itself
+when you log a set. A clock at the top says how long you have been at it. Cardio
+logs distance, duration and effort, with protocols for intervals you repeat.
 
-Anything that beats your previous best lands on the PRs page by itself, with the
-estimated 1RM worked out for you. Nothing is entered twice — and deleting a
-session never deletes the records it produced.
+**Then see what it did.** Finishing shows a body map — green for what you
+trained, red for what the day planned and you skipped — and sends the workout to
+Apple Health when you press Done.
+
+<br clear="right">
 
 <img src="docs/screenshots/records.png" width="260" align="right" alt="The PRs screen">
+
+Anything that beats your previous best lands on the PRs page by itself, newest at
+the top, with the estimated 1RM worked out for you. Nothing is entered twice —
+and deleting a session never deletes the records it produced. The ⓘ beside a
+name shows what the exercise trains, on the body.
+
 <br clear="right">
+
+<img src="docs/screenshots/share.png" width="260" align="right" alt="A personal record as a share card">
+
+Swipe a record left, or tap share on its page, and it becomes a card sized for a
+story: the lift, what it beat, the estimated 1RM, the climb to it and the muscles
+behind it. It is drawn on the phone, and only the picture leaves it.
+
 <br clear="right">
 
 ### 3. Rest — the timer that follows you
@@ -197,17 +268,28 @@ its own streak.
 
 ### 6. Watch it move — *Weight*, *Streaks*, *Anime*, *More*
 
-<img src="docs/screenshots/anime.png" width="260" align="right" alt="The anime screen">
+<img src="docs/screenshots/weight.png" width="260" align="right" alt="The weight screen">
 
 Weigh in, and the weight page fits a trend line and tells you the rate per week
 it implies — not the difference between two mornings, which is mostly water.
-After three weeks it offers you the maintenance figure your own data supports.
+The streak page counts your days, and lets you set right a day you forgot to
+log.
+
+<br clear="right">
+
+<img src="docs/screenshots/anime.png" width="260" align="right" alt="The anime screen">
+
+And the anime list, because a personal app is allowed to hold unrelated parts
+of a life.
+
+<br clear="right">
 
 <img src="docs/screenshots/more.png" width="260" align="right" alt="The More screen">
 
 Under *More* sit the plate calculator, the anime list, the streak page, the PDF
-export and Settings, where the navbar is arranged — and which screens live there
-rather than in the bar is entirely your call.
+export and Settings — the navbar, Apple Health, and every screen's own
+settings. Which screens live under More rather than in the bar is entirely your
+call.
 
 <br clear="right">
 
@@ -302,8 +384,8 @@ an iPhone simulator, and press Run.
 
 ```sh
 # The logic, on the host — no simulator, ~0.01s
-cd SenkuCore && swift test        # 172 tests
-cd ../SenkuUI  && swift test      # 79 tests
+cd SenkuCore && swift test        # 241 tests
+cd ../SenkuUI  && swift test      # 208 tests
 
 # The app. Note the *generic* destination — a named device breaks the
 # watch link; docs/BUILD.md explains why.
@@ -319,6 +401,21 @@ through the same importer a real backup uses:
 
 ```sh
 SIMCTL_CHILD_SENKU_SAMPLE=1 xcrun simctl launch booted pk.Senku
+```
+
+Or somebody else entirely. The screenshots above are of Maya — eleven weeks of
+an upper/lower split, a slow cut, food and water — generated by a script so that
+everything agrees with everything else, and photographed by a UI test:
+
+```sh
+python3 docs/screenshots/make_persona.py /tmp/maya.json
+SIMCTL_CHILD_SENKU_SAMPLE=/tmp/maya.json xcrun simctl launch booted pk.Senku
+
+# Or every screenshot, on a fresh install:
+TEST_RUNNER_SENKU_PERSONA=/tmp/maya.json TEST_RUNNER_SENKU_SHOTS=docs/screenshots \
+  xcodebuild test -project Senku/Senku.xcodeproj -scheme Senku \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:SenkuUITests/ScreenshotTests
 ```
 
 ### Make your own .ipa
@@ -355,24 +452,27 @@ senku/
 │       ├── SenkuCore/
 │       │   ├── Calculations/    BMR, macros, coverage, streaks, adaptive TDEE
 │       │   ├── Models/          the nouns: WeighIn, Exercise, WorkoutSession…
-│       │   └── Resources/       ExerciseCatalogue.json — 138 exercises
+│       │   └── Resources/       ExerciseCatalogue.json — 160 exercises
 │       └── SenkuCLI/            `senku plan …` — the maths without an app
 ├── SenkuUI/                     every screen, and the state behind them
-│   └── Sources/SenkuUI/
-│       ├── Calculations/        PlateMath — needs the unit types, so it lives here
-│       ├── Components/          Card, rings, numeric field, the tab bar
-│       ├── Formatting/          units, and how each figure is written
-│       ├── LiveActivity/        notifications, reminders, chime, App Intents
-│       ├── Reports/             the PDF: layout, charts, section picker
-│       ├── Screens/             one file per screen, phone and watch
-│       ├── State/               the stores, the importer, the sync
-│       └── Theme/               palette and metrics
+│   ├── Sources/SenkuUI/
+│   │   ├── Calculations/        PlateMath — needs the unit types, so it lives here
+│   │   ├── Components/          Card, rings, numeric field, the tab bar
+│   │   ├── Formatting/          units, and how each figure is written
+│   │   ├── LiveActivity/        notifications, reminders, chime, App Intents
+│   │   ├── Reports/             the PDF: layout, charts, section picker
+│   │   ├── Resources/           BodyMap.json, the chime, the art
+│   │   ├── Screens/             one file per screen, phone and watch
+│   │   ├── State/               the stores, the importer, the sync, Apple Health
+│   │   └── Theme/               palette and metrics
+│   └── Tools/                   build_bodymap.py — makes BodyMap.json
 ├── Senku/                       the Xcode project
 │   ├── Senku/                   app entry point, sample data
 │   ├── SenkuWidgets/            Home Screen widgets, Live Activity, Control
 │   ├── SenkuWatch/              watch app entry point
 │   ├── SenkuTests/              what can only be checked inside the app bundle
 │   └── SenkuUITests/            launches the app and drives it
+├── skills/senku-plan/           turn any plan into an import file, with any AI
 └── docs/                        the plan, the architecture, the decisions
 ```
 
@@ -384,11 +484,12 @@ senku/
 | **App Group** (`group.pk.Senku`) | the one place data lives — JSON under versioned keys, shared by app, widgets and watch |
 | **WidgetKit + App Intents** | widgets that log a drink or start a rest without opening the app |
 | **ActivityKit** | the rest timer on the Lock Screen and in the Dynamic Island |
+| **HealthKit** | write only — water, food, weight and workouts, reconciled so edits and deletes follow |
 | **WatchConnectivity** | application context for state, messages and transfers for records |
 | **UserNotifications** | reminders, and a deliberate budget inside iOS's 64-request ceiling |
 | **Liquid Glass** | `GlassEffectContainer`, `glassEffectID`, interactive tinted capsules |
 | **Core Text + Core Graphics** | the PDF — real pagination and vector charts, no screenshots |
-| **Swift Testing / XCTest** | 240 host tests, plus bundle and UI tests on a simulator |
+| **Swift Testing / XCTest** | 449 host tests, plus bundle and UI tests on a simulator |
 
 ### Three decisions worth knowing about
 
@@ -434,6 +535,15 @@ The short version: open an issue describing the use case first, keep logic in
 `SenkuCore` with tests, and explain *why* in the comments rather than *what*. The
 full version, including the one rule about numbers on screen, is in
 [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## Credits
+
+The body figures are drawn from
+[react-native-body-highlighter](https://github.com/HichamELBSI/react-native-body-highlighter)
+(MIT), split into finer muscles for Senku. The full notice is in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ---
 

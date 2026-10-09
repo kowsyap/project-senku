@@ -40,8 +40,8 @@ public final class WorkoutStore {
     // MARK: - The live session
 
     @discardableResult
-    public func start(_ day: SplitDay, at date: Date = .now) -> WorkoutSession {
-        let session = WorkoutSession(startingFrom: day, at: date)
+    public func start(_ day: SplitDay, target: RepTarget = .standard, at date: Date = .now) -> WorkoutSession {
+        let session = WorkoutSession(startingFrom: day, target: target, at: date)
         live = session
         persistLive()
         return session
@@ -133,9 +133,9 @@ public final class WorkoutStore {
         persistLive()
     }
 
-    public func addExercise(_ exerciseID: String) {
+    public func addExercise(_ exerciseID: String, target: RepTarget? = nil) {
         guard var session = live else { return }
-        session.addExercise(exerciseID)
+        session.addExercise(exerciseID, target: target)
         live = session
         persistLive()
     }

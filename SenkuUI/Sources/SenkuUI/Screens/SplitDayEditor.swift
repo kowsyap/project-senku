@@ -19,6 +19,10 @@ struct SplitDayEditor: View {
 
     @State private var adding: WorkoutGroup?
     @State private var info: Exercise?
+    /// The exercise whose sets and reps are being set.
+    @State private var targeting: Exercise?
+    /// Adding from outside the day's muscles, through the Other card.
+    @State private var isAddingOther = false
 
     init(
         day: SplitDay,
@@ -41,6 +45,19 @@ struct SplitDayEditor: View {
         return name.isEmpty ? "Add Exercise" : "Add to \(name)"
     }
 
+    private var planTarget: RepTarget { store.plan.target }
+
+    /// "3 × 8–12", and whether it is the exercise's own or the plan's.
+    private func target(of exercise: Exercise) -> (text: String, isOwn: Bool) {
+        let own = day.targets[exercise.id]
+        return ((own ?? planTarget).text, own != nil)
+    }
+
+    private func remove(_ exercise: Exercise) {
+        day.exerciseIDs.removeAll { $0 == exercise.id }
+        day.targets[exercise.id] = nil
+    }
+
     private var canSave: Bool {
         !day.name.trimmingCharacters(in: .whitespaces).isEmpty && !day.groups.isEmpty
     }
@@ -52,7 +69,7 @@ struct SplitDayEditor: View {
 
             if !day.groups.isEmpty {
                 coverageSection
-                strandedSection
+                otherSection
             }
         }
         .navigationTitle(isNew ? "New Day" : day.name)
@@ -73,7 +90,7 @@ struct SplitDayEditor: View {
                 ExercisePicker(
                     library: library,
                     hidden: Set(day.exerciseIDs),
-                    startingIn: group,
+                    within: group,
                     deletionRefusal: deletionRefusal
                 ) { exercise in
                     day.exerciseIDs.append(exercise.id)
@@ -92,6 +109,38 @@ struct SplitDayEditor: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $isAddingOther) {
+            NavigationStack {
+                // Unfenced, and opening on the groups: what goes here is by
+                // definition from a muscle the day did not pick.
+                ExercisePicker(
+                    library: library,
+                    hidden: Set(day.exerciseIDs),
+                    deletionRefusal: deletionRefusal
+                ) { exercise in
+                    day.exerciseIDs.append(exercise.id)
+                    isAddingOther = false
+                }
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { isAddingOther = false }
+                    }
+                }
+            }
+        }
+        .sheet(item: $targeting) { exercise in
+            NavigationStack {
+                ExerciseTargetEditor(
+                    name: exercise.name,
+                    plan: planTarget,
+                    own: day.targets[exercise.id]
+                ) { chosen in
+                    day.targets[exercise.id] = chosen
+                    targeting = nil
+                }
+            }
+            .presentationDetents([.medium])
         }
         .sheet(item: $info) { exercise in
             NavigationStack {
@@ -198,13 +247,15 @@ struct SplitDayEditor: View {
                 CoverageRow(
                     coverage: MuscleCoverage.of(exercises, for: group, in: library.catalogue),
                     contributors: picked,
+                    target: target(of:),
                     onInspect: { info = $0 },
+                    onTarget: { targeting = $0 },
                     onRemove: { exercise in
                         // Removed from the day, not from this muscle: an
                         // exercise listed under two groups is one entry, and
                         // pretending otherwise would let the same tap mean
                         // different things in different rows.
-                        day.exerciseIDs.removeAll { $0 == exercise.id }
+                        remove(exercise)
                     },
                     onAdd: { adding = group }
                 )
@@ -229,41 +280,93 @@ struct SplitDayEditor: View {
         }
     }
 
-    /// Exercises in the day that none of its muscles account for.
+    /// Exercises in the day that none of its muscles account for, and the way
+    /// to add one — a forearm finisher on leg day.
     ///
-    /// The case that makes this necessary: pick a chest day, add dips, then
-    /// remove chest from the day's muscles. Without a home of their own those
-    /// exercises would simply stop being drawn — still in the day, still on the
+    /// Always there, so the way in is always there. It also catches the case
+    /// that made it necessary: pick a chest day, add dips, then remove chest
+    /// from the day's muscles. Without a home of their own those exercises
+    /// would simply stop being drawn — still in the day, still on the
     /// checklist, and impossible to get rid of from the one screen that is
     /// supposed to manage them.
-    @ViewBuilder
-    private var strandedSection: some View {
+    private var otherSection: some View {
         let covered = Set(
             day.groups.flatMap { group in
                 MuscleCoverage.contributors(among: exercises, to: group, in: library.catalogue)
                     .map(\.exercise.id)
             }
         )
-        let stranded = exercises.filter { !covered.contains($0.id) }
+        let others = exercises.filter { !covered.contains($0.id) }
 
-        if !stranded.isEmpty {
-            Section {
-                ForEach(stranded) { exercise in
-                    HStack {
-                        Text(exercise.name)
-                        Spacer()
+        return Section {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "square.grid.2x2")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 22, height: 22)
+                    Text("Other")
+                        .font(.subheadline.weight(.semibold))
+                    Spacer()
+                }
+
+                if others.isEmpty {
+                    Text("Anything from outside this day’s muscles.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                ForEach(others) { exercise in
+                    HStack(spacing: 8) {
                         Button {
-                            day.exerciseIDs.removeAll { $0 == exercise.id }
+                            remove(exercise)
                         } label: {
                             Image(systemName: "minus.circle.fill")
+                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Remove \(exercise.name)")
+
+                        Button {
+                            info = exercise
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text(exercise.name)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.primary)
+                                    .lineLimit(1)
+                                Spacer(minLength: 8)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        let aim = target(of: exercise)
+                        TargetChip(text: aim.text, isOwn: aim.isOwn, tint: exercise.workoutGroup.tint) {
+                            targeting = exercise
+                        }
                     }
                 }
-            } header: {
-                Text("Also in this day")
+
+                HStack {
+                    Spacer()
+                    Button {
+                        isAddingOther = true
+                    } label: {
+                        Label("Exercise", systemImage: "plus")
+                            .font(.footnote.weight(.semibold))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Color.secondary.opacity(0.15), in: .capsule)
+                            .foregroundStyle(Color.primary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Add an exercise from another muscle group")
+                }
+                .padding(.top, 2)
             }
+            .padding(.vertical, 4)
         }
     }
 
@@ -295,7 +398,9 @@ struct SplitDayEditor: View {
 private struct CoverageRow: View {
     let coverage: MuscleCoverage
     let contributors: [(exercise: Exercise, fraction: Double)]
+    let target: (Exercise) -> (text: String, isOwn: Bool)
     let onInspect: (Exercise) -> Void
+    let onTarget: (Exercise) -> Void
     let onRemove: (Exercise) -> Void
     let onAdd: () -> Void
 
@@ -350,6 +455,11 @@ private struct CoverageRow: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+
+                    let aim = target(entry.exercise)
+                    TargetChip(text: aim.text, isOwn: aim.isOwn, tint: tint) {
+                        onTarget(entry.exercise)
+                    }
                 }
             }
 
@@ -475,6 +585,117 @@ private struct ExerciseContribution: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }
             }
+        }
+    }
+}
+
+/// An exercise's sets and reps on a day, as a chip: grey when it is the plan's,
+/// in the muscle's colour when the exercise has its own.
+private struct TargetChip: View {
+    let text: String
+    let isOwn: Bool
+    let tint: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(text)
+                .font(.caption.weight(.semibold))
+                .monospacedDigit()
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background((isOwn ? tint : Color.secondary).opacity(isOwn ? 0.18 : 0.12), in: .capsule)
+                .foregroundStyle(isOwn ? tint : Color.secondary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isOwn ? "Target \(text), set for this exercise" : "Target \(text), the plan's")
+    }
+}
+
+/// Sets and reps for one exercise on one day.
+///
+/// Starts from what it uses now — its own, or the plan's — so the common edit,
+/// one figure, is one tap. "Use the plan's" takes its own away again, so a
+/// later change to the plan reaches it.
+struct ExerciseTargetEditor: View {
+    let name: String
+    let plan: RepTarget
+    let own: RepTarget?
+    let onDone: (RepTarget?) -> Void
+
+    @State private var sets: Int
+    @State private var reps: Int
+    @State private var maxReps: Int
+
+    init(name: String, plan: RepTarget, own: RepTarget?, onDone: @escaping (RepTarget?) -> Void) {
+        self.name = name
+        self.plan = plan
+        self.own = own
+        self.onDone = onDone
+        let start = own ?? plan
+        _sets = State(initialValue: start.sets)
+        _reps = State(initialValue: start.reps)
+        _maxReps = State(initialValue: start.topReps)
+    }
+
+    private var chosen: RepTarget { RepTarget(sets: sets, reps: reps, maxReps: maxReps) }
+
+    var body: some View {
+        Form {
+            RepTargetFields(sets: $sets, reps: $reps, maxReps: $maxReps)
+
+            if own != nil {
+                Section {
+                    Button("Use the plan’s, \(plan.text)") { onDone(nil) }
+                }
+            }
+        }
+        .navigationTitle(name)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { onDone(own) }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                // The same numbers as the plan's are no exercise target at
+                // all: saved as one, a later change to the plan would pass it by.
+                Button("Done") { onDone(chosen == plan ? nil : chosen) }
+                    .fontWeight(.semibold)
+            }
+        }
+    }
+}
+
+/// Sets, then reps as a range: the bottom, and how high it goes. A top equal
+/// to the bottom is one figure, "3 × 10".
+struct RepTargetFields: View {
+    @Binding var sets: Int
+    @Binding var reps: Int
+    @Binding var maxReps: Int
+    var header: String? = nil
+
+    var body: some View {
+        Section {
+            Stepper(value: $sets, in: RepTarget.setRange) {
+                LabeledContent("Sets", value: "\(sets)")
+            }
+            Stepper(value: Binding(
+                get: { reps },
+                set: { reps = $0; maxReps = max(maxReps, $0) }
+            ), in: RepTarget.repRange) {
+                LabeledContent("Reps Min", value: "\(reps)")
+            }
+            Stepper(value: $maxReps, in: reps...RepTarget.repRange.upperBound) {
+                LabeledContent("Reps Max", value: maxReps == reps ? "—" : "\(maxReps)")
+            }
+        } header: {
+            if let header { Text(header) }
+        } footer: {
+            Text(maxReps > reps
+                ? "Done at \(sets) sets. Reach \(maxReps) reps on all \(sets) at one weight and the next workout offers a heavier one, back at \(reps)."
+                : "Done at \(sets) sets. Reach \(reps) reps on all \(sets) at one weight and the next workout offers a heavier one.")
         }
     }
 }

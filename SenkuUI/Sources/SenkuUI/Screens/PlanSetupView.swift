@@ -127,7 +127,17 @@ public struct PlanSetupView: View {
                 } label: {
                     Label("Build my own", systemImage: "square.and.pencil")
                 }
+                importRow
             }
+        }
+    }
+
+    /// A programme you already have — from a coach, a spreadsheet, a PDF.
+    private var importRow: some View {
+        NavigationLink {
+            PlanImportView(store: store, library: library)
+        } label: {
+            Label("Import a plan", systemImage: "square.and.arrow.down")
         }
     }
 
@@ -196,6 +206,7 @@ public struct PlanSetupView: View {
             RestAfterSetSection()
 
             Section {
+                importRow
                 Button {
                     isSwitching = true
                 } label: {
@@ -205,27 +216,24 @@ public struct PlanSetupView: View {
         }
     }
 
-    /// The sets and reps every exercise aims for. Hit them at one weight and
-    /// the workout offers the next weight up.
+    /// The sets and reps every exercise aims for, unless it has its own on a
+    /// day. Hit them at one weight and the workout offers the next weight up.
     private var targetSection: some View {
         let target = store.plan.target
-        return Section {
-            Stepper(value: Binding(
-                get: { target.sets },
-                set: { store.setTarget(RepTarget(sets: $0, reps: target.reps)) }
-            ), in: RepTarget.setRange) {
-                LabeledContent("Sets", value: "\(target.sets)")
-            }
-            Stepper(value: Binding(
-                get: { target.reps },
-                set: { store.setTarget(RepTarget(sets: target.sets, reps: $0)) }
-            ), in: RepTarget.repRange) {
-                LabeledContent("Reps", value: "\(target.reps)")
-            }
-        } header: {
-            Text("Target per exercise")
-        } footer: {
-            Text("Do \(target.sets) sets of \(target.reps) at one weight to get a progressive overload suggestion next time.")
+        func set(sets: Int? = nil, reps: Int? = nil, maxReps: Int? = nil) {
+            store.setTarget(RepTarget(
+                sets: sets ?? target.sets,
+                reps: reps ?? target.reps,
+                maxReps: maxReps ?? target.topReps
+            ))
+        }
+        return Group {
+            RepTargetFields(
+                sets: Binding(get: { target.sets }, set: { set(sets: $0) }),
+                reps: Binding(get: { target.reps }, set: { set(reps: $0, maxReps: max(target.topReps, $0)) }),
+                maxReps: Binding(get: { target.topReps }, set: { set(maxReps: $0) }),
+                header: "Target per exercise"
+            )
         }
     }
 

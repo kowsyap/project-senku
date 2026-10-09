@@ -515,6 +515,8 @@ Agreed, not started, and not yet specified as features of their own.
 | Sets-per-week volume guidance | F3 | M9 |
 | User-settable day boundary | S3 | M9 — midnight by default, 03:00 as the alternative |
 | Watch complications for water and food | F4, F5 | M9 |
+| Plan builder in the plan skill | F3 | `/senku-plan` with no file offers to build a plan from goals, days, equipment and experience, using only catalogue exercises, written as the same import file and checked by the same script. Part of `skills/senku-plan`, not a separate skill |
+| SBD / powerlifting programmes | F3 | Week-by-week blocks: a top set and back-off sets per lift with prescribed weights, RPE, deload, peak and test week, pre-filled in the set logger. Not needed for now |
 | Loan / EMI tracker | new | Amount, rate, tenure, principal and interest split, prepayment effect; arithmetic only |
 | Expense tracker | new | Dated entries; receipt reading through the existing Vision pipeline |
 | Wardrobe | new | Catalogue the clothes, then suggest outfits by occasion |

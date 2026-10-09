@@ -127,7 +127,21 @@ private final class Chime {
         #else
         configureSession()
         player.currentTime = 0
-        completion?(player.play())
+        let played = player.play()
+        completion?(played)
+        #if os(iOS)
+        // Ducking lasts as long as the session is active, so the session goes
+        // back once the chime has sounded — or your music stays turned down
+        // after it. Not while a rest is holding it: that one lets go itself.
+        if played {
+            let left = player.duration
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(left + 0.25))
+                guard !RestChime.isHolding else { return }
+                try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+            }
+        }
+        #endif
         #endif
     }
 

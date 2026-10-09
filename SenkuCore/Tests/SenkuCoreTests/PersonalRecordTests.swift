@@ -236,4 +236,30 @@ struct PersonalRecordTests {
         #expect(book.wouldBeRecord(exerciseID: "catalogue.pullup", weightKG: 5, reps: 3))
         #expect(!book.wouldBeRecord(exerciseID: "catalogue.pullup", weightKG: 0, reps: 8))
     }
+
+    /// Typed in by hand, a lighter lift is not a record — even one whose
+    /// estimated single is higher, which a logged set would be allowed.
+    @Test func aRecordAddedByHandHasToBeHeavierOrMoreReps() throws {
+        let book = RecordBook([try record(20, 12)])
+        let id = "catalogue.bench.flat"
+
+        #expect(!book.beatsBest(exerciseID: id, weightKG: 17.5, reps: 10))
+        #expect(!book.beatsBest(exerciseID: id, weightKG: 17.5, reps: 20))
+        #expect(!book.beatsBest(exerciseID: id, weightKG: 20, reps: 12))
+        #expect(!book.beatsBest(exerciseID: id, weightKG: 20, reps: 8))
+        #expect(book.beatsBest(exerciseID: id, weightKG: 20, reps: 13))
+        #expect(book.beatsBest(exerciseID: id, weightKG: 22.5, reps: 1))
+        #expect(book.beatsBest(exerciseID: "catalogue.squat.back", weightKG: 5, reps: 1))
+    }
+
+    @Test func aHoldAddedByHandHasToBeLonger() throws {
+        let plank = try PersonalRecord(exerciseID: "catalogue.abs.plank", weightKG: 0, seconds: 120, date: day)
+        let book = RecordBook([plank])
+        let id = "catalogue.abs.plank"
+
+        #expect(!book.beatsBest(exerciseID: id, weightKG: 0, reps: 0, seconds: 90))
+        #expect(!book.beatsBest(exerciseID: id, weightKG: 0, reps: 0, seconds: 120))
+        #expect(book.beatsBest(exerciseID: id, weightKG: 10, reps: 0, seconds: 120))
+        #expect(book.beatsBest(exerciseID: id, weightKG: 0, reps: 0, seconds: 125))
+    }
 }

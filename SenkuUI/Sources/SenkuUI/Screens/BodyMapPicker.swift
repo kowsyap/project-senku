@@ -234,9 +234,10 @@ struct BodyMapArea: Identifiable, Hashable {
         .init(id: "front.triceps", title: "Triceps", group: .tricep,
               regionIDs: ["tricep.longHead", "tricep.lateralHead", "tricep.medialHead"], slugs: ["triceps"]),
         .init(id: "front.forearms", title: "Forearms", group: .forearm,
-              regionIDs: ["forearm.flexors", "forearm.brachioradialis"], slugs: ["forearm"]),
+              regionIDs: ["forearm.flexors", "forearm.brachioradialis"],
+              slugs: ["forearm-brachioradialis", "forearm-flexors"]),
         .init(id: "front.abs", title: "Abs", group: .abs,
-              regionIDs: ["abs.upper", "abs.lower"], slugs: ["abs"]),
+              regionIDs: ["abs.upper", "abs.lower"], slugs: ["abs-upper", "abs-lower"]),
         .init(id: "front.obliques", title: "Obliques", group: .abs,
               regionIDs: ["abs.obliques"], slugs: ["obliques"]),
         .init(id: "front.quads", title: "Quads", group: .legs,
@@ -259,7 +260,8 @@ struct BodyMapArea: Identifiable, Hashable {
         .init(id: "back.lowerBack", title: "Lower back", group: .back,
               regionIDs: ["back.lowerBack"], slugs: ["lower-back"]),
         .init(id: "back.triceps", title: "Triceps", group: .tricep,
-              regionIDs: ["tricep.longHead", "tricep.lateralHead", "tricep.medialHead"], slugs: ["triceps"]),
+              regionIDs: ["tricep.longHead", "tricep.lateralHead", "tricep.medialHead"],
+              slugs: ["triceps-long", "triceps-lateral", "triceps-medial"]),
         .init(id: "back.forearms", title: "Forearms", group: .forearm,
               regionIDs: ["forearm.extensors", "forearm.brachioradialis"], slugs: ["forearm"]),
         .init(id: "back.glutes", title: "Glutes", group: .legs,
@@ -287,6 +289,9 @@ struct BodyMapArt: Sendable {
         let frame: CGRect
         let outline: Path
         let parts: [String: Path]
+        /// The same, piece by piece — a left and a right chest rather than one
+        /// path — for cutting a piece along lines that mirror side to side.
+        let pieces: [String: [Path]]
 
         var slugs: [String] { Array(parts.keys) }
 
@@ -333,16 +338,17 @@ struct BodyMapArt: Sendable {
 
         func side(_ raw: Raw.RawSide) -> Side? {
             let outline = path(raw.outline)
-            let parts = raw.parts.mapValues { pieces in
+            let pieces = raw.parts.mapValues { $0.map(path) }
+            let parts = pieces.mapValues { paths in
                 var combined = Path()
-                for piece in pieces { combined.addPath(path(piece)) }
+                for piece in paths { combined.addPath(piece) }
                 return combined
             }
             let drawn = parts.values.reduce(outline.boundingRect) { $0.union($1.boundingRect) }
             guard !drawn.isEmpty else { return nil }
             // A hair of room all round, so the outline's stroke is not shaved
             // off at the edge it is fitted to.
-            return Side(frame: drawn.insetBy(dx: -4, dy: -4), outline: outline, parts: parts)
+            return Side(frame: drawn.insetBy(dx: -4, dy: -4), outline: outline, parts: parts, pieces: pieces)
         }
         func body(_ raw: Raw.RawBody) -> Body? {
             guard let front = side(raw.front), let back = side(raw.back) else { return nil }

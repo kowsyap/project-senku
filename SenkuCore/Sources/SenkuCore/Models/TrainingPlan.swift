@@ -18,20 +18,42 @@ public struct SplitDay: Identifiable, Codable, Hashable, Sendable {
     public var groups: [WorkoutGroup]
     /// Ordered: this is the order they are performed and shown in.
     public var exerciseIDs: [String]
+    /// Sets and reps for the exercises that differ from the plan's, by id.
+    /// Most days have none: an exercise without its own uses the plan's.
+    public var targets: [String: RepTarget]
 
     public init(
         id: UUID = UUID(),
         name: String,
         groups: [WorkoutGroup],
-        exerciseIDs: [String] = []
+        exerciseIDs: [String] = [],
+        targets: [String: RepTarget] = [:]
     ) {
         self.id = id
         self.name = name
         self.groups = groups
         self.exerciseIDs = exerciseIDs
+        self.targets = targets
     }
 
     public var isEmpty: Bool { exerciseIDs.isEmpty }
+
+    /// The exercise's own target, or the plan's.
+    public func target(for exerciseID: String, plan: RepTarget) -> RepTarget {
+        targets[exerciseID] ?? plan
+    }
+
+    /// Lenient about what a hand-written plan leaves out: a day with no id is
+    /// given one, and a day with no groups gets them from its exercises when
+    /// it is imported. A stored day always has both.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        name = try container.decode(String.self, forKey: .name)
+        groups = try container.decodeIfPresent([WorkoutGroup].self, forKey: .groups) ?? []
+        exerciseIDs = try container.decodeIfPresent([String].self, forKey: .exerciseIDs) ?? []
+        targets = try container.decodeIfPresent([String: RepTarget].self, forKey: .targets) ?? [:]
+    }
 }
 
 /// The week: an ordered list of days.
@@ -52,11 +74,33 @@ public struct TrainingPlan: Codable, Hashable, Sendable {
         self.target = target
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case days, target
+    }
+
     /// Plans saved before the target existed get the standard one.
+    ///
+    /// Days are read through ``WrittenDay``, which also takes the shapes a
+    /// person writes — exercises with their own sets and reps inline, some of
+    /// the numbers left out — and fills what is missing from this plan's
+    /// target, the one thing a day on its own does not know.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        days = try container.decode([SplitDay].self, forKey: .days)
-        target = try container.decodeIfPresent(RepTarget.self, forKey: .target) ?? .standard
+        let target = try container.decodeIfPresent(RepTarget.self, forKey: .target) ?? .standard
+        let written = try container.decode([WrittenDay].self, forKey: .days)
+        self.target = target
+        days = written.map { $0.day(planTarget: target) }
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(days, forKey: .days)
+        try container.encode(target, forKey: .target)
+    }
+
+    /// The target for an exercise on a day: its own, the plan's, or the app's.
+    public func target(for exerciseID: String, on dayID: UUID) -> RepTarget {
+        day(dayID)?.target(for: exerciseID, plan: target) ?? target
     }
 
     public var isEmpty: Bool { days.isEmpty }
@@ -158,4 +202,83 @@ public enum SplitTemplate: String, CaseIterable, Identifiable, Sendable {
     }
 
     public var plan: TrainingPlan { TrainingPlan(days: days) }
+}
+
+/// A day as a file may write it.
+///
+/// Everything ``SplitDay`` stores, plus the friendlier forms: `exercises` as
+/// well as `exerciseIDs`, and each one either a plain name or an object with
+/// its own numbers —
+///
+/// ```json
+/// "exercises": [
+///   "Bench",
+///   { "name": "Squat", "sets": 5, "reps": 5 },
+///   { "name": "Lat Pulldown", "minReps": 8, "maxReps": 12 }
+/// ]
+/// ```
+///
+/// A number left out comes from the plan: the pulldown above is the plan's
+/// sets, at 8–12.
+struct WrittenDay: Decodable {
+    let day: SplitDay
+    let written: [(exercise: String, sets: Int?, reps: Int?, maxReps: Int?)]
+
+    private enum Keys: String, CodingKey {
+        case exercises
+    }
+
+    private struct Item: Decodable {
+        let exercise: String
+        let sets: Int?
+        let reps: Int?
+        let maxReps: Int?
+
+        private enum Keys: String, CodingKey {
+            case name, exercise, id, sets, reps, minReps, maxReps
+        }
+
+        init(from decoder: any Decoder) throws {
+            if let plain = try? decoder.singleValueContainer().decode(String.self) {
+                exercise = plain
+                sets = nil
+                reps = nil
+                maxReps = nil
+                return
+            }
+            let container = try decoder.container(keyedBy: Keys.self)
+            exercise = try container.decodeIfPresent(String.self, forKey: .name)
+                ?? container.decodeIfPresent(String.self, forKey: .exercise)
+                ?? container.decode(String.self, forKey: .id)
+            sets = try container.decodeIfPresent(Int.self, forKey: .sets)
+            reps = try container.decodeIfPresent(Int.self, forKey: .reps)
+                ?? container.decodeIfPresent(Int.self, forKey: .minReps)
+            maxReps = try container.decodeIfPresent(Int.self, forKey: .maxReps)
+        }
+    }
+
+    init(from decoder: any Decoder) throws {
+        var day = try SplitDay(from: decoder)
+        let container = try decoder.container(keyedBy: Keys.self)
+        let items = try container.decodeIfPresent([Item].self, forKey: .exercises) ?? []
+        day.exerciseIDs += items.map(\.exercise)
+        self.day = day
+        self.written = items.map { ($0.exercise, $0.sets, $0.reps, $0.maxReps) }
+    }
+
+    func day(planTarget: RepTarget) -> SplitDay {
+        var day = day
+        for item in written where item.sets != nil || item.reps != nil || item.maxReps != nil {
+            let reps = item.reps ?? planTarget.reps
+            // A top given without a bottom keeps the plan's bottom; a bottom
+            // given alone is a single figure, not the plan's range around it.
+            let top = item.maxReps ?? (item.reps == nil ? planTarget.maxReps : nil)
+            day.targets[item.exercise] = RepTarget(
+                sets: item.sets ?? planTarget.sets,
+                reps: reps,
+                maxReps: top
+            )
+        }
+        return day
+    }
 }

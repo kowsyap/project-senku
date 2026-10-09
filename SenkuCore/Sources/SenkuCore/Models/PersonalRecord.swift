@@ -249,6 +249,35 @@ public struct RecordBook: Sendable {
     /// a record over 100×3 even though the weight is unchanged, and the app
     /// would be wrong to ignore it. The reps rule is what keeps that true past
     /// the estimate's rep limit, where 40×15 and 40×12 estimate the same.
+    /// Whether a lift entered by hand is a new best: more weight than the
+    /// heaviest, or the same weight for more reps. A hold has to be longer, or
+    /// as long with more weight.
+    ///
+    /// Stricter than ``wouldBeRecord(exerciseID:weightKG:reps:seconds:)`` on
+    /// purpose. A logged set can make a record on its estimated single, because
+    /// it was lifted just now; a lift typed in later, lighter than one already
+    /// on the page, only ever made a list with a smaller number under a bigger
+    /// one — and a record page that goes down is not a record page.
+    public func beatsBest(
+        exerciseID: String,
+        weightKG: Double,
+        reps: Int,
+        seconds: TimeInterval? = nil
+    ) -> Bool {
+        let existing = records(for: exerciseID)
+
+        if let seconds {
+            guard let longest = existing.longestHold else { return true }
+            let held = longest.seconds ?? 0
+            if seconds > held + 0.5 { return true }
+            return abs(seconds - held) < 0.5 && weightKG > longest.weightKG + 0.01
+        }
+
+        guard let heaviest = existing.heaviest else { return true }
+        if weightKG > heaviest.weightKG + 0.01 { return true }
+        return abs(weightKG - heaviest.weightKG) < 0.01 && reps > heaviest.reps
+    }
+
     public func wouldBeRecord(
         exerciseID: String,
         weightKG: Double,

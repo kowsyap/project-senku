@@ -35,6 +35,13 @@ public struct RecordsView: View {
     /// Which cardio plan is open for editing.
     @State private var editingProtocol: ExerciseID?
     @State private var filter: WorkoutGroup?
+    /// The exercise whose Info sheet is open, from the button by its name.
+    @State private var infoID: ExerciseID?
+    /// The lift whose record card is being shared.
+    @State private var sharingID: ExerciseID?
+    /// The row slid open to show its Share button. One at a time.
+    @State private var swipedID: String?
+    @Environment(\.senkuBodySex) private var sex
 
     public init(
         store: RecordStore = RecordStore(),
@@ -123,11 +130,38 @@ public struct RecordsView: View {
         return library.catalogue.workoutGroups.filter { groups.contains($0) }
     }
 
-    /// The lifts on screen: everything, or one group's worth, newest first.
-    private var shownRecords: [ExerciseRecords] {
-        sections
+    /// One exercise's card on the page, lifted or cardio.
+    private enum Row: Identifiable {
+        case lift(ExerciseRecords)
+        case cardio(CardioExerciseRecords)
+
+        var id: String {
+            switch self {
+            case .lift(let entry): "lift." + entry.exerciseID
+            case .cardio(let entry): "cardio." + entry.exerciseID
+            }
+        }
+
+        var latest: Date {
+            switch self {
+            case .lift(let entry): entry.mostRecent?.date ?? .distantPast
+            case .cardio(let entry): entry.mostRecent?.date ?? .distantPast
+            }
+        }
+    }
+
+    /// What is on screen: everything, or one group's worth, with whatever you
+    /// beat most recently at the top — across groups, cardio included, so the
+    /// record you just set is the first thing you see.
+    private var shownRows: [Row] {
+        var rows = sections
             .filter { filter == nil || $0.group == filter }
             .flatMap(\.entries)
+            .map(Row.lift)
+        if filter == nil || filter == .cardio {
+            rows += cardioRecords.book.byExercise.map(Row.cardio)
+        }
+        return rows.sorted { $0.latest > $1.latest }
     }
 
     /// Cardio, in the same shape as the rest of the page: one card per
@@ -137,24 +171,6 @@ public struct RecordsView: View {
     /// twenty minutes beats a gentle forty — so the card leads with the longest
     /// session and names the other bests underneath, and a session counts as a
     /// record when it beats the time *or* any figure the machine reports.
-    @ViewBuilder
-    private var cardioSection: some View {
-        let entries = cardioRecords.book.byExercise
-
-        if !entries.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(entries) { entry in
-                    Button {
-                        editingProtocol = ExerciseID(entry.exerciseID)
-                    } label: {
-                        cardioCard(entry)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
     private func cardioCard(_ entry: CardioExerciseRecords) -> some View {
         let exercise = library.exercise(entry.exerciseID)
         let longest = entry.longest
@@ -167,9 +183,7 @@ public struct RecordsView: View {
         return Card {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(name(of: entry.exerciseID))
-                        .font(.subheadline.weight(.semibold))
-                        .multilineTextAlignment(.leading)
+                    nameLine(entry.exerciseID)
 
                     if let bests = cardioBests(entry, exercise: exercise) {
                         Text(bests)
@@ -220,21 +234,28 @@ public struct RecordsView: View {
                 } else {
                     groupFilter
 
-                    if filter == nil || filter == .cardio {
-                        cardioSection
-                    }
-
                     // A flat list, filtered. The headings said the same word as
                     // the chip above them and cost a line each on a page that
                     // is mostly scrolling — and with a filter chosen, a heading
                     // announces the only group on screen.
-                    ForEach(shownRecords) { record in
-                        Button {
-                            detailID = ExerciseID(record.exerciseID)
-                        } label: {
-                            recordCard(record)
+                    ForEach(shownRows) { row in
+                        switch row {
+                        case .lift(let entry):
+                            SwipeToShare(
+                                id: row.id,
+                                openID: $swipedID,
+                                tint: tint(for: entry.exerciseID),
+                                onShare: { sharingID = ExerciseID(entry.exerciseID) }
+                            ) {
+                                tappable(recordCard(entry)) {
+                                    detailID = ExerciseID(entry.exerciseID)
+                                }
+                            }
+                        case .cardio(let entry):
+                            tappable(cardioCard(entry)) {
+                                editingProtocol = ExerciseID(entry.exerciseID)
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -249,6 +270,31 @@ public struct RecordsView: View {
                     StackedActionLabel("Add", symbol: "plus")
                 }
                 .accessibilityLabel("Add a personal record")
+            }
+        }
+        .sheet(item: $infoID) { opened in
+            if let exercise = library.exercise(opened.id) {
+                ExerciseInfoSheet(
+                    exercise: exercise,
+                    library: library,
+                    refusal: nil,
+                    onDelete: nil,
+                    onClose: { infoID = nil }
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(ExercisePicker.solidSheet)
+            }
+        }
+        .sheet(item: $sharingID) { opened in
+            if let card = RecordShareCard(
+                entry: store.book.records(for: opened.id),
+                exercise: library.exercise(opened.id),
+                name: name(of: opened.id),
+                unitSystem: unitSystem,
+                sex: sex
+            ) {
+                RecordShareSheet(card: card, message: card.message) { sharingID = nil }
             }
         }
         .sheet(item: $editingProtocol) { opened in
@@ -298,6 +344,7 @@ public struct RecordsView: View {
         .sheet(item: $detailID) { opened in
             RecordDetailSheet(
                 store: store,
+                library: library,
                 exerciseID: opened.id,
                 name: name(of: opened.id),
                 isBodyweight: library.exercise(opened.id)?.equipment == .bodyweight,
@@ -308,13 +355,55 @@ public struct RecordsView: View {
         }
     }
 
+    /// The exercise's name, with its Info button right beside it.
+    private func nameLine(_ exerciseID: String) -> some View {
+        HStack(spacing: 6) {
+            Text(name(of: exerciseID))
+                .font(.subheadline.weight(.semibold))
+                .multilineTextAlignment(.leading)
+
+            if library.exercise(exerciseID) != nil {
+                Button {
+                    infoID = ExerciseID(exerciseID)
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        // A bigger target than the glyph, without a bigger glyph.
+                        .padding(6)
+                        .contentShape(Rectangle())
+                        .padding(-6)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("About \(name(of: exerciseID))")
+            }
+        }
+    }
+
+    /// A card that opens on a tap.
+    ///
+    /// A tap gesture rather than a `Button`, because the Info button sits
+    /// inside the card, and a button inside a button's label never gets the
+    /// tap. A tap on a row slid open closes it instead of opening it.
+    private func tappable(_ card: some View, open: @escaping () -> Void) -> some View {
+        card
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if swipedID != nil {
+                    withAnimation(.snappy) { swipedID = nil }
+                } else {
+                    open()
+                }
+            }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { open() }
+    }
+
     private func recordCard(_ entry: ExerciseRecords) -> some View {
         Card {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(name(of: entry.exerciseID))
-                        .font(.subheadline.weight(.semibold))
-                        .multilineTextAlignment(.leading)
+                    nameLine(entry.exerciseID)
 
                     Text(subtitle(for: entry.exerciseID))
                         .font(.caption2)
@@ -404,6 +493,7 @@ public struct RecordsView: View {
 
 private struct RecordDetailSheet: View {
     @Bindable var store: RecordStore
+    let library: ExerciseLibrary
     let exerciseID: String
     let name: String
     let isBodyweight: Bool
@@ -418,6 +508,18 @@ private struct RecordDetailSheet: View {
     @State private var isAdding = false
     @State private var deleting: PersonalRecord?
     @State private var isConfirmingExerciseDelete = false
+    @State private var isSharing = false
+    @Environment(\.senkuBodySex) private var sex
+
+    private var shareCard: RecordShareCard? {
+        RecordShareCard(
+            entry: entry,
+            exercise: library.exercise(exerciseID),
+            name: name,
+            unitSystem: unitSystem,
+            sex: sex
+        )
+    }
 
     private func row(for record: PersonalRecord) -> some View {
         HStack(spacing: 10) {
@@ -504,6 +606,18 @@ private struct RecordDetailSheet: View {
                     .accessibilityLabel("Delete every record for this exercise")
                 }
 
+                // The best record as a picture, for a friend or a story.
+                if entry.best != nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            isSharing = true
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel("Share this record")
+                    }
+                }
+
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         isAdding = true
@@ -515,6 +629,15 @@ private struct RecordDetailSheet: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: onClose)
+                }
+            }
+            .sheet(isPresented: $isSharing) {
+                if let shareCard {
+                    RecordShareSheet(
+                        card: shareCard,
+                        message: shareCard.message,
+                        onClose: { isSharing = false }
+                    )
                 }
             }
             .confirmationDialog(
@@ -644,8 +767,20 @@ private struct RecordValueEditor: View {
         )
     }
 
+    /// The best this would fall short of, if it would. A record added by hand
+    /// has to be heavier, or the same weight for more reps — see
+    /// ``RecordBook/beatsBest(exerciseID:weightKG:reps:seconds:)``.
+    private var shortOf: PersonalRecord? {
+        guard let weightKG else { return nil }
+        let book = RecordBook(existing)
+        let beats = isTimed
+            ? book.beatsBest(exerciseID: exerciseID, weightKG: weightKG, reps: 0, seconds: seconds)
+            : reps.map { book.beatsBest(exerciseID: exerciseID, weightKG: weightKG, reps: Int($0)) } ?? true
+        return beats ? nil : book.records(for: exerciseID).best
+    }
+
     private var canSave: Bool {
-        guard duplicate == nil else { return false }
+        guard duplicate == nil, shortOf == nil else { return false }
         guard weightKG != nil || isBodyweight else { return false }
         return isTimed || reps != nil
     }
@@ -731,6 +866,17 @@ private struct RecordValueEditor: View {
                 // and the reason to be guessed at.
                 Label(
                     "You already have this one, from \(duplicate.date.formatted(date: .abbreviated, time: .omitted)). Change the weight or the reps.",
+                    systemImage: "exclamationmark.circle"
+                )
+                .font(.caption)
+                .foregroundStyle(Senku.Palette.caution)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else if let shortOf {
+                Label(
+                    "Not a record: your best is \(Display.set(weightKG: shortOf.weightKG, reps: shortOf.reps, seconds: shortOf.seconds, in: unitSystem)), from \(shortOf.date.formatted(date: .abbreviated, time: .omitted)). "
+                        + (isTimed
+                            ? "Hold longer, or as long with more weight."
+                            : "Go heavier, or the same weight for more reps."),
                     systemImage: "exclamationmark.circle"
                 )
                 .font(.caption)
@@ -844,4 +990,82 @@ private struct RecordEditor: View {
     }
 }
 
+#endif
+
+#if !os(watchOS)
+/// A row that slides left to show a Share button behind it.
+///
+/// The page is a scroll of cards rather than a `List`, so the system's swipe
+/// actions are not there to use; this is the same gesture, built by hand. A
+/// short slide opens it, a long one shares straight away, and only a drag that
+/// is more sideways than up and down counts — anything else is the page
+/// scrolling.
+private struct SwipeToShare<Content: View>: View {
+    let id: String
+    @Binding var openID: String?
+    let tint: Color
+    let onShare: () -> Void
+    @ViewBuilder let content: Content
+
+    @State private var drag: CGFloat = 0
+
+    private static var width: CGFloat { 80 }
+    private static var fullSwipe: CGFloat { 200 }
+
+    private var isOpen: Bool { openID == id }
+    private var rest: CGFloat { isOpen ? -Self.width : 0 }
+    private var offset: CGFloat { min(0, rest + drag) }
+
+    var body: some View {
+        content
+            .offset(x: offset)
+            .background(alignment: .trailing) {
+                Button {
+                    withAnimation(.snappy) { openID = nil }
+                    onShare()
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.title3.weight(.semibold))
+                        Text("Share")
+                            .font(.caption2.weight(.semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(width: max(Self.width - 8, -offset - 8))
+                    .frame(maxHeight: .infinity)
+                    .background(
+                        tint,
+                        in: RoundedRectangle(cornerRadius: Senku.Metrics.cardCorner, style: .continuous)
+                    )
+                }
+                .buttonStyle(.plain)
+                .opacity(offset < -4 ? 1 : 0)
+                .accessibilityHidden(true)
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 16)
+                    .onChanged { value in
+                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                        // Another row was open: this one takes over.
+                        if openID != nil, !isOpen { withAnimation(.snappy) { openID = nil } }
+                        drag = value.translation.width
+                    }
+                    .onEnded { value in
+                        let sideways = abs(value.translation.width) > abs(value.translation.height)
+                        let end = rest + value.translation.width
+                        withAnimation(.snappy) {
+                            drag = 0
+                            guard sideways else { return }
+                            if end < -Self.fullSwipe {
+                                openID = nil
+                                onShare()
+                            } else {
+                                openID = end < -Self.width / 2 ? id : nil
+                            }
+                        }
+                    }
+            )
+            .accessibilityAction(named: "Share") { onShare() }
+    }
+}
 #endif
