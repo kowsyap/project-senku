@@ -17,13 +17,15 @@ measured inputs are kept distinct from estimated ones.
    with one measured from the user's own data.
 4. Keep the common actions to one tap, on the phone, the Home Screen or the
    wrist.
-5. Run entirely on-device, with no account and no subscription.
+5. Run entirely on-device, with no account and no subscription. The one
+   exception — reading food photos with Gemini — is off unless switched on, and
+   says so where it is.
 
 ## Non-goals
 
 | Not in scope | Reason |
 | --- | --- |
-| Social features, feeds, sharing | Single-user application by design |
+| Social features and feeds | Single-user application by design; a record can be shared as a picture, and that is all |
 | A food database | Licensed data; quick-adds cover recurring items |
 | Cloud sync | Export and import cover backup and transfer |
 | Reading from HealthKit | Senku is the source of record: it writes to Apple Health (F7) and never reads back |
@@ -47,7 +49,7 @@ measured inputs are kept distinct from estimated ones.
 | iOS | 26.5 or later |
 | watchOS | 26.5 or later |
 | Toolchain | Xcode 26, Swift 6 |
-| Distribution | Build from source; personal Apple ID is sufficient |
+| Distribution | Build from source, or sideload the `.ipa`; a personal Apple ID is sufficient |
 
 ## Scope
 
@@ -59,9 +61,11 @@ measured inputs are kept distinct from estimated ones.
 | F4 | Water tracking | Delivered |
 | F5 | Protein and macro intake | Delivered |
 | F6 | Anime log | Delivered |
+| F7 | Apple Health, write-only | Delivered; the SideStore check is open |
 
 Supporting capabilities: rest timer, plate calculator, Home Screen widgets,
-Apple Watch app, PDF report, JSON export and import.
+Apple Watch app, PDF report, JSON export and import, plan import from any AI
+(`skills/senku-plan`), and an About page carrying the license notices.
 
 ## Documents
 
@@ -71,6 +75,8 @@ Apple Watch app, PDF report, JSON export and import.
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Structure, storage, sync, testing |
 | [ROADMAP.md](ROADMAP.md) | Milestones and backlog |
 | [BUILD.md](BUILD.md) | Build, signing and simulator setup |
+| [../skills/senku-plan](../skills/senku-plan) | The plan-import skill: instructions, format, checker |
+| [../LICENSE](../LICENSE) · [../THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) | MIT, with the icon artwork excluded; third-party notices |
 
 ## Disclaimer
 

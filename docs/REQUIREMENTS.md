@@ -10,10 +10,9 @@ Functional requirements and acceptance criteria for Senku.
 - A checked box means the criterion is implemented and covered by a test or by
   a named type in the source.
 
-**Status:** F1–F6 delivered; two of their acceptance criteria remain open and
-are tracked in [ROADMAP.md](ROADMAP.md) M9. F7 (Apple Health) is specified and
-not started. Everything else agreed but not yet built is under
-[Planned](#planned).
+**Status:** F1–F7 delivered. Three acceptance criteria remain open — two from
+F1–F5, tracked in [ROADMAP.md](ROADMAP.md) M9, and F7's SideStore install, M10.
+Everything else agreed but not yet built is under [Planned](#planned).
 
 | ID | Feature | Depends on |
 | --- | --- | --- |
@@ -23,7 +22,7 @@ not started. Everything else agreed but not yet built is under
 | [F4](#f4--water-tracking) | Water tracking | S1, S2 |
 | [F5](#f5--protein-and-macro-intake) | Protein and macro intake | S1 |
 | [F6](#f6--anime-log) | Anime log | S1 |
-| [F7](#f7--apple-health-planned) | Apple Health — planned | F1, F3, F4, F5 |
+| [F7](#f7--apple-health) | Apple Health | F1, F3, F4, F5 |
 
 ---
 
@@ -68,13 +67,18 @@ must have a text equivalent.
 - **S2-R1** iOS retains only the 64 soonest pending requests. The total booked
   by the app must stay demonstrably below that ceiling.
 - **S2-R2** Identifiers are namespaced per source: `senku.rest.*`,
-  `senku.weighin.*`, `senku.water.*`, `senku.creatine.*`.
+  `senku.weighin.*`, `senku.water.*`, `senku.creatine.*`, `senku.due.*`.
 - **S2-R3** Repeating triggers are used in preference to enumerating future
   occurrences.
 - **S2-R4** Authorisation is requested before scheduling, not alongside it.
 - **S2-R5** Every reminder is individually switchable.
 
-Current budget: 12 water slots, 1 weigh-in, 1 creatine, 1 rest — 15 at worst.
+- **S2-R6** The rest chime must not turn other audio down for the length of a
+  rest. The session holding the app awake mixes with other audio; it ducks only
+  for the chime, and lets go once the chime has sounded.
+
+Budget, declared once in `NotificationBudget` and summed by a test: water 12,
+rest 2, weigh-in 1, creatine 1, due dates 42 — 58 allocated, 6 held in reserve.
 
 ### S3 — Day boundary
 
@@ -104,6 +108,12 @@ Current budget: 12 water slots, 1 weigh-in, 1 creatine, 1 rest — 15 at worst.
   each of those pages (Workout, Weight, Water, Food, Plates) rather than holding a
   second copy. The rest that follows a logged set is a Workout setting, on the
   Week page.
+- **S5-R6** An About page, from Settings, gives the version, who made the app
+  and where to report a problem, where the data goes and the exceptions to "it
+  stays on the phone", the medical disclaimer, the license with its artwork
+  exclusion, and every third-party license notice in full — the copy MIT asks
+  for in each copy of the software. The app's copy of a notice must match
+  `THIRD_PARTY_NOTICES.md` word for word, which `PlanConverterTests` checks.
 
 ---
 
@@ -171,6 +181,7 @@ PersonalRecord
   exerciseID: ExerciseID
   weightKG: Double
   reps: Int
+  seconds: TimeInterval?         // a hold
   date: Date
   source: .logged(setID) | .manual
 ```
@@ -193,13 +204,23 @@ PersonalRecord
 - **F2-R6** Deleting a custom exercise that a split or a record still references
   is refused.
 - **F2-R7** Cardio records are held alongside, with reusable protocols.
-- **F2-R8** The list can be filtered by muscle group and by recency, including a
-  stale filter of no new record in 60 days.
+- **F2-R8** The list is newest first: an exercise's latest record decides its
+  place, lifts and cardio together. It can be filtered by muscle group. (The
+  recency and stale filters were removed — every row carries its date.)
 - **F2-R9** A set is a record if it is heavier than any before, has more reps at
   the heaviest weight, or implies a better estimated single. The reps rule
   holds past the estimate's 10-rep limit, where two sets estimate alike.
 - **F2-R10** A logged set and a record of the same lift give the same estimate:
   the formula is written once.
+- **F2-R11** A record added by hand must beat the exercise's best: heavier, or
+  the same weight for more reps; a hold longer, or as long with more weight.
+  Logged sets keep F2-R9, which also accepts a better estimated single.
+- **F2-R12** A record can be shared as a picture: a 9:16 card at 1080 × 1920 with
+  the lift, what it beat, the estimated 1RM, the records leading to it and the
+  muscles it trains on the body. It is drawn on the phone, previewed before the
+  share sheet, and only the image leaves. Swiping a row left offers the same.
+- **F2-R13** Each row carries an info button beside the exercise's name, opening
+  the exercise's sheet (F3-R18).
 
 ### Acceptance
 
@@ -214,6 +235,11 @@ PersonalRecord
 - [x] 35 kg × 10 followed by 40 kg × 15 moves the estimate to ≥ 53.3 kg —
       `PersonalRecordTests`
 - [x] 40 kg × 15 is a record over 40 kg × 12 — `PersonalRecordTests`
+- [x] A lighter record typed by hand is refused, the same weight for more reps
+      accepted — `PersonalRecordTests`
+- [x] A record shares as a story-sized card — `RecordShareCard`, `RecordShareSheet`
+- [x] The list orders exercises by their latest record, cardio included —
+      `RecordsView.shownRows`
 
 ---
 
@@ -230,12 +256,19 @@ Exercise                       // catalogue: bundled, read-only
   contributions: [MuscleRegion: Double]     // 0…1 per region
   isTimed, isCustom: Bool
 
+RepTarget
+  sets: 1…10, reps: 1…50, maxReps?          // "3 × 10" or "3 × 8–12"
+
+TrainingPlan
+  days: [SplitDay], target: RepTarget        // the week's target
+
 SplitDay                       // user-defined
   name, groups: [WorkoutGroup], exerciseIDs: [ExerciseID]
+  targets: [ExerciseID: RepTarget]           // only where an exercise differs
 
 WorkoutSession
   date, groups
-  entries: [(exerciseID, sets: [LoggedSet])]
+  entries: [(exerciseID, sets: [LoggedSet], target: RepTarget?)]
 
 LoggedSet
   id, weightKG, reps, seconds?, completedAt
@@ -277,9 +310,10 @@ A two-level taxonomy, bundled as data in `SenkuCore`:
 - **F3-R13** Forearms are a group of their own. Adding a group must not change
   the coverage of any existing group, and a week without forearm work is not
   reported as a gap.
-- **F3-R14** The exercise picker opened on a split day's group may leave it for
-  any other group; an exercise from a group the day does not include is listed
-  under "Also in this day".
+- **F3-R14** The exercise picker opened from a muscle's card offers that muscle
+  only, and its search looks only there. The day's Other card, always shown,
+  holds exercises from outside the day's muscles, and its + opens the picker on
+  the groups.
 - **F3-R15** A muscle group is chosen either on a body map (the default) or on
   the ring, with a switch between them that is remembered and backed up.
   - The body drawn is the profile's sex, front and back, the other side small in
@@ -291,6 +325,44 @@ A two-level taxonomy, bundled as data in `SenkuCore`:
   - Muscles are drawn in their group's colour, the same as the ring's discs.
 - **F3-R16** The ring can be turned by dragging. It settles with a group at the
   top, and a tap still chooses a group.
+- **F3-R17** Targets. The week has one, and any exercise on a day may have its
+  own; an exercise without its own uses the week's, and a week without one uses
+  3 × 10.
+  - A target is sets and reps, or sets and a rep range.
+  - An exercise is done at its target's sets.
+  - A step up is earned when every set at one weight reaches the top of the
+    range; the next session opens at that weight plus one step, back at the
+    bottom of the range. A bodyweight exercise asks for one rep past the top.
+  - A session copies each exercise's target when it starts, so a later change
+    to the plan does not re-judge old sessions. Sessions from before targets
+    finish at three sets.
+- **F3-R18** An exercise's info sheet draws what it trains on the body, front and
+  back, yellow for a little to red for most; the chest is cut into its three
+  heads along the muscle. It opens from the picker, from a session's rows and
+  from records.
+- **F3-R19** Finishing a session shows the body: green for what was trained,
+  red for what the day planned and was not. A muscle counts as trained at half
+  coverage or more.
+- **F3-R20** A session shows how long it has run, from the moment the day was
+  chosen: minutes and seconds, hours added after the first, stopping in red at
+  three hours.
+- **F3-R21** A plan can be imported from a file, from the Week page.
+  - The file may name exercises by id, name or another name, whole and
+    forgiving case, spacing and a plural; groups as people say them; and no ids.
+    Exercises may carry their own numbers, and what they leave out comes from
+    the plan's target.
+  - A name that matches nothing, or matches several, is reported and left out,
+    never guessed.
+  - Only the plan and the custom exercises it needs are taken from the file;
+    custom exercises are added first so the plan can name them, and one whose
+    name already exists is not added again.
+  - Before anything is replaced the week is shown, laid out like the Week page,
+    from a dry run of the same import; the long press previews a plan-only
+    file the same way.
+  - The page hands out a prompt for any AI chat and the plan skill as a zip, both
+    built at that moment from the app's own catalogue and the person's own
+    exercises. The skill lives in `skills/senku-plan` and is mirrored into the
+    app.
 
 ### Two-way behaviour with F2
 
@@ -320,6 +392,21 @@ A two-level taxonomy, bundled as data in `SenkuCore`:
 - [x] Every region except cardio's is on the body, for both sexes, and the heart
       reaches cardio — `BodyMapTests`
 - [x] The heart stands on the line the figures do — `BodyMapTests`
+- [x] 3 × 8–12 is earned at twelve on every set; a range written as 10–10 is one
+      figure; an old target still reads — `RepTargetTests`
+- [x] An exercise finishes at its own sets; a session from before targets at
+      three — `RepTargetTests`
+- [x] Names, aliases and plurals resolve; "RDL" is reported as ambiguous;
+      nothing outside the plan changes — `PlanImportTests`
+- [x] The documented example and the skill's example both import cleanly —
+      `PlanImportTests`
+- [x] The preview predicts exactly what Replace does, and touches nothing —
+      `PlanConverterTests`
+- [x] The app's prompt and skill match the repository's byte for byte —
+      `PlanConverterTests`
+- [x] Trained and missed muscles follow the half-coverage line — `BodyMapTests`
+- [x] Import a Plan is reachable from the Week page, and a plan file opens its
+      preview — `PlanImportUITests`
 - [x] Dragging round the ring turns it the right way, across the wrap, and not
       at all near the centre — `RingTurnTests`
 - [x] Every rule above is covered by the `SenkuCore` suite
@@ -448,7 +535,7 @@ AnimeEntry
 
 ---
 
-## F7 — Apple Health (planned)
+## F7 — Apple Health
 
 **Purpose.** Write what Senku records into Apple Health, so it sits beside what
 the phone and watch measure. Senku stays the source of record: nothing is read
@@ -489,8 +576,9 @@ back.
 - [x] Water, food and body are worked out as new, edited or removed before
       anything is sent — `HealthSyncPlanTests`
 - [x] Food and body samples appear in Health — verified on device, 2026-10-07
-- [ ] A finished session writes one workout with its estimated energy, only
-      after confirmation — open, F7
+- [x] A finished session writes one workout with its estimated energy, only
+      when its summary is closed with Done — `HealthWorkoutDraft`,
+      `WorkoutEnergyTests`
 - [x] PROJECT.md's HealthKit non-goal reads "write-only; never reads"
 
 ---
@@ -500,8 +588,8 @@ back.
 | Criterion | Feature | Tracked as |
 | --- | --- | --- |
 | Reminder suppressed on a day already logged | F1 | M9 |
-| A past entry can be edited | F4, F5 | M9 |
-| Every F7 acceptance criterion | F7 | M10 |
+| A single past entry can be edited or deleted (a past day's total already can be set, from Streaks) | F4, F5 | M9 |
+| A SideStore install writes to Health | F7 | M10 |
 
 ---
 

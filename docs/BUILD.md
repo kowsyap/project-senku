@@ -35,8 +35,8 @@ is needed only to distribute.
 
 ```sh
 # Packages, on the host
-cd SenkuCore && swift test        # 171 tests
-cd ../SenkuUI  && swift test      # 73 tests
+cd SenkuCore && swift test        # 241 tests
+cd ../SenkuUI  && swift test      # 209 tests
 
 # Package builds per platform
 xcodebuild -scheme SenkuUI -destination 'generic/platform=iOS' build
@@ -96,11 +96,12 @@ xcrun simctl launch booted pk.Senku.watchkitapp
 
 ### Debug hooks
 
-Both are `#if DEBUG`, read at launch, and set as environment variables:
+All are `#if DEBUG`, read at launch, and set as environment variables:
 
 | Variable | Effect |
 | --- | --- |
-| `SENKU_SAMPLE` | loads `Senku/Senku/sample-data.json` through the production importer — three weeks of workouts, weigh-ins, water, food and anime |
+| `SENKU_SAMPLE` | `1` loads `Senku/Senku/sample-data.json` through the production importer — three weeks of workouts, weigh-ins, water, food and anime. A path loads that file instead, such as a persona from `make_persona.py`. Only into an empty app |
+| `SENKU_PLAN_FILE` | opens a plan file's preview as though it had been picked — the one step a UI test cannot reach through the file picker |
 | `SENKU_SCREEN` | opens the app directly on one screen (`water`, `food`, `records`…) |
 | `SENKU_REST` | watch only: starts a rest of N seconds at launch |
 
@@ -133,21 +134,28 @@ write` is refused by the sandbox. Use the sample data or the Quick calc screen.
 
 For sideloading with SideStore, AltStore or similar. An `.ipa` is a zip with the
 app inside a folder called `Payload`, so no export step is needed — the sideloader
-strips the signature and re-signs with your own Apple ID anyway.
+strips the signature and re-signs with your own Apple ID anyway. The archive is
+built unsigned for that reason.
 
 ```sh
 cd Senku
 xcodebuild -project Senku.xcodeproj -scheme Senku \
   -configuration Release -destination 'generic/platform=iOS' \
-  -archivePath /tmp/Senku.xcarchive -allowProvisioningUpdates archive
+  -archivePath /tmp/Senku.xcarchive CODE_SIGNING_ALLOWED=NO archive
 
 mkdir -p /tmp/ipa/Payload
 cp -R /tmp/Senku.xcarchive/Products/Applications/Senku.app /tmp/ipa/Payload/
 cd /tmp/ipa && zip -qry <repo>/dist/Senku.ipa Payload
+
+# The SideStore build: the same, without the embedded watch app.
+rm -rf /tmp/ipa/Payload/Senku.app/Watch
+cd /tmp/ipa && zip -qry <repo>/dist/Senku-sidestore.ipa Payload
 ```
 
-`dist/` is ignored by git. The package carries the widgets, the watch app and
-the watch complication, all four bundles signed with `group.pk.Senku`.
+Both are committed to `dist/`, which is where the README's install steps send
+people. The full package carries the widgets, the watch app and the watch
+complication; the SideStore one drops the watch app, which sideloaders handle
+badly.
 
 Two things to check after a sideloaded install:
 
@@ -157,6 +165,40 @@ Two things to check after a sideloaded install:
 - **A watch app that never updates.** Sideloaders have a patchy record with
   embedded WatchKit apps and may quietly drop it. Installing straight to the watch
   with `devicectl` bypasses that entirely — see above.
+
+## The plan skill
+
+`skills/senku-plan` is the source; the app carries a copy in
+`SenkuUI/Sources/SenkuUI/PlanSkill` and hands it out from Import a Plan. After
+changing the skill or the exercise catalogue:
+
+```sh
+python3 skills/senku-plan/scripts/senku_plan.py sync
+```
+
+It refreshes the skill's catalogue, its exercise list and `prompt.md`, and
+mirrors the hand-written files into the app. `PlanConverterTests` fails until
+it has been run.
+
+## README screenshots
+
+Taken by `ScreenshotTests` from a persona made by `docs/screenshots/make_persona.py`,
+on a fresh install — the persona loads only into an empty app — with the status
+bar pinned:
+
+```sh
+python3 docs/screenshots/make_persona.py /tmp/maya.json
+xcrun simctl uninstall <device> pk.Senku
+xcrun simctl status_bar <device> override --time 9:41 --batteryState charged \
+  --batteryLevel 100 --cellularBars 4 --wifiBars 3
+TEST_RUNNER_SENKU_PERSONA=/tmp/maya.json TEST_RUNNER_SENKU_SHOTS=/tmp/shots \
+  xcodebuild test -project Senku/Senku.xcodeproj -scheme Senku \
+  -destination 'platform=iOS Simulator,id=<device>' -parallel-testing-enabled NO \
+  -only-testing:SenkuUITests/ScreenshotTests
+```
+
+A named simulator destination is fine for tests; the generic-destination rule
+above is about builds that link the watch app.
 
 ## Entitlements
 

@@ -2,7 +2,8 @@
 
 Milestones in delivery order. Each one ends with something usable on a device.
 
-**Status:** M0–M8 complete. M9 is the current backlog.
+**Status:** M0–M8 and M11 complete. M10 is done but for the SideStore check.
+M9 is the current backlog.
 
 ---
 
@@ -52,7 +53,8 @@ Milestones in delivery order. Each one ends with something usable on a device.
 - [x] Personal records per exercise, logged and manual kept distinct
 - [x] Estimated 1RM by Epley, sets past 10 reps counted as 10 and shown as a floor
 - [x] Cardio records and reusable cardio protocols
-- [x] Filters: muscle group, recency, stale
+- [x] Filter by muscle group (recency and stale filters later replaced by a
+      newest-first list, M11)
 
 ## M5 — Workout (F3)
 
@@ -66,7 +68,8 @@ Milestones in delivery order. Each one ends with something usable on a device.
 - [x] Rest timer started from the set logger
 - [x] Group chosen on a body map (male or female, front and back) or a ring that
       turns by dragging
-- [x] A split day's picker can leave its group for any other
+- [x] A split day's picker can leave its group for any other (later fenced to the
+      muscle, with an Other card for the rest, M11)
 
 ## M6 — Water (F4)
 
@@ -104,7 +107,8 @@ Milestones in delivery order. Each one ends with something usable on a device.
 ## M9 — Backlog
 
 - [x] Set a past day's protein, calories, water and creatine, from Streaks
-- [ ] Edit a past entry of food and water
+- [ ] Open a past day's food and water and edit or delete a single entry
+      (today's can be; a past day's total can be set from Streaks)
 - [ ] User-settable day boundary (default midnight, 03:00 alternative)
 - [ ] Sets-per-week volume guidance
 - [ ] Watch complications for water and food
@@ -114,9 +118,27 @@ Milestones in delivery order. Each one ends with something usable on a device.
 ## M10 — Apple Health (F7)
 
 - [ ] Sideload test: one water sample through SideStore on a free Apple ID
-- [ ] Water, food and body written as logged, following edits and deletions
-- [ ] Workouts with confirmed, MET-estimated active energy
-- [ ] Apple Health section on the Settings page
+- [x] Water, food and body written as logged, following edits and deletions
+- [x] Workouts with confirmed, MET-estimated active energy
+- [x] Apple Health section on the Settings page
+
+## M11 — Plans, targets and sharing
+
+- [x] Sets and rep ranges: a week's target and any exercise's own; done at its
+      sets, a step up at the top of the range (F3-R17)
+- [x] Day editor: target chips, an Other card, a picker that stays in its muscle
+- [x] Import a Plan on the Week page, with a preview laid out like the week; the
+      long press previews plan files too (F3-R21)
+- [x] The plan skill, `/senku-plan`, for any AI, with a standard-library checker;
+      and a prompt for any AI chat, both built from the app's own catalogue
+- [x] PRs: a story-sized share card, swipe to share, newest first, info beside
+      each name, and a record added by hand must beat the best (F2-R11–R13)
+- [x] Body heat maps on exercise info, chest heads cut along the muscle; trained
+      and missed muscles on the session summary (F3-R18, R19)
+- [x] Session clock (F3-R20)
+- [x] The rest chime ducks music only for the chime (S2-R6)
+- [x] MIT license, and an About page with the license notices in full (S5-R6)
+- [x] README screenshots of a generated persona, taken by a UI test
 
 ---
 
@@ -134,4 +156,5 @@ Milestones in delivery order. Each one ends with something usable on a device.
 | M7 — Food | ✅ |
 | M8 — Watch, widgets and export | ✅ |
 | M9 — Backlog | in progress |
-| M10 — Apple Health | planned |
+| M10 — Apple Health | ✅ but for the SideStore check |
+| M11 — Plans, targets and sharing | ✅ |

@@ -21,25 +21,30 @@ senku/
 │       ├── SenkuCore/
 │       │   ├── Calculations/    BMR, macros, coverage, streaks, adaptive TDEE
 │       │   ├── Models/          WeighIn, Exercise, WorkoutSession, Intake…
-│       │   └── Resources/       ExerciseCatalogue.json — 138 exercises
+│       │   └── Resources/       ExerciseCatalogue.json — 160 exercises
 │       └── SenkuCLI/            `senku plan …`
 ├── SenkuUI/                     screens and state
-│   └── Sources/SenkuUI/
-│       ├── Calculations/        PlateMath
-│       ├── Components/          cards, rings, numeric field, tab bar
-│       ├── Formatting/          units and display rules
-│       ├── LiveActivity/        notifications, reminders, App Intents
-│       ├── Reports/             PDF layout, charts, section picker
-│       ├── Screens/             one file per screen, phone and watch
-│       ├── State/               stores, importer, sync
-│       └── Theme/               palette and metrics
+│   ├── Sources/SenkuUI/
+│   │   ├── Calculations/        PlateMath
+│   │   ├── Components/          cards, rings, numeric field, tab bar
+│   │   ├── Formatting/          units and display rules
+│   │   ├── Intelligence/        reading food: Vision, on-device model, Gemini
+│   │   ├── LiveActivity/        notifications, reminders, chime, App Intents
+│   │   ├── PlanSkill/           the plan skill, mirrored from skills/
+│   │   ├── Reports/             PDF layout, charts, section picker
+│   │   ├── Resources/           BodyMap.json, the chime, artwork
+│   │   ├── Screens/             one file per screen, phone and watch
+│   │   ├── State/               stores, importer, Apple Health, plan converter
+│   │   └── Theme/               palette and metrics
+│   └── Tools/                   build_bodymap.py
 ├── Senku/                       Xcode project
 │   ├── Senku/                   app entry point, sample data
 │   ├── SenkuWidgets/
 │   ├── SenkuWatch/
 │   ├── SenkuTests/              bundle-level tests
-│   └── SenkuUITests/            UI automation
-└── docs/
+│   └── SenkuUITests/            UI automation and the README screenshots
+├── skills/senku-plan/           the plan-import skill, for any AI
+└── docs/                        and docs/screenshots/make_persona.py
 ```
 
 ### Package boundaries
@@ -103,16 +108,53 @@ identifiers before re-reading, since a concurrent write shifts rows.
   unreachable counterpart queues rather than drops. Duplicate identifiers are
   ignored on arrival.
 
+## Apple Health
+
+Write-only (F7). `HealthSync` reconciles rather than appends: each category
+works out what is new, changed and gone since the last write
+(`HealthSyncPlan`), tags every sample with its Senku entry so an edit replaces
+it and a delete removes it, and writes only categories switched on in Settings
+and only entries logged since they were. Restores and sample data never reach
+Health. A workout is written once, from its summary's Done.
+
+## Plan import
+
+A plan file goes through the same importer as a backup, trimmed to its plan and
+custom exercises (`SenkuImporter.applyPlan`). Names are resolved to catalogue
+ids on the way in (`ExerciseLibrary.exercise(named:)`); a day's targets follow
+their exercises through that resolution.
+
+The preview is a dry run, not a second implementation: the importer runs
+against throwaway stores seeded with the person's own exercises, and the week it
+leaves behind is what the preview draws (`PlanImportPreview`). It cannot
+promise a different week from the one Replace makes.
+
+The converters are built on the phone (`PlanConverter`): the prompt and the
+skill's exercise list are generated from the bundled catalogue plus the
+person's own exercises, and the skill is zipped from `PlanSkill/`, a copy of
+`skills/senku-plan` kept by `senku_plan.py sync`. Tests hold the copy, the
+generated list and the prompt to the repository's bytes.
+
+## Network
+
+None by default. The exceptions are each the person's choice: Gemini reading a
+food photo or label (opt-in, with their own key), anime posters loaded from the
+addresses they add, and links they tap. Everything else — HealthKit,
+WatchConnectivity, widgets — stays on the device.
+
 ## Notifications
 
-iOS retains the 64 soonest pending requests (S2-R1). Current budget:
+iOS retains the 64 soonest pending requests (S2-R1). The budget is declared
+once, in `NotificationBudget`, and a test sums it:
 
 | Source | Requests |
 | --- | --- |
-| Water reminders | up to 12 repeating |
+| Water reminders | up to 12 |
+| Rest timer | 2, only while a rest runs |
 | Weigh-in reminder | 1 repeating |
 | Creatine reminder | 1 repeating |
-| Rest timer | 1, only while a rest runs |
+| Due dates | up to 42 one-shots |
+| Reserve | 6 |
 
 `RestAlertPresenter` is the `UNUserNotificationCenterDelegate`, installed at
 launch. It presents alerts while the app is foregrounded and allows notification
@@ -132,10 +174,10 @@ they are on display (S5-R4).
 
 | Suite | Runs on | Covers |
 | --- | --- | --- |
-| `SenkuCore/Tests` | host, `swift test` | calculations and model rules — 171 tests |
-| `SenkuUI/Tests` | host, `swift test` | stores, importer, plate maths, tab layout, sample data — 73 tests |
+| `SenkuCore/Tests` | host, `swift test` | calculations and model rules — 241 tests |
+| `SenkuUI/Tests` | host, `swift test` | stores, importer, plan import and preview, the skill's copy, body map, plate maths, tab layout, sample data — 209 tests |
 | `Senku/SenkuTests` | simulator | bundle resources, App Group access |
-| `Senku/SenkuUITests` | simulator | launch, rest timer, calculator |
+| `Senku/SenkuUITests` | simulator | launch, rest timer, calculator, Import a Plan; the README screenshots, on request |
 
 ## Conventions
 
@@ -143,8 +185,9 @@ they are on display (S5-R4).
 - Models validate in `init` and throw; invalid values are not stored.
 - Formatting lives in `Display`.
 - Debug-only hooks are `#if DEBUG` and documented: `SENKU_SAMPLE` loads sample
-  data through the production importer, `SENKU_SCREEN` opens the app on one
-  screen.
+  data through the production importer (`1` for the bundled file, or a path),
+  `SENKU_SCREEN` opens the app on one screen, `SENKU_PLAN_FILE` opens a plan
+  file's preview as though it had been picked.
 
 ## Key decisions
 
@@ -156,3 +199,6 @@ they are on display (S5-R4).
 | A4 | Watch holds a summary, not a history | Avoids two devices diverging on one list |
 | A5 | Custom navigation bar | Four configurable slots rather than five fixed ones |
 | A6 | PDF drawn with Core Text and Core Graphics | Real pagination and vector charts |
+| A7 | Apple Health reconciled by difference, write-only | Edits and deletes follow; nothing read back competes with the app's own record |
+| A8 | The plan preview is a dry run of the importer | One implementation, so the preview cannot disagree with the import |
+| A9 | The skill mirrored into the app, held by tests | The app hands out exactly the skill in the repository, with its own catalogue |
