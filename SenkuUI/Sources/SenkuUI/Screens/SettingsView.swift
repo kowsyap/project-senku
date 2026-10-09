@@ -47,6 +47,19 @@ struct SettingsView: View {
             #endif
 
             screensSection
+
+            Section {
+                NavigationLink {
+                    AboutView()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(RootView.Tab.more.tint)
+                            .frame(width: 26)
+                        Text("About")
+                    }
+                }
+            }
         }
         .sheet(isPresented: Binding(get: { plates != nil }, set: { if !$0 { plates = nil } })) {
             if let plates {

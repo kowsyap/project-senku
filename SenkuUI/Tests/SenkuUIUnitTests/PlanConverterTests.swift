@@ -190,4 +190,18 @@ import SenkuCore
         #expect(Set(preview.exercises.keys) == shown)
         #expect(preview.exercises.values.contains { $0.name == "Towel Row" && $0.isCustom })
     }
+
+    /// The notice the app shows is the one the library ships — MIT asks for it
+    /// word for word in every copy, and the repository's copy is the record.
+    @Test func theAboutPageCarriesTheBodyFigureNoticeWordForWord() throws {
+        let notices = try String(
+            contentsOf: Self.skill.deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("THIRD_PARTY_NOTICES.md"),
+            encoding: .utf8
+        )
+        let parts = notices.components(separatedBy: "```")
+        #expect(parts.count >= 3)
+        let block = parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
+        #expect(AboutView.bodyHighlighterNotice == block)
+    }
 }

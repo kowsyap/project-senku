@@ -130,4 +130,21 @@ final class ScreenshotTests: XCTestCase {
         }
 
     }
+
+    func testAbout() {
+        let app = launch()
+        app.open("More")
+        app.buttons["Settings"].tap()
+        let about = app.buttons["About"]
+        if reveal(about, in: app) {
+            about.tap()
+            shoot("about")
+            let notice = app.buttons.containing(NSPredicate(format: "label CONTAINS 'react-native-body-highlighter'")).firstMatch
+            if reveal(notice, in: app) {
+                notice.tap()
+                app.swipeUp()
+                shoot("about-notice")
+            }
+        }
+    }
 }
