@@ -132,25 +132,21 @@ write` is refused by the sandbox. Use the sample data or the Quick calc screen.
 
 ## Packaging an .ipa
 
-For sideloading with SideStore, AltStore or similar. An `.ipa` is a zip with the
-app inside a folder called `Payload`, so no export step is needed — the sideloader
-strips the signature and re-signs with your own Apple ID anyway. The archive is
-built unsigned for that reason.
+For sideloading with SideStore, AltStore or similar:
 
 ```sh
-cd Senku
-xcodebuild -project Senku.xcodeproj -scheme Senku \
-  -configuration Release -destination 'generic/platform=iOS' \
-  -archivePath /tmp/Senku.xcarchive CODE_SIGNING_ALLOWED=NO archive
-
-mkdir -p /tmp/ipa/Payload
-cp -R /tmp/Senku.xcarchive/Products/Applications/Senku.app /tmp/ipa/Payload/
-cd /tmp/ipa && zip -qry <repo>/dist/Senku.ipa Payload
-
-# The SideStore build: the same, without the embedded watch app.
-rm -rf /tmp/ipa/Payload/Senku.app/Watch
-cd /tmp/ipa && zip -qry <repo>/dist/Senku-sidestore.ipa Payload
+sh Senku/make_ipas.sh
 ```
+
+An `.ipa` is a zip with the app inside a folder called `Payload`, so no export
+step is needed. The script archives unsigned, then signs every bundle **ad hoc
+with its own entitlements**, inside out — the watch widgets, the watch app, the
+phone widgets, the app. The sideloader replaces that signature with your Apple
+ID's, but it keeps the entitlements it finds: an unsigned `.ipa` carries none,
+which installed an app with no HealthKit (Apple Health could not be switched
+on) and no App Group (blank widgets, a watch that never updated). Fixed in 1.1.
+
+Check a build with `codesign -d --entitlements - Payload/Senku.app`.
 
 Both are committed to `dist/`, which is where the README's install steps send
 people. The full package carries the widgets, the watch app and the watch
@@ -219,9 +215,9 @@ SenkuWatchWidgets.appex  ['group.pk.Senku']
 **HealthKit works on a free account**, verified 2026-10-07: the team profile for
 `pk.Senku` accepts `com.apple.developer.healthkit`, and a build installed with
 `devicectl` asks for permission and writes samples the Health app shows. Only the
-phone app carries it; the watch and widgets write nothing to Health. Whether it
-survives a sideloader's re-signing is not yet known — an unsigned `.ipa` carries
-no entitlements for SideStore to copy.
+phone app carries it; the watch and widgets write nothing to Health. Through a
+sideloader it needs the entitlement inside the `.ipa`, which `make_ipas.sh`
+signs in from 1.1 — whether SideStore then grants it is the open check.
 
 **iCloud does not.** Adding `com.apple.developer.ubiquity-kvstore-identifier`
 fails at signing with *"Personal development teams … do not support the iCloud

@@ -571,8 +571,8 @@ back.
 
 - [x] A build installed on a free Apple ID writes a water sample and the
       permission prompt appears — verified on device, 2026-10-07
-- [ ] The same through a SideStore install — open, F7; the `.ipa` must carry
-      its entitlements first
+- [ ] The same through a SideStore install — open, F7; from 1.1 the `.ipa`
+      carries its entitlements (`make_ipas.sh`), awaiting a check on a device
 - [x] Water, food and body are worked out as new, edited or removed before
       anything is sent — `HealthSyncPlanTests`
 - [x] Food and body samples appear in Health — verified on device, 2026-10-07

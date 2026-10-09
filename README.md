@@ -317,7 +317,10 @@ No Mac needed for this route, and no Xcode. Download the `.ipa` and sideload it.
 
 ### 1. Get the app
 
-Download **`Senku.ipa`** from the [Releases page](../../releases/latest).
+Download **`Senku-sidestore.ipa`** from the [Releases page](../../releases/latest).
+It is the app and its widgets. `Senku.ipa` also carries the Apple Watch app,
+which sideloaders often drop; if you want the watch, see the note at the end of
+this section.
 
 ### 2. Set up SideStore
 
@@ -422,18 +425,14 @@ TEST_RUNNER_SENKU_PERSONA=/tmp/maya.json TEST_RUNNER_SENKU_SHOTS=docs/screenshot
 ### Make your own .ipa
 
 ```sh
-cd Senku
-xcodebuild -project Senku.xcodeproj -scheme Senku \
-  -configuration Release -destination 'generic/platform=iOS' \
-  -archivePath /tmp/Senku.xcarchive -allowProvisioningUpdates archive
-
-mkdir -p /tmp/ipa/Payload
-cp -R /tmp/Senku.xcarchive/Products/Applications/Senku.app /tmp/ipa/Payload/
-cd /tmp/ipa && zip -qry ~/Desktop/Senku.ipa Payload
+sh Senku/make_ipas.sh      # → dist/Senku.ipa and dist/Senku-sidestore.ipa
 ```
 
-An `.ipa` is a zip with the app inside a folder called `Payload`; no export step
-is needed, because the sideloader re-signs it anyway.
+An `.ipa` is a zip with the app inside a folder called `Payload`, and the
+sideloader re-signs it with your Apple ID. The script still signs each bundle
+ad hoc with its entitlements first: SideStore keeps the entitlements it finds,
+and without them Apple Health could not be switched on and the widgets and the
+watch would see none of your data.
 
 More — the watch pairing, the debug hooks, the entitlement notes — is in
 [docs/BUILD.md](docs/BUILD.md).
