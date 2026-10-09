@@ -41,6 +41,7 @@ cannot explain where a number came from, it does not show it.**
 - [The technical side](#the-technical-side)
 - [Contributing](#contributing)
 - [Credits](#credits)
+- [License](#license)
 
 ---
 
@@ -544,6 +545,14 @@ The body figures are drawn from
 [react-native-body-highlighter](https://github.com/HichamELBSI/react-native-body-highlighter)
 (MIT), split into finer muscles for Senku. The full notice is in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+---
+
+## License
+
+The code is [MIT](LICENSE). The icon artwork — app icons, logo marks and other
+image assets used as icons — is not covered and belongs to its respective
+owners; a fork has to bring its own.
 
 ---
 
