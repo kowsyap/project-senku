@@ -12,9 +12,9 @@ import SenkuCore
     @Test func theAllocationIsWhatWasAgreed() {
         #expect(NotificationBudget.allocation(.water) == 12)
         #expect(NotificationBudget.allocation(.rest) == 2)
-        #expect(NotificationBudget.allocation(.weighIn) == 1)
+        #expect(NotificationBudget.allocation(.weighIn) == 7)
         #expect(NotificationBudget.allocation(.creatine) == 1)
-        #expect(NotificationBudget.allocation(.dueDates) == 42)
+        #expect(NotificationBudget.allocation(.dueDates) == 36)
     }
 }
 
@@ -121,7 +121,7 @@ import SenkuCore
 
     @Test func slotsLeftLeavesOutTheItemBeingEdited() {
         let item = amex()
-        #expect(DueReminderPlan.slotsLeft([item]) == 39)
-        #expect(DueReminderPlan.slotsLeft([item], excluding: item.id) == 42)
+        #expect(DueReminderPlan.slotsLeft([item]) == 33)
+        #expect(DueReminderPlan.slotsLeft([item], excluding: item.id) == 36)
     }
 }

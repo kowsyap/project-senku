@@ -32,19 +32,28 @@ public final class WaterStore {
     }
 
     private let defaults: UserDefaults
-    private let calendar: Calendar
+    private let fixedCalendar: Calendar?
+    /// The logging calendar, read live so a change of day boundary applies at
+    /// once; a test can fix one instead.
+    private var calendar: Calendar { fixedCalendar ?? .logging }
 
     public private(set) var entries: [WaterEntry] = []
     public private(set) var settings = Settings()
     /// Days creatine was taken, as start-of-day timestamps.
     public private(set) var creatineDays: Set<Date> = []
 
-    public init(defaults: UserDefaults = SenkuStorage.shared, calendar: Calendar = .current) {
+    /// Ticks saved under any day boundary, as the days they mean under this one.
+    private func loadCreatineDays() -> Set<Date> {
+        let stored = Self.load([Date].self, key: Self.creatineKey, from: defaults) ?? []
+        return Set(stored.map { DayBoundary.day(of: $0, in: calendar) })
+    }
+
+    public init(defaults: UserDefaults = SenkuStorage.shared, calendar: Calendar? = nil) {
         self.defaults = defaults
-        self.calendar = calendar
+        self.fixedCalendar = calendar
         self.entries = Self.load([WaterEntry].self, key: Self.entriesKey, from: defaults) ?? []
         self.settings = Self.load(Settings.self, key: Self.settingsKey, from: defaults) ?? Settings()
-        self.creatineDays = Set(Self.load([Date].self, key: Self.creatineKey, from: defaults) ?? [])
+        self.creatineDays = loadCreatineDays()
 
         migrate()
     }
@@ -64,7 +73,7 @@ public final class WaterStore {
     public func reload() {
         entries = Self.load([WaterEntry].self, key: Self.entriesKey, from: defaults) ?? []
         settings = Self.load(Settings.self, key: Self.settingsKey, from: defaults) ?? Settings()
-        creatineDays = Set(Self.load([Date].self, key: Self.creatineKey, from: defaults) ?? [])
+        creatineDays = loadCreatineDays()
     }
 
     /// Brings stored settings up to what the app now allows.

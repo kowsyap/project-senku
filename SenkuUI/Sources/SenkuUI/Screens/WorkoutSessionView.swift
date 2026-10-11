@@ -510,6 +510,8 @@ private struct SetLogger: View {
     let target: RepTarget
 
     @State private var weight: Double = 0
+    /// A plate or a belt on a bodyweight exercise. See ``AddedWeight``.
+    @State private var addsWeight = false
     @State private var reps: Int = 8
     @State private var seconds: TimeInterval = 60
     @State private var newRecord: PersonalRecord?
@@ -602,8 +604,11 @@ private struct SetLogger: View {
 
     private var inputSection: some View {
         Section {
-            if !isBodyweight {
-                LabeledContent("Weight") {
+            if isBodyweight {
+                Toggle("Added weight", isOn: $addsWeight.animation(.snappy(duration: 0.2)))
+            }
+            if !isBodyweight || addsWeight {
+                LabeledContent(isBodyweight ? "Added" : "Weight") {
                     HStack {
                         weightStepButton(-1)
                         TextField(
@@ -712,6 +717,14 @@ private struct SetLogger: View {
             reps = max(1, best.reps)
             if let held = best.seconds { seconds = held }
         }
+
+        // A bodyweight exercise opens at bodyweight. Added weight carries over
+        // only from a set you did today, with it showing — never from a record
+        // or an old session, where it was invisible and got saved anyway.
+        if isBodyweight {
+            addsWeight = AddedWeight.startsOn(lastSetToday: entry?.sets.last)
+            if !addsWeight { weight = 0 }
+        }
     }
 
     private func converted(_ kilograms: Double) -> Double {
@@ -721,7 +734,7 @@ private struct SetLogger: View {
     private func addSet() {
         let kilograms = unitSystem == .metric ? weight : Convert.kilograms(fromPounds: weight)
         guard let set = try? LoggedSet(
-            weightKG: max(0, kilograms),
+            weightKG: AddedWeight.recorded(kilograms, isBodyweight: isBodyweight, adds: addsWeight),
             reps: isTimed ? 0 : reps,
             seconds: isTimed ? seconds : nil
         ) else { return }
@@ -1153,6 +1166,27 @@ private struct CardioLogger: View {
         Feedback.control()
         newRecord = workouts.logCardio(effort, for: exerciseID, records: cardioRecords)
         dismiss()
+    }
+}
+
+/// Weight on a bodyweight exercise — a belt, a plate, a vest.
+///
+/// Off unless switched on for the set in front of you. It used to be a weight
+/// the logger kept with the field hidden: filled from the last set or the
+/// record, and saved with every set, so a pull-up record once typed with a
+/// plate put that plate on every pull-up after it without a word.
+enum AddedWeight {
+    /// Whether a set opens with weight added: only when the set before it,
+    /// today, had some.
+    static func startsOn(lastSetToday: LoggedSet?) -> Bool {
+        (lastSetToday?.weightKG ?? 0) > 0
+    }
+
+    /// What a set records. A loaded exercise records its weight; a bodyweight
+    /// one records the added weight when it is switched on, and nothing else.
+    static func recorded(_ kilograms: Double, isBodyweight: Bool, adds: Bool) -> Double {
+        guard isBodyweight else { return max(0, kilograms) }
+        return adds ? max(0, kilograms) : 0
     }
 }
 

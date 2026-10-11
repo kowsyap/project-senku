@@ -246,6 +246,8 @@ struct BodyMapArea: Identifiable, Hashable {
               regionIDs: ["legs.adductors"], slugs: ["adductors"]),
         .init(id: "front.calves", title: "Calves", group: .legs,
               regionIDs: ["legs.calves"], slugs: ["calves"]),
+        .init(id: "front.tibialis", title: "Shins", group: .legs,
+              regionIDs: ["legs.tibialis"], slugs: ["tibialis"]),
     ]
 
     static let back: [BodyMapArea] = [

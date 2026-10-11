@@ -23,14 +23,17 @@ public final class IntakeStore {
     static let seededKey = "senku.intake.seeded.v2"
 
     private let defaults: UserDefaults
-    private let calendar: Calendar
+    private let fixedCalendar: Calendar?
+    /// The logging calendar, read live so a change of day boundary applies at
+    /// once; a test can fix one instead.
+    private var calendar: Calendar { fixedCalendar ?? .logging }
 
     public private(set) var entries: [IntakeEntry] = []
     public private(set) var favourites: [FoodFavourite] = []
 
-    public init(defaults: UserDefaults = SenkuStorage.shared, calendar: Calendar = .current) {
+    public init(defaults: UserDefaults = SenkuStorage.shared, calendar: Calendar? = nil) {
         self.defaults = defaults
-        self.calendar = calendar
+        self.fixedCalendar = calendar
         reload()
         seedIfNeeded()
     }

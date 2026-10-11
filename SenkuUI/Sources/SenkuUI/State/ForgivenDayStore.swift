@@ -20,16 +20,19 @@ public final class ForgivenDayStore {
     static let storageKey = "senku.forgivenDays.v1"
 
     private let defaults: UserDefaults
-    private let calendar: Calendar
+    private let fixedCalendar: Calendar?
+    /// The logging calendar, read live so a change of day boundary applies at
+    /// once; a test can fix one instead.
+    private var calendar: Calendar { fixedCalendar ?? .logging }
 
     /// Keyed by the track's id — "water", "creatine", "protein", "calories" —
     /// so forgiving a day of one habit says nothing about the others. Missing
     /// your protein and drinking your water is an ordinary Tuesday.
     public private(set) var days: [String: Set<Date>] = [:]
 
-    public init(defaults: UserDefaults = SenkuStorage.shared, calendar: Calendar = .current) {
+    public init(defaults: UserDefaults = SenkuStorage.shared, calendar: Calendar? = nil) {
         self.defaults = defaults
-        self.calendar = calendar
+        self.fixedCalendar = calendar
         reload()
     }
 
@@ -40,7 +43,8 @@ public final class ForgivenDayStore {
             days = [:]
             return
         }
-        days = stored
+        // Days saved under any boundary, as the days they mean under this one.
+        days = stored.mapValues { Set($0.map { DayBoundary.day(of: $0, in: calendar) }) }
     }
 
     public func days(for track: String) -> Set<Date> { days[track] ?? [] }

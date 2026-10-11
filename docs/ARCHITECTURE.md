@@ -21,7 +21,7 @@ senku/
 │       ├── SenkuCore/
 │       │   ├── Calculations/    BMR, macros, coverage, streaks, adaptive TDEE
 │       │   ├── Models/          WeighIn, Exercise, WorkoutSession, Intake…
-│       │   └── Resources/       ExerciseCatalogue.json — 160 exercises
+│       │   └── Resources/       ExerciseCatalogue.json — 162 exercises
 │       └── SenkuCLI/            `senku plan …`
 ├── SenkuUI/                     screens and state
 │   ├── Sources/SenkuUI/
@@ -151,9 +151,9 @@ once, in `NotificationBudget`, and a test sums it:
 | --- | --- |
 | Water reminders | up to 12 |
 | Rest timer | 2, only while a rest runs |
-| Weigh-in reminder | 1 repeating |
+| Weigh-in reminder | 7 one-shots, a day already weighed left out |
 | Creatine reminder | 1 repeating |
-| Due dates | up to 42 one-shots |
+| Due dates | up to 36 one-shots |
 | Reserve | 6 |
 
 `RestAlertPresenter` is the `UNUserNotificationCenterDelegate`, installed at

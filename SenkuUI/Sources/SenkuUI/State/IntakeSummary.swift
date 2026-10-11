@@ -56,7 +56,7 @@ public struct IntakeSummary: Codable, Hashable, Sendable {
         )
     }
 
-    public func isCurrent(_ calendar: Calendar = .current) -> Bool {
+    public func isCurrent(_ calendar: Calendar = .logging) -> Bool {
         calendar.isDateInToday(date)
     }
 

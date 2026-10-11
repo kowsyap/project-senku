@@ -58,6 +58,12 @@ public enum RestChime {
     /// Whether a rest is holding the audio session open.
     public static var isHolding: Bool { silence != nil }
 
+    /// Whether a chime is booked for the rest that is running or just ended.
+    ///
+    /// The Rest tab asks before ringing its own: with this one booked, both
+    /// sounded at the deadline — the same chime twice, a beat apart.
+    public static var isBooked: Bool { chime != nil }
+
     /// Starts holding the session, and books the chime for the deadline.
     public static func schedule(at deadline: Date) {
         let delay = deadline.timeIntervalSinceNow

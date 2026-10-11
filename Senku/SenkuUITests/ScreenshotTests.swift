@@ -147,4 +147,40 @@ final class ScreenshotTests: XCTestCase {
             }
         }
     }
+
+    /// A bodyweight exercise's logger: bodyweight by default, weight a switch away.
+    func testBodyweightLogger() {
+        let app = launch()
+        app.open("Workout")
+        let day = button(containing: "Upper B", in: app)
+        if day.waitForExistence(timeout: 3) { day.tap() }
+        let pullUp = button(containing: "Pull-Up", in: app)
+        if reveal(pullUp, in: app) {
+            pullUp.tap()
+            shoot("logger-bodyweight")
+            let toggle = app.switches["Added weight"]
+            if toggle.waitForExistence(timeout: 3) {
+                toggle.switches.firstMatch.tap()
+                shoot("logger-added-weight")
+            }
+        }
+    }
+
+    func testDayBoundaryConfirmation() {
+        let app = launch()
+        app.open("More")
+        app.buttons["Settings"].tap()
+        let picker = button(containing: "Day starts at", in: app)
+        if picker.waitForExistence(timeout: 3) {
+            picker.tap()
+            let option = app.buttons["2 am"]
+            if option.waitForExistence(timeout: 3) {
+                option.tap()
+                if app.alerts.firstMatch.waitForExistence(timeout: 3) {
+                    shoot("day-boundary-alert")
+                    app.alerts.buttons["Cancel"].tap()
+                }
+            }
+        }
+    }
 }

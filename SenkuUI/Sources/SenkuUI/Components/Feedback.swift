@@ -21,8 +21,15 @@ import WatchKit
 public enum Feedback {
     /// The buzzer: chime plus haptic, on the running→finished edge.
     @discardableResult
-    public static func restFinished(onSound: (@MainActor @Sendable (Bool) -> Void)? = nil) -> Bool {
-        Chime.shared.play(completion: onSound)
+    public static func restFinished(
+        chime: Bool = true,
+        onSound: (@MainActor @Sendable (Bool) -> Void)? = nil
+    ) -> Bool {
+        if chime {
+            Chime.shared.play(completion: onSound)
+        } else {
+            onSound?(true)
+        }
 
         #if os(iOS)
         UINotificationFeedbackGenerator().notificationOccurred(.success)

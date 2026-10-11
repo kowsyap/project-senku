@@ -49,7 +49,10 @@ struct WaterProvider: TimelineProvider {
         Task { @MainActor in
             // Midnight, and only midnight: the total resets then, and nothing
             // else about it is predictable.
-            let midnight = Calendar.current.startOfDay(for: .now.addingTimeInterval(86_400))
+            // The start of the next day, at the day boundary you chose.
+            let logging = Calendar.logging
+            let midnight = logging.date(byAdding: .day, value: 1, to: logging.startOfDay(for: .now))
+                ?? .now.addingTimeInterval(86_400)
             completion(
                 Timeline(
                     entries: [WaterEntry(date: .now, summary: current())],

@@ -25,6 +25,7 @@ public enum NotificationBudget {
         case water
         /// The finished alert and its sweep.
         case rest
+        /// A week of single mornings, so a day already weighed is skipped.
         case weighIn
         case creatine
         /// Bills, renewals, deadlines — the one that can grow.
@@ -35,9 +36,9 @@ public enum NotificationBudget {
         switch feature {
         case .water: 12
         case .rest: 2
-        case .weighIn: 1
+        case .weighIn: 7
         case .creatine: 1
-        case .dueDates: 42
+        case .dueDates: 36
         }
     }
 

@@ -83,6 +83,11 @@ public struct RootView: View {
     /// action in the app that means "forget everything".
     @State private var generation = UUID()
 
+    /// When a day starts. Watched here because a change moves every day's
+    /// totals: the stores re-read their day-stamped records, the screens are
+    /// rebuilt, and the widgets redrawn.
+    @AppStorage(DayBoundary.storageKey, store: SenkuStorage.shared) private var dayBoundary = 0
+
     /// Which three screens the bar is carrying, and what More is showing.
     @State private var layout = TabLayout()
     @State private var moreDestination: Tab?
@@ -370,6 +375,7 @@ public struct RootView: View {
             selection = .more
             moreDestination = stranded
         }
+        .onChange(of: dayBoundary) { _, _ in dayBoundaryChanged() }
         .onChange(of: scenePhase) { _, phase in
             // Drinks can be logged from the Home Screen widget, in another
             // process, while the app is in the background — so the water it
@@ -386,6 +392,11 @@ public struct RootView: View {
                 // calendar: yesterday's "due tomorrow" is today's "due today",
                 // and a bill that went overdue overnight needs its nudge.
                 refreshDueReminders()
+                // The weigh-in reminders are a week of single mornings; coming
+                // back is when the week is topped up.
+                #if canImport(UserNotifications) && !os(macOS)
+                Task { await WeightReminder.refresh() }
+                #endif
             }
 
             // Republished whenever the app comes forward, which is the cheapest
@@ -736,6 +747,17 @@ public struct RootView: View {
     /// Here instead, where it runs at launch and every time the app comes
     /// forward, after the store has been re-read so today's total is the real
     /// one.
+    /// Every day's totals move with the boundary: re-read what is stamped by
+    /// day, rebuild the screens, and redraw the widgets.
+    private func dayBoundaryChanged() {
+        water.reload()
+        intake.reload()
+        weightLog.reload()
+        generation = UUID()
+        restoreWaterReminders()
+        DayBoundary.refreshWidgets()
+    }
+
     private func restoreWaterReminders() {
         #if canImport(UserNotifications) && !os(macOS)
         WaterReminders.refresh(

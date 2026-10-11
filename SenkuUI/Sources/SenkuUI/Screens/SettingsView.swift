@@ -23,6 +23,10 @@ struct SettingsView: View {
     /// Opened fresh for the rack editor; the plate calculator reads the
     /// saved rack again when it next appears.
     @State private var plates: PlateStore?
+    @AppStorage(DayBoundary.storageKey, store: SenkuStorage.shared) private var dayBoundary = 0
+    /// The boundary picked and not yet confirmed. Changing it moves every
+    /// day's totals and streaks, so it is asked about first.
+    @State private var pendingBoundary: Int?
     #if os(iOS)
     private let health = HealthSync.shared
     #endif
@@ -40,6 +44,28 @@ struct SettingsView: View {
                         Text("Navbar")
                     }
                 }
+            }
+
+            Section {
+                Picker(selection: Binding(
+                    get: { dayBoundary },
+                    set: { if $0 != dayBoundary { pendingBoundary = $0 } }
+                )) {
+                    ForEach(DayBoundary.choices, id: \.self) { hour in
+                        Text(DayBoundary.title(hour)).tag(hour)
+                    }
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "moon.stars")
+                            .foregroundStyle(RootView.Tab.more.tint)
+                            .frame(width: 26)
+                        Text("Day starts at")
+                    }
+                }
+            } footer: {
+                Text(dayBoundary == 0
+                    ? "Logs after midnight count towards the new day."
+                    : "Logs before \(DayBoundary.title(dayBoundary)) count towards the previous day.")
             }
 
             #if os(iOS)
@@ -66,6 +92,20 @@ struct SettingsView: View {
                 PlateRackEditor(plates: plates, unitSystem: plates.unit) { self.plates = nil }
             }
         }
+        .alert(
+            "Start the day at \(DayBoundary.title(pendingBoundary ?? 0).lowercased())?",
+            isPresented: Binding(get: { pendingBoundary != nil }, set: { if !$0 { pendingBoundary = nil } })
+        ) {
+            Button("Change") {
+                if let pendingBoundary { dayBoundary = pendingBoundary }
+                pendingBoundary = nil
+            }
+            Button("Cancel", role: .cancel) { pendingBoundary = nil }
+        } message: {
+            Text("Today's totals and your streaks are counted again from the new start of the day. Nothing you logged is changed.")
+        }
+        // The More tab's grey made the alert's buttons look disabled.
+        .tint(.blue)
         .navigationTitle("Settings")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

@@ -171,6 +171,7 @@ struct BodyMapPart: Identifiable, Hashable {
         .init(id: "front.quads", group: .legs, regionIDs: ["legs.quads"], slugs: ["quadriceps"]),
         .init(id: "front.innerThigh", group: .legs, regionIDs: ["legs.adductors"], slugs: ["adductors"]),
         .init(id: "front.calves", group: .legs, regionIDs: ["legs.calves"], slugs: ["calves"]),
+        .init(id: "front.tibialis", group: .legs, regionIDs: ["legs.tibialis"], slugs: ["tibialis"]),
     ]
 
     static let back: [BodyMapPart] = [

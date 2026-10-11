@@ -243,7 +243,7 @@ public struct WaterView: View {
 
     /// The same seven days the water chart covers, so the two read together.
     private var creatineWeek: some View {
-        let calendar = Calendar.current
+        let calendar = Calendar.logging
         let days: [Date] = (0 ..< 7).compactMap {
             calendar.date(byAdding: .day, value: -(6 - $0), to: .now)
         }
@@ -410,7 +410,7 @@ public struct WaterView: View {
     /// longer exists. The training-day bump is resolved per day, which is the
     /// part that would be wrong if this were stored at the time.
     private func metWaterDays(days: Int = 35) -> Set<Date> {
-        let calendar = Calendar.current
+        let calendar = Calendar.logging
 
         return Set(
             store.log.recentTotals(days: days).compactMap { day in

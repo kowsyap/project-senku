@@ -40,7 +40,7 @@ public struct WaterSummary: Codable, Hashable, Sendable {
 
     /// Whether this is about today. A summary from another day says nothing
     /// about this one.
-    public func isCurrent(_ calendar: Calendar = .current) -> Bool {
+    public func isCurrent(_ calendar: Calendar = .logging) -> Bool {
         calendar.isDateInToday(date)
     }
 

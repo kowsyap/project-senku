@@ -91,6 +91,24 @@ public struct RestTimerView: View {
     private let isVisible = true
     #endif
 
+    /// Takes up the stored rest — or, when there no longer is one, stops.
+    ///
+    /// The second half is the fix. Ending a rest from the Live Activity clears
+    /// the stored rest, cancels the chime and tells this screen; the screen
+    /// only ever took up a rest that existed, so it went on counting its own
+    /// copy to an end that made no sound.
+    private func followStoredRest() {
+        if let stored = RestTimerStore.load() {
+            timer = stored
+            now = .now
+        } else if !timer.isIdle {
+            // Running, paused or counting past zero — any of them, stopped
+            // elsewhere, stops here.
+            endEverything()
+            now = .now
+        }
+    }
+
     /// Tears the rest down across every surface that knows about it.
     private func endEverything() {
         timer.reset()
@@ -121,11 +139,9 @@ public struct RestTimerView: View {
         }
         .background(.background)
         .onReceive(NotificationCenter.default.publisher(for: RestDeepLink.didStart)) { _ in
-            // A widget tap while this screen is already on display.
-            if let started = RestTimerStore.load() {
-                timer = started
-                now = .now
-            }
+            // A rest started, extended or ended from outside this screen — a
+            // logged set, a widget, the Live Activity's End button.
+            followStoredRest()
         }
         .onAppear {
             // A rest started from Control Center, or one left running when iOS
@@ -190,6 +206,9 @@ public struct RestTimerView: View {
             // Leaving it in Notification Center afterwards is pure litter — you
             // already know the rest ended, and it stays there until swiped.
             guard phase == .active else { return }
+            // Ended from the lock screen while the app was away: the stored rest
+            // is gone, and this screen must not carry on with its own copy.
+            followStoredRest()
             #if canImport(UserNotifications) && !os(macOS) && !os(watchOS)
             if !timer.isRunning { RestNotifications.clearDelivered() }
             #endif
@@ -228,7 +247,12 @@ public struct RestTimerView: View {
                 // brought up to date either way, which is what `changed` does
                 // below; it is the alert that is conditional.
                 if timer.overrun(at: instant) < 3 {
-                    #if !os(watchOS)
+                    #if os(iOS)
+                    // The chime booked on the audio clock rings by itself; a
+                    // second one from here was the same sound twice. Only when
+                    // nothing is booked does this screen make the noise.
+                    Feedback.restFinished(chime: !RestChime.isBooked)
+                    #elseif !os(watchOS)
                     Feedback.restFinished()
                     #endif
 

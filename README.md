@@ -63,7 +63,7 @@ cannot explain where a number came from, it does not show it.**
 
 ### Training
 
-- **A catalogue of 160 exercises** — barbell, dumbbell, kettlebell, machine,
+- **A catalogue of 162 exercises** — barbell, dumbbell, kettlebell, machine,
   cable and bodyweight, each one already mapped to the muscle regions it
   actually works and how much of the effort goes where. Search it by the name
   you actually use — "skull crusher", "RDL", "OHP" — filter it by group or
@@ -172,7 +172,7 @@ guessing from your BMI.
 
 **Build your week once.** Add a training day, name it, pick its muscle groups,
 then pull exercises into it from the catalogue — tap a muscle on the body, or
-search 160 of them by name, filtered by group or by equipment, or add your own if
+search 162 of them by name, filtered by group or by equipment, or add your own if
 what you use is not there. Four templates are there to start from if you would
 rather not begin with a blank week. Give the week a target — 3 × 8–12 — and any
 exercise that differs its own. The coverage bars show what each muscle region
@@ -452,7 +452,7 @@ senku/
 │       ├── SenkuCore/
 │       │   ├── Calculations/    BMR, macros, coverage, streaks, adaptive TDEE
 │       │   ├── Models/          the nouns: WeighIn, Exercise, WorkoutSession…
-│       │   └── Resources/       ExerciseCatalogue.json — 160 exercises
+│       │   └── Resources/       ExerciseCatalogue.json — 162 exercises
 │       └── SenkuCLI/            `senku plan …` — the maths without an app
 ├── SenkuUI/                     every screen, and the state behind them
 │   ├── Sources/SenkuUI/

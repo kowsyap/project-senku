@@ -2,8 +2,7 @@
 
 Milestones in delivery order. Each one ends with something usable on a device.
 
-**Status:** M0–M8 and M11 complete. M10 is done but for the SideStore check.
-M9 is the current backlog.
+**Status:** M0–M8, M10 and M11 complete. M9 is the current backlog.
 
 ---
 
@@ -46,8 +45,8 @@ M9 is the current backlog.
 
 ## M4 — Exercises and records (F2)
 
-- [x] Exercise catalogue: 160 entries, bundled as data, searchable by other names
-- [x] Muscle taxonomy: 9 groups, 28 regions, per-exercise contributions; forearms
+- [x] Exercise catalogue: 162 entries, bundled as data, searchable by other names
+- [x] Muscle taxonomy: 9 groups, 29 regions, per-exercise contributions; forearms
       a group of their own
 - [x] Custom exercises, marked as user-classified, optionally timed
 - [x] Personal records per exercise, logged and manual kept distinct
@@ -107,17 +106,12 @@ M9 is the current backlog.
 ## M9 — Backlog
 
 - [x] Set a past day's protein, calories, water and creatine, from Streaks
-- [ ] Open a past day's food and water and edit or delete a single entry
-      (today's can be; a past day's total can be set from Streaks)
-- [ ] User-settable day boundary (default midnight, 03:00 alternative)
-- [ ] Sets-per-week volume guidance
-- [ ] Watch complications for water and food
-- [ ] Weigh-in reminder suppressed on a day already logged
-- [ ] Shin region, so a Tibialis Raise can be scored
+- [x] User-settable day boundary (midnight by default, or 1, 2 or 3 am)
+- [x] Weigh-in reminder suppressed on a day already logged
+- [x] Shin region, so a Tibialis Raise can be scored
 
 ## M10 — Apple Health (F7)
 
-- [ ] Sideload test: one water sample through SideStore on a free Apple ID
 - [x] Water, food and body written as logged, following edits and deletions
 - [x] Workouts with confirmed, MET-estimated active energy
 - [x] Apple Health section on the Settings page
@@ -156,5 +150,5 @@ M9 is the current backlog.
 | M7 — Food | ✅ |
 | M8 — Watch, widgets and export | ✅ |
 | M9 — Backlog | in progress |
-| M10 — Apple Health | ✅ but for the SideStore check |
+| M10 — Apple Health | ✅ |
 | M11 — Plans, targets and sharing | ✅ |

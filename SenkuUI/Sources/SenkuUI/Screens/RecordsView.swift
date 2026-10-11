@@ -711,6 +711,8 @@ private struct RecordValueEditor: View {
     let onCancel: () -> Void
 
     @State private var weight: Double?
+    /// A plate or a belt on a bodyweight exercise — off unless switched on.
+    @State private var addsWeight = false
     @State private var reps: Double?
     @State private var seconds: TimeInterval
     @State private var date = Date.now
@@ -734,8 +736,11 @@ private struct RecordValueEditor: View {
         self.onSave = onSave
         self.onCancel = onCancel
 
+        // A bodyweight record opens at bodyweight. Starting from the best's
+        // added weight with the field hidden is how a plate typed once ended
+        // up on every record after it.
         _weight = State(
-            initialValue: previous.map {
+            initialValue: isBodyweight ? nil : previous.map {
                 unitSystem == .metric ? $0.weightKG : Convert.pounds(fromKilograms: $0.weightKG)
             }
         )
@@ -744,6 +749,7 @@ private struct RecordValueEditor: View {
     }
 
     private var weightKG: Double? {
+        if isBodyweight, !addsWeight { return 0 }
         guard let weight else { return isBodyweight ? 0 : nil }
         return unitSystem == .metric ? weight : Convert.kilograms(fromPounds: weight)
     }
@@ -808,14 +814,17 @@ private struct RecordValueEditor: View {
     private var fields: some View {
         VStack(spacing: Senku.Metrics.stackSpacing) {
             Card("What you lifted") {
-                // A bodyweight exercise is reps and nothing else. The field was
-                // there for the belt-and-plate case, and it earned its place by
-                // making every pull-up entry a decision about a number that is
-                // nearly always zero — so it is gone, and a weighted variation
-                // is what a custom exercise is for.
-                if !isBodyweight {
+                // A bodyweight exercise is reps unless you say otherwise: the
+                // belt-and-plate case is a switch, off by default, so a pull-up
+                // is not a decision about a number that is nearly always zero.
+                if isBodyweight {
+                    Toggle("Added weight", isOn: $addsWeight.animation(.snappy(duration: 0.2)))
+                        .font(.subheadline)
+                    Divider()
+                }
+                if !isBodyweight || addsWeight {
                     HStack {
-                        Text("Weight").font(.subheadline)
+                        Text(isBodyweight ? "Added" : "Weight").font(.subheadline)
                         Spacer(minLength: 8)
                         NumericField(
                             value: $weight,

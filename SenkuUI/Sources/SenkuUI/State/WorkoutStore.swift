@@ -215,7 +215,7 @@ public final class WorkoutStore {
     public func completedDays(
         in plan: TrainingPlan,
         now: Date = .now,
-        calendar: Calendar = .current
+        calendar: Calendar = .logging
     ) -> Set<UUID> {
         let planned = Set(plan.days.filter { !$0.isEmpty }.map(\.id))
         guard !planned.isEmpty, let week = Self.week(containing: now, calendar: calendar) else {
@@ -239,7 +239,7 @@ public final class WorkoutStore {
 
     /// Monday to Sunday, regardless of where the device's locale starts its
     /// week — a training week is a training week in Riyadh and in Boston.
-    static func week(containing date: Date, calendar: Calendar = .current) -> DateInterval? {
+    static func week(containing date: Date, calendar: Calendar = .logging) -> DateInterval? {
         var weekly = calendar
         weekly.firstWeekday = 2
         return weekly.dateInterval(of: .weekOfYear, for: date)

@@ -34,7 +34,7 @@ struct StreakTrack: Identifiable {
     }
 
     func streak(forgiven: Set<Date>) -> Streak {
-        Streak.of(days, forgiven: forgiven)
+        Streak.of(days, forgiven: forgiven, calendar: .logging)
     }
 }
 
@@ -316,7 +316,7 @@ private struct MonthGrid: View {
     let onPick: (Date) -> Void
 
     private let weeks = 5
-    private let calendar = Calendar.current
+    private var calendar: Calendar { .logging }
 
     /// Whole Monday-to-Sunday rows ending with this week, so the columns stay
     /// under their weekday letters instead of drifting with the month.

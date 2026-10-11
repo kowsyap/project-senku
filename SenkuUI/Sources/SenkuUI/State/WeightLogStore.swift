@@ -56,7 +56,7 @@ public final class WeightLogStore {
 
     /// Everything derived — trend, weekly rate, time to a goal — comes from
     /// here rather than from stored fields, so none of it can go stale.
-    public var series: WeightSeries { WeightSeries(weighIns) }
+    public var series: WeightSeries { WeightSeries(weighIns, calendar: .logging) }
 
     /// Starts the log at the weight the profile already knows.
     ///
@@ -92,12 +92,14 @@ public final class WeightLogStore {
         weighIns.append(weighIn)
         weighIns.sort { $0.date > $1.date }
         persist()
+        rebookReminder()
     }
 
     public func delete(_ weighIn: WeighIn) {
         reload()
         weighIns.removeAll { $0.id == weighIn.id }
         persist()
+        rebookReminder()
     }
 
     public func delete(atOffsets offsets: IndexSet) {
@@ -109,6 +111,15 @@ public final class WeightLogStore {
         reload()
         weighIns.removeAll { doomed.contains($0.id) }
         persist()
+        rebookReminder()
+    }
+
+    /// A weigh-in logged before ten takes this morning's reminder away; one
+    /// deleted puts it back.
+    private func rebookReminder() {
+        #if os(iOS)
+        Task { @MainActor in await WeightReminder.refresh() }
+        #endif
     }
 
     private func persist() {

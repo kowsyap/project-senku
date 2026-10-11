@@ -459,7 +459,7 @@ public enum SenkuImporter {
             // you import a file twice, or import one that starts where the app
             // already has readings.
             let duplicate = weights.weighIns.contains {
-                Calendar.current.isDate($0.date, inSameDayAs: entry.date)
+                Calendar.logging.isDate($0.date, inSameDayAs: entry.date)
                     && abs($0.weightKG - weightKG) < 0.01
             }
             guard !duplicate else {

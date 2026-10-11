@@ -157,6 +157,7 @@ Anything not listed here goes in `customExercises`.
 | Dumbbell Pullover |  | dumbbell |  |
 | Dumbbell Shrug |  | dumbbell |  |
 | Inverted Row | Australian Pull-Up, Body Row | bodyweight |  |
+| Machine Back Extension | Back Extension Machine, Lower Back Machine, Seated Back Extension, Lumbar Extension | machine |  |
 | Machine Row |  | machine |  |
 | Meadows Row |  | barbell |  |
 | Muscle-Up |  | bodyweight |  |
@@ -278,6 +279,7 @@ Anything not listed here goes in `customExercises`.
 | Standing Calf Raise |  | machine |  |
 | Step-Up |  | dumbbell |  |
 | Sumo Deadlift |  | barbell |  |
+| Tibialis Raise | Tib Raise, Tib Bar Raise, Tibialis Curl | bodyweight |  |
 | Trap Bar Deadlift | Hex Bar Deadlift | barbell |  |
 | Walking Lunge |  | dumbbell |  |
 | Wall Sit |  | bodyweight | held (seconds) |
@@ -375,6 +377,7 @@ Anything not listed here goes in `customExercises`.
 | legs.hamstrings | Hamstrings | legs |
 | legs.glutes | Glutes | legs |
 | legs.calves | Calves | legs |
+| legs.tibialis | Tibialis | legs |
 | legs.adductors | Adductors | legs |
 | legs.abductors | Abductors | legs |
 | abs.upper | Upper abs | abs |

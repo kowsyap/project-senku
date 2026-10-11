@@ -357,7 +357,7 @@ public struct WeightLogView: View {
     private func lastReadingDetail(_ newest: WeighIn) -> String {
         let when = newest.date.formatted(.relative(presentation: .named))
         let sameDay = store.weighIns.filter {
-            Calendar.current.isDate($0.date, inSameDayAs: newest.date)
+            Calendar.logging.isDate($0.date, inSameDayAs: newest.date)
         }
         guard sameDay.count > 1,
               let dayValue = series.dailyValues.last?.weightKG

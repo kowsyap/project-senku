@@ -36,9 +36,14 @@ and others that support skills. "Convert my plan for Senku" works too.
 
 ### Claude Code
 
-- **In this repository:** it is already available, through `.claude/skills`.
-  Ask *"convert my plan.xlsx for Senku"*.
-- **Anywhere else:** copy the folder to `~/.claude/skills/senku-plan`.
+Copy the folder to `~/.claude/skills/senku-plan` — or, inside a clone of this
+repository, link it in so it follows the repository:
+
+```sh
+mkdir -p .claude/skills && ln -s ../../skills/senku-plan .claude/skills/senku-plan
+```
+
+Then type `/senku-plan`, or ask *"convert my plan.xlsx for Senku"*.
 
 ### Claude (web or desktop)
 

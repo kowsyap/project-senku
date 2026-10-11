@@ -1,0 +1,305 @@
+\documentclass[10pt,a4paper,twocolumn]{article}
+
+\usepackage{fontspec}
+\setmainfont{Helvetica Neue}[
+  UprightFont = *,
+  BoldFont = * Bold,
+  ItalicFont = * Italic,
+]
+\setmonofont{Menlo}[Scale=0.8]
+
+\usepackage[top=20mm,bottom=20mm,left=16mm,right=16mm,columnsep=8mm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{multicol}
+\usepackage{caption}
+\usepackage{dblfloatfix}
+
+% Colours
+\definecolor{senkugreen}{HTML}{4CAF50}
+\definecolor{senkugray}{HTML}{888888}
+\definecolor{senkulight}{HTML}{F5F8FF}
+\definecolor{senkublue}{HTML}{2A5DB0}
+\definecolor{rulecolor}{HTML}{CCCCCC}
+
+\hypersetup{colorlinks=true,linkcolor=senkublue,urlcolor=senkublue}
+
+% Compact section formatting
+\titleformat{\section}
+  {\large\bfseries}
+  {\thesection.}
+  {6pt}
+  {}
+  [\vspace{1pt}{\color{rulecolor}\hrule height 0.6pt}]
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+\titleformat{\subsection}
+  {\normalsize\bfseries}
+  {}
+  {0pt}
+  {}
+\titlespacing*{\subsection}{0pt}{8pt}{3pt}
+
+% Compact parskip
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+
+% Compact lists
+\setlist[itemize]{topsep=2pt, itemsep=1pt, parsep=0pt, leftmargin=14pt}
+\setlist[enumerate]{topsep=2pt, itemsep=1pt, parsep=0pt, leftmargin=14pt}
+
+% Header/footer
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\textcolor{senkugray}{Senku User Guide}}
+\fancyhead[R]{\small\textcolor{senkugray}{v1.1}}
+\fancyfoot[C]{\small\textcolor{senkugray}{\thepage}}
+
+% Figure caption style
+\captionsetup{font=small,labelfont=bf,skip=4pt,justification=centering}
+
+% Screenshot command: centered, compact
+\graphicspath{{../screenshots/}}
+\newcommand{\screenshot}[2]{%
+  \begin{center}
+    \vspace{2pt}
+    \includegraphics[width=0.75\columnwidth]{#1}\\[2pt]
+    {\small\textcolor{senkugray}{#2}}
+    \vspace{2pt}
+  \end{center}
+}
+
+% Tip/quote boxes
+\newtcolorbox{tipbox}{
+  colback=senkulight,
+  colframe=rulecolor,
+  arc=4pt, boxrule=0.4pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  fontupper=\small,
+}
+\newtcolorbox{privacybox}{
+  colback=white,
+  colframe=senkugreen,
+  leftrule=2pt, rightrule=0pt, toprule=0pt, bottomrule=0pt,
+  arc=0pt,
+  left=8pt, right=8pt, top=4pt, bottom=4pt,
+  fontupper=\small,
+}
+
+\begin{document}
+
+% ── Title block (no separate page) ──
+\twocolumn[{%
+  \begin{center}
+    {\LARGE\bfseries Senku User Guide}\\[4pt]
+    {\small\textcolor{senkugray}{Strength\enspace·\enspace Energy\enspace·\enspace Nutrition\enspace·\enspace Knowledge\enspace·\enspace Utility}}\\[6pt]
+    {\small A personal fitness app for iPhone and Apple Watch. Tracks workouts, water, food,}\\
+    {\small weight and more — all offline, no account, no cloud. Version 1.1.}\\[10pt]
+    {\color{rulecolor}\hrule height 0.6pt}
+  \end{center}
+  \vspace{8pt}
+}]
+
+\thispagestyle{fancy}
+
+% ── Navigation ──
+\section{Navigation}
+
+Five tabs along the bottom of the screen:
+
+{\small
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Tab} & \textbf{Purpose} \\
+  \midrule
+  Me       & Profile, macros, body composition \\
+  Rest     & Rest timer between sets \\
+  Workout  & Weekly plan, exercise logging \\
+  Water    & Water intake, creatine tracking \\
+  More     & Weight, Food, PRs, Watchlist, Dues \\
+  \bottomrule
+\end{tabular}
+}
+
+% ── Me ──
+\section{Me — Your Plan}
+
+\screenshot{guide-me.png}{Profile and calorie target}
+
+Your profile and nutrition plan. Shows \textbf{name, sex, age, height, weight, body fat}, \textbf{activity level}, \textbf{goal} (maintain / cut / bulk), \textbf{goal weight} and \textbf{formula} (Mifflin-St~Jeor or Katch-McArdle).
+
+A calorie ring displays your daily target (e.g.\ 1680\,kcal) with protein, carbs and fat in grams and percentages. Tap \textbf{Edit} to change any value; the plan recalculates immediately.
+
+\subsection{Details (scroll down)}
+
+\screenshot{guide-me-macros.png}{Macros, energy and body composition}
+
+Below the ring: \textbf{fiber} and \textbf{water} targets, \textbf{maintenance calories}, \textbf{daily deficit/surplus}, \textbf{expected weekly change}, \textbf{basal rate} across activity levels, and \textbf{lean/fat mass} breakdown.
+
+% ── Rest ──
+\section{Rest — The Timer}
+
+\screenshot{guide-rest.png}{Rest timer — idle}
+
+A countdown timer for rest between sets. Pick a preset (\textbf{1}, \textbf{2}, \textbf{3} or \textbf{5\,min}) or use \textbf{Custom} ($-$/$+$ in 15\,s steps).
+
+\screenshot{guide-rest-running.png}{Timer running}
+
+Tap \textbf{Start} to begin. While running: \textbf{Pause}, \textbf{Reset}, or \textbf{+30s}. At zero a chime plays with a haptic tap.
+
+Also runs as a \textbf{Live Activity} on the lock screen and Dynamic Island. The background notification chime does not double up with the in-app sound.
+
+% ── Workout ──
+\section{Workout — Your Week}
+
+\screenshot{guide-workout-week.png}{Weekly training plan}
+
+Each session card shows a \textbf{green check} if done this week, the \textbf{session name}, \textbf{muscle icons}, exercise count and last-done date. Top-right: \textbf{Plates} (barbell calculator), \textbf{History}, \textbf{Week} summary. Tap \textbf{Edit my week} to rearrange, rename or add sessions.
+
+\subsection{Inside a session}
+
+\screenshot{guide-workout-session.png}{Session summary with body map}
+
+Shows \textbf{total sets}, \textbf{weight moved}, \textbf{time}, muscle group breakdown with weekly-volume percentages, and a heat-coloured \textbf{body map}.
+
+\subsection{Weighted exercises}
+
+\screenshot{guide-set-logger.png}{Set logger — weighted}
+
+Tap an exercise to log sets. Adjust \textbf{weight} (kg) and \textbf{reps} with $-$/$+$ or type directly. Shows your \textbf{last performance} with a suggestion and your \textbf{personal record} — beat it here and the PRs page updates.
+
+\subsection{Bodyweight exercises}
+
+\screenshot{guide-bodyweight-logger.png}{Set logger — bodyweight}
+
+For bodyweight exercises (e.g.\ Pull-Up): an \textbf{Added weight} toggle enables logging extra weight (belt/vest). When off, no weight is saved — only reps.
+
+\subsection{Exercise info}
+
+\screenshot{guide-exercise-info.png}{Exercise info sheet}
+
+Tap the info button (\,ⓘ\,) to see \textbf{how it is done}, \textbf{alternative names}, and \textbf{muscles trained} with targeting percentages.
+
+\subsection{Exercise picker}
+
+\screenshot{guide-picker.png}{Browse by body map or search}
+
+Tap \textbf{Add an exercise} to browse 162 exercises by \textbf{body map} (tap a muscle), \textbf{Groups} (list view), \textbf{Search} (by name), or \textbf{Cardio} (heart icon).
+
+\subsection{Importing a plan}
+
+\screenshot{guide-import.png}{Import from JSON or AI}
+
+Tap \textbf{Import a plan} from the week editor. Without a file: copy the built-in AI prompt, paste into any AI chat with your plan (PDF/Excel/Word/photo), and import the \texttt{.json} it produces.
+
+% ── Water ──
+\section{Water}
+
+\screenshot{guide-water.png}{Water intake and weekly chart}
+
+Tracks daily water intake. A \textbf{progress bubble} shows amount, percentage and what is left. Three quick-add buttons: \textbf{250\,ml}, \textbf{500\,ml}, \textbf{750\,ml}. A \textbf{weekly chart} shows daily intake as bars.
+
+Top-right: \textbf{Adjust} (target, creatine) and \textbf{Log} (custom amount).
+
+\subsection{Creatine \& Streaks}
+
+Below the chart, a \textbf{creatine toggle} tracks daily creatine intake. Scroll further to see \textbf{streaks} — consecutive days hitting your water target and taking creatine.
+
+% ── Food ──
+\section{Food}
+
+\screenshot{guide-food.png}{Daily nutrition tracking}
+
+Tracks daily nutrition against your plan. Shows a \textbf{protein ring}, \textbf{calorie status}, \textbf{macro breakdown} (calories, carbs, fat, fiber as current\,/\,target), and a \textbf{Quick Add} section to search foods or add protein-only / calorie-only entries.
+
+Top-right: \textbf{Adjust} (targets) and \textbf{Log} (full entry with all macros).
+
+% ── Weight ──
+\section{Weight}
+
+\screenshot{guide-weight.png}{Trend chart and status}
+
+Tracks body weight with a \textbf{7-day half-life moving average} (smooth line) and individual dots. Toggle \textbf{1M}/\textbf{3M}/\textbf{6M}/\textbf{All}. Goal weight shown as a green dashed line.
+
+\textbf{Where you are}: trend weight, last reading, rate of change (vs.\ plan), and distance to goal.
+
+\subsection{Logging \& profile sync}
+
+\screenshot{guide-weight-history.png}{Update prompt when profile diverges}
+
+Tap \textbf{Log} to add today's weight, \textbf{History} for past entries, \textbf{Adjust} for goal weight. If the trend diverges from your profile, an \textbf{Update} prompt keeps your calorie plan in sync.
+
+\subsection{Reminders}
+
+Enable in \textbf{Settings\,$\rightarrow$\,Weight}. Rings at 10:00 each morning, skips days already weighed in.
+
+% ── PRs ──
+\section{Personal Records}
+
+\screenshot{guide-records.png}{PRs filtered by muscle group}
+
+Lists personal records for every logged exercise. Filter by muscle group chips. Each row shows exercise name, equipment, time since set, and weight. Tap \textbf{Add} to enter a record manually.
+
+\subsection{Sharing}
+
+\screenshot{guide-share-card.png}{Share card with body map}
+
+Tap a record $\rightarrow$ \textbf{Share this record} to generate a card with exercise, weight$\times$reps, improvement, \textbf{estimated 1RM}, progress chart and body map.
+
+% ── Watchlist ──
+\section{Watchlist}
+
+\screenshot{guide-anime.png}{Watchlist with filters}
+
+Tracks shows, films or series. Name defaults to ``Watchlist'' — rename in the tab bar editor (Anime, K-Dramas, etc.). Summary shows \textbf{titles}, \textbf{seasons}, \textbf{episodes}. Filter: All / Pending / Airing / Watched / Completed. Search by name or genre.
+
+% ── Dues ──
+\section{Dues}
+
+\screenshot{guide-dues.png}{Monthly dues with status}
+
+Tracks recurring bills and payments. Header shows \textbf{amount left this month}. Each due: progress ring, name, category, amount, due date with countdown. Overdue items shown in red. Reminders arrive 3 days before and on the day.
+
+% ── More ──
+\section{More}
+
+\screenshot{guide-more.png}{Hub for secondary screens}
+
+Hub for screens without their own tab: \textbf{Macro Calculator}, \textbf{Weight}, \textbf{Food}, \textbf{PRs}, \textbf{Watchlist}, \textbf{Dues}, and \textbf{Settings}.
+
+% ── Settings ──
+\section{Settings}
+
+\screenshot{guide-settings.png}{App configuration}
+
+\textbf{Navbar} — rearrange the five tabs. \textbf{Day starts at} — roll the day over at Midnight, 1\,am, 2\,am or 3\,am (affects totals, streaks and all daily grouping; confirmation required). \textbf{Apple Health} — toggle writes for Water, Food, Body, Workouts (write-only, never reads). \textbf{Screen settings} — per-screen options for Workout, Weight, Water and Plates.
+
+% ── About ──
+\section{About}
+
+\screenshot{guide-about.png}{Privacy and credits}
+
+Shows version, developer (\textbf{kowsyap}), GitHub link and issue reporting.
+
+\begin{privacybox}
+\textit{Everything you log stays on this iPhone and your Apple Watch. There is no account, no cloud and no tracking.}
+\end{privacybox}
+
+Apple Health: write-only. Food photos: on-device via Apple Intelligence (or Google if Gemini enabled). Watchlist posters: loaded from URLs you provide.
+
+% ── Tips ──
+\vspace{6pt}
+\begin{tipbox}
+{\normalsize\bfseries Tips}\\[3pt]
+\textbf{Weigh in} first thing, before eating. \textbf{Log water} with quick-add taps. \textbf{Use the rest timer} every set. \textbf{Check the body map} after sessions. \textbf{Share PRs} — the cards look great. \textbf{Set day boundary} if you are a night owl.
+\end{tipbox}
+
+\end{document}

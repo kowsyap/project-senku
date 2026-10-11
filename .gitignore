@@ -36,3 +36,6 @@ Senku.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 .vscode/
 # Python
 __pycache__/
+
+# Claude Code (local only)
+.claude/

@@ -78,14 +78,17 @@ public enum MaintenanceCheck {
             formula: profile.formula
         )
 
-        let calendar = Calendar.current
+        let calendar = Calendar.logging
         let today = calendar.startOfDay(for: date)
         guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today),
               let firstDay = calendar.date(byAdding: .day, value: -window, to: today)
         else { return nil }
         // Weigh-ins from the same days the food is averaged over, and none
         // from today.
-        let recent = WeightSeries(weights.weighIns.filter { $0.date >= firstDay && $0.date < today })
+        let recent = WeightSeries(
+            weights.weighIns.filter { $0.date >= firstDay && $0.date < today },
+            calendar: calendar
+        )
 
         guard let average = intake.log.averageCalories(days: window, endingOn: yesterday),
               average.loggedDays >= requiredLoggedDays,

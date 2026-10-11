@@ -57,7 +57,10 @@ struct FoodProvider: TimelineProvider {
         Task { @MainActor in
             // Midnight and nothing else. Eating is not on a schedule a timeline
             // can predict; the app reloads this whenever a meal is logged.
-            let midnight = Calendar.current.startOfDay(for: .now.addingTimeInterval(86_400))
+            // The start of the next day, at the day boundary you chose.
+            let logging = Calendar.logging
+            let midnight = logging.date(byAdding: .day, value: 1, to: logging.startOfDay(for: .now))
+                ?? .now.addingTimeInterval(86_400)
             completion(
                 Timeline(
                     entries: [FoodEntry(date: .now, summary: current())],

@@ -217,7 +217,7 @@ SenkuWatchWidgets.appex  ['group.pk.Senku']
 `devicectl` asks for permission and writes samples the Health app shows. Only the
 phone app carries it; the watch and widgets write nothing to Health. Through a
 sideloader it needs the entitlement inside the `.ipa`, which `make_ipas.sh`
-signs in from 1.1 — whether SideStore then grants it is the open check.
+signs in from 1.1.
 
 **iCloud does not.** Adding `com.apple.developer.ubiquity-kvstore-identifier`
 fails at signing with *"Personal development teams … do not support the iCloud

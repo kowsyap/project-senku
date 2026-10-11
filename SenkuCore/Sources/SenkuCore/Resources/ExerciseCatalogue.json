@@ -125,25 +125,31 @@
       "id": "legs.quads",
       "name": "Quads",
       "workoutGroup": "legs",
-      "groupShare": 0.3
+      "groupShare": 0.29
     },
     {
       "id": "legs.hamstrings",
       "name": "Hamstrings",
       "workoutGroup": "legs",
-      "groupShare": 0.25
+      "groupShare": 0.24
     },
     {
       "id": "legs.glutes",
       "name": "Glutes",
       "workoutGroup": "legs",
-      "groupShare": 0.25
+      "groupShare": 0.24
     },
     {
       "id": "legs.calves",
       "name": "Calves",
       "workoutGroup": "legs",
       "groupShare": 0.12
+    },
+    {
+      "id": "legs.tibialis",
+      "name": "Tibialis",
+      "workoutGroup": "legs",
+      "groupShare": 0.03
     },
     {
       "id": "legs.adductors",
@@ -711,6 +717,30 @@
       "aliases": [
         "Hyperextension",
         "Roman Chair"
+      ]
+    },
+    {
+      "id": "catalogue.backExtension.machine",
+      "name": "Machine Back Extension",
+      "description": "A seated extension against a padded lever, legs fixed, that trains the lower back with the glutes and hamstrings helping.",
+      "equipment": "machine",
+      "targetMuscles": [
+        "Lower back",
+        "Glutes",
+        "Hamstrings"
+      ],
+      "workoutGroup": "back",
+      "contributions": {
+        "back.lowerBack": 1.0,
+        "legs.glutes": 0.3,
+        "legs.hamstrings": 0.2
+      },
+      "isCustom": false,
+      "aliases": [
+        "Back Extension Machine",
+        "Lower Back Machine",
+        "Seated Back Extension",
+        "Lumbar Extension"
       ]
     },
     {
@@ -1623,6 +1653,25 @@
         "legs.calves": 1.0
       },
       "isCustom": false
+    },
+    {
+      "id": "catalogue.tibialisRaise",
+      "name": "Tibialis Raise",
+      "description": "Heels down, back to a wall or on a tib bar, lifting the toes towards the shins to train the muscle on the front of the shin.",
+      "equipment": "bodyweight",
+      "targetMuscles": [
+        "Tibialis"
+      ],
+      "workoutGroup": "legs",
+      "contributions": {
+        "legs.tibialis": 1.0
+      },
+      "isCustom": false,
+      "aliases": [
+        "Tib Raise",
+        "Tib Bar Raise",
+        "Tibialis Curl"
+      ]
     },
     {
       "id": "catalogue.calfRaise.seated",

@@ -10,8 +10,7 @@ Functional requirements and acceptance criteria for Senku.
 - A checked box means the criterion is implemented and covered by a test or by
   a named type in the source.
 
-**Status:** F1–F7 delivered. Three acceptance criteria remain open — two from
-F1–F5, tracked in [ROADMAP.md](ROADMAP.md) M9, and F7's SideStore install, M10.
+**Status:** F1–F7 delivered, every acceptance criterion met.
 Everything else agreed but not yet built is under [Planned](#planned).
 
 | ID | Feature | Depends on |
@@ -69,7 +68,8 @@ must have a text equivalent.
 - **S2-R2** Identifiers are namespaced per source: `senku.rest.*`,
   `senku.weighin.*`, `senku.water.*`, `senku.creatine.*`, `senku.due.*`.
 - **S2-R3** Repeating triggers are used in preference to enumerating future
-  occurrences.
+  occurrences, except where a day must be skippable — the weigh-in reminder
+  books a week of single mornings and leaves out the ones already weighed.
 - **S2-R4** Authorisation is requested before scheduling, not alongside it.
 - **S2-R5** Every reminder is individually switchable.
 
@@ -78,12 +78,18 @@ must have a text equivalent.
   for the chime, and lets go once the chime has sounded.
 
 Budget, declared once in `NotificationBudget` and summed by a test: water 12,
-rest 2, weigh-in 1, creatine 1, due dates 42 — 58 allocated, 6 held in reserve.
+rest 2, weigh-in 7, creatine 1, due dates 36 — 58 allocated, 6 held in reserve.
 
 ### S3 — Day boundary
 
-- **S3-R1** A day runs from local midnight to local midnight.
-- **S3-R2** Aggregation is performed at read time against the current calendar.
+- **S3-R1** A day runs from local midnight, or from 1, 2 or 3 am when that is
+  chosen on the Settings page. Everything logged — water, food, weigh-ins, creatine,
+  workouts — is put on a day by that boundary, and so are the totals, streaks
+  and averages built on them. Reminders and due dates keep to the wall clock.
+- **S3-R2** Aggregation is performed at read time against the logging calendar
+  (`Calendar.logging`), so a change of boundary applies at once.
+- **S3-R3** A day stored as a timestamp means the same day under either
+  boundary: it is read by its midday — `DayBoundaryTests`.
 
 ### S4 — Units
 
@@ -163,7 +169,8 @@ WeighIn
       `MaintenanceCheckTests`
 - [x] A weigh-in arriving from the watch is not overwritten by the next one
       logged on the phone — `WeightLogSharingTests`
-- [ ] The reminder is suppressed on a day already logged — open, M9
+- [x] The reminder is suppressed on a day already logged: a week of single
+      mornings, rebooked on every weigh-in and on return — `WeighInReminderTests`
 
 ---
 
@@ -280,7 +287,7 @@ A two-level taxonomy, bundled as data in `SenkuCore`:
 
 - **Group** — back, biceps, triceps, forearms, chest, legs, shoulders, abs,
   cardio.
-- **Region** — 28 in total; each carries a share of its group, summing to 100%
+- **Region** — 29 in total; each carries a share of its group, summing to 100%
   per group.
 - **Contribution** — each exercise contributes 0–1 per region, where 1 is a
   primary target.
@@ -543,9 +550,8 @@ back.
 
 ### Requirements
 
-- **F7-R1** The first step is a sideloaded build that writes one water sample.
-  If HealthKit does not survive SideStore's re-signing on a free Apple ID, the
-  feature stops there.
+- **F7-R1** The `.ipa` carries the HealthKit entitlement (`make_ipas.sh`), so a
+  sideloaded install can ask for it.
 - **F7-R2** Written, each as it is logged: water; each food entry as one food
   correlation of protein, carbohydrate, fat, fibre (when set) and energy; weight;
   body fat when entered rather than estimated; height when changed.
@@ -571,8 +577,6 @@ back.
 
 - [x] A build installed on a free Apple ID writes a water sample and the
       permission prompt appears — verified on device, 2026-10-07
-- [ ] The same through a SideStore install — open, F7; from 1.1 the `.ipa`
-      carries its entitlements (`make_ipas.sh`), awaiting a check on a device
 - [x] Water, food and body are worked out as new, edited or removed before
       anything is sent — `HealthSyncPlanTests`
 - [x] Food and body samples appear in Health — verified on device, 2026-10-07
@@ -585,11 +589,8 @@ back.
 
 ## Open criteria
 
-| Criterion | Feature | Tracked as |
-| --- | --- | --- |
-| Reminder suppressed on a day already logged | F1 | M9 |
-| A single past entry can be edited or deleted (a past day's total already can be set, from Streaks) | F4, F5 | M9 |
-| A SideStore install writes to Health | F7 | M10 |
+None. New work is tracked in [ROADMAP.md](ROADMAP.md) M9 and under
+[Planned](#planned).
 
 ---
 
@@ -599,10 +600,7 @@ Agreed, not started, and not yet specified as features of their own.
 
 | Item | Area | Notes |
 | --- | --- | --- |
-| Shin region and Tibialis Raise | F3 | Needs a muscle region for the front of the shin before the exercise can be scored honestly |
-| Sets-per-week volume guidance | F3 | M9 |
 | User-settable day boundary | S3 | M9 — midnight by default, 03:00 as the alternative |
-| Watch complications for water and food | F4, F5 | M9 |
 | Plan builder in the plan skill | F3 | `/senku-plan` with no file offers to build a plan from goals, days, equipment and experience, using only catalogue exercises, written as the same import file and checked by the same script. Part of `skills/senku-plan`, not a separate skill |
 | SBD / powerlifting programmes | F3 | Week-by-week blocks: a top set and back-off sets per lift with prescribed weights, RPE, deload, peak and test week, pre-filled in the set logger. Not needed for now |
 | Loan / EMI tracker | new | Amount, rate, tenure, principal and interest split, prepayment effect; arithmetic only |

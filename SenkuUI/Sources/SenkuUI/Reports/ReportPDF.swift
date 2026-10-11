@@ -443,7 +443,7 @@ public enum ReportPDF {
             }
 
             if water.settings.takesCreatine {
-                let streak = Streak.of(water.creatineDays)
+                let streak = Streak.of(water.creatineDays, calendar: .logging)
                 out.append(row("Creatine", "\(streak.current) day streak, best \(streak.longest), \(streak.total) days in all"))
             }
             out.append(body("\n"))
