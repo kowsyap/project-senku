@@ -15,6 +15,9 @@ public struct ProfileDashboardView: View {
     private let onSave: (ProfileStore.Profile) -> Void
 
     @State private var editingDraft: PlanDraft?
+    /// Shared by the card wherever it is drawn, so a decision made on it is
+    /// seen at once.
+    @State private var cycle = MaintenanceCycleStore()
 
     public init(
         profile: ProfileStore.Profile,
@@ -30,25 +33,36 @@ public struct ProfileDashboardView: View {
         self.onSave = onSave
     }
 
+    private var maintenance: MaintenanceCheck.Result? {
+        guard let weights, let intake, onAdoptMaintenance != nil else { return nil }
+        return MaintenanceCheck.check(profile: profile, weights: weights, intake: intake, since: cycle.start)
+    }
+
     public var body: some View {
+        let maintenance = maintenance
+
         ScrollView {
             VStack(spacing: Senku.Metrics.stackSpacing) {
-                detailsCard
-                ResultsView(plan: profile.plan, unitSystem: profile.unitSystem, showsAdvisories: false)
+                // A suggestion waiting on a decision goes first, where it is
+                // seen; the count goes after the plan, out of the way.
+                if let maintenance, maintenance.isReady {
+                    maintenanceCard(maintenance)
+                }
 
-                // What the scale says, after the plan it would change.
-                if let weights, let intake, let onAdoptMaintenance {
-                    MaintenanceCard(
-                        profile: profile,
-                        weights: weights,
-                        intake: intake,
-                        unitSystem: profile.unitSystem,
-                        onAdopt: onAdoptMaintenance
-                    )
+                detailsCard
+                ResultsView(
+                    plan: profile.plan,
+                    unitSystem: profile.unitSystem,
+                    showsAdvisories: false,
+                    calculatorPlan: profile.hasAdjustments ? profile.calculatorPlan : nil
+                )
+
+                if let maintenance, !maintenance.isReady {
+                    maintenanceCard(maintenance)
                 }
 
                 // The notes on the plan, last: read once the numbers are known.
-                ForEach(profile.plan.advisories) { advisory in
+                ForEach(profile.plan.bannerAdvisories) { advisory in
                     AdvisoryBanner(advisory)
                 }
 
@@ -59,6 +73,12 @@ public struct ProfileDashboardView: View {
             .frame(maxWidth: .infinity)
         }
         .background(.background)
+        .onAppear {
+            cycle.reload()
+            // A fortnight that came out on track is settled; save that, so a
+            // later change to the profile cannot reopen it.
+            if let start = maintenance?.cycleStart { cycle.advance(to: start) }
+        }
         .toolbar {
             ToolbarItem {
                 Button {
@@ -71,12 +91,24 @@ public struct ProfileDashboardView: View {
         }
         .sheet(item: $editingDraft) { draft in
             ProfileEditorSheet(draft: draft) { updated in
+                var updated = updated
+                updated.keepFormlessFields(of: profile)
                 onSave(updated)
                 editingDraft = nil
             } onCancel: {
                 editingDraft = nil
             }
         }
+    }
+
+    private func maintenanceCard(_ result: MaintenanceCheck.Result) -> some View {
+        MaintenanceCard(
+            profile: profile,
+            result: result,
+            cycle: cycle,
+            unitSystem: profile.unitSystem,
+            onAdopt: { onAdoptMaintenance?($0) }
+        )
     }
 
     /// What the plan was worked out from, spelled out.
@@ -133,8 +165,9 @@ public struct ProfileDashboardView: View {
 
 /// The profile editor. Shows the target updating live while you change inputs,
 /// so the effect of a change is visible before you commit to it.
-private struct ProfileEditorSheet: View {
+struct ProfileEditorSheet: View {
     @Bindable var draft: PlanDraft
+    var title: String = "Edit Profile"
     let onSave: (ProfileStore.Profile) -> Void
     let onCancel: () -> Void
 
@@ -151,7 +184,7 @@ private struct ProfileEditorSheet: View {
             }
             .background(.background)
             .dismissableKeyboard()
-            .navigationTitle("Edit Profile")
+            .navigationTitle(title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

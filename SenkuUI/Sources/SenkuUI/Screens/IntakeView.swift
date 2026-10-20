@@ -25,8 +25,9 @@ public struct IntakeView: View {
 
     private let profile: ProfileStore.Profile?
     private let onOpenCalculator: () -> Void
-    /// Handed the measured figure when you accept it, or nil to go back to the
-    /// formula. The screen does not own the profile, so it asks.
+    /// Handed new calorie and protein adjustments from Food Settings. The
+    /// screen does not own the profile, so it asks.
+    private let onAdjustTargets: (_ calories: Double, _ protein: Double) -> Void
 
     @State private var isAdding = false
     @State private var editing: IntakeEntry?
@@ -40,10 +41,12 @@ public struct IntakeView: View {
     public init(
         store: IntakeStore,
         profile: ProfileStore.Profile?,
+        onAdjustTargets: @escaping (_ calories: Double, _ protein: Double) -> Void = { _, _ in },
         onOpenCalculator: @escaping () -> Void = {}
     ) {
         self.store = store
         self.profile = profile
+        self.onAdjustTargets = onAdjustTargets
         self.onOpenCalculator = onOpenCalculator
     }
 
@@ -87,7 +90,7 @@ public struct IntakeView: View {
             StreaksView(tracks: tracks)
         }
         .navigationDestination(isPresented: $isShowingSettings) {
-            IntakeSettingsView(store: store)
+            IntakeSettingsView(store: store, profile: profile, onAdjustTargets: onAdjustTargets)
         }
         .senkuPushed(isShowingStreaks, isShowingSettings)
     }
@@ -570,9 +573,9 @@ public struct IntakeView: View {
         ContentUnavailableView {
             Label("No targets yet", systemImage: "fork.knife")
         } description: {
-            Text("Work out your numbers in the macro calculator and save them, and this screen will show what you have eaten against them.")
+            Text("Set up your profile on the Me tab to get calorie and macro targets, then this screen will show what you have eaten against them.")
         } actions: {
-            Button("Open the macro calculator", action: onOpenCalculator)
+            Button("Set up my profile", action: onOpenCalculator)
                 .buttonStyle(.borderedProminent)
         }
     }

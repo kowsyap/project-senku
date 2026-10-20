@@ -17,8 +17,7 @@ Most macro calculators hand you a number with no explanation — no indication o
 which formula produced it, and no warning when it is a bad idea for you
 specifically. Senku names the formula it used, keeps what you *measured* separate
 from what it *estimated*, clamps a deficit that lands below the safe floor and
-says that it did, and — once there are three weeks of food and weigh-ins to work
-from — replaces the population average with the maintenance figure your own scale
+says that it did, and — every fourteen days of food and weigh-ins — offers to replace the population average with the maintenance figure your own scale
 implies.
 
 It is named after a scientist, and that is the whole design rule: **if the app
@@ -56,10 +55,11 @@ cannot explain where a number came from, it does not show it.**
   minimum; protein, carbs, fat, fibre and water; BMI, lean and fat mass, healthy
   weight range; projected weekly change and time to target. Advisories whenever
   the plan deserves a caveat.
-- **Adaptive maintenance** — after three weeks with enough weigh-ins and
-  enough logged food, the Me page compares what you ate against what the scale did
-  and offers the maintenance figure *that* implies. It is a button you press,
-  never a target that changes behind your back.
+- **Adaptive maintenance** — after fourteen days in a row with both a weigh-in
+  and food logged, the Me page compares what you ate against what the scale did
+  and offers the maintenance figure *that* implies. Use it or pass with ✕; either
+  way the next fourteen days start counting. It is a button you press, never a
+  target that changes behind your back.
 
 ### Training
 
@@ -98,6 +98,10 @@ cannot explain where a number came from, it does not show it.**
 - **A summary at the end** — the session's sets and time, a body map of what got
   trained and what was planned but missed, and the workout's energy, sent to
   Apple Health when you press Done.
+- **History by week** — this week's workouts one by one, every week before it a
+  card: days trained, exercises, PRs and how much of the body it reached. Open a
+  week for its sets, time, volume against the week before, the plan's days ticked
+  off, a body map, and the workouts themselves.
 - **Cardio too** — distance, duration, effort, and reusable protocols for
   intervals you repeat.
 - **PRs** — every record the sets produced, per exercise, newest first, with
@@ -124,7 +128,8 @@ cannot explain where a number came from, it does not show it.**
 - **Food** — two concentric rings, protein inside and calories outside. Quick-add
   protein alone or calories alone for when that is all you know, saved foods with
   a servings stepper, full macro entry when you have the label. Separate streaks
-  for protein and calories.
+  for protein and calories. Want to eat more or less than the calculator says?
+  Step your own calorie and protein targets up or down from its numbers.
 
 ### Everything else
 
@@ -134,14 +139,16 @@ cannot explain where a number came from, it does not show it.**
   log them, each switched on separately. Write only: Senku never reads your
   Health data. Edit or delete something in Senku and Health follows.
 - **Streaks** — protein, calories, water and creatine, with any past day you
-  forgot to log set right from the streak page.
+  forgot to log set right from the streak page. Each day is judged by the target
+  it had, so changing your plan never rewrites the past.
 - **Anime** — because a personal app is allowed to hold unrelated parts of a
   life. Seasons or totals, statuses, search, sorting, posters.
 - **Export** — a PDF report with vector charts and a picker for which sections go
   in, plus a JSON backup that restores. No cloud, no account, no subscription.
 - **A navbar that is yours** — four tabs visible (three on a small phone) and the
   rest under More; you choose which and in what order, and you switch pages by
-  dragging the glass pill with your finger.
+  dragging the glass pill with your finger. The tab you are on stands up and
+  moves — Goku powers up, the figure curls, the timer runs.
 - **One Settings page** — the navbar, Apple Health, and a way into every
   screen's own settings, which also sit on each screen behind its Adjust button.
 
@@ -156,7 +163,7 @@ cannot explain where a number came from, it does not show it.**
 Sex, age, height, weight, activity level, goal. The app returns the whole ladder
 — maintenance at every activity level, your target, the macros that follow — and
 keeps it. Every other screen derives from this one: your water goal, your protein
-ring, the rate your weight page measures you against. Once you have three weeks
+ring, the rate your weight page measures you against. Every fourteen days
 of food and weigh-ins, this is also where the maintenance your own data implies
 turns up.
 
@@ -388,8 +395,8 @@ an iPhone simulator, and press Run.
 
 ```sh
 # The logic, on the host — no simulator, ~0.01s
-cd SenkuCore && swift test        # 241 tests
-cd ../SenkuUI  && swift test      # 208 tests
+cd SenkuCore && swift test        # 243 tests
+cd ../SenkuUI  && swift test      # 236 tests
 
 # The app. Note the *generic* destination — a named device breaks the
 # watch link; docs/BUILD.md explains why.
@@ -489,7 +496,7 @@ senku/
 | **UserNotifications** | reminders, and a deliberate budget inside iOS's 64-request ceiling |
 | **Liquid Glass** | `GlassEffectContainer`, `glassEffectID`, interactive tinted capsules |
 | **Core Text + Core Graphics** | the PDF — real pagination and vector charts, no screenshots |
-| **Swift Testing / XCTest** | 449 host tests, plus bundle and UI tests on a simulator |
+| **Swift Testing / XCTest** | 479 host tests, plus bundle and UI tests on a simulator |
 
 ### Three decisions worth knowing about
 

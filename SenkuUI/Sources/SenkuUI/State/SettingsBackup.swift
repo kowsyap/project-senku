@@ -37,6 +37,11 @@ public struct SettingsBackup: Codable, Equatable, Sendable {
         // otherwise in no backup at all.
         "senku.water.creatineDays.v1",
         "senku.forgivenDays.v1",
+        // The targets each day had, so a restored streak is judged the same.
+        "senku.intake.targetHistory.v1",
+        "senku.water.targetHistory.v1",
+        // Where the maintenance count began, so a restore does not restart it.
+        "senku.maintenanceCycle.v1",
         // The gym.
         "senku.plates.v1",
         "senku.plates.unit.v1",

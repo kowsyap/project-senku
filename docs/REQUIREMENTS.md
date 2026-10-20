@@ -149,11 +149,17 @@ WeighIn
   another.
 - **F1-R4** The profile weight never changes without explicit user action.
   Adopting the trend is an offered, single-purpose edit.
-- **F1-R5** Adaptive maintenance reads food and weight over the same window:
-  the 21 full days ending yesterday. It becomes available only when all of the
-  following hold within it: at least 8 weigh-ins spanning at least 14 days,
-  food logged on at least 15 of the 21 days, and a difference of at least
-  100 kcal from the formula plan.
+- **F1-R5** Adaptive maintenance counts complete days — a weigh-in and food
+  logged — in a row, from the day the count began; today is never counted. A
+  day missing either resets the count. After 14, food and weight over those 14
+  days are compared with the maintenance the plan is using now (the formula's,
+  or a figure accepted earlier); a difference of at least 100 kcal is offered,
+  anything less starts the count again. Until a decision, the suggestion
+  follows the latest 14 days of the run, recalculated each day; a missed day
+  removes it. Accepting or dismissing starts the count again from the day of
+  the decision. No figure is shown before day 14; a waiting suggestion is shown
+  at the top of the Me page. Past calories can be filled in; weigh-ins can
+  be logged for today only.
 - **F1-R6** Adaptive maintenance shows its arithmetic — observed change, the
   7,700 kcal/kg assumption, the implied daily delta — and applies only on
   acceptance.

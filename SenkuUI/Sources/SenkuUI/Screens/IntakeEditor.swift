@@ -246,12 +246,19 @@ struct IntakeEditor: View {
 /// The quick-add row, editable.
 struct IntakeSettingsView: View {
     @Bindable var store: IntakeStore
+    var profile: ProfileStore.Profile?
+    /// The new calorie and protein adjustments, to be saved to the profile.
+    var onAdjustTargets: (_ calories: Double, _ protein: Double) -> Void = { _, _ in }
 
     @State private var editing: FoodFavourite?
     @State private var isAdding = false
 
     var body: some View {
         Form {
+            if let profile {
+                targetsSection(profile)
+            }
+
             #if os(iOS)
             if #available(iOS 27, *) {
                 Section {
@@ -446,6 +453,99 @@ private struct FavouriteEditor: View {
             )
         )
         onClose()
+    }
+}
+
+// MARK: - Your targets
+
+extension IntakeSettingsView {
+    static let calorieStep: Double = 50
+    static let proteinStep: Double = 5
+    static let calorieReach: Double = 1000
+    static let proteinReach: Double = 100
+
+    /// Eat more or less than the calculator says, by a difference that stays
+    /// put when the plan underneath it changes.
+    @ViewBuilder
+    func targetsSection(_ profile: ProfileStore.Profile) -> some View {
+        let calculator = profile.calculatorPlan
+        let plan = profile.plan
+        let calories = profile.calorieAdjustment ?? 0
+        let protein = profile.proteinAdjustment ?? 0
+        let floor = profile.metrics.sex.safeMinimumCalories
+
+        // Never below the safe floor: the lowest step is the one that lands on
+        // it or just above, and a plan already at the floor cannot go lower.
+        let lowestCalories = max(
+            -Self.calorieReach,
+            min(0, ((floor - calculator.energy.targetCalories) / Self.calorieStep).rounded(.up) * Self.calorieStep)
+        )
+        let lowestProtein = -min(
+            Self.proteinReach,
+            (calculator.macros.proteinGrams / Self.proteinStep).rounded(.down) * Self.proteinStep
+        )
+
+        Section {
+            Stepper(
+                value: Binding(
+                    get: { calories },
+                    set: { onAdjustTargets($0, protein) }
+                ),
+                in: lowestCalories ... Self.calorieReach,
+                step: Self.calorieStep
+            ) {
+                adjustmentLabel(
+                    "Calories",
+                    value: "\(Int(plan.macros.calories.rounded()).formatted()) kcal",
+                    calculator: "\(Int(calculator.macros.calories.rounded()).formatted()) kcal",
+                    difference: calories == 0 ? nil : "\(Display.signedCalories(calories)) kcal"
+                )
+            }
+
+            Stepper(
+                value: Binding(
+                    get: { protein },
+                    set: { onAdjustTargets(calories, $0) }
+                ),
+                in: lowestProtein ... Self.proteinReach,
+                step: Self.proteinStep
+            ) {
+                adjustmentLabel(
+                    "Protein",
+                    value: Display.grams(plan.macros.proteinGrams),
+                    calculator: Display.grams(calculator.macros.proteinGrams),
+                    difference: protein == 0 ? nil : "\(protein > 0 ? "+" : "")\(Int(protein)) g"
+                )
+            }
+
+            if calories != 0 || protein != 0 {
+                Button("Use the calculator's targets") {
+                    onAdjustTargets(0, 0)
+                }
+            }
+        } header: {
+            Text("Your targets")
+        }
+    }
+
+    private func adjustmentLabel(
+        _ title: String,
+        value: String,
+        calculator: String,
+        difference: String?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text(title)
+                Text(value)
+                    .fontWeight(.semibold)
+                    .monospacedDigit()
+            }
+            Text(difference.map { "Calculator \(calculator) · \($0)" } ?? "Calculator's target")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
     }
 }
 #endif

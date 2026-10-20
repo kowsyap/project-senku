@@ -10,10 +10,20 @@ public struct ResultsView: View {
     /// them last, after the maintenance figure they sit beside.
     private let showsAdvisories: Bool
 
-    public init(plan: NutritionPlan, unitSystem: UnitSystem = .metric, showsAdvisories: Bool = true) {
+    /// The plan before the Food tab's adjustments, when there are any — so the
+    /// target card can say the numbers are not the calculator's own.
+    private let calculatorPlan: NutritionPlan?
+
+    public init(
+        plan: NutritionPlan,
+        unitSystem: UnitSystem = .metric,
+        showsAdvisories: Bool = true,
+        calculatorPlan: NutritionPlan? = nil
+    ) {
         self.showsAdvisories = showsAdvisories
         self.plan = plan
         self.unitSystem = unitSystem
+        self.calculatorPlan = calculatorPlan
     }
 
     private var energy: EnergyProfile { plan.energy }
@@ -22,7 +32,7 @@ public struct ResultsView: View {
     public var body: some View {
         VStack(spacing: Senku.Metrics.stackSpacing) {
             targetCard
-            if showsAdvisories, !plan.advisories.isEmpty {
+            if showsAdvisories, !plan.bannerAdvisories.isEmpty {
                 advisoriesCard
             }
             energyCard
@@ -61,7 +71,27 @@ public struct ResultsView: View {
 
             Divider()
             projection
+
+            if let calculatorPlan {
+                Divider()
+                adjustment(from: calculatorPlan)
+            }
         }
+    }
+
+    /// What the Food tab changed, against what the calculator worked out.
+    private func adjustment(from calculator: NutritionPlan) -> some View {
+        let calories = macros.calories - calculator.macros.calories
+        let protein = macros.proteinGrams - calculator.macros.proteinGrams
+        var parts: [String] = []
+        if abs(calories) >= 1 { parts.append("\(Display.signedCalories(calories)) kcal") }
+        if abs(protein) >= 1 { parts.append("\(protein > 0 ? "+" : "")\(Int(protein.rounded())) g protein") }
+
+        return StatRow(
+            "Your adjustment",
+            value: parts.isEmpty ? "None" : parts.joined(separator: ", "),
+            detail: "Calculator: \(Display.calories(calculator.macros.calories)) kcal, \(Display.grams(calculator.macros.proteinGrams))"
+        )
     }
 
     private var supportingTargets: some View {
@@ -111,7 +141,7 @@ public struct ResultsView: View {
 
     private var advisoriesCard: some View {
         VStack(spacing: 8) {
-            ForEach(plan.advisories) { advisory in
+            ForEach(plan.bannerAdvisories) { advisory in
                 AdvisoryBanner(advisory)
             }
         }
@@ -137,10 +167,16 @@ public struct ResultsView: View {
         let metrics = plan.metrics
 
         return Card("Body") {
-            StatRow("BMI", value: String(format: "%.1f", metrics.bmi))
-            // The advisory above already says the body-fat figure is estimated
-            // and what measuring it would buy. This is the same screen.
-            StatRow("Body fat", value: Display.percent(metrics.effectiveBodyFatPercentage))
+            StatRow(
+                "BMI",
+                value: String(format: "%.1f", metrics.bmi),
+                info: plan.note(Advisory.bmiLow)
+            )
+            StatRow(
+                "Body fat",
+                value: Display.percent(metrics.effectiveBodyFatPercentage),
+                info: plan.note(Advisory.bodyFatEstimated)
+            )
             StatRow("Lean mass", value: Display.mass(metrics.leanBodyMassKG, in: unitSystem))
             StatRow("Fat mass", value: Display.mass(metrics.fatMassKG, in: unitSystem))
             StatRow(
@@ -149,5 +185,27 @@ public struct ResultsView: View {
                 detail: "BMI 18.5–24.9 for your height"
             )
         }
+    }
+}
+
+extension Advisory {
+    static let bmiLow = "bmi.low"
+    static let bodyFatEstimated = "bodyfat.estimated"
+
+    /// Notes about a single figure, shown in an info button beside it rather
+    /// than as a banner: "your BMI is below the healthy range" means most next
+    /// to the BMI.
+    static let besideTheirFigure: Set<String> = [bmiLow, bodyFatEstimated]
+}
+
+extension NutritionPlan {
+    /// The advisories that still get a banner of their own.
+    var bannerAdvisories: [Advisory] {
+        advisories.filter { !Advisory.besideTheirFigure.contains($0.id) }
+    }
+
+    /// One figure's note, with its severity's colour, if the plan has it.
+    func note(_ id: String) -> (text: String, tint: Color)? {
+        advisories.first { $0.id == id }.map { ($0.message, $0.severity.tint) }
     }
 }

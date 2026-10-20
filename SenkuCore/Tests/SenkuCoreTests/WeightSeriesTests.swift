@@ -179,14 +179,14 @@ struct AdaptiveMaintenanceTests {
         let barely = AdaptiveMaintenance(
             intakeCalories: 2500,
             observedWeeklyChangeKG: -0.05,
-            formulaMaintenance: 2540
+            baselineMaintenance: 2540
         )
         #expect(!barely.isWorthActingOn)
 
         let real = AdaptiveMaintenance(
             intakeCalories: 2500,
             observedWeeklyChangeKG: -0.5,
-            formulaMaintenance: 2540
+            baselineMaintenance: 2540
         )
         #expect(real.isWorthActingOn)
     }

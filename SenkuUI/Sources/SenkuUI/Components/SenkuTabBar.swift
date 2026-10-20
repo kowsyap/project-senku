@@ -51,6 +51,11 @@ struct SenkuTabBar: View {
     /// be turned back into a tab.
     @State private var frames: [RootView.Tab: CGRect] = [:]
 
+    /// Where each icon's place in the row is, in the bar's outer space. The
+    /// icons themselves are drawn over the bar rather than in it — see
+    /// ``icons`` — and this is where they go.
+    @State private var iconFrames: [RootView.Tab: CGRect] = [:]
+
     /// Where the finger is, while it is down. The pill follows this rather than
     /// the selection, which is what makes it feel attached to the finger rather
     /// than chasing it from position to position.
@@ -61,6 +66,7 @@ struct SenkuTabBar: View {
     // `nonisolated` because the geometry callbacks that name this space are
     // `@Sendable`, and a constant string has nothing to protect.
     nonisolated private static let space = "senku.tabbar"
+    nonisolated private static let outerSpace = "senku.tabbar.outer"
 
     /// How the pill travels when it is not being held: a spring with a little
     /// give in it, which is the liquid-glass movement the bar had when it was
@@ -109,6 +115,46 @@ struct SenkuTabBar: View {
                 legacyBar
             }
         }
+        .coordinateSpace(name: Self.outerSpace)
+        .overlay(alignment: .topLeading) { icons }
+    }
+
+    // MARK: - The icons
+
+    /// Every icon, drawn over the bar at its place in the row.
+    ///
+    /// Over it rather than in it so the one you are on can stand up out of
+    /// the bar: inside the glass, the part past its edge was drawn under the
+    /// rim — a light line through the middle of it — and washed by the pill.
+    /// Out here it is plain paint above everything. Never touched: taps and
+    /// drags go through to the row underneath.
+    private var icons: some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(tabs, id: \.self) { tab in
+                if let frame = iconFrames[tab] {
+                    icon(tab)
+                        .position(x: frame.midX, y: frame.midY)
+                        .animation(Self.settle, value: frame)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func icon(_ tab: RootView.Tab) -> some View {
+        let isOn = tab == highlighted
+        let isSelected = tab == selection
+
+        return TabIcon(tab: tab, isActive: isSelected, isOn: isOn)
+            // Coloured by what the pill is over, like the label under it.
+            .foregroundStyle(isOn ? AnyShapeStyle(tab.activeTint) : AnyShapeStyle(.secondary))
+            // The tab you are on stands up: grown from where it stands — its
+            // foot does not move — to the bar's top edge, with a shadow
+            // under it.
+            .scaleEffect(isSelected ? 1.5 : 1, anchor: .bottom)
+            .shadow(color: .black.opacity(isSelected ? 0.28 : 0), radius: 3, y: 3)
+            .animation(Self.settle, value: isSelected)
     }
 
     // MARK: - Liquid Glass
@@ -239,27 +285,21 @@ struct SenkuTabBar: View {
 
     private func item(_ tab: RootView.Tab) -> some View {
         let isOn = tab == highlighted
+        let isSelected = tab == selection
 
         return Group {
             VStack(spacing: 3) {
-                // "Me" wears a face rather than the system's anonymous
-                // silhouette — it is the one tab that is about a particular
-                // person. Full colour, so it is not tinted into the bar's
-                // accent and lost.
-                if let mark = tab.mark {
-                    // A template, so it takes the row's colour like every
-                    // other icon here: grey while it waits its turn, gold only
-                    // when it is the tab you are on.
-                    Image(mark, bundle: .module)
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 21)
-                } else {
-                    Image(systemName: tab.symbol)
-                        .font(.system(size: 18, weight: isOn ? .semibold : .regular))
-                        .frame(height: 21)
-                }
+                // The icon's place, held empty: the icon itself is drawn
+                // over the bar — see ``icons``.
+                Image(systemName: tab.symbol)
+                    .font(.system(size: 18))
+                    .frame(height: 21)
+                    .hidden()
+                    .onGeometryChange(for: CGRect.self) { proxy in
+                        proxy.frame(in: .named(Self.outerSpace))
+                    } action: { frame in
+                        iconFrames[tab] = frame
+                    }
 
                 Text(tab.shortTitle)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
@@ -282,7 +322,11 @@ struct SenkuTabBar: View {
             // bar that scrolled anyway; five fixed positions have to fit.
             .frame(minWidth: 56)
             .padding(.vertical, 6)
-            .padding(.horizontal, 4)
+            // Longer while selected. By the selection rather than by the
+            // pill, which follows a finger: items changing width under a drag
+            // would move the targets it is being measured against.
+            .padding(.horizontal, isSelected ? 12 : 4)
+            .animation(Self.settle, value: isSelected)
             .contentShape(Capsule())
         }
         // The row handles the touching, so each item carries its own

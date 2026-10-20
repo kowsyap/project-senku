@@ -517,8 +517,18 @@ private struct WeighInEditor: View {
 
                         Divider()
 
-                        DatePicker("When", selection: $date, in: ...Date.now)
-                            .font(.subheadline)
+                        // Today only. A weigh-in typed in for a past day is a
+                        // guess, and a guess bends the trend and the
+                        // maintenance count that reads it — see
+                        // `MaintenanceCheck`. Calories can be filled in later;
+                        // a weight cannot.
+                        DatePicker(
+                            "When",
+                            selection: $date,
+                            in: Calendar.logging.startOfDay(for: .now) ... Date.now,
+                            displayedComponents: .hourAndMinute
+                        )
+                        .font(.subheadline)
                     }
 
                     Text("Weigh yourself at the same time of day — first thing, before eating — or the trend measures your breakfast.")

@@ -13,6 +13,30 @@ struct NutritionPlanTests {
         NutritionPlan.make(for: male, activityLevel: activity, goal: goal)
     }
 
+    @Test("An adjustment moves the target, and the projection with it")
+    func adjustmentMovesTheTarget() {
+        let base = plan(.maintain)
+        let less = NutritionPlan.make(
+            for: male, activityLevel: .moderate, goal: .maintain,
+            calorieAdjustment: -300, proteinAdjustment: 20
+        )
+
+        expectClose(less.energy.targetCalories, base.energy.targetCalories - 300, tolerance: 0.5)
+        #expect(less.macros.proteinGrams == base.macros.proteinGrams + 20)
+        #expect(less.projectedWeeklyChangeKG < 0)
+        #expect(less.energy.calorieAdjustment == -300)
+    }
+
+    @Test("An adjustment cannot take the target under the safe floor")
+    func adjustmentStopsAtTheSafeFloor() {
+        let low = NutritionPlan.make(
+            for: male, activityLevel: .sedentary, goal: .maintain, calorieAdjustment: -2000
+        )
+
+        #expect(low.energy.targetCalories == Sex.male.safeMinimumCalories)
+        #expect(low.energy.wasClampedToSafeMinimum)
+    }
+
     @Test("A cut projects loss and a bulk projects gain")
     func cutProjectsLossAndBulkProjectsGain() {
         #expect(plan(.moderateCut).projectedWeeklyChangeKG < 0)

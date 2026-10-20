@@ -56,6 +56,7 @@ public struct RootView: View {
     @State private var planPreview: PlanImportPreview?
     @State private var isShowingDataMenu = false
     @State private var isConfirmingReset = false
+    @State private var isSettingUpProfile = false
     @State private var isConfirmingResetAgain = false
     #if os(iOS)
     @State private var exportedReport: ExportedReport?
@@ -218,12 +219,7 @@ public struct RootView: View {
     public init(store: ProfileStore = ProfileStore()) {
         _store = State(initialValue: store)
 
-        // Somebody with no profile belongs in the calculator — but the
-        // calculator may not be in their bar, and a pager asked for a page it
-        // does not have silently shows its first one instead. So an opening
-        // destination is routed exactly like any other: onto the bar if it is
-        // there, and under More if it is not.
-        var opening: Tab = store.hasProfile ? .me : .quickCalc
+        var opening: Tab = .me
 
         #if DEBUG
         // Lets a debug build be launched straight onto a screen, which is how
@@ -359,7 +355,12 @@ public struct RootView: View {
             // exactly when the reminders need putting back.
             restoreWaterReminders()
             refreshDueReminders()
+            recordTargets()
         }
+        // Each change of target kept with its day, so the streaks judge a
+        // past day by the target it had — see `TargetHistory`.
+        .onChange(of: store.profile) { _, _ in recordTargets() }
+        .onChange(of: water.settings) { _, _ in recordTargets() }
         .onChange(of: dueDates.items) { _, _ in
             refreshDueReminders()
         }
@@ -636,7 +637,7 @@ public struct RootView: View {
         intake = IntakeStore()
         profileEditionID = UUID()
         generation = UUID()
-        show(.quickCalc)
+        show(.me)
 
         #if os(iOS)
         // The watch holds its own copy of the profile and the weight summary.
@@ -808,6 +809,13 @@ public struct RootView: View {
     }
 
     /// The watch's two rings, as four numbers.
+    /// Notes today's food and water targets. Nothing is written unless one
+    /// changed.
+    private func recordTargets() {
+        intake.recordTargets(profile: store.profile)
+        water.recordGoal(profile: store.profile)
+    }
+
     private func publishIntake() {
         #if os(iOS)
         // Read before publishing, for the same reason water does — see there.
@@ -921,19 +929,10 @@ public struct RootView: View {
 
     @ViewBuilder
     private var quickCalcScreen: some View {
-        // Saving is offered whether or not a profile exists. It used
-        // to be hidden once one did, on the theory that this tab was
-        // then only for other people's numbers — which left someone who
-        // had just worked out their own new numbers here with no way to
-        // keep them.
         CalculatorView(
             draft: PlanDraft(),
-            saveTitle: store.hasProfile ? "Update my profile" : "Save as my profile"
-        ) { profile in
-            store.save(profile)
-            profileEditionID = UUID()
-            show(.me)
-        }
+            offersSaving: false
+        )
         .senkuBottomBarInset()
             .navigationTitle("Macro Calculator")
     }
@@ -993,9 +992,17 @@ public struct RootView: View {
     private var foodScreen: some View {
         IntakeView(
             store: intake,
-            profile: store.profile
+            profile: store.profile,
+            onAdjustTargets: { calories, protein in
+                guard var profile = store.profile else { return }
+                profile.calorieAdjustment = calories == 0 ? nil : calories
+                profile.proteinAdjustment = protein == 0 ? nil : protein
+                store.save(profile)
+                // The watch and the Me page hold the old targets.
+                profileEditionID = UUID()
+            }
         ) {
-            show(.quickCalc)
+            show(.me)
         }
         .navigationTitle("Food")
     }
@@ -1261,12 +1268,21 @@ public struct RootView: View {
         ContentUnavailableView {
             Label("No profile yet", systemImage: "person.crop.circle.dashed")
         } description: {
-            Text("Work out your numbers in the macro calculator, then save them here to keep them.")
+            Text("Set up your profile to get calorie targets, macro breakdowns and weight tracking.")
         } actions: {
-            Button("Open the macro calculator") {
-                show(.quickCalc)
+            Button("Set up my profile") {
+                isSettingUpProfile = true
             }
             .buttonStyle(.borderedProminent)
+        }
+        .sheet(isPresented: $isSettingUpProfile) {
+            ProfileEditorSheet(draft: PlanDraft(), title: "Set Up Profile") { profile in
+                store.save(profile)
+                profileEditionID = UUID()
+                isSettingUpProfile = false
+            } onCancel: {
+                isSettingUpProfile = false
+            }
         }
     }
 }

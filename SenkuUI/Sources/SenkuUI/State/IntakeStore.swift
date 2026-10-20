@@ -21,6 +21,7 @@ public final class IntakeStore {
     /// the flag was set regardless. Bumping the key lets those installs have
     /// the top-up they missed, once.
     static let seededKey = "senku.intake.seeded.v2"
+    static let targetHistoryKey = "senku.intake.targetHistory.v1"
 
     private let defaults: UserDefaults
     private let fixedCalendar: Calendar?
@@ -80,11 +81,33 @@ public final class IntakeStore {
         profile?.plan.macros
     }
 
+    private var targetHistory: TargetHistory<FoodTargets> {
+        TargetHistory(key: Self.targetHistoryKey, defaults: defaults, calendar: calendar)
+    }
+
+    /// The targets a day was asked to meet: today's for today, and for a day
+    /// gone, the calorie and protein targets that were in force on it — see
+    /// ``TargetHistory``.
+    public func targets(profile: ProfileStore.Profile?, on date: Date) -> MacroTargets? {
+        guard let current = targets(profile: profile) else { return nil }
+        guard calendar.startOfDay(for: date) < calendar.startOfDay(for: .now),
+              let then = targetHistory.value(on: date)
+        else { return current }
+        return current.with(calories: then.calories, proteinGrams: then.proteinGrams)
+    }
+
+    /// Notes today's calorie and protein targets, so a change from here on
+    /// leaves the days before it judged as they were.
+    public func recordTargets(profile: ProfileStore.Profile?, on date: Date = .now) {
+        guard let macros = targets(profile: profile) else { return }
+        targetHistory.record(FoodTargets(calories: macros.calories, proteinGrams: macros.proteinGrams), on: date)
+    }
+
     public func day(
         _ date: Date = .now,
         profile: ProfileStore.Profile?
     ) -> IntakeDay? {
-        guard let targets = targets(profile: profile) else { return nil }
+        guard let targets = targets(profile: profile, on: date) else { return nil }
         return log.day(date, targets: targets)
     }
 
@@ -302,12 +325,8 @@ public final class IntakeStore {
 
     // MARK: - Streaks
 
-    /// Days the protein target was reached, as start-of-day dates.
-    ///
-    /// Recomputed against today's targets rather than recorded at the time.
-    /// The same trade the water streak makes: a target that changes rewrites
-    /// the history, which is the lesser evil next to a history judged against
-    /// a number the app can no longer explain.
+    /// Days the protein target was reached, as start-of-day dates — each day
+    /// against the target it had, so changing the plan leaves the past alone.
     public func proteinDays(_ days: Int = 35, profile: ProfileStore.Profile?) -> Set<Date> {
         metDays(days, profile: profile) { $0.isProteinMet }
     }
@@ -323,12 +342,14 @@ public final class IntakeStore {
         profile: ProfileStore.Profile?,
         where isMet: (IntakeDay) -> Bool
     ) -> Set<Date> {
-        guard let targets = targets(profile: profile) else { return [] }
-
-        return Set(
-            log.recentDays(days, targets: targets)
-                .filter { !$0.isUnlogged && isMet($0) }
-                .map { calendar.startOfDay(for: $0.date) }
+        Set(
+            (0 ..< days).compactMap { offset -> Date? in
+                guard let date = calendar.date(byAdding: .day, value: -offset, to: .now),
+                      let day = day(calendar.startOfDay(for: date), profile: profile),
+                      !day.isUnlogged, isMet(day)
+                else { return nil }
+                return calendar.startOfDay(for: date)
+            }
         )
     }
 

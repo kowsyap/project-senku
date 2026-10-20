@@ -10,9 +10,9 @@ import Foundation
 /// height and weight will find that out. Eating at a target for a fortnight and
 /// weighing yourself will.
 ///
-/// So this compares the weight change that actually happened against the one
-/// the plan predicted, converts the difference into calories, and reports the
-/// maintenance figure implied by the result. It is the one number in Senku
+/// So this takes what you ate and what the scale did over the same days,
+/// converts the weight change into calories, and reports the maintenance
+/// figure implied by the result — next to the one the plan is using now. It is the one number in Senku
 /// derived from evidence about *you* rather than from a formula, which is also
 /// why it is never applied silently — see ``Advisory`` and the suggestion the
 /// UI is expected to offer.
@@ -25,19 +25,26 @@ public struct AdaptiveMaintenance: Hashable, Sendable {
 
     /// The shortest history worth drawing a conclusion from.
     ///
-    /// Two weeks and eight readings. Shorter than that and the estimate is
+    /// Two weeks and eight readings — and two weeks of daily weigh-ins, the
+    /// first to the fourteenth, span thirteen days between them, which is why
+    /// the figure is 13 and not 14. Shorter than that and the estimate is
     /// dominated by water: a single glycogen swing can imply a maintenance
     /// figure hundreds of calories out, which is worse than no figure at all,
     /// because it looks like an answer.
-    public static let minimumSpanDays: Double = 14
+    public static let minimumSpanDays: Double = 13
     public static let minimumWeighIns = 8
 
     /// What the user has been eating, as they reported it.
     public let intakeCalories: Double
     /// Observed change per week, from the weight series.
     public let observedWeeklyChangeKG: Double
-    /// Maintenance as the formula estimated it, for comparison.
-    public let formulaMaintenance: Double
+    /// The maintenance the plan is using now, for comparison: the formula's,
+    /// or a measured figure accepted earlier.
+    ///
+    /// Not always the formula. Once a measured figure is in use, the question
+    /// worth asking is whether *it* is still right — compared against the
+    /// formula, an accepted figure would be offered again every time.
+    public let baselineMaintenance: Double
 
     /// Maintenance implied by what happened.
     ///
@@ -55,20 +62,20 @@ public struct AdaptiveMaintenance: Hashable, Sendable {
         observedWeeklyChangeKG * Self.caloriesPerKG / 7
     }
 
-    /// How far the formula was out, signed: positive when the formula
+    /// How far the plan's figure was out, signed: positive when it
     /// underestimated what you actually burn.
-    public var differenceFromFormula: Double {
-        estimatedMaintenance - formulaMaintenance
+    public var differenceFromBaseline: Double {
+        estimatedMaintenance - baselineMaintenance
     }
 
     public init(
         intakeCalories: Double,
         observedWeeklyChangeKG: Double,
-        formulaMaintenance: Double
+        baselineMaintenance: Double
     ) {
         self.intakeCalories = intakeCalories
         self.observedWeeklyChangeKG = observedWeeklyChangeKG
-        self.formulaMaintenance = formulaMaintenance
+        self.baselineMaintenance = baselineMaintenance
     }
 
     /// The estimate, or nil when the history cannot support one.
@@ -88,7 +95,7 @@ public struct AdaptiveMaintenance: Hashable, Sendable {
         return AdaptiveMaintenance(
             intakeCalories: intakeCalories,
             observedWeeklyChangeKG: weekly,
-            formulaMaintenance: plan.energy.maintenanceCalories
+            baselineMaintenance: plan.energy.maintenanceCalories
         )
     }
 
@@ -98,6 +105,6 @@ public struct AdaptiveMaintenance: Hashable, Sendable {
     /// changing a plan over it would be false precision — the app would look
     /// responsive while telling you nothing.
     public var isWorthActingOn: Bool {
-        abs(differenceFromFormula) >= 100
+        abs(differenceFromBaseline) >= 100
     }
 }

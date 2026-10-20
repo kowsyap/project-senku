@@ -103,6 +103,8 @@ public struct WorkoutView: View {
             WorkoutHistoryView(
                 workouts: workouts,
                 library: library,
+                records: records,
+                plan: plans.plan,
                 unitSystem: unitSystem
             )
         }
@@ -255,40 +257,72 @@ public struct WorkoutView: View {
     }
 }
 
-/// Everything logged, newest first.
+/// Everything logged, newest first, in training weeks.
+///
+/// The week you are in lists its workouts one by one while it is being
+/// trained; every other week — and this one, once every day of the plan is
+/// done — is a card. A card says what the week added up to, and opens on the
+/// whole of it: the numbers against the week before, which days of the plan
+/// were done, what the body got, and the workouts themselves.
 struct WorkoutHistoryView: View {
     @Bindable var workouts: WorkoutStore
     @Bindable var library: ExerciseLibrary
+    @Bindable var records: RecordStore
+    let plan: TrainingPlan
     let unitSystem: UnitSystem
 
     @State private var showing: WorkoutSession?
+    /// The one week open. Opening another closes it.
+    @State private var expanded: Date?
 
     var body: some View {
+        let layout = WorkoutHistoryLayout.make(history: workouts.history, plan: plan)
+
         List {
-            ForEach(workouts.history) { session in
-                Button {
-                    showing = session
-                } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(session.dayName)
-                                .font(.headline)
-                                .foregroundStyle(Color.primary)
-                            Spacer()
-                            Text(session.date.formatted(date: .abbreviated, time: .omitted))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Text("\(session.totalSets) sets · \(Display.mass(session.volumeKG, in: unitSystem, decimals: 0)) moved")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+            if !layout.thisWeek.isEmpty {
+                Section("This week") {
+                    sessionRows(layout.thisWeek)
                 }
             }
-            .onDelete { offsets in
-                for index in offsets {
-                    workouts.delete(workouts.history[index])
+
+            // A card of its own for each week, close together: the wide gap
+            // is the one between this week's workouts and the weeks.
+            ForEach(Array(layout.weeks.enumerated()), id: \.element.id) { index, week in
+                let previous = layout.weeks.indices.contains(index + 1) ? layout.weeks[index + 1] : nil
+                let isOpen = expanded == week.id
+
+                Section {
+                    Button {
+                        withAnimation(.snappy) {
+                            expanded = isOpen ? nil : week.id
+                        }
+                    } label: {
+                        weekCard(week, isOpen: isOpen)
+                    }
+
+                    if isOpen {
+                        WeekAnalysis(
+                            week: week,
+                            previous: previous,
+                            plan: plan,
+                            records: records,
+                            library: library,
+                            unitSystem: unitSystem
+                        )
+                        sessionRows(week.sessions)
+                    }
+                } header: {
+                    // Labels where the list changes: this week, once it is a
+                    // finished card of its own, and the first week before it.
+                    if week.interval.contains(.now) {
+                        Text("This week")
+                    } else if index == 0 || layout.weeks[index - 1].interval.contains(.now) {
+                        Text("Previous weeks")
+                    }
                 }
+                #if os(iOS)
+                .listSectionSpacing(8)
+                #endif
             }
         }
         .senkuBottomBarInset()
@@ -305,6 +339,214 @@ struct WorkoutHistoryView: View {
                 )
             }
         }
+    }
+
+    private func sessionRows(_ sessions: [WorkoutSession]) -> some View {
+        ForEach(sessions) { session in
+            Button {
+                showing = session
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(session.dayName)
+                            .font(.headline)
+                            .foregroundStyle(Color.primary)
+                        Spacer()
+                        Text(session.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    let prs = session.recordsSet(in: records.records)
+                    Text("\(session.totalSets) sets" + (prs > 0 ? " · \(prs) \(prs == 1 ? "PR" : "PRs")" : ""))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .onDelete { offsets in
+            offsets.map { sessions[$0] }.forEach(workouts.delete)
+        }
+    }
+
+    private func weekCard(_ week: WorkoutWeek, isOpen: Bool) -> some View {
+        let days = week.trainingDays()
+        let exercises = week.performedExerciseIDs.count
+        let prs = week.recordsSet(in: records.records)
+        let performed = week.performedExerciseIDs.compactMap { library.exercise($0) }
+        let covered = BodyMapPart.trainedShare(of: BodyMapPart.coverage(of: performed))
+
+        return HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(Self.title(of: week))
+                    .font(.headline)
+                    .foregroundStyle(Color.primary)
+                // In columns, so they line up from one week to the next
+                // whatever the counts.
+                HStack(spacing: 6) {
+                    column("\(days) \(days == 1 ? "day" : "days")", widest: "0 days")
+                    Text("·")
+                    column("\(exercises) \(exercises == 1 ? "exercise" : "exercises")", widest: "00 exercises")
+                    if prs > 0 {
+                        Text("·")
+                        column("\(prs) \(prs == 1 ? "PR" : "PRs")", widest: "00 PRs")
+                    }
+                }
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            // How much of the body the week reached: the green on its map.
+            VStack(alignment: .trailing, spacing: 0) {
+                Text("\(Int((covered * 100).rounded()))%")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(Senku.Palette.surplus)
+                Text("MUSCLES")
+                    .font(.system(size: 8, weight: .heavy))
+                    .foregroundStyle(.tertiary)
+            }
+
+            Image(systemName: "chevron.down")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .rotationEffect(.degrees(isOpen ? 180 : 0))
+        }
+        .padding(.vertical, 4)
+    }
+
+    /// A figure as wide as the widest it could be, so columns hold still.
+    private func column(_ text: String, widest: String) -> some View {
+        ZStack(alignment: .leading) {
+            Text(widest).hidden()
+            Text(text)
+        }
+    }
+
+    /// The week's dates, month first at both ends: "Oct 6 – Oct 12". Put
+    /// together by hand, because a date format would put the day first
+    /// wherever the region does.
+    static func title(of week: WorkoutWeek) -> String {
+        func monthDay(_ date: Date) -> String {
+            "\(date.formatted(.dateTime.month(.abbreviated))) \(date.formatted(.dateTime.day()))"
+        }
+        return "\(monthDay(week.interval.start)) – \(monthDay(week.interval.end.addingTimeInterval(-1)))"
+    }
+}
+
+/// The whole of a training week, under its card.
+private struct WeekAnalysis: View {
+    let week: WorkoutWeek
+    let previous: WorkoutWeek?
+    let plan: TrainingPlan
+    @Bindable var records: RecordStore
+    @Bindable var library: ExerciseLibrary
+    let unitSystem: UnitSystem
+
+    private var newRecords: Int { week.recordsSet(in: records.records) }
+
+    /// Against the week before, only when it really is the week before.
+    private var volumeChange: Double? {
+        guard let previous, previous.volumeKG > 0,
+              abs(week.interval.start.timeIntervalSince(previous.interval.start) - 7 * 86_400) < 2 * 3600
+        else { return nil }
+        return (week.volumeKG - previous.volumeKG) / previous.volumeKG
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            stats
+            splits
+            bodyMap
+        }
+        .padding(.vertical, 6)
+    }
+
+    // MARK: - Numbers
+
+    private var stats: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 10) {
+            stat("Exercises", "\(week.performedExerciseIDs.count)")
+            stat("Sets", "\(week.totalSets)")
+            stat("Moved", Display.mass(week.volumeKG, in: unitSystem, decimals: 0), change: volumeChange)
+            if week.trainedSeconds > 0 {
+                stat("Time", Display.clock(week.trainedSeconds))
+            }
+            if week.cardioSeconds > 0 {
+                stat("Cardio", "\(Int((week.cardioSeconds / 60).rounded())) min")
+            }
+            if newRecords > 0 {
+                stat("PRs", "\(newRecords)")
+            }
+        }
+    }
+
+    private func stat(_ label: String, _ value: String, change: Double? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(label.uppercased())
+                .font(.system(size: 9, weight: .heavy))
+                .foregroundStyle(.tertiary)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text(value)
+                    .font(.headline)
+                    .monospacedDigit()
+                if let change, abs(change) >= 0.005 {
+                    Text("\(change > 0 ? "+" : "")\(Int((change * 100).rounded()))%")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(change > 0 ? Senku.Palette.surplus : Senku.Palette.warning)
+                }
+            }
+        }
+    }
+
+    // MARK: - The plan
+
+    /// Each day of the plan, done or not.
+    @ViewBuilder
+    private var splits: some View {
+        let days = plan.days.filter { !$0.isEmpty }
+        if !days.isEmpty {
+            VStack(alignment: .leading, spacing: 5) {
+                ForEach(days) { day in
+                    let done = week.dayIDs.contains(day.id)
+                    HStack(spacing: 8) {
+                        Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(done ? Senku.Palette.surplus : Color.secondary)
+                        Text(day.name)
+                            .font(.subheadline)
+                            .foregroundStyle(done ? Color.primary : Color.secondary)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - The body
+
+    /// What the week trained, on the body: green for trained, red for what the
+    /// week's own groups asked for and did not get.
+    private var bodyMap: some View {
+        let performed = week.performedExerciseIDs.compactMap { library.exercise($0) }
+        let coverage = BodyMapPart.coverage(of: performed)
+        let planned = Set(week.groups)
+
+        return VStack(spacing: 8) {
+            BodyHighlight { part in
+                switch part.state(coverage: coverage, plannedGroups: planned) {
+                case .trained: BodyHighlight.trained
+                case .missed: BodyHighlight.missed
+                case nil: nil
+                }
+            }
+            .frame(height: 200)
+
+            HStack(spacing: 14) {
+                BodyHighlightKey(color: BodyHighlight.trained, label: "Trained")
+                BodyHighlightKey(color: BodyHighlight.missed, label: "Not trained")
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 #endif
