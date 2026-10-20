@@ -27,6 +27,24 @@ final class ProfileStoreTests: XCTestCase {
         )
     }
 
+    /// The profile editor's form has no control for these, so a profile it
+    /// builds comes back without them — and saving must not lose them.
+    func testEditingKeepsWhatTheFormDoesNotHold() throws {
+        var previous = try makeProfile()
+        previous.measuredMaintenanceCalories = 2900
+        previous.calorieAdjustment = -200
+        previous.proteinAdjustment = 15
+
+        var edited = try XCTUnwrap(PlanDraft(profile: previous).profileSnapshot)
+        XCTAssertNil(edited.measuredMaintenanceCalories)
+
+        edited.keepFormlessFields(of: previous)
+        XCTAssertEqual(edited.measuredMaintenanceCalories, 2900)
+        XCTAssertEqual(edited.calorieAdjustment, -200)
+        XCTAssertEqual(edited.proteinAdjustment, 15)
+        XCTAssertEqual(edited.plan.macros.calories, edited.calculatorPlan.macros.calories - 200, accuracy: 10)
+    }
+
     func testSavedProfileSurvivesANewStoreOverTheSameStorage() throws {
         let store = ProfileStore(defaults: defaults)
         XCTAssertFalse(store.hasProfile)

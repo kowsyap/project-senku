@@ -34,6 +34,16 @@ public final class ProfileStore {
         /// Optional, so a profile saved before this existed still decodes.
         public var measuredMaintenanceCalories: Double?
 
+        /// Calories and protein to eat above or below what the calculator
+        /// works out, set on the Food tab. Kept as a difference rather than a
+        /// figure, so it rides along when the goal, the weight or the
+        /// maintenance changes: "200 less than the plan" is still true of the
+        /// next plan, and "2,200" would quietly stop being.
+        ///
+        /// Optional, so a profile saved before these existed still decodes.
+        public var calorieAdjustment: Double?
+        public var proteinAdjustment: Double?
+
         public var updatedAt: Date
 
         public init(
@@ -45,6 +55,8 @@ public final class ProfileStore {
             unitSystem: UnitSystem,
             goalWeightKG: Double? = nil,
             measuredMaintenanceCalories: Double? = nil,
+            calorieAdjustment: Double? = nil,
+            proteinAdjustment: Double? = nil,
             updatedAt: Date = .now
         ) {
             self.name = name
@@ -55,10 +67,27 @@ public final class ProfileStore {
             self.unitSystem = unitSystem
             self.goalWeightKG = goalWeightKG
             self.measuredMaintenanceCalories = measuredMaintenanceCalories
+            self.calorieAdjustment = calorieAdjustment
+            self.proteinAdjustment = proteinAdjustment
             self.updatedAt = updatedAt
         }
 
+        /// The targets everything is measured against, adjustments included.
         public var plan: NutritionPlan {
+            NutritionPlan.make(
+                for: metrics,
+                activityLevel: activityLevel,
+                goal: goal,
+                formula: formula,
+                measuredMaintenance: measuredMaintenanceCalories,
+                calorieAdjustment: calorieAdjustment ?? 0,
+                proteinAdjustment: proteinAdjustment ?? 0
+            )
+        }
+
+        /// The plan as the calculator works it out, before the adjustments —
+        /// what the Food tab's adjustments are shown against.
+        public var calculatorPlan: NutritionPlan {
             NutritionPlan.make(
                 for: metrics,
                 activityLevel: activityLevel,
@@ -66,6 +95,22 @@ public final class ProfileStore {
                 formula: formula,
                 measuredMaintenance: measuredMaintenanceCalories
             )
+        }
+
+        public var hasAdjustments: Bool {
+            (calorieAdjustment ?? 0) != 0 || (proteinAdjustment ?? 0) != 0
+        }
+
+        /// Takes back what the profile editor's form does not hold: the
+        /// accepted maintenance and the Food tab's adjustments.
+        ///
+        /// The editor builds a whole new profile from its fields, and a field
+        /// it has no control for came back nil — so saving a new age quietly
+        /// threw away a maintenance figure measured over weeks.
+        public mutating func keepFormlessFields(of previous: Profile) {
+            measuredMaintenanceCalories = previous.measuredMaintenanceCalories
+            calorieAdjustment = previous.calorieAdjustment
+            proteinAdjustment = previous.proteinAdjustment
         }
 
         /// How long the current plan would take to reach `goalWeightKG`, when

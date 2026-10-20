@@ -46,6 +46,7 @@ Scroll down to see:
 
 - **Fiber** and **water** targets.
 - **Maintenance calories** — what you burn at your activity level.
+- **Maintenance card** — counts down to a maintenance analysis: days in a row with both a weigh-in and food logged. After 14, if what you ate and what the scale did disagree with your plan by 100 kcal or more, the card moves to the top of the page and offers the measured figure: tap **Use** to adopt it or **✕** to keep yours. Until you decide, it updates each day from your latest 14. Either way the count starts again. A day missing either resets the count; a past day's calories can be filled in from **Streaks**, but a weight can only be logged on the day.
 - **Daily deficit** (or surplus) — the gap between what you eat and what you burn.
 - **Expected change** — how much weight you should lose or gain per week.
 - **Energy section** — your basal rate and how it scales across activity levels, calculated with your chosen formula.
@@ -93,7 +94,7 @@ Sessions you have finished this week show "Done this week — tap to see it." Th
 At the top-right:
 
 - **Plates** — a plate calculator for loading barbells.
-- **History** — a log of past workouts.
+- **History** — your past workouts by week. This week's are listed one by one until every day of your plan is done; earlier weeks are cards showing days trained, exercises, PRs and the share of muscles reached. Tap a week to open its analysis — sets, time, volume against the week before, your plan's days, a body map — and its workouts.
 - **Week** — the current week's summary.
 
 ### Editing your week
@@ -196,6 +197,8 @@ Below the chart, a **creatine toggle** lets you track whether you have taken you
 
 Scroll down past the chart, or tap the **Streaks** badge, to see your streaks — how many consecutive days you have hit your water target and taken your creatine. A streak is a motivator: it costs nothing to keep and everything to break.
 
+Each day is judged by the target it had. Changing your water goal, maintenance or food targets applies from that day on and never breaks the days before it.
+
 ---
 
 ## Food
@@ -217,7 +220,7 @@ Below that:
 
 At the top-right:
 
-- **Adjust** — change your macro targets or calorie goal.
+- **Adjust** — eat more or less than the calculator works out: step your calories (by 50 kcal) and protein (by 5 g) up or down from its numbers. The difference stays when you edit your profile or change goal, and **Use the calculator's targets** puts it back. Calories cannot go below the safe minimum.
 - **Log** — add a food entry with full macros.
 
 ---

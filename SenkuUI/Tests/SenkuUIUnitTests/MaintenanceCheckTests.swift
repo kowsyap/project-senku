@@ -10,7 +10,12 @@ import SenkuCore
     private let calendar = Calendar.current
 
     private func day(_ ago: Int) -> Date {
-        calendar.date(byAdding: .day, value: -ago, to: .now)!
+        calendar.startOfDay(for: calendar.date(byAdding: .day, value: -ago, to: .now)!)
+    }
+
+    /// Mid-morning on a day, as a weigh-in or a meal would be.
+    private func morning(_ ago: Int) -> Date {
+        day(ago).addingTimeInterval(9 * 3600)
     }
 
     private func profile() throws -> ProfileStore.Profile {
@@ -23,142 +28,220 @@ import SenkuCore
         )
     }
 
-    /// Weighs every day for three weeks and a day, losing `weeklyKG` a week.
-    private func weights(weeklyKG: Double, days: Int = 22) throws -> WeightLogStore {
+    /// A weigh-in on each of `days` ago, losing `weeklyKG` a week.
+    private func weights(weeklyKG: Double, days: [Int]) throws -> WeightLogStore {
         let store = WeightLogStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
-        for ago in stride(from: days, through: 0, by: -1) {
-            let weight = 84 + weeklyKG / 7 * Double(days - ago)
-            store.add(try WeighIn(date: day(ago), weightKG: weight))
+        let oldest = days.max() ?? 0
+        for ago in days {
+            store.add(try WeighIn(date: morning(ago), weightKG: 84 + weeklyKG / 7 * Double(oldest - ago)))
         }
         return store
     }
 
-    /// Food on the `loggedDays` days before today — today is never counted.
-    private func intake(calories: Double, loggedDays: Int) throws -> IntakeStore {
+    private func intake(calories: Double, days: [Int]) throws -> IntakeStore {
         let store = IntakeStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
-        for ago in 1 ... max(1, loggedDays) where loggedDays > 0 {
-            store.add(try IntakeEntry(date: day(ago), carbsG: calories / 4))
+        for ago in days {
+            store.add(try IntakeEntry(date: morning(ago), carbsG: calories / 4))
         }
         return store
     }
 
-    @Test func threeWeeksOfBothProducesAFinding() throws {
-        let finding = MaintenanceCheck.finding(
-            profile: try profile(),
-            weights: try weights(weeklyKG: -0.5),
-            intake: try intake(calories: 2600, loggedDays: 21)
+    /// The fourteen days ending yesterday.
+    private let fortnight = Array(1 ... 14)
+
+    private func check(
+        _ profile: ProfileStore.Profile?,
+        _ weights: WeightLogStore,
+        _ intake: IntakeStore,
+        since ago: Int = 14
+    ) -> MaintenanceCheck.Result? {
+        MaintenanceCheck.check(profile: profile, weights: weights, intake: intake, since: day(ago))
+    }
+
+    private func finding(_ result: MaintenanceCheck.Result?) -> MaintenanceCheck.Finding? {
+        guard case let .ready(finding, _) = result?.status else { return nil }
+        return finding
+    }
+
+    private func countedDays(_ result: MaintenanceCheck.Result?) -> Int? {
+        guard case let .counting(days, _, _) = result?.status else { return nil }
+        return days
+    }
+
+    @Test func fourteenCompleteDaysProduceAFinding() throws {
+        let result = check(
+            try profile(),
+            try weights(weeklyKG: -0.5, days: fortnight),
+            try intake(calories: 2600, days: fortnight)
         )
 
-        let result = try #require(finding)
+        let found = try #require(finding(result))
         // Losing half a kilo a week on 2,600 is about a 550 kcal daily deficit,
         // so maintenance is around 3,150 — well clear of the ~2,790 this
         // profile's formula predicts, which is what makes it worth saying.
-        #expect(abs(result.measured - 3150) < 30)
-        #expect(result.loggedDays == 21)
+        #expect(abs(found.measured - 3150) < 30)
+        #expect(found.firstDay == day(14))
+        #expect(found.lastDay == day(1))
     }
 
-    /// Four days of food is an estimate of what you eat on days you remember
-    /// the app, which is not the same quantity.
-    @Test func tooFewLoggedDaysSaysNothing() throws {
-        let finding = MaintenanceCheck.finding(
-            profile: try profile(),
-            weights: try weights(weeklyKG: -0.5),
-            intake: try intake(calories: 2200, loggedDays: 4)
+    /// Left undecided, the suggestion follows the latest fourteen days and
+    /// the count keeps going.
+    @Test func anUndecidedSuggestionMovesWithEachNewDay() throws {
+        let everyDay = Array(1 ... 17)
+        let result = check(
+            try profile(),
+            try weights(weeklyKG: -0.5, days: everyDay),
+            try intake(calories: 2600, days: everyDay),
+            since: 17
         )
 
-        #expect(finding == nil)
+        guard case let .ready(found, days) = result?.status else {
+            Issue.record("Expected a suggestion")
+            return
+        }
+        #expect(days == 17)
+        #expect(found.firstDay == day(14))
+        #expect(found.lastDay == day(1))
     }
 
-    @Test func tooShortAWeightHistorySaysNothing() throws {
-        let finding = MaintenanceCheck.finding(
-            profile: try profile(),
-            weights: try weights(weeklyKG: -0.5, days: 5),
-            intake: try intake(calories: 2200, loggedDays: 21)
+    /// A missed day while a suggestion waits takes it away, and the count
+    /// starts from nothing.
+    @Test func aMissedDayTakesAWaitingSuggestionAway() throws {
+        let everyDay = Array(1 ... 17)
+        let result = check(
+            try profile(),
+            try weights(weeklyKG: -0.5, days: everyDay.filter { $0 != 2 }),
+            try intake(calories: 2600, days: everyDay),
+            since: 17
         )
 
-        #expect(finding == nil)
+        #expect(finding(result) == nil)
+        #expect(countedDays(result) == 1)
+    }
+
+    /// Thirteen days is not fourteen, however good they are.
+    @Test func thirteenDaysAreStillCounting() throws {
+        let result = check(
+            try profile(),
+            try weights(weeklyKG: -0.5, days: Array(1 ... 13)),
+            try intake(calories: 2600, days: Array(1 ... 13)),
+            since: 13
+        )
+
+        #expect(countedDays(result) == 13)
+    }
+
+    /// A day with food and no weigh-in breaks the run, as does the reverse.
+    @Test func aMissedWeighInStartsTheCountAgain() throws {
+        let result = check(
+            try profile(),
+            try weights(weeklyKG: -0.5, days: fortnight.filter { $0 != 5 }),
+            try intake(calories: 2600, days: fortnight)
+        )
+
+        #expect(finding(result) == nil)
+        #expect(countedDays(result) == 4)
+    }
+
+    @Test func aMissedDayOfFoodStartsTheCountAgain() throws {
+        let result = check(
+            try profile(),
+            try weights(weeklyKG: -0.5, days: fortnight),
+            try intake(calories: 2600, days: fortnight.filter { $0 != 10 })
+        )
+
+        #expect(countedDays(result) == 9)
+    }
+
+    /// Calories filled in afterwards, from the streak screen, mend the day.
+    @Test func caloriesFilledInLaterMendTheDay() throws {
+        let food = try intake(calories: 2600, days: fortnight.filter { $0 != 10 })
+        food.setTotal(.calories, 2600, on: day(10))
+
+        let result = check(try profile(), try weights(weeklyKG: -0.5, days: fortnight), food)
+        #expect(finding(result) != nil)
+    }
+
+    /// Days before the count began do not count towards it.
+    @Test func daysBeforeTheStartDoNotCount() throws {
+        let everyDay = Array(1 ... 30)
+        let result = check(
+            try profile(),
+            try weights(weeklyKG: -0.5, days: everyDay),
+            try intake(calories: 2600, days: everyDay),
+            since: 5
+        )
+
+        #expect(countedDays(result) == 5)
     }
 
     @Test func noProfileSaysNothing() throws {
-        let finding = MaintenanceCheck.finding(
-            profile: nil,
-            weights: try weights(weeklyKG: -0.5),
-            intake: try intake(calories: 2200, loggedDays: 21)
+        let result = check(
+            nil,
+            try weights(weeklyKG: -0.5, days: fortnight),
+            try intake(calories: 2600, days: fortnight)
         )
 
-        #expect(finding == nil)
+        #expect(result == nil)
     }
 
-    /// Agreement is not news. Eating at the formula's own maintenance and
-    /// holding steady should produce no card at all.
-    @Test func aDifferenceInsideTheNoiseSaysNothing() throws {
+    /// Agreement is not news. Eating at the plan's own maintenance and holding
+    /// steady produces no suggestion — and the count starts again the day after.
+    @Test func aFortnightOnTrackStartsTheCountAgain() throws {
         let profile = try profile()
-        let formulaMaintenance = profile.plan.energy.maintenanceCalories
-
-        let finding = MaintenanceCheck.finding(
-            profile: profile,
-            weights: try weights(weeklyKG: 0),
-            intake: try intake(calories: formulaMaintenance, loggedDays: 21)
+        let everyDay = Array(1 ... 16)
+        let result = check(
+            profile,
+            try weights(weeklyKG: 0, days: everyDay),
+            try intake(calories: profile.plan.energy.maintenanceCalories, days: everyDay),
+            since: 16
         )
 
-        #expect(finding == nil)
+        #expect(finding(result) == nil)
+        #expect(countedDays(result) == 2)
+        #expect(result?.cycleStart == day(2))
     }
 
-    /// Accepting a measured figure moves every target that hangs off it — and
-    /// the measurement is still compared against the formula next time, not
-    /// against itself, or it would drift a little further each time.
-    @Test func acceptingItChangesThePlanButNotTheComparison() throws {
+    /// Once a measured figure is in use, the next check asks whether *it* is
+    /// right. Against the formula, it would be offered back every fortnight.
+    @Test func comparesAgainstTheFigureInUse() throws {
         var profile = try profile()
-        let formula = profile.plan.energy.maintenanceCalories
+        let weights = try weights(weeklyKG: -0.5, days: fortnight)
+        let food = try intake(calories: 2600, days: fortnight)
 
-        profile.measuredMaintenanceCalories = formula + 400
+        let first = try #require(finding(check(profile, weights, food)))
+        profile.measuredMaintenanceCalories = first.measured
 
-        #expect(profile.plan.energy.maintenanceCalories == formula + 400)
         #expect(profile.plan.energy.isMaintenanceMeasured)
-        #expect(profile.plan.energy.targetCalories > 0)
-
-        let againstFormula = MaintenanceCheck.finding(
-            profile: profile,
-            weights: try weights(weeklyKG: -0.5),
-            intake: try intake(calories: 2600, loggedDays: 21)
-        )
-        #expect(try #require(againstFormula).formula == formula.rounded())
+        #expect(finding(check(profile, weights, food)) == nil)
     }
 
-    /// The bug this window fixed: months of dieting, then three weeks eating
-    /// at the formula's maintenance and holding steady. Only the three weeks
-    /// count, and they agree with the formula — so there is nothing to say.
-    @Test func aDietThatEndedBeforeTheWindowDoesNotCount() throws {
-        let profile = try profile()
-        let store = WeightLogStore(defaults: UserDefaults(suiteName: UUID().uuidString)!)
-        for ago in stride(from: 112, through: 23, by: -1) {
-            store.add(try WeighIn(date: day(ago), weightKG: 92 - 0.5 / 7 * Double(112 - ago)))
-        }
-        for ago in stride(from: 22, through: 0, by: -1) {
-            store.add(try WeighIn(date: day(ago), weightKG: 84))
-        }
+    /// Today is still being logged, so it is never one of the fourteen — but
+    /// the card does say whether it has its weigh-in and its food yet.
+    @Test func todayIsReportedButNotCounted() throws {
+        let weights = try weights(weeklyKG: -0.5, days: [0, 1, 2])
+        let food = try intake(calories: 2600, days: [1, 2])
 
-        let finding = MaintenanceCheck.finding(
-            profile: profile,
-            weights: store,
-            intake: try intake(calories: profile.plan.energy.maintenanceCalories, loggedDays: 21)
-        )
-        #expect(finding == nil)
+        let result = check(try profile(), weights, food, since: 2)
+        guard case let .counting(days, weighedToday, ateToday) = result?.status else {
+            Issue.record("Expected to be counting")
+            return
+        }
+        #expect(days == 2)
+        #expect(weighedToday)
+        #expect(!ateToday)
     }
 
-    /// Today is still being logged; a breakfast-only day must not drag the
-    /// average down.
-    @Test func todayIsNotCounted() throws {
-        let food = try intake(calories: 2600, loggedDays: 21)
-        let without = try #require(MaintenanceCheck.finding(
-            profile: try profile(), weights: try weights(weeklyKG: -0.5), intake: food
-        ))
+    @Test func theCycleStartsTodayAndRestartsOnADecision() throws {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let cycle = MaintenanceCycleStore(defaults: defaults, calendar: calendar, now: morning(20))
+        #expect(cycle.start == day(20))
 
-        food.add(try IntakeEntry(date: .now, carbsG: 300 / 4))
-        let with = try #require(MaintenanceCheck.finding(
-            profile: try profile(), weights: try weights(weeklyKG: -0.5), intake: food
-        ))
-        #expect(with.measured == without.measured)
-        #expect(with.loggedDays == 21)
+        cycle.advance(to: day(25))
+        #expect(cycle.start == day(20))
+
+        cycle.restart(on: morning(0))
+        #expect(cycle.start == day(0))
+        #expect(MaintenanceCycleStore(defaults: defaults, calendar: calendar).start == day(0))
     }
 }

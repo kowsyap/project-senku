@@ -35,6 +35,11 @@ public struct EnergyProfile: Hashable, Sendable {
     /// estimate about people like you, the other is a measurement of you.
     public var isMaintenanceMeasured = false
 
+    /// Calories the user chose to eat above (positive) or below (negative) the
+    /// goal's target, already included in ``targetCalories``. Zero when the
+    /// target is the calculator's own.
+    public var calorieAdjustment: Double = 0
+
     public func expenditure(at level: ActivityLevel) -> Double {
         expenditureByActivity[level] ?? basalMetabolicRate * level.multiplier
     }
@@ -54,7 +59,8 @@ public enum EnergyCalculator {
         activityLevel: ActivityLevel,
         goal: Goal,
         formula: BMRFormula = .automatic,
-        measuredMaintenance: Double? = nil
+        measuredMaintenance: Double? = nil,
+        calorieAdjustment: Double = 0
     ) -> EnergyProfile {
         let resolvedFormula = formula.resolved(for: metrics)
         let bmr = resolvedFormula.basalMetabolicRate(for: metrics)
@@ -66,12 +72,13 @@ public enum EnergyCalculator {
         )
 
         let maintenance = measuredMaintenance ?? bmr * activityLevel.multiplier
-        let rawTarget = maintenance * goal.calorieMultiplier
+        let rawTarget = maintenance * goal.calorieMultiplier + calorieAdjustment
 
-        // A deficit must never push intake under the medically safe floor.
+        // A deficit must never push intake under the medically safe floor —
+        // whether the goal asked for it or the user's own adjustment did.
         // Bulks are left alone: eating more is not the risk being guarded here.
         let floor = metrics.sex.safeMinimumCalories
-        let clamped = goal.isCut && rawTarget < floor
+        let clamped = (goal.isCut || calorieAdjustment < 0) && rawTarget < floor
         let target = clamped ? floor : rawTarget
 
         return EnergyProfile(
@@ -85,7 +92,8 @@ public enum EnergyCalculator {
             activityLevel: activityLevel,
             goal: goal,
             wasClampedToSafeMinimum: clamped,
-            isMaintenanceMeasured: measuredMaintenance != nil
+            isMaintenanceMeasured: measuredMaintenance != nil,
+            calorieAdjustment: calorieAdjustment
         )
     }
 }

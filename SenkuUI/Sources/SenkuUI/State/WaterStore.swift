@@ -16,6 +16,7 @@ public final class WaterStore {
     static let entriesKey = "senku.water.entries.v1"
     static let settingsKey = "senku.water.settings.v1"
     static let creatineKey = "senku.water.creatineDays.v1"
+    static let targetHistoryKey = "senku.water.targetHistory.v1"
 
     /// What the user has chosen, as opposed to what is computed.
     public struct Settings: Codable, Hashable, Sendable {
@@ -121,22 +122,50 @@ public final class WaterStore {
     /// workout store: before F3 the requirements called for a manual toggle,
     /// and a toggle asking whether you trained today, on a device that knows,
     /// would have been the app making its own problem into your chore.
+    ///
+    /// For a day gone, the base, creatine and a hand-set goal are the ones in
+    /// force on it — see ``TargetHistory`` — and only whether it was a
+    /// training day is read from the log.
     public func goal(
         profile: ProfileStore.Profile?,
         workouts: WorkoutStore?,
         on date: Date = .now
     ) -> WaterGoal {
-        let macros = profile?.plan.macros
-        let base = macros?.waterML ?? 2000
-
         let trained = workouts?.history.contains { calendar.isDate($0.date, inSameDayAs: date) } ?? false
 
+        var parts = targets(profile: profile)
+        if calendar.startOfDay(for: date) < calendar.startOfDay(for: .now),
+           let then = targetHistory.value(on: date) {
+            parts = then
+        }
+
         return WaterGoal(
-            baseML: base,
-            trainingBonusML: trained ? (macros?.trainingDayExtraWaterML ?? 500) : 0,
-            creatineBonusML: settings.takesCreatine ? WaterGoal.creatineExtraML : 0,
+            baseML: parts.baseML,
+            trainingBonusML: trained ? parts.trainingExtraML : 0,
+            creatineBonusML: parts.creatineML,
+            overrideML: parts.overrideML
+        )
+    }
+
+    /// Today's goal, as its chosen parts.
+    private func targets(profile: ProfileStore.Profile?) -> WaterTargets {
+        let macros = profile?.plan.macros
+        return WaterTargets(
+            baseML: macros?.waterML ?? 2000,
+            trainingExtraML: macros?.trainingDayExtraWaterML ?? 500,
+            creatineML: settings.takesCreatine ? WaterGoal.creatineExtraML : 0,
             overrideML: settings.goalOverrideML
         )
+    }
+
+    private var targetHistory: TargetHistory<WaterTargets> {
+        TargetHistory(key: Self.targetHistoryKey, defaults: defaults, calendar: calendar)
+    }
+
+    /// Notes today's goal, so a change from here on leaves the days before it
+    /// judged as they were.
+    public func recordGoal(profile: ProfileStore.Profile?, on date: Date = .now) {
+        targetHistory.record(targets(profile: profile), on: date)
     }
 
     public func day(

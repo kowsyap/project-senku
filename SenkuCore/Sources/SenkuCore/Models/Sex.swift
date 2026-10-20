@@ -18,7 +18,7 @@ public enum Sex: String, Codable, Hashable, Sendable, CaseIterable {
     }
 
     /// Lowest daily intake considered safe without medical supervision.
-    var safeMinimumCalories: Double {
+    public var safeMinimumCalories: Double {
         switch self {
         case .male: 1500
         case .female: 1200

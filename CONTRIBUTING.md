@@ -60,8 +60,8 @@ Anything with a rule in it gets a test. The host suites run in about a hundredth
 of a second and need no simulator:
 
 ```sh
-cd SenkuCore && swift test     # 171 tests
-cd ../SenkuUI  && swift test   # 73 tests
+cd SenkuCore && swift test     # 243 tests
+cd ../SenkuUI  && swift test   # 236 tests
 ```
 
 Then build the app before you open the PR:

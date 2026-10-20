@@ -46,11 +46,15 @@ struct BodyHighlight: View {
 
     // MARK: - Colours
 
-    /// Yellow for a muscle an exercise touches, through orange, to red for
-    /// one it is *the* exercise for — the scale the percentages above it use.
+    /// Pale yellow for a muscle an exercise touches, through orange, to red
+    /// for one it is *the* exercise for — the scale the percentages above it
+    /// use.
+    ///
+    /// Eased, so the low end stays light: on a straight line a small share
+    /// was already orange, and "a little" read much like "some".
     static func heat(_ share: Double) -> Color {
-        let t = min(max(share, 0), 1)
-        let yellow = (r: 1.00, g: 0.82, b: 0.10)
+        let t = pow(min(max(share, 0), 1), 1.6)
+        let yellow = (r: 1.00, g: 0.93, b: 0.55)
         let red = (r: 0.90, g: 0.12, b: 0.12)
         return Color(
             red: yellow.r + (red.r - yellow.r) * t,
@@ -226,6 +230,16 @@ struct BodyMapPart: Identifiable, Hashable {
             return .trained
         }
         return plannedGroups.contains(group) ? .missed : nil
+    }
+
+    /// Every muscle region the body map draws, front and back, once each.
+    static let allRegionIDs: Set<String> = Set((front + back).flatMap(\.regionIDs))
+
+    /// The share of those regions trained — the green on the map, as a
+    /// fraction of everything it could have been.
+    static func trainedShare(of coverage: [String: Double]) -> Double {
+        let trained = allRegionIDs.filter { (coverage[$0] ?? 0) >= trainedThreshold }
+        return Double(trained.count) / Double(max(1, allRegionIDs.count))
     }
 
     /// Each region's coverage from a set of exercises: their contributions

@@ -32,6 +32,20 @@ public struct MacroTargets: Hashable, Sendable {
         guard calories > 0 else { return 0 }
         return value / calories * 100
     }
+
+    /// The same targets with a different calorie and protein figure — a past
+    /// day's, for judging that day by what it was asked.
+    public func with(calories: Double, proteinGrams: Double) -> MacroTargets {
+        MacroTargets(
+            calories: calories,
+            proteinGrams: proteinGrams,
+            fatGrams: fatGrams,
+            carbGrams: carbGrams,
+            fiberGrams: fiberGrams,
+            waterML: waterML,
+            trainingDayExtraWaterML: trainingDayExtraWaterML
+        )
+    }
 }
 
 public enum MacroCalculator {
@@ -67,9 +81,14 @@ public enum MacroCalculator {
     /// without further benefit.
     static let maxProteinCalorieShare: Double = 0.40
 
+    /// - Parameter proteinAdjustment: Grams the user chose to eat above or
+    ///   below the calculated protein. Applied after the ceiling, so somebody
+    ///   who wants more than it allows can have it; the calories it takes come
+    ///   out of carbs.
     public static func targets(
         for metrics: BodyMetrics,
-        energy: EnergyProfile
+        energy: EnergyProfile,
+        proteinAdjustment: Double = 0
     ) -> MacroTargets {
         let calories = energy.targetCalories
         let goal = energy.goal
@@ -82,7 +101,7 @@ public enum MacroCalculator {
             metrics.weightKG * rates.perKGBodyweight
         }
         let proteinCeiling = calories * maxProteinCalorieShare / CaloriesPerGram.protein
-        var protein = min(rawProtein, proteinCeiling)
+        var protein = max(0, min(rawProtein, proteinCeiling) + proteinAdjustment)
 
         // Fat, as a share of intake but never below the essential minimum.
         let essentialFat = metrics.weightKG * essentialFatPerKG
