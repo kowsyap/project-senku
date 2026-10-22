@@ -354,8 +354,6 @@ struct AnimeEditor: View {
                     #if os(iOS)
                     .textInputAutocapitalization(.words)
                     #endif
-            } header: {
-                Text("What it is")
             }
 
             Section {
@@ -364,8 +362,6 @@ struct AnimeEditor: View {
                     Text("Film").tag(true)
                 }
                 .pickerStyle(.segmented)
-            } header: {
-                Text("Series or film")
             }
 
             Section {
@@ -374,11 +370,6 @@ struct AnimeEditor: View {
                         Text(status.title).tag(status)
                     }
                 }
-                Text(entry.status.detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } header: {
-                Text("Where you are with it")
             }
 
             episodeSection
@@ -386,8 +377,6 @@ struct AnimeEditor: View {
             Section {
                 TextField("Notes", text: $entry.note, axis: .vertical)
                     .lineLimit(2...6)
-            } header: {
-                Text("Notes")
             }
 
             // Last, because it is the one field that is decoration. Everything
@@ -411,8 +400,6 @@ struct AnimeEditor: View {
                         #endif
                 }
                 .padding(.vertical, 2)
-            } header: {
-                Text("Poster")
             }
 
             if !isNew {
@@ -497,8 +484,6 @@ struct AnimeEditor: View {
                     episodeField(episodeBinding)
                 }
             }
-        } header: {
-            Text("How much you have watched")
         } footer: {
             if entry.isComplete, !entry.countSummary.isEmpty {
                 Text(entry.countSummary)
