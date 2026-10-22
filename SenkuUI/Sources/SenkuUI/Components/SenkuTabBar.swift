@@ -149,10 +149,8 @@ struct SenkuTabBar: View {
         return TabIcon(tab: tab, isActive: isSelected, isOn: isOn)
             // Coloured by what the pill is over, like the label under it.
             .foregroundStyle(isOn ? AnyShapeStyle(tab.activeTint) : AnyShapeStyle(.secondary))
-            // The tab you are on stands up: grown from where it stands — its
-            // foot does not move — to the bar's top edge, with a shadow
-            // under it.
-            .scaleEffect(isSelected ? 1.5 : 1, anchor: .bottom)
+            // The tab you are on is the same size as the rest, lifted only by
+            // a shadow under it.
             .shadow(color: .black.opacity(isSelected ? 0.28 : 0), radius: 3, y: 3)
             .animation(Self.settle, value: isSelected)
     }
