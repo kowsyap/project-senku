@@ -4,6 +4,10 @@ import SwiftUI
 /// A new personal record, celebrated: Goku powering up to Super Saiyan over
 /// the logger, with the set that did it.
 ///
+/// The frames live in the iPhone app's own asset catalog, not this package's:
+/// everything that links the package — both widgets and the watch — carries a
+/// copy of its assets, and only the app plays this.
+///
 /// Eight drawn frames, base form to Super Saiyan, played once and then held on
 /// the last — the transformation is the point, so it does not loop. About two
 /// seconds in all; a tap ends it sooner. With Reduce Motion it is the last
@@ -29,7 +33,7 @@ struct PRCelebration: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 6) {
-                Image("pr.saiyan.\(frame)", bundle: .module)
+                Image("pr.saiyan.\(frame)")
                     .resizable()
                     .scaledToFit()
                     .frame(maxHeight: 360)
