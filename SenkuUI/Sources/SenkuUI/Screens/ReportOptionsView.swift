@@ -24,8 +24,12 @@ struct ReportOptionsView: View {
                     Toggle("Workouts", isOn: $selection.workouts)
                     Toggle("Water", isOn: $selection.water)
                     Toggle("Food", isOn: $selection.food)
-                    Toggle(WatchlistName.shared.title, isOn: $selection.anime)
-                    Toggle("Dues", isOn: $selection.dues)
+                    if ExtraStore.shared.isInstalled(.watchlist) {
+                        Toggle("Watchlist", isOn: $selection.anime)
+                    }
+                    if ExtraStore.shared.isInstalled(.dues) {
+                        Toggle("Dues", isOn: $selection.dues)
+                    }
                 } header: {
                     Text("In the report")
                 } footer: {

@@ -63,8 +63,7 @@ enum SampleData {
             anime: AnimeStore(),
             water: WaterStore(),
             intake: intake,
-            dueDates: DueDateStore(),
-            watchlist: WatchlistName.shared
+            dueDates: DueDateStore()
         )
 
         NSLog("SENKU_SAMPLE: \(summary.detail ?? "nothing imported")")

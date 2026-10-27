@@ -81,13 +81,12 @@ public final class WorkoutStore {
         )
     }
 
-    /// Removes a set, and detaches any record that was made from it.
+    /// Removes a set, and any record that was made from it.
     ///
-    /// Detached rather than deleted: the lift was still performed, and a record
-    /// that quietly vanished because a typo was corrected elsewhere would be a
-    /// worse surprise than one that stays with its provenance downgraded to
-    /// manual. That is `RecordStore.detachRecords(fromSets:)`, which already
-    /// exists for exactly this.
+    /// A set deleted from the workout in progress is a set that was logged by
+    /// mistake, so the record it made goes too. The sets left are offered
+    /// again in order: one that was beaten only by the deleted set is the
+    /// record now.
     public func removeSet(_ setID: UUID, from exerciseID: String, records: RecordStore) {
         guard var session = live else { return }
 
@@ -95,7 +94,16 @@ public final class WorkoutStore {
         live = session
         persistLive()
 
-        records.detachRecords(fromSets: [setID])
+        records.deleteRecords(fromSets: [setID])
+        for set in session.entry(exerciseID)?.sets ?? [] {
+            records.offer(
+                exerciseID: exerciseID,
+                weightKG: set.weightKG,
+                reps: set.reps,
+                at: set.completedAt,
+                setID: set.id
+            )
+        }
     }
 
     /// Records a cardio session, and offers it to the cardio record book.

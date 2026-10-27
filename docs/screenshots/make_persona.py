@@ -283,7 +283,7 @@ document = {
     "schemaVersion": 1, "unitSystem": "metric", "profile": profile, "weighIns": weigh_ins,
     "records": records, "plan": {"days": plan_days, "target": TARGET}, "workouts": workouts,
     "cardioRecords": cardio_records, "cardioPlans": cardio_plans, "water": water, "intake": intake,
-    "favourites": favourites, "anime": anime_list, "dueDates": dues, "watchlistName": "Anime",
+    "favourites": favourites, "anime": anime_list, "dueDates": dues,
 }
 
 Path(sys.argv[1]).write_text(json.dumps(document, indent=1))

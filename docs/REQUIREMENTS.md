@@ -210,8 +210,9 @@ PersonalRecord
 - **F2-R3** The records list is a superset of the current splits. Editing a
   split never removes a record.
 - **F2-R4** Deleting a workout session must not delete the records it produced.
-  Deleting an individual set detaches its record and downgrades its provenance
-  to manual.
+  Deleting an individual set from the workout in progress deletes the record it
+  made — it was logged by mistake — and the sets left are re-offered, so one
+  beaten only by the deleted set becomes the record.
 - **F2-R5** A record may be deleted only by explicit user action, with
   confirmation.
 - **F2-R6** Deleting a custom exercise that a split or a record still references
@@ -242,8 +243,8 @@ PersonalRecord
       `WorkoutStore.log(_:for:records:)`
 - [x] A manual record below a logged record is kept but not shown as the
       headline — `PersonalRecordTests`
-- [x] Deleting a session preserves its records; deleting one set detaches it —
-      `RecordStore.detachRecords(fromSets:)`
+- [x] Deleting a session preserves its records; deleting one set deletes its
+      record and re-offers the rest — `WorkoutStore.removeSet(_:from:records:)`
 - [x] Deleting a referenced custom exercise is refused on both screens
 - [x] 35 kg × 10 followed by 40 kg × 15 moves the estimate to ≥ 53.3 kg —
       `PersonalRecordTests`

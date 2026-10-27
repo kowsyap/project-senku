@@ -42,6 +42,8 @@ public struct RootView: View {
     @State private var intake = IntakeStore()
     @State private var records = RecordStore()
     @State private var library = ExerciseLibrary()
+    /// Which of Dues and the watchlist are added — see ``Extra``.
+    private let extras = ExtraStore.shared
     @State private var selection: Tab
 
     /// Reset when a profile is saved or cleared, so the calculator rebuilds its
@@ -132,7 +134,7 @@ public struct RootView: View {
             case .water: "Water"
             case .food: "Food"
             case .records: "PRs"
-            case .anime: WatchlistName.shared.title
+            case .anime: "Watchlist"
             case .dueDates: "Dues"
             case .more: "More"
             }
@@ -374,7 +376,9 @@ public struct RootView: View {
             guard !barTabs.contains(selection) else { return }
             let stranded = selection
             selection = .more
-            moreDestination = stranded
+            // Unless it was an extra being removed: then there is nothing to
+            // open, and the More list is where you were anyway.
+            moreDestination = extras.isAvailable(stranded) ? stranded : nil
         }
         .onChange(of: dayBoundary) { _, _ in dayBoundaryChanged() }
         .onChange(of: scenePhase) { _, phase in
@@ -569,11 +573,14 @@ public struct RootView: View {
                 water: water,
                 intake: intake,
                 dueDates: dueDates,
-                watchlist: WatchlistName.shared,
                 settingsTo: SenkuStorage.shared
             )
 
             if summary.settingsRestored { reloadSettings() }
+            // A saved Dues or watchlist, imported after it was removed, puts
+            // it back — data with no screen to show it would be lost again.
+            if summary.dueDatesAdded > 0 { reinstall(.dues) }
+            if summary.animeAdded > 0 { reinstall(.watchlist) }
 
             if summary.profileReplaced {
                 // The same nudge every other profile edit gives: the watch is
@@ -589,11 +596,18 @@ public struct RootView: View {
         }
     }
 
+    private func reinstall(_ extra: Extra) {
+        guard !extras.isInstalled(extra) else { return }
+        extras.install(extra)
+        layout.add(extra.tab)
+    }
+
     /// Re-reads everything that caches a setting, after a restore wrote new
     /// ones underneath it — and books the reminders those settings switch on,
     /// since a switch restored to "on" with nothing scheduled behind it would
     /// be a reminder that never comes.
     private func reloadSettings() {
+        extras.reload()
         layout = TabLayout()
         water.reload()
         #if os(iOS)
@@ -635,6 +649,10 @@ public struct RootView: View {
         dueDates = DueDateStore()
         water = WaterStore()
         intake = IntakeStore()
+        extras.reload()
+        for extra in Extra.allCases where !extras.isInstalled(extra) {
+            layout.drop(extra.tab)
+        }
         profileEditionID = UUID()
         generation = UUID()
         show(.me)
@@ -705,7 +723,6 @@ public struct RootView: View {
             water: water,
             intake: intake,
             dueDates: dueDates,
-            watchlist: WatchlistName.shared,
             settingsFrom: SenkuStorage.shared
         )
 
@@ -1010,8 +1027,8 @@ public struct RootView: View {
     /// Nothing to do with training, and deliberately so — see F6.
     @ViewBuilder
     private var animeScreen: some View {
+        // Titled by the view itself: it shows the screen you are on.
         AnimeView(store: anime)
-            .navigationTitle(WatchlistName.shared.title)
     }
 
     @ViewBuilder
@@ -1049,7 +1066,7 @@ public struct RootView: View {
     @ViewBuilder
     private var systemTabs: some View {
         if #available(iOS 18.0, macOS 15.0, *) {
-            AdaptiveTabs(selection: $selection) {
+            AdaptiveTabs(selection: $selection, installed: extras.installed) {
                 stack(.me)
             } quickCalc: {
                 stack(.quickCalc)
@@ -1194,6 +1211,8 @@ public struct RootView: View {
                     intake: intake,
                     plans: plans,
                     library: library,
+                    dues: dueDates,
+                    anime: anime,
                     unitSystem: store.profile?.unitSystem ?? UnitPreference.current
                 )
             }
@@ -1231,7 +1250,7 @@ public struct RootView: View {
     /// different route.
     private var legacyTabs: some View {
         TabView(selection: $selection) {
-            ForEach(Tab.ordered) { tab in
+            ForEach(Tab.ordered.filter(extras.isAvailable)) { tab in
                 stack(tab)
                     .tabItem { Label(tab.title, systemImage: tab.symbol) }
                     .tag(tab)
@@ -1306,6 +1325,8 @@ private struct AdaptiveTabs<
     DueDates: View
 >: View {
     @Binding var selection: RootView.Tab
+    /// The extras added in Settings; the rest have no tab.
+    let installed: Set<Extra>
 
     @ViewBuilder var me: Me
     @ViewBuilder var quickCalc: QuickCalc
@@ -1359,11 +1380,15 @@ private struct AdaptiveTabs<
             Tab("PRs", systemImage: "trophy", value: RootView.Tab.records) { records }
                 .customizationID("senku.tab.records")
 
-            Tab(WatchlistName.shared.title, systemImage: "sparkles.tv", value: RootView.Tab.anime) { anime }
-                .customizationID("senku.tab.anime")
+            if installed.contains(.watchlist) {
+                Tab("Watchlist", systemImage: "sparkles.tv", value: RootView.Tab.anime) { anime }
+                    .customizationID("senku.tab.anime")
+            }
 
-            Tab("Dues", systemImage: "calendar.badge.clock", value: RootView.Tab.dueDates) { dueDates }
-                .customizationID("senku.tab.dueDates")
+            if installed.contains(.dues) {
+                Tab("Dues", systemImage: "calendar.badge.clock", value: RootView.Tab.dueDates) { dueDates }
+                    .customizationID("senku.tab.dueDates")
+            }
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabViewCustomization($customization)
@@ -1385,9 +1410,16 @@ struct ExportedReport: Identifiable {
 /// the thing being shared is produced on demand rather than known up front.
 struct ShareSheet: UIViewControllerRepresentable {
     let urls: [URL]
+    /// Told whether the file went anywhere — saved or shared — or the sheet
+    /// was closed without it.
+    var onFinish: ((Bool) -> Void)? = nil
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: urls, applicationActivities: nil)
+        let controller = UIActivityViewController(activityItems: urls, applicationActivities: nil)
+        if let onFinish {
+            controller.completionWithItemsHandler = { _, completed, _, _ in onFinish(completed) }
+        }
+        return controller
     }
 
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}

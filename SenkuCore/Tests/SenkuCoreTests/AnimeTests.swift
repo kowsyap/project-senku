@@ -185,6 +185,16 @@ import Testing
     @Test func airingAndPendingSeriesNeedOnlyATitle() {
         #expect(AnimeEntry(title: "Next season of something", status: .airing).isComplete)
         #expect(AnimeEntry(title: "Heard it was good", status: .pending).isComplete)
+        #expect(AnimeEntry(title: "Meaning to watch", status: .planned).isComplete)
+    }
+
+    /// A film is watched or meant to be, and nothing else.
+    @Test func aFilmIsPlannedOrWatched() {
+        #expect(AnimeStatus.options(isMovie: true) == [.planned, .watched])
+        #expect(AnimeStatus.options(isMovie: false) == AnimeStatus.allCases)
+        #expect(AnimeStatus.completed.asFilm == .watched)
+        #expect(AnimeStatus.airing.asFilm == .planned)
+        #expect(AnimeStatus.dropped.asFilm == .planned)
     }
 
     /// Finished, though, and you know how much of it there was.

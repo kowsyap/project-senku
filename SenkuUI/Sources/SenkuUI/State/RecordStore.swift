@@ -83,6 +83,15 @@ public final class RecordStore {
         persist()
     }
 
+    /// Deletes the records made from sets that were logged by mistake.
+    public func deleteRecords(fromSets setIDs: Set<UUID>) {
+        records.removeAll { record in
+            guard case .logged(let setID) = record.source else { return false }
+            return setIDs.contains(setID)
+        }
+        persist()
+    }
+
     /// Detaches records that came from a workout session being deleted.
     ///
     /// They become `.manual` rather than disappearing — open question 4 in the

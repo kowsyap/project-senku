@@ -22,7 +22,6 @@ import SenkuCore
         lazy var water = WaterStore(defaults: suite)
         lazy var intake = IntakeStore(defaults: suite)
         lazy var dues = DueDateStore(defaults: suite)
-        lazy var watchlist = WatchlistName(defaults: suite)
 
         mutating func backup() throws -> SenkuImportDocument {
             let document = SenkuImportDocument.snapshot(
@@ -30,7 +29,7 @@ import SenkuCore
                 library: library, plans: plans, workouts: workouts,
                 cardioRecords: cardioRecords, cardioPlans: cardioPlans,
                 anime: anime, water: water, intake: intake,
-                dueDates: dues, watchlist: watchlist, settingsFrom: suite
+                dueDates: dues, settingsFrom: suite
             )
             // Through the file format, not just the in-memory value.
             return try SenkuImportDocument.decode(try document.encoded())
@@ -43,7 +42,7 @@ import SenkuCore
                 library: library, plans: plans, workouts: workouts,
                 cardioRecords: cardioRecords, cardioPlans: cardioPlans,
                 anime: anime, water: water, intake: intake,
-                dueDates: dues, watchlist: watchlist, settingsTo: suite
+                dueDates: dues, settingsTo: suite
             )
         }
     }
@@ -104,22 +103,18 @@ import SenkuCore
         #expect(new.library.custom.first { $0.name == "Gripper" }?.isTimed == false)
     }
 
-    @Test func theWatchlistNameComesBack() throws {
+    @Test func watchlistScreensComeBackWithWhatIsOnThem() throws {
         var old = Device()
-        old.watchlist.name = "K-dramas"
+        let hollywood = try #require(old.anime.addScreen("Hollywood"))
+        let marvel = try #require(old.anime.addScreen("Marvel"))
+        old.anime.save(AnimeEntry(title: "Iron Man", isMovie: true, screens: [hollywood.id, marvel.id]))
 
         var new = Device()
         new.restore(try old.backup())
 
-        #expect(new.watchlist.title == "K-dramas")
-    }
-
-    /// A backup from before the name existed leaves the current one alone.
-    @Test func anOlderBackupKeepsTheCurrentName() throws {
-        var new = Device()
-        new.watchlist.name = "Anime"
-        new.restore(SenkuImportDocument())
-        #expect(new.watchlist.title == "Anime")
+        #expect(new.anime.screens.map(\.name) == ["Hollywood", "Marvel"])
+        #expect(new.anime.list(screen: marvel.id).map(\.title) == ["Iron Man"])
+        #expect(new.anime.list(screen: hollywood.id).map(\.title) == ["Iron Man"])
     }
 
     @Test func settingsComeBack() throws {

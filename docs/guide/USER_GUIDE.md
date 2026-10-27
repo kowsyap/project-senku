@@ -124,7 +124,7 @@ Tap an exercise in the session to open the set logger. For a weighted exercise l
 - **Reps** — adjust with **-** and **+** or type directly.
 - **Log set** — tap to record the set.
 - **Last time you did** — a reminder of what you hit previously (e.g. "3×12 at 15 kg. Go up to 17.5 kg.").
-- **Your record** — your personal best for this exercise. Beat it here and the PRs page updates itself.
+- **Your record** — your personal best for this exercise. Beat it here and the PRs page updates itself, with a short celebration on screen. Delete that set from today's workout and its record goes too.
 
 ### Logging a set — bodyweight exercises
 
@@ -291,13 +291,16 @@ Tap the green **Share** button to send the card to anyone or save it as an image
 
 ![Watchlist](../screenshots/guide-anime.png)
 
-The **Watchlist** screen (under More) tracks the shows, films or series you are watching. The name defaults to "Watchlist" and you can rename it to anything — Anime, K-Dramas, Films — in the tab bar editor. At the top, a summary shows your total **titles**, **seasons** and **episodes**.
+The **Watchlist** screen (under More) tracks the shows, films or series you are watching. At the top, a summary shows your total **titles** (series and films), **seasons** and **episodes**.
 
-- Filter by **All**, **Pending**, **Airing**, **Watched** or **Completed**.
+- Filter by **All**, **Pending**, **Planned**, **Airing**, **Watched**, **Completed** or **Dropped**. A film is only ever **Planned** or **Watched**.
 - Each row shows the title, season and episode count, genre tags, and its current status.
-- Search by name or genre using the search bar.
+- Search by name or genre; the sort button sits beside the search field.
 - Tap **Add** (top-right) to add a new title.
-- Tap **Sort** to reorder the list.
+
+### Collections
+
+Split the watchlist into collections — Anime, Hollywood, Marvel — under **Adjust** (top-right). The title becomes the collection you are on; with two or more, tap it to switch. A title can be in several collections, picked in one line on its edit screen. The first collection takes everything already on the list. Deleting a collection never deletes titles: any left in no collection appear under **Other**.
 
 ---
 
@@ -344,6 +347,10 @@ The **Settings** screen lets you configure the app:
 ### Navbar
 
 Rearrange the five tabs at the bottom of the screen to put the ones you use most within easy reach.
+
+### Extras
+
+**Dues** and **Watchlist** are extras: add them with the download button, remove them with the trash button. Removing one deletes its data — if it has any, Senku first offers to save it as a file, which Import Data brings back.
 
 ### Day starts at
 

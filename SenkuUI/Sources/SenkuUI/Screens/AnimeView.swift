@@ -4,8 +4,9 @@ import SenkuCore
 
 /// The watch list: what you are watching, what is waiting, what is behind you.
 ///
-/// Anime, K-dramas, films, web series — whatever you keep. The tab takes the
-/// name you give it; see ``WatchlistName``.
+/// Anime, K-dramas, films, web series — whatever you keep. It can be split
+/// into screens (Anime, Hollywood, Marvel), made under Adjust: the title is the
+/// screen you are on, and with two or more it is a menu to switch.
 ///
 /// One search field does titles and genres together, because being asked which
 /// kind of thing you are looking for before you look is a question with no good
@@ -22,14 +23,23 @@ public struct AnimeView: View {
     @State private var reversed = false
     @State private var editing: AnimeEntry?
     @State private var isAdding = false
+    @State private var isAdjusting = false
     @State private var deleting: AnimeEntry?
+    /// The screen last looked at, kept across launches.
+    @AppStorage("senku.watchlist.screen.v1", store: SenkuStorage.shared) private var screenID = ""
 
     public init(store: AnimeStore) {
         self.store = store
     }
 
+    /// The screen showing — the one last picked, else the first. None until
+    /// screens are made, and then the list is everything.
+    private var current: WatchScreen? {
+        store.screen(UUID(uuidString: screenID)) ?? store.screens.first
+    }
+
     private var shown: [AnimeEntry] {
-        store.list(search: search, status: status, sort: sort, reversed: reversed)
+        store.list(search: search, status: status, screen: current?.id, sort: sort, reversed: reversed)
     }
 
     public var body: some View {
@@ -40,23 +50,23 @@ public struct AnimeView: View {
                 list
             }
         }
-        // Under the title, not at the foot of the screen. iOS 26 puts a search
-        // field at the bottom by default, which is right for an app using the
-        // system tab bar and wrong here: Senku's bar is a floating capsule of
-        // its own, and the two landed on top of each other.
-        #if os(iOS)
-        .searchable(
-            text: $search,
-            placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "Search by name or genre"
-        )
-        #else
-        .searchable(text: $search, prompt: "Search by name or genre")
-        #endif
         .senkuBottomBarInset()
+        .navigationTitle(current.flatMap { $0.name.isEmpty ? nil : $0.name } ?? "Watchlist")
+        #if os(iOS)
+        // Small from the start once there is a choice of screens: the picker
+        // sits where the title would.
+        .navigationBarTitleDisplayMode(store.choices.count > 1 ? .inline : .automatic)
+        #endif
         .toolbar {
+            if store.choices.count > 1 {
+                ToolbarItem(placement: .principal) {
+                    ScreenPicker(screens: store.choices, current: current?.id) { screenID = $0.uuidString }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
-                sortMenu
+                Button { isAdjusting = true } label: {
+                    StackedActionLabel("Adjust", symbol: "slider.horizontal.3")
+                }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button { isAdding = true } label: {
@@ -66,7 +76,20 @@ public struct AnimeView: View {
         }
         .sheet(isPresented: $isAdding) {
             NavigationStack {
-                AnimeEditor(entry: AnimeEntry(title: ""), store: store, isNew: true)
+                // Added to the collection you are looking at — none, on Other.
+                AnimeEditor(
+                    entry: AnimeEntry(
+                        title: "",
+                        screens: current.flatMap { $0.id == WatchScreen.other.id ? nil : [$0.id] } ?? []
+                    ),
+                    store: store,
+                    isNew: true
+                )
+            }
+        }
+        .sheet(isPresented: $isAdjusting) {
+            NavigationStack {
+                WatchlistAdjustView(store: store)
             }
         }
         .sheet(item: $editing) { entry in
@@ -90,11 +113,18 @@ public struct AnimeView: View {
 
     private var list: some View {
         List {
+            searchRow
             summary
             filters
 
             if shown.isEmpty {
-                ContentUnavailableView.search(text: search)
+                if search.isEmpty {
+                    Text("Nothing here yet")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    ContentUnavailableView.search(text: search)
+                }
             } else {
                 ForEach(shown) { entry in
                     Button {
@@ -112,7 +142,7 @@ public struct AnimeView: View {
                     }
                     // The edit made most often, without opening the form for it.
                     .contextMenu {
-                        ForEach(AnimeStatus.allCases) { candidate in
+                        ForEach(AnimeStatus.options(isMovie: entry.isMovie)) { candidate in
                             Button {
                                 store.setStatus(candidate, for: entry.id)
                             } label: {
@@ -135,14 +165,14 @@ public struct AnimeView: View {
     private var filters: some View {
         Section {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    chip("All \(store.entries.count)", isOn: status == nil) {
+                HStack(spacing: 6) {
+                    chip("All \(store.count(on: current?.id))", isOn: status == nil) {
                         status = nil
                     }
 
                     ForEach(AnimeStatus.allCases) { candidate in
                         chip(
-                            "\(candidate.title) \(store.count(candidate))",
+                            "\(candidate.title) \(store.count(candidate, on: current?.id))",
                             isOn: status == candidate,
                             tint: tint(for: candidate)
                         ) {
@@ -156,13 +186,49 @@ public struct AnimeView: View {
         }
     }
 
+    /// Search, with sort beside it.
+    ///
+    /// A field of the app's own rather than `.searchable`: the system one
+    /// cannot have a button beside it.
+    private var searchRow: some View {
+        Section {
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search by name or genre", text: $search)
+                        .submitLabel(.search)
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                        .autocorrectionDisabled()
+                    if !search.isEmpty {
+                        Button { search = "" } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Clear search")
+                    }
+                }
+                .padding(.horizontal, 10)
+                .frame(height: 36)
+                .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                sortMenu
+            }
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            .listRowBackground(Color.clear)
+        }
+    }
+
     /// What the list adds up to, across the top.
     private var summary: some View {
-        let totals = store.totals
+        let totals = store.totals(on: current?.id)
 
         return Section {
             HStack(spacing: 0) {
-                total("\(totals.titles)", totals.movies > 0 ? "titles" : "series")
+                total("\(totals.titles)", "titles")
                 Divider().frame(height: 28)
                 total("\(totals.seasons)", "seasons")
                 Divider().frame(height: 28)
@@ -193,7 +259,7 @@ public struct AnimeView: View {
         Button(action: action) {
             Text(label)
                 .font(.caption.weight(.semibold))
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 9)
                 .padding(.vertical, 6)
                 .background(tint.opacity(isOn ? 0.25 : 0.10), in: .capsule)
                 .foregroundStyle(isOn ? tint : Color.secondary)
@@ -253,13 +319,19 @@ public struct AnimeView: View {
                 Label("Reverse order", systemImage: "arrow.up.arrow.down")
             }
         } label: {
-            StackedActionLabel("Sort", symbol: reversed ? "arrow.up" : "arrow.down")
+            Image(systemName: "arrow.up.arrow.down")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Senku.Palette.protein)
+                .frame(width: 36, height: 36)
+                .background(Senku.Palette.protein.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
+        .accessibilityLabel("Sort")
     }
 
     private func tint(for status: AnimeStatus) -> Color {
         switch status {
         case .pending: Senku.Palette.info
+        case .planned: Color(red: 0.62, green: 0.45, blue: 0.92)   // violet
         case .airing: Senku.Palette.protein
         case .watched: Senku.Palette.carbs
         case .completed: Senku.Palette.surplus
@@ -340,6 +412,7 @@ struct AnimeEditor: View {
     }
 
     /// The model decides, so an import cannot add what the form would refuse.
+    /// In no collection is allowed: it shows under Other.
     private var canSave: Bool { entry.isComplete }
 
     var body: some View {
@@ -362,15 +435,20 @@ struct AnimeEditor: View {
                     Text("Film").tag(true)
                 }
                 .pickerStyle(.segmented)
+                .onChange(of: entry.isMovie) { _, isMovie in
+                    if isMovie { entry.status = entry.status.asFilm }
+                }
             }
 
             Section {
                 Picker("Status", selection: $entry.status) {
-                    ForEach(AnimeStatus.allCases) { status in
+                    ForEach(AnimeStatus.options(isMovie: entry.isMovie)) { status in
                         Text(status.title).tag(status)
                     }
                 }
             }
+
+            screensSection
 
             episodeSection
 
@@ -492,6 +570,55 @@ struct AnimeEditor: View {
         }
     }
 
+    /// Which screens it shows on — as many as fit it: a film can be Hollywood
+    /// and Marvel both.
+    @ViewBuilder
+    private var screensSection: some View {
+        if !store.screens.isEmpty {
+            Section {
+                // One line however many screens there are: a menu that stays
+                // open while you tick, so several can be picked in one go.
+                Menu {
+                    ForEach(store.screens) { screen in
+                        Toggle(screen.name, isOn: Binding(
+                            get: { entry.screens.contains(screen.id) },
+                            set: { on in
+                                if on {
+                                    entry.screens.append(screen.id)
+                                } else {
+                                    entry.screens.removeAll { $0 == screen.id }
+                                }
+                            }
+                        ))
+                    }
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("Collections")
+                            .foregroundStyle(Color.primary)
+                        Spacer()
+                        Text(chosenScreens)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                #if os(iOS)
+                .menuActionDismissBehavior(.disabled)
+                #endif
+            }
+        }
+    }
+
+    /// "Hollywood, Marvel", in the order the screens are kept.
+    private var chosenScreens: String {
+        let names = store.screens.filter { entry.screens.contains($0.id) }.map(\.name)
+        return names.isEmpty ? "None" : names.joined(separator: ", ")
+    }
+
     /// Typed rather than stepped.
     ///
     /// A stepper is right for a season count and wrong for episodes: One Piece
@@ -556,6 +683,142 @@ struct AnimeEditor: View {
 
         store.save(entry)
         dismiss()
+    }
+}
+
+/// The title as a dropdown of screens, once there are two to choose between.
+///
+/// A popover of its own rather than the system title menu, so the screen you
+/// are on can be shown in colour rather than with a tick.
+private struct ScreenPicker: View {
+    let screens: [WatchScreen]
+    let current: UUID?
+    let pick: (UUID) -> Void
+
+    @State private var isOpen = false
+    private let tint = RootView.Tab.anime.tint
+
+    private var title: String {
+        let name = screens.first { $0.id == current }?.name ?? ""
+        return name.isEmpty ? "Watchlist" : name
+    }
+
+    var body: some View {
+        Button { isOpen.toggle() } label: {
+            HStack(spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(Color.primary)
+                Image(systemName: "chevron.down")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(isOpen ? 180 : 0))
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title), choose a collection")
+        .popover(isPresented: $isOpen) {
+            VStack(spacing: 4) {
+                ForEach(screens) { screen in
+                    let isOn = screen.id == current
+                    Button {
+                        pick(screen.id)
+                        isOpen = false
+                    } label: {
+                        Text(screen.name.isEmpty ? "Untitled" : screen.name)
+                            .font(.body.weight(isOn ? .semibold : .regular))
+                            .foregroundStyle(isOn ? tint : Color.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(isOn ? tint.opacity(0.15) : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(8)
+            .frame(minWidth: 200)
+            .presentationCompactAdaptation(.popover)
+        }
+    }
+}
+
+/// The watchlist's settings: the screens it is split into.
+struct WatchlistAdjustView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var store: AnimeStore
+
+    @State private var draft = ""
+    @State private var deleting: WatchScreen?
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(store.screens) { screen in
+                    HStack(spacing: 12) {
+                        Image(systemName: "rectangle.stack")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 22)
+                        TextField("Name", text: Binding(
+                            get: { store.screen(screen.id)?.name ?? "" },
+                            set: { store.renameScreen(screen.id, to: $0) }
+                        ))
+                        .submitLabel(.done)
+                        Text("\(store.count(on: screen.id))")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) { deleting = screen } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+                .onMove { store.moveScreens(from: $0, to: $1) }
+
+                HStack(spacing: 12) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundStyle(Senku.Palette.surplus)
+                        .frame(width: 22)
+                    TextField("New collection", text: $draft)
+                        .submitLabel(.done)
+                        .onSubmit(add)
+                    Button("Add", action: add)
+                        .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            } header: {
+                Text("Collections")
+            } footer: {
+                if store.screens.isEmpty {
+                    Text("The first collection takes everything already on the list.")
+                }
+            }
+        }
+        .navigationTitle("Adjust")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { dismiss() }
+            }
+        }
+        .alert(
+            "Delete \u{201C}\(deleting?.name ?? "")\u{201D}?",
+            isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+        ) {
+            Button("Delete", role: .destructive) {
+                if let deleting { store.deleteScreen(deleting.id) }
+                deleting = nil
+            }
+            Button("Cancel", role: .cancel) { deleting = nil }
+        }
+    }
+
+    private func add() {
+        store.addScreen(draft)
+        draft = ""
     }
 }
 #endif

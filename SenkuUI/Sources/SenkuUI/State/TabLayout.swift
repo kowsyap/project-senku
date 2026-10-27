@@ -55,6 +55,12 @@ public final class TabLayout {
         RootView.Tab.ordered.filter { $0 != .me }
     }
 
+    /// The selectable ones, less any extra that has not been added.
+    static func available(in defaults: UserDefaults) -> [RootView.Tab] {
+        let installed = ExtraStore.installed(in: defaults)
+        return selectable.filter { ExtraStore.isAvailable($0, installed: installed) }
+    }
+
     private let defaults: UserDefaults
 
     public private(set) var chosen: [RootView.Tab]
@@ -69,9 +75,10 @@ public final class TabLayout {
     public init(defaults: UserDefaults = SenkuStorage.shared) {
         self.defaults = defaults
 
+        let available = Self.available(in: defaults)
         let stored = (defaults.array(forKey: Self.storageKey) as? [String] ?? [])
             .compactMap(RootView.Tab.init(rawValue:))
-            .filter { Self.selectable.contains($0) }
+            .filter { available.contains($0) }
 
         // Not trimmed here. The bar has not been measured yet, so trimming now
         // would cut a fourth tab against a default of three and never put it
@@ -81,11 +88,11 @@ public final class TabLayout {
 
         let storedRest = (defaults.array(forKey: Self.restKey) as? [String] ?? [])
             .compactMap(RootView.Tab.init(rawValue:))
-            .filter { Self.selectable.contains($0) && !inBar.contains($0) }
+            .filter { available.contains($0) && !inBar.contains($0) }
 
         // Anything neither list mentions — a screen added in a later version —
         // joins the end of More rather than vanishing.
-        let missing = Self.selectable.filter { !inBar.contains($0) && !storedRest.contains($0) }
+        let missing = available.filter { !inBar.contains($0) && !storedRest.contains($0) }
         self.others = storedRest + missing
     }
 
@@ -153,9 +160,25 @@ public final class TabLayout {
         persist()
     }
 
+    /// An extra just added: into the bar if there is room, otherwise the top
+    /// of More, where it will be seen.
+    public func add(_ tab: RootView.Tab) {
+        guard !chosen.contains(tab), !others.contains(tab) else { return }
+        if isFull { others.insert(tab, at: 0) } else { chosen.append(tab) }
+        persist()
+    }
+
+    /// An extra just removed, from wherever it was.
+    public func drop(_ tab: RootView.Tab) {
+        chosen.removeAll { $0 == tab }
+        others.removeAll { $0 == tab }
+        // Never empty, as in `toggle(_:)`.
+        if chosen.isEmpty { reset() } else { persist() }
+    }
+
     public func reset() {
         chosen = Array(Self.fallback.prefix(slots))
-        others = Self.selectable.filter { !chosen.contains($0) }
+        others = Self.available(in: defaults).filter { !chosen.contains($0) }
         persist()
     }
 

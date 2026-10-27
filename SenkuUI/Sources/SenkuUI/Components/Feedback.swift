@@ -68,6 +68,15 @@ public enum Feedback {
         WKInterfaceDevice.current().play(.click)
         #endif
     }
+
+    /// Something finished arriving, such as an extra once it is added.
+    public static func success() {
+        #if os(iOS)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        #elseif os(watchOS)
+        WKInterfaceDevice.current().play(.success)
+        #endif
+    }
 }
 
 #if canImport(AVFoundation)

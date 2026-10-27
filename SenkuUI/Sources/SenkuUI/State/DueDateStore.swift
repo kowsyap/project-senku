@@ -68,6 +68,13 @@ public final class DueDateStore {
             .sorted { $0.entry.doneAt > $1.entry.doneAt }
     }
 
+    /// Every item, gone — Dues removed in Settings. The reminders follow,
+    /// because the app reschedules whenever the items change.
+    public func eraseAll() {
+        items = []
+        persist()
+    }
+
     public func restore(_ item: DueItem) {
         guard !items.contains(where: { $0.id == item.id }) else { return }
         items.append(item)

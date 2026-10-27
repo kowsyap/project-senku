@@ -515,6 +515,8 @@ private struct SetLogger: View {
     @State private var reps: Int = 8
     @State private var seconds: TimeInterval = 60
     @State private var newRecord: PersonalRecord?
+    /// The record being celebrated, while the animation plays.
+    @State private var celebrating: PersonalRecord?
     @State private var hasSeeded = false
 
     private var entry: WorkoutEntry? { workouts.live?.entry(exerciseID) }
@@ -548,7 +550,10 @@ private struct SetLogger: View {
                     }
                     .onDelete { offsets in
                         for index in offsets {
-                            workouts.removeSet(entry.sets[index].id, from: exerciseID, records: records)
+                            let id = entry.sets[index].id
+                            workouts.removeSet(id, from: exerciseID, records: records)
+                            // Its record is gone, so the "New record" line goes with it.
+                            if case .logged(id)? = newRecord?.source { newRecord = nil }
                         }
                     }
                 }
@@ -600,6 +605,28 @@ private struct SetLogger: View {
             hasSeeded = true
             seed()
         }
+        #if os(iOS)
+        // Over everything, the navigation bar included. Presented without the
+        // cover's slide: the celebration fades itself in.
+        .fullScreenCover(item: $celebrating) { record in
+            PRCelebration(set: celebrationText(record)) {
+                var quiet = Transaction()
+                quiet.disablesAnimations = true
+                withTransaction(quiet) { celebrating = nil }
+            }
+            .presentationBackground(.clear)
+        }
+        #else
+        .overlay {
+            if let celebrating {
+                PRCelebration(set: celebrationText(celebrating)) { self.celebrating = nil }
+            }
+        }
+        #endif
+    }
+
+    private func celebrationText(_ record: PersonalRecord) -> String {
+        Display.set(weightKG: record.weightKG, reps: record.reps, seconds: record.seconds, in: unitSystem)
     }
 
     private var inputSection: some View {
@@ -741,6 +768,11 @@ private struct SetLogger: View {
 
         Feedback.control()
         newRecord = workouts.log(set, for: exerciseID, records: records)
+        if let newRecord {
+            var quiet = Transaction()
+            quiet.disablesAnimations = true
+            withTransaction(quiet) { celebrating = newRecord }
+        }
         #if os(iOS)
         // The set is done, so the rest begins: the Rest tab's own timer, at
         // the length set in Settings, counting on the lock screen while you

@@ -39,3 +39,6 @@ __pycache__/
 
 # Claude Code (local only)
 .claude/
+
+# Source art, kept out of the repository
+soku_sayan_gif.png

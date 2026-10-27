@@ -55,9 +55,8 @@ public struct SenkuImportDocument: Codable, Sendable {
     public var cardioPlans: [CardioProtocol]?
     public var anime: [AnimeEntry]?
     public var dueDates: [DueItem]?
-    /// What the watch list is called — a setting, but one you typed, and a
-    /// restore that turned "K-dramas" back into "Watchlist" would be losing it.
-    public var watchlistName: String?
+    /// The screens the watchlist is split into; each entry says which it is on.
+    public var watchlistScreens: [WatchScreen]?
     /// Settings, copied as stored — see `SettingsBackup` for what and why.
     public var settings: SettingsBackup?
     public var water: [DrinkEntry]?
@@ -220,7 +219,6 @@ public struct SenkuImportDocument: Codable, Sendable {
         water: WaterStore,
         intake: IntakeStore,
         dueDates: DueDateStore? = nil,
-        watchlist: WatchlistName? = nil,
         settingsFrom: UserDefaults? = nil
     ) -> SenkuImportDocument {
         var document = SenkuImportDocument()
@@ -257,7 +255,7 @@ public struct SenkuImportDocument: Codable, Sendable {
         document.cardioPlans = cardioPlans.protocols
         document.anime = anime.entries
         document.dueDates = dueDates?.items
-        document.watchlistName = watchlist?.name
+        document.watchlistScreens = anime.screens.isEmpty ? nil : anime.screens
         document.settings = settingsFrom.map { SettingsBackup.capture(from: $0) }
         document.water = water.entries.map {
             DrinkEntry(id: $0.id, date: $0.date, millilitres: $0.millilitres, containerID: $0.containerID)
@@ -436,7 +434,6 @@ public enum SenkuImporter {
         water: WaterStore,
         intake: IntakeStore,
         dueDates: DueDateStore? = nil,
-        watchlist: WatchlistName? = nil,
         settingsTo: UserDefaults? = nil
     ) -> ImportSummary {
         var summary = ImportSummary()
@@ -556,8 +553,8 @@ public enum SenkuImporter {
             summary.animeAdded += 1
         }
 
-        if let watchlist, let name = document.watchlistName {
-            watchlist.name = name
+        for screen in document.watchlistScreens ?? [] {
+            anime.restore(screen)
         }
 
         // Replaced, like the plan: a backup's settings are the settings of the

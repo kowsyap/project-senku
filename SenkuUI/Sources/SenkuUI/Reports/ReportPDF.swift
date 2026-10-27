@@ -562,7 +562,7 @@ public enum ReportPDF {
 
         // MARK: Anime
         if !anime.entries.isEmpty, selection.anime {
-            out.append(heading(WatchlistName.current()))
+            out.append(heading("Watchlist"))
             for status in AnimeStatus.allCases {
                 let shown = anime.list(status: status, sort: .title)
                 guard !shown.isEmpty else { continue }

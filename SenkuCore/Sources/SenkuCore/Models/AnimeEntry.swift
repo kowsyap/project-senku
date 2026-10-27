@@ -2,12 +2,13 @@ import Foundation
 
 /// Where a series stands with you.
 ///
-/// Five states, named as you asked for them. The pair worth being careful about
+/// Six states, named as you asked for them. The pair worth being careful about
 /// is **watched** and **completed**: watched means you have seen it, completed
 /// means the series itself is finished and so are you. A show you are caught up
 /// on but which is still releasing is `airing`, not either of them.
 public enum AnimeStatus: String, Codable, CaseIterable, Identifiable, Sendable {
     case pending
+    case planned
     case airing
     case watched
     case completed
@@ -18,6 +19,7 @@ public enum AnimeStatus: String, Codable, CaseIterable, Identifiable, Sendable {
     public var title: String {
         switch self {
         case .pending: "Pending"
+        case .planned: "Planned"
         case .airing: "Airing"
         case .watched: "Watched"
         case .completed: "Completed"
@@ -29,6 +31,7 @@ public enum AnimeStatus: String, Codable, CaseIterable, Identifiable, Sendable {
     public var detail: String {
         switch self {
         case .pending: "On the list, not started"
+        case .planned: "Plan to watch"
         case .airing: "Releasing now, keeping up"
         case .watched: "Seen it"
         case .completed: "Finished, and so is the series"
@@ -39,10 +42,26 @@ public enum AnimeStatus: String, Codable, CaseIterable, Identifiable, Sendable {
     public var symbol: String {
         switch self {
         case .pending: "clock"
+        case .planned: "bookmark"
         case .airing: "dot.radiowaves.left.and.right"
         case .watched: "eye.fill"
         case .completed: "checkmark.seal.fill"
         case .dropped: "xmark.circle"
+        }
+    }
+
+    /// What a title can be set to. A film is one sitting: you mean to watch
+    /// it or you have.
+    public static func options(isMovie: Bool) -> [AnimeStatus] {
+        isMovie ? [.planned, .watched] : allCases
+    }
+
+    /// The nearest a film can be: seen it if you finished it, otherwise
+    /// still meaning to.
+    public var asFilm: AnimeStatus {
+        switch self {
+        case .watched, .completed: .watched
+        default: .planned
         }
     }
 
@@ -52,11 +71,32 @@ public enum AnimeStatus: String, Codable, CaseIterable, Identifiable, Sendable {
         switch self {
         case .airing: 0
         case .pending: 1
-        case .watched: 2
-        case .completed: 3
-        case .dropped: 4
+        case .planned: 2
+        case .watched: 3
+        case .completed: 4
+        case .dropped: 5
         }
     }
+}
+
+/// A collection the watchlist can be split into — Anime, Hollywood, Marvel.
+/// A title can be in several.
+public struct WatchScreen: Identifiable, Codable, Hashable, Sendable {
+    public let id: UUID
+    public var name: String
+
+    public init(id: UUID = UUID(), name: String) {
+        self.id = id
+        self.name = name
+    }
+
+    /// Where titles in no collection are shown, once there are collections:
+    /// left there by a deleted one, or never put in one. Never stored and
+    /// never edited — it appears when it has something in it.
+    public static let other = WatchScreen(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!,
+        name: "Other"
+    )
 }
 
 /// One season, and how many episodes are in it.
@@ -129,6 +169,10 @@ public struct AnimeEntry: Identifiable, Codable, Hashable, Sendable {
     public var addedAt: Date
     public var updatedAt: Date
 
+    /// The screens it is on. Optional in storage so a list saved before
+    /// screens existed still reads; see ``screens``.
+    public var screenIDs: [UUID]?
+
     public init(
         id: UUID = UUID(),
         title: String,
@@ -141,7 +185,8 @@ public struct AnimeEntry: Identifiable, Codable, Hashable, Sendable {
         imageURL: String? = nil,
         note: String = "",
         addedAt: Date = .now,
-        updatedAt: Date = .now
+        updatedAt: Date = .now,
+        screens: [UUID] = []
     ) {
         self.id = id
         self.title = title
@@ -157,6 +202,21 @@ public struct AnimeEntry: Identifiable, Codable, Hashable, Sendable {
         self.note = note
         self.addedAt = addedAt
         self.updatedAt = updatedAt
+        self.screenIDs = screens.isEmpty ? nil : screens
+    }
+
+    /// The screens it is on — none until screens are made.
+    public var screens: [UUID] {
+        get { screenIDs ?? [] }
+        set { screenIDs = newValue.isEmpty ? nil : newValue }
+    }
+
+    /// Whether it shows in a collection; `nil` is the whole list, and
+    /// ``WatchScreen/other`` is the titles in none.
+    public func isOn(_ screen: UUID?) -> Bool {
+        guard let screen else { return true }
+        if screen == WatchScreen.other.id { return screens.isEmpty }
+        return screens.contains(screen)
     }
 
     /// The poster, if the link is one the app can actually load.
@@ -183,7 +243,7 @@ public struct AnimeEntry: Identifiable, Codable, Hashable, Sendable {
     /// Whether this can be saved: a title, and — unless it is a film, or still
     /// airing, or not started — at least one season with at least one episode.
     ///
-    /// **Airing and pending are exempt.** A show that started this week has an
+    /// **Airing, pending and planned are exempt.** A show that started this week has an
     /// episode count nobody knows yet, and one you have only heard about has
     /// even less; the rule existed to stop half-filled entries, not to make you
     /// invent numbers. The same is not true of something you have finished: if
@@ -193,7 +253,7 @@ public struct AnimeEntry: Identifiable, Codable, Hashable, Sendable {
     /// series on the list that the app would not have let you type.
     public var isComplete: Bool {
         guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-        if isMovie || status == .airing || status == .pending { return true }
+        if isMovie || status == .airing || status == .pending || status == .planned { return true }
         return (seasonCount ?? 0) >= 1 && (episodeCount ?? 0) >= 1
     }
 
