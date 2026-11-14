@@ -297,6 +297,14 @@ struct WorkoutSessionView: View {
                 Image(systemName: mark(for: entry))
                     .font(.title2)
                     .foregroundStyle(markTint(for: entry))
+                    .overlay {
+                        if let filled = filledFraction(for: entry) {
+                            SetWedge(fraction: filled)
+                                .fill(markTint(for: entry))
+                                .padding(4)
+                        }
+                    }
+                    .animation(.snappy, value: entry.sets.count)
                     .frame(width: 34, height: 34)
                     .contentShape(Rectangle())
             }
@@ -366,10 +374,17 @@ struct WorkoutSessionView: View {
     private func mark(for entry: WorkoutEntry) -> String {
         if entry.isDone { return "checkmark.circle.fill" }
         if entry.isSkipped { return "minus.circle" }
-        // Started but not finished: a row with two of three sets should not
-        // look like one nobody has touched.
-        if entry.hasAnyWork { return "circle.lefthalf.filled" }
+        // Started but not finished: an outline the wedge fills, a slice a set,
+        // so two of three looks two-thirds done rather than merely touched.
         return "circle"
+    }
+
+    /// How much of the circle the logged sets fill, while some but not all
+    /// are in. Nothing once it is done, skipped or untouched — the symbol
+    /// says those on its own.
+    private func filledFraction(for entry: WorkoutEntry) -> Double? {
+        guard !entry.isDone, !entry.isSkipped, !entry.sets.isEmpty else { return nil }
+        return Double(entry.sets.count) / Double(entry.setsToFinish)
     }
 
     private func markTint(for entry: WorkoutEntry) -> Color {
@@ -463,6 +478,32 @@ struct WorkoutSessionView: View {
 /// session any more but one nobody finished — the same mark the Apple Health
 /// card questions a duration at — and a clock climbing on into the evening
 /// would only be counting the time since you went home.
+/// A pie slice from twelve o'clock, clockwise — the row's set progress.
+/// Animatable, so a logged set sweeps the next slice in.
+private struct SetWedge: Shape {
+    var fraction: Double
+
+    var animatableData: Double {
+        get { fraction }
+        set { fraction = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        var path = Path()
+        path.move(to: center)
+        path.addArc(
+            center: center,
+            radius: min(rect.width, rect.height) / 2,
+            startAngle: .degrees(-90),
+            endAngle: .degrees(-90 + 360 * min(max(fraction, 0), 1)),
+            clockwise: false
+        )
+        path.closeSubpath()
+        return path
+    }
+}
+
 private struct SessionClock: View {
     let since: Date
 
