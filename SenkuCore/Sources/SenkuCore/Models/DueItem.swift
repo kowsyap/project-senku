@@ -10,6 +10,19 @@ public enum DueRepeat: String, Codable, CaseIterable, Identifiable, Sendable {
 
     public var id: String { rawValue }
 
+    /// The longest step before the next unit up says it better: every six
+    /// days, then weekly; three weeks, then monthly; eleven months, then
+    /// yearly. Yearly has no step — every two years is rare enough to be a
+    /// one-off you add again.
+    public var maxEvery: Int {
+        switch self {
+        case .never, .years: 1
+        case .days: 6
+        case .weeks: 3
+        case .months: 11
+        }
+    }
+
     var component: Calendar.Component? {
         switch self {
         case .never: nil
@@ -112,6 +125,7 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
         self.doneThrough = doneThrough
         self.history = history
         self.createdAt = createdAt
+        tidyRepeat()
     }
 
     /// Items saved before the history existed come back with an empty one.
@@ -130,6 +144,51 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
         doneThrough = try container.decodeIfPresent(Date.self, forKey: .doneThrough)
         history = try container.decodeIfPresent([DueCompletion].self, forKey: .history) ?? []
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? .now
+        tidyRepeat()
+    }
+
+    // MARK: - Reminders that make sense for the step
+
+    /// The early reminders worth offering: only ones shorter than the gap
+    /// between due dates, since "a week before" a weekly bill lands on the
+    /// previous one's day and says nothing on-the-day did not.
+    ///
+    /// Daily gets "a day before" only from every four days, and nothing
+    /// longer — three days ahead of something due every five is noise.
+    public var earlyChoices: [Int] {
+        switch repeats {
+        case .days: every >= 4 ? [1] : []
+        case .weeks: Self.earlyReminderChoices.filter { $0 < every * 7 }
+        case .never, .months, .years: Self.earlyReminderChoices
+        }
+    }
+
+    /// Keeps the step and the reminders to what the repeat allows: a step no
+    /// longer than `maxEvery`, and no early reminder the step does not offer.
+    /// Run on every load, so an item saved before the rule is brought into it.
+    public mutating func tidyRepeat() {
+        every = min(every, repeats.maxEvery)
+        let early = earlyChoices
+        remindDaysBefore = remindDaysBefore.filter { $0 == 0 || early.contains($0) }
+    }
+
+    /// How many days ahead of its date an item joins the to-pay list: on the
+    /// day for daily, three days for weekly, a week for monthly, a month for
+    /// yearly and one-offs — or the early reminder, if that is earlier, so the
+    /// reminder never points at something the list calls paid.
+    public var leadDays: Int {
+        let base = switch repeats {
+        case .days: 0
+        case .weeks: 3
+        case .months: 7
+        case .never, .years: 30
+        }
+        return max(base, remindDaysBefore.max() ?? 0)
+    }
+
+    /// The last day of `now`'s to-pay window.
+    public func windowEnd(from now: Date = .now, calendar: Calendar = .current) -> Date {
+        calendar.date(byAdding: .day, value: leadDays, to: calendar.startOfDay(for: now))!
     }
 
     public var isComplete: Bool {
@@ -194,20 +253,12 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
         return last
     }
 
-    /// Whether anything is still to do by the end of `now`'s month — this
-    /// month's due date, or an earlier one never ticked off.
-    public func isOpen(inMonthOf now: Date = .now, calendar: Calendar = .current) -> Bool {
-        guard let month = calendar.dateInterval(of: .month, for: now),
-              let lastDay = calendar.date(byAdding: .day, value: -1, to: month.end),
-              let next = nextOpen(calendar: calendar)
-        else { return false }
-        return next <= lastDay
-    }
-
-    /// Whether something was ticked off during `now`'s month.
-    public func wasDone(inMonthOf now: Date = .now, calendar: Calendar = .current) -> Bool {
-        guard let month = calendar.dateInterval(of: .month, for: now) else { return false }
-        return history.contains { month.contains($0.doneAt) }
+    /// Whether it is on the to-pay list: due within `leadDays` of `now`, or
+    /// overdue. A month boundary plays no part — a bill on the 2nd shows up
+    /// in the last week of the month before, not the day before it is due.
+    public func isOpen(on now: Date = .now, calendar: Calendar = .current) -> Bool {
+        guard let next = nextOpen(calendar: calendar) else { return false }
+        return next <= windowEnd(from: now, calendar: calendar)
     }
 
     /// Everything finished: a one-off ticked off.
@@ -217,11 +268,12 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
 
     /// Ticks off the next open due date, and writes it in the history with the
     /// amount as it stands today — so changing the bill's amount next year
-    /// does not rewrite what was paid this one.
-    public mutating func markDone(at now: Date = .now, calendar: Calendar = .current) {
+    /// does not rewrite what was paid this one. `paid` is what was paid this
+    /// time, for an item with no set amount; it goes in the history only.
+    public mutating func markDone(at now: Date = .now, paid: Double? = nil, calendar: Calendar = .current) {
         guard let next = nextOpen(calendar: calendar) else { return }
         doneThrough = next
-        history.append(DueCompletion(due: next, doneAt: now, amount: amount))
+        history.append(DueCompletion(due: next, doneAt: now, amount: paid ?? amount))
     }
 
     /// Takes back the last tick, and its line in the history.
@@ -333,14 +385,15 @@ public struct DueCompletion: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-/// What this month comes to: still to pay, and already paid.
+/// What is left to pay, and what was paid this month.
 ///
-/// "Still to pay" is every open due date up to the end of the month — last
-/// month's unpaid bill included, because it has not stopped needing paying.
-/// "Paid" is what was ticked off this month, whichever month it was due in.
-/// Items without an amount count for neither: the amount is optional, and a
-/// total that guessed would be worse than one that says what it knows.
-public struct DueMonthTotals: Equatable, Sendable {
+/// "Left to pay" is every open due date inside each item's to-pay window —
+/// the same dates the list shows, overdue ones included, because they have
+/// not stopped needing paying. "Paid" is what was ticked off this month,
+/// whichever month it was due in. Items without an amount count for neither:
+/// the amount is optional, and a total that guessed would be worse than one
+/// that says what it knows.
+public struct DueTotals: Equatable, Sendable {
     public var toPay: Double = 0
     public var paid: Double = 0
     /// Whether any item has an amount at all — no amounts, no total to show.
@@ -351,14 +404,12 @@ public struct DueMonthTotals: Equatable, Sendable {
     public var includesToday = false
 
     public init(_ items: [DueItem], now: Date = .now, calendar: Calendar = .current) {
-        guard let month = calendar.dateInterval(of: .month, for: now),
-              let lastDay = calendar.date(byAdding: .day, value: -1, to: month.end)
-        else { return }
+        guard let month = calendar.dateInterval(of: .month, for: now) else { return }
 
         for item in items {
             if let amount = item.amount, amount > 0 {
                 hasAmounts = true
-                let open = item.openOccurrences(through: lastDay, calendar: calendar)
+                let open = item.openOccurrences(through: item.windowEnd(from: now, calendar: calendar), calendar: calendar)
                 toPay += amount * Double(open.count)
 
                 let today = calendar.startOfDay(for: now)

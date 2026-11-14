@@ -41,9 +41,9 @@ public final class DueDateStore {
         persist()
     }
 
-    public func markDone(_ id: UUID) {
+    public func markDone(_ id: UUID, paid: Double? = nil) {
         guard let index = items.firstIndex(where: { $0.id == id }) else { return }
-        items[index].markDone()
+        items[index].markDone(paid: paid)
         persist()
     }
 

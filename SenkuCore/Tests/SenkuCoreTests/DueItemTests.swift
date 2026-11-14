@@ -154,7 +154,7 @@ import Testing
         rent.markDone(at: day(2026, 10, 1), calendar: calendar)
         let noAmount = DueItem(title: "Passport", firstDue: day(2026, 10, 20), repeats: .never)
 
-        let totals = DueMonthTotals([amex, rent, noAmount], now: day(2026, 10, 10), calendar: calendar)
+        let totals = DueTotals([amex, rent, noAmount], now: day(2026, 10, 10), calendar: calendar)
         #expect(totals.toPay == 1200)
         #expect(totals.paid == 20000)
         #expect(totals.hasAmounts)
@@ -164,12 +164,12 @@ import Testing
     @Test func anOverdueBillCountsTowardsThisMonth() {
         var amex = DueItem(title: "Amex", firstDue: day(2026, 9, 5), repeats: .months)
         amex.amount = 1000
-        let totals = DueMonthTotals([amex], now: day(2026, 10, 10), calendar: calendar)
+        let totals = DueTotals([amex], now: day(2026, 10, 10), calendar: calendar)
         #expect(totals.toPay == 2000)   // September's and October's
     }
 
     @Test func noAmountsMeansNoTotal() {
-        #expect(DueMonthTotals([amex()], now: day(2026, 10, 1), calendar: calendar).hasAmounts == false)
+        #expect(DueTotals([amex()], now: day(2026, 10, 1), calendar: calendar).hasAmounts == false)
     }
 
     @Test func anItemSavedBeforeHistoryStillLoads() throws {
@@ -190,38 +190,112 @@ import Testing
         var later = DueItem(title: "Phone", firstDue: day(2026, 10, 25), repeats: .months)
         later.amount = 50
 
-        let all = DueMonthTotals([late, today, later], now: day(2026, 10, 10), calendar: calendar)
+        let all = DueTotals([late, today, later], now: day(2026, 10, 10), calendar: calendar)
         #expect(all.includesOverdue)
         #expect(all.includesToday)
 
-        let onlyToday = DueMonthTotals([today, later], now: day(2026, 10, 10), calendar: calendar)
+        let onlyToday = DueTotals([today, later], now: day(2026, 10, 10), calendar: calendar)
         #expect(!onlyToday.includesOverdue)
         #expect(onlyToday.includesToday)
 
-        let neither = DueMonthTotals([later], now: day(2026, 10, 10), calendar: calendar)
+        let neither = DueTotals([later], now: day(2026, 10, 10), calendar: calendar)
         #expect(!neither.includesOverdue && !neither.includesToday)
     }
 
-    @Test func thisMonthIsWhatIsStillToPay() {
-        var amex = amex()   // 5 Oct
-        #expect(amex.isOpen(inMonthOf: day(2026, 10, 1), calendar: calendar))
+    @Test func paidDropsOffTheListUntilItsNextWindow() {
+        var amex = amex()   // 5 Oct, monthly: a week ahead
+        #expect(amex.isOpen(on: day(2026, 9, 28), calendar: calendar))
+        #expect(!amex.isOpen(on: day(2026, 9, 27), calendar: calendar))
 
         amex.markDone(at: day(2026, 10, 3), calendar: calendar)
-        #expect(!amex.isOpen(inMonthOf: day(2026, 10, 10), calendar: calendar))
-        #expect(amex.wasDone(inMonthOf: day(2026, 10, 10), calendar: calendar))
-
-        // November comes round and it is open again.
-        #expect(amex.isOpen(inMonthOf: day(2026, 11, 1), calendar: calendar))
+        #expect(!amex.isOpen(on: day(2026, 10, 10), calendar: calendar))
+        #expect(amex.isOpen(on: day(2026, 10, 29), calendar: calendar))   // 5 Nov is a week off
     }
 
-    @Test func lastMonthsUnpaidBillIsStillThisMonths() {
+    /// The case the month boundary got wrong: due on the 2nd, on the list in
+    /// the last week of the month before rather than on the 1st.
+    @Test func aBillEarlyInTheMonthShowsUpTheMonthBefore() {
+        let rent = DueItem(title: "Rent", firstDue: day(2026, 12, 2), repeats: .months)
+        #expect(rent.isOpen(on: day(2026, 11, 25), calendar: calendar))
+        #expect(!rent.isOpen(on: day(2026, 11, 24), calendar: calendar))
+    }
+
+    @Test func lastMonthsUnpaidBillIsStillOpen() {
         let late = DueItem(title: "Amex", firstDue: day(2026, 9, 5), repeats: .months)
-        #expect(late.isOpen(inMonthOf: day(2026, 10, 10), calendar: calendar))
+        #expect(late.isOpen(on: day(2026, 10, 10), calendar: calendar))
     }
 
-    @Test func somethingDueNextMonthIsNotOpenNow() {
-        let later = DueItem(title: "Insurance", firstDue: day(2026, 11, 20), repeats: .years)
-        #expect(!later.isOpen(inMonthOf: day(2026, 10, 10), calendar: calendar))
-        #expect(!later.wasDone(inMonthOf: day(2026, 10, 10), calendar: calendar))
+    @Test func howFarAheadDependsOnTheRepeat() {
+        let start = day(2026, 10, 5)
+        #expect(DueItem(title: "", firstDue: start, repeats: .days, remindDaysBefore: [0]).leadDays == 0)
+        #expect(DueItem(title: "", firstDue: start, repeats: .weeks, remindDaysBefore: [0]).leadDays == 3)
+        #expect(DueItem(title: "", firstDue: start, repeats: .months, remindDaysBefore: [0]).leadDays == 7)
+        #expect(DueItem(title: "", firstDue: start, repeats: .years, remindDaysBefore: [0]).leadDays == 30)
+        #expect(DueItem(title: "", firstDue: start, repeats: .never, remindDaysBefore: [0]).leadDays == 30)
+        // An earlier reminder pulls the window out to meet it.
+        #expect(DueItem(title: "", firstDue: start, repeats: .weeks, every: 2, remindDaysBefore: [7, 0]).leadDays == 7)
+    }
+
+    @Test func earlyRemindersAreShorterThanTheStep() {
+        let start = day(2026, 10, 5)
+        #expect(DueItem(title: "", firstDue: start, repeats: .days, every: 3).earlyChoices.isEmpty)
+        #expect(DueItem(title: "", firstDue: start, repeats: .days, every: 4).earlyChoices == [1])
+        #expect(DueItem(title: "", firstDue: start, repeats: .weeks).earlyChoices == [1, 3])
+        #expect(DueItem(title: "", firstDue: start, repeats: .weeks, every: 2).earlyChoices == [1, 3, 7])
+        #expect(DueItem(title: "", firstDue: start, repeats: .months).earlyChoices == [1, 3, 7])
+    }
+
+    /// What was paid goes in the history; the item stays without an amount.
+    @Test func whatWasPaidIsLoggedWithoutSettingAnAmount() {
+        var power = DueItem(title: "Electricity", firstDue: day(2026, 10, 5), repeats: .months)
+        power.markDone(at: day(2026, 10, 5), paid: 1840, calendar: calendar)
+        #expect(power.history.last?.amount == 1840)
+        #expect(power.amount == nil)
+        #expect(DueTotals([power], now: day(2026, 10, 10), calendar: calendar).paid == 1840)
+    }
+
+    @Test func eachStepTopsOutBeforeTheNextUnit() {
+        let start = day(2026, 10, 5)
+        #expect(DueItem(title: "", firstDue: start, repeats: .weeks, every: 5).every == 3)
+        #expect(DueItem(title: "", firstDue: start, repeats: .months, every: 12).every == 11)
+        #expect(DueItem(title: "", firstDue: start, repeats: .months, every: 3).every == 3)
+        #expect(DueItem(title: "", firstDue: start, repeats: .years, every: 2).every == 1)
+    }
+
+    @Test func aDailyStepTopsOutAtSixAndDropsWhatItCannotOffer() {
+        var item = DueItem(title: "", firstDue: day(2026, 10, 5), repeats: .days, every: 9, remindDaysBefore: [3, 0])
+        #expect(item.every == 6)
+        #expect(item.remindDaysBefore == [0])
+
+        item.remindDaysBefore = [7, 0]
+        item.repeats = .weeks
+        item.every = 1
+        item.tidyRepeat()
+        #expect(item.remindDaysBefore == [0])
+    }
+
+    @Test func anOldItemIsTidiedOnLoad() throws {
+        let item = DueItem(title: "Gym", firstDue: day(2026, 10, 5), repeats: .months, remindDaysBefore: [7, 0])
+        var json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(item)) as! [String: Any]
+        json["repeats"] = "days"
+        json["every"] = 2
+        let decoded = try JSONDecoder().decode(DueItem.self, from: JSONSerialization.data(withJSONObject: json))
+        #expect(decoded.remindDaysBefore == [0])
+    }
+
+    /// The total counts what the list shows: a monthly bill a fortnight out
+    /// is not in it yet.
+    @Test func theTotalFollowsTheWindow() {
+        var phone = DueItem(title: "Phone", firstDue: day(2026, 10, 24), repeats: .months)
+        phone.amount = 50
+        #expect(DueTotals([phone], now: day(2026, 10, 10), calendar: calendar).toPay == 0)
+        #expect(DueTotals([phone], now: day(2026, 10, 17), calendar: calendar).toPay == 50)
+    }
+
+    /// A daily item counts today's, not the rest of the month's.
+    @Test func aDailyItemCountsOnlyToday() {
+        var lunch = DueItem(title: "Lunch", firstDue: day(2026, 10, 10), repeats: .days)
+        lunch.amount = 100
+        #expect(DueTotals([lunch], now: day(2026, 10, 10), calendar: calendar).toPay == 100)
     }
 }

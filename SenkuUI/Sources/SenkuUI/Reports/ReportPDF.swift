@@ -584,10 +584,10 @@ public enum ReportPDF {
         if let dues, !dues.items.isEmpty, selection.dues {
             out.append(heading("Dues"))
 
-            let totals = DueMonthTotals(dues.items)
+            let totals = DueTotals(dues.items)
             if totals.hasAmounts {
-                var line = "This month: \(DueFormat.money(totals.toPay)) left to pay"
-                if totals.paid > 0 { line += ", \(DueFormat.money(totals.paid)) paid" }
+                var line = "Left to pay: \(DueFormat.money(totals.toPay))"
+                if totals.paid > 0 { line += ", \(DueFormat.money(totals.paid)) paid this month" }
                 out.append(body(line + "\n\n"))
             }
 

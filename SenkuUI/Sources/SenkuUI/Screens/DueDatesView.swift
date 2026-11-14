@@ -19,6 +19,9 @@ public struct DueDatesView: View {
     @State private var isAdding = false
     @State private var deleting: DueItem?
     @State private var isShowingHistory = false
+    /// The item being ticked off with no set amount, while it asks what was paid.
+    @State private var askingPaid: DueItem?
+    @State private var paidText = ""
 
     public init(store: DueDateStore) {
         self.store = store
@@ -70,6 +73,39 @@ public struct DueDatesView: View {
             }
             Button("Keep", role: .cancel) { deleting = nil }
         }
+        .alert(
+            "How much did you pay?",
+            isPresented: Binding(get: { askingPaid != nil }, set: { if !$0 { askingPaid = nil } })
+        ) {
+            TextField("Amount", text: $paidText)
+                #if os(iOS)
+                .keyboardType(.decimalPad)
+                #endif
+            Button("Done") {
+                if let askingPaid {
+                    // Read the way the phone's region writes numbers.
+                    let paid = try? Double(paidText.trimmingCharacters(in: .whitespaces), format: .number)
+                    Feedback.control()
+                    store.markDone(askingPaid.id, paid: paid.flatMap { $0 > 0 ? $0 : nil })
+                }
+                askingPaid = nil
+            }
+            Button("Cancel", role: .cancel) { askingPaid = nil }
+        } message: {
+            Text(askingPaid?.title ?? "")
+        }
+    }
+
+    /// Ticks off the next due date — asking first what was paid, when the
+    /// item has no set amount. Left blank, it is ticked off with none.
+    private func tick(_ item: DueItem) {
+        guard item.amount ?? 0 <= 0 else {
+            Feedback.control()
+            store.markDone(item.id)
+            return
+        }
+        paidText = ""
+        askingPaid = item
     }
 
     // MARK: - The list
@@ -80,12 +116,12 @@ public struct DueDatesView: View {
         let items: [DueItem]
     }
 
-    /// Two groups: what is still to pay this month — overdue included — and
-    /// everything already dealt with, waiting for its next date.
+    /// Two groups: what is to pay now — overdue, or close enough to its date
+    /// to deal with — and everything else, waiting for its next date.
     private var groups: [Group_] {
         let all = store.sorted
         return [
-            Group_(id: "month", title: "This month", items: all.filter { $0.isOpen() }),
+            Group_(id: "month", title: "To pay", items: all.filter { $0.isOpen() }),
             Group_(id: "paid", title: "Paid", items: all.filter { !$0.isOpen() }),
         ].filter { !$0.items.isEmpty }
     }
@@ -106,8 +142,7 @@ public struct DueDatesView: View {
                         .swipeActions(edge: .leading) {
                             if item.isOpen() {
                                 Button {
-                                    Feedback.control()
-                                    store.markDone(item.id)
+                                    tick(item)
                                 } label: {
                                     Label("Done", systemImage: "checkmark")
                                 }
@@ -142,12 +177,12 @@ public struct DueDatesView: View {
     /// amount, since a total of nothing is not worth the space.
     @ViewBuilder
     private var monthTotal: some View {
-        let totals = DueMonthTotals(store.items)
+        let totals = DueTotals(store.items)
         if totals.hasAmounts {
             Section {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("LEFT TO PAY THIS MONTH")
+                        Text("LEFT TO PAY")
                             .font(.system(size: 10, weight: .heavy))
                             .foregroundStyle(.secondary)
                         Text(DueFormat.money(totals.toPay))
@@ -175,7 +210,7 @@ public struct DueDatesView: View {
 
     /// Red if any of it is overdue, orange if any is due today — the worse of
     /// the two wins — and green once nothing is left.
-    private func totalTint(_ totals: DueMonthTotals) -> Color {
+    private func totalTint(_ totals: DueTotals) -> Color {
         if totals.includesOverdue { return Senku.Palette.warning }
         if totals.includesToday { return Senku.Palette.caution }
         return totals.toPay > 0 ? Color.primary : Senku.Palette.surplus
@@ -190,8 +225,7 @@ public struct DueDatesView: View {
                 // A control, not an indicator: ticks off the due date without
                 // opening anything. Long-press the row to take it back.
                 Button {
-                    Feedback.control()
-                    store.markDone(item.id)
+                    tick(item)
                 } label: {
                     Image(systemName: "circle")
                         .font(.title2)
@@ -202,10 +236,10 @@ public struct DueDatesView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Mark done")
             } else {
-                // Nothing to tick until next month comes round. A tick for
-                // what was paid this month; a plain calendar for what simply
-                // is not due yet, so it does not claim a payment never made.
-                let paid = item.wasDone() || item.isFinished
+                // Nothing to tick until its next date comes close. A tick
+                // when the last one was paid; a plain calendar for something
+                // never due yet, so it does not claim a payment never made.
+                let paid = item.doneThrough != nil || item.isFinished
                 Image(systemName: paid ? "checkmark.circle.fill" : "calendar")
                     .font(.title2)
                     .foregroundStyle(paid ? Senku.Palette.surplus : Color.secondary)
@@ -380,13 +414,14 @@ struct DueItemEditor: View {
     var body: some View {
         Form {
             Section {
-                TextField("Title — e.g. Amex bill", text: $item.title)
+                TextField("Title", text: $item.title)
                     #if os(iOS)
                     .textInputAutocapitalization(.words)
                     #endif
 
+                // Category and amount share a line: both short, both optional.
                 HStack {
-                    TextField("Category (optional)", text: $item.category)
+                    TextField("Category", text: $item.category)
                         #if os(iOS)
                         .textInputAutocapitalization(.words)
                         #endif
@@ -399,12 +434,17 @@ struct DueItemEditor: View {
                             Image(systemName: "chevron.down.circle")
                         }
                     }
-                }
 
-                TextField("Amount (optional)", text: $amountText)
-                    #if os(iOS)
-                    .keyboardType(.decimalPad)
-                    #endif
+                    Divider()
+
+                    TextField("Amount", text: $amountText)
+                        .multilineTextAlignment(.trailing)
+                        .monospacedDigit()
+                        .frame(maxWidth: 120)
+                        #if os(iOS)
+                        .keyboardType(.decimalPad)
+                        #endif
+                }
             } header: {
                 Text("What")
             }
@@ -424,8 +464,8 @@ struct DueItemEditor: View {
                     Text("Yearly").tag(DueRepeat.years)
                 }
 
-                if item.repeats != .never {
-                    Stepper(value: $item.every, in: 1...36) {
+                if item.repeats.maxEvery > 1 {
+                    Stepper(value: $item.every, in: 1...item.repeats.maxEvery) {
                         LabeledContent("Every", value: "\(item.every) \(item.repeats.unit(item.every))")
                     }
                 }
@@ -442,10 +482,13 @@ struct DueItemEditor: View {
                     // Turning it off is always allowed; on, only while it fits.
                     .disabled(!item.remindDaysBefore.contains(0) && !fits(onTheDay: true, early: early))
 
-                Picker("Also remind", selection: earlyBinding) {
-                    Text("No").tag(0)
-                    ForEach(earlyOptions, id: \.self) { days in
-                        Text(earlyLabel(days)).tag(days)
+                // Nothing to offer for a step of three days or less.
+                if !item.earlyChoices.isEmpty {
+                    Picker("Also remind", selection: earlyBinding) {
+                        Text("No").tag(0)
+                        ForEach(earlyOptions, id: \.self) { days in
+                            Text(earlyLabel(days)).tag(days)
+                        }
                     }
                 }
 
@@ -482,6 +525,9 @@ struct DueItemEditor: View {
             }
         }
         .dismissableKeyboard()
+        // A shorter step can take away the early reminder that was set.
+        .onChange(of: item.repeats) { item.tidyRepeat() }
+        .onChange(of: item.every) { item.tidyRepeat() }
         .navigationTitle(isNew ? "Add a Due" : item.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -520,15 +566,12 @@ struct DueItemEditor: View {
         item.remindDaysBefore = [early > 0 ? early : nil, onTheDay ? 0 : nil].compactMap { $0 }
     }
 
-    /// Only the choices that fit — and whatever is already set, even if it is
-    /// an older one like "3 days before" that is no longer offered.
+    /// The choices the step allows, and of those only the ones that fit.
     private var earlyOptions: [Int] {
         let onTheDay = item.remindDaysBefore.contains(0)
-        var options = DueItem.earlyReminderChoices.filter {
+        return item.earlyChoices.filter {
             $0 == early || early > 0 || fits(onTheDay: onTheDay, early: $0)
         }
-        if early > 0, !options.contains(early) { options.append(early) }
-        return options.sorted()
     }
 
     private func earlyLabel(_ days: Int) -> String {
@@ -567,7 +610,7 @@ struct DueItemEditor: View {
     private var isFull: Bool {
         let onTheDay = item.remindDaysBefore.contains(0)
         let canAddDay = onTheDay || fits(onTheDay: true, early: early)
-        let canAddEarly = early > 0 || fits(onTheDay: onTheDay, early: 1)
+        let canAddEarly = early > 0 || item.earlyChoices.isEmpty || fits(onTheDay: onTheDay, early: 1)
         return !(canAddDay && canAddEarly)
     }
 
