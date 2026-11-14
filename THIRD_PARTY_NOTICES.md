@@ -2,6 +2,18 @@
 
 Senku includes material from the following projects.
 
+## RepDB
+
+Exercise data by [RepDB](https://repdb.co) (repdb.co).
+
+The exercise pictures come from RepDB's free tier and are loaded from
+`exercise-dataset.com` when an exercise is opened; they are not stored in this
+repository. `SenkuCore/Sources/SenkuCore/Resources/ExerciseMedia.json` maps
+Senku's exercises to RepDB's ids and image paths. Use is governed by the
+[RepDB Free Tier License](https://github.com/RepDB/exercise-dataset/blob/main/LICENSE-DATA.md):
+in-app use with this attribution; no redistribution as a dataset; no use of
+the images with generative models.
+
 ## react-native-body-highlighter
 
 The body drawings in `SenkuUI/Sources/SenkuUI/Resources/BodyMap.json` — male and

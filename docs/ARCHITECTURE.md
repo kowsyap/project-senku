@@ -137,9 +137,13 @@ generated list and the prompt to the repository's bytes.
 
 ## Network
 
-None by default. The exceptions are each the person's choice: Gemini reading a
-food photo or label (opt-in, with their own key), anime posters loaded from the
-addresses they add, and links they tap. Everything else — HealthKit,
+Little by default. Exercise pictures are fetched from RepDB's free tier
+(`exercise-dataset.com`) the first time an exercise is opened, and kept in the
+caches folder — `ExerciseMedia.json` holds only the paths, never the images,
+since their licence allows in-app use with a credit but not redistribution.
+The other exceptions are each the person's choice: Gemini reading a food photo
+or label (opt-in, with their own key), anime posters loaded from the addresses
+they add, and links they tap. Everything else — HealthKit,
 WatchConnectivity, widgets — stays on the device.
 
 ## Notifications

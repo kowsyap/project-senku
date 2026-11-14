@@ -552,6 +552,10 @@ The body figures are drawn from
 (MIT), split into finer muscles for Senku. The full notice is in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+Exercise data by [RepDB](https://repdb.co) — the exercise pictures, fetched from
+RepDB's free tier when an exercise is first opened rather than shipped with the
+app.
+
 ---
 
 ## License

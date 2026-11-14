@@ -15,6 +15,7 @@ struct AboutView: View {
     static let repository = URL(string: "https://github.com/kowsyap/project-senku")!
     static let issues = URL(string: "https://github.com/kowsyap/project-senku/issues")!
     static let license = URL(string: "https://github.com/kowsyap/project-senku/blob/main/LICENSE")!
+    static let repdb = URL(string: "https://repdb.co")!
 
     @State private var isShowingNotice = false
 
@@ -70,6 +71,7 @@ struct AboutView: View {
                     bullet("Apple Health: Senku only writes what you switch on, and never reads.")
                     bullet("Food photos are read on your iPhone by Apple Intelligence. If you switch on Gemini under Photo reading, the photo or label text goes to Google instead.")
                     bullet("Anime posters load from the addresses you add.")
+                    bullet("Exercise pictures load from RepDB the first time you open an exercise, then stay on this iPhone.")
                 }
                 .padding(.vertical, 4)
             } header: {
@@ -105,6 +107,18 @@ struct AboutView: View {
                         Text("react-native-body-highlighter")
                             .font(.subheadline.weight(.semibold))
                         Text("The front and back body figures · MIT License")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                // Their free tier's one condition: this credit, visible.
+                Link(destination: Self.repdb) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("RepDB")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.primary)
+                        Text("Exercise data by RepDB (repdb.co)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

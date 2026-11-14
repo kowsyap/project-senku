@@ -558,6 +558,11 @@ struct ExerciseInfoSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Senku.Metrics.stackSpacing) {
+                    let pictures = ExerciseMedia.bundled.imageURLs(for: exercise.id)
+                    if !pictures.isEmpty {
+                        ExercisePictures(urls: pictures, name: exercise.name)
+                    }
+
                     Card("How it is done") {
                         Text(exercise.description.isEmpty
                              ? "No description — this is one of yours."
@@ -574,30 +579,51 @@ struct ExerciseInfoSheet: View {
                     }
 
                     Card("Trains") {
-                        ForEach(trained, id: \.name) { region in
-                            StatRow(
-                                region.name,
-                                value: "\(Int((region.share * 100).rounded()))%",
-                                tint: region.share >= 0.8 ? Senku.Palette.protein : nil
-                            )
+                        let hasBody = (BodyMapPart.front + BodyMapPart.back)
+                            .contains { $0.share(of: exercise.contributions) != nil }
+
+                        // The list on the left, the body beside it: the two
+                        // say the same thing, so they share the width rather
+                        // than stacking into a tall card.
+                        HStack(alignment: .center, spacing: 12) {
+                            // Smaller than a StatRow: half a card is narrow,
+                            // and a muscle name at full size wraps.
+                            VStack(spacing: 8) {
+                                ForEach(trained, id: \.name) { region in
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(region.name)
+                                            .font(.footnote)
+                                        Spacer(minLength: 6)
+                                        Text("\(Int((region.share * 100).rounded()))%")
+                                            .font(.footnote.weight(.semibold))
+                                            .monospacedDigit()
+                                            .foregroundStyle(region.share >= 0.8 ? Senku.Palette.protein : Color.primary)
+                                    }
+                                    .accessibilityElement(children: .combine)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            // Only what this works is coloured, yellow for a
+                            // little, red for the muscle it is *the* exercise for.
+                            if hasBody {
+                                BodyHighlight { part in
+                                    part.share(of: exercise.contributions).map(BodyHighlight.heat)
+                                }
+                                // Half the width, the list the other half. No set
+                                // height: the figures are twice as tall as wide,
+                                // and a fixed one left empty bands above and below.
+                                .frame(maxWidth: .infinity)
+                            }
                         }
 
-                        // The same percentages, on the body: only what this
-                        // works is coloured, yellow for a little, red for the
-                        // muscle it is *the* exercise for.
-                        if (BodyMapPart.front + BodyMapPart.back).contains(where: { $0.share(of: exercise.contributions) != nil }) {
-                            BodyHighlight { part in
-                                part.share(of: exercise.contributions).map(BodyHighlight.heat)
-                            }
-                            .frame(height: 230)
-                            .padding(.top, 6)
-
+                        if hasBody {
                             HStack(spacing: 14) {
                                 BodyHighlightKey(color: BodyHighlight.heat(0.2), label: "Little")
                                 BodyHighlightKey(color: BodyHighlight.heat(0.6), label: "Some")
                                 BodyHighlightKey(color: BodyHighlight.heat(1), label: "Most")
                             }
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                     }
 
