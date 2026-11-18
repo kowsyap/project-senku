@@ -205,6 +205,8 @@ public struct PlanSetupView: View {
 
             RestAfterSetSection()
 
+            PRAnimationSection()
+
             Section {
                 importRow
                 Button {
