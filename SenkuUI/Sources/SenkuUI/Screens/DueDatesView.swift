@@ -298,7 +298,7 @@ public struct DueDatesView: View {
         ContentUnavailableView {
             Label("Nothing due", systemImage: "calendar.badge.clock")
         } description: {
-            Text("Card bills, rent, renewals, deadlines — anything with a date. Repeat it monthly or yearly, and tick it off when it is done.")
+            Text("Bills, renewals and deadlines. Tick each off when it is done.")
         } actions: {
             Button("Add a Due") { isAdding = true }
                 .buttonStyle(.borderedProminent)

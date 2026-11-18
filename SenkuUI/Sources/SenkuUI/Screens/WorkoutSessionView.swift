@@ -397,7 +397,7 @@ struct WorkoutSessionView: View {
     /// last time, which is very nearly always what you are about to do.
     private func detail(for entry: WorkoutEntry) -> String {
         if entry.isMarkedDone, entry.sets.isEmpty, entry.cardio == nil {
-            return "Done — nothing logged"
+            return "Done, nothing logged"
         }
         if let cardio = entry.cardio {
             return Display.cardio(cardio, for: library.exercise(entry.exerciseID), in: unitSystem)
@@ -839,7 +839,7 @@ struct WorkoutSummaryView: View {
         }
         // A hand-ticked exercise, in the summary and in the report: said as
         // what it is, rather than dressed up as sets that were never recorded.
-        if entry.isMarkedDone { return "Done — nothing logged" }
+        if entry.isMarkedDone { return "Done, nothing logged" }
         return entry.isSkipped ? "Skipped" : "Not done"
     }
 
@@ -1054,11 +1054,11 @@ private struct HealthWorkoutSection: View {
                 }
                 switch WorkoutEnergy.check(draft.duration) {
                 case .tooShort:
-                    Text("Under 5 minutes — set how long you actually trained.")
+                    Text("Under 5 minutes. Set how long you trained.")
                         .font(.footnote)
                         .foregroundStyle(Senku.Palette.warning)
                 case .unusuallyLong:
-                    Text("Over 3 hours — check this is the session, not when finish was tapped.")
+                    Text("Over 3 hours. Check the session length.")
                         .font(.footnote)
                         .foregroundStyle(Senku.Palette.caution)
                 case .plausible:

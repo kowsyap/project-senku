@@ -136,7 +136,7 @@ struct FoodPhotoSheet: View {
                 // what is underneath. Optional, because most of the time there
                 // is nothing to add and a required field would be skipped
                 // blank anyway.
-                Text("Optional. Cooking fat, hidden ingredients — what the picture leaves out.")
+                Text("Optional. Cooking fat or anything the picture misses.")
             }
         }
         .toolbar {
@@ -202,7 +202,7 @@ struct FoodPhotoSheet: View {
                     "Apple Intelligence has to be on, and its model downloaded, before this can run.")
         case GeminiFailure.busy:
             return ("Google is busy.",
-                    "It answered that it is under load, three times. Nothing is wrong with the photo — wait a moment and try again.")
+                    "It is busy right now. Wait a moment and try again.")
         case GeminiFailure.rateLimited:
             return ("Too many in a row.",
                     "The free tier allows a few requests a minute. Wait a minute and try again.")
@@ -244,7 +244,7 @@ struct FoodPhotoSheet: View {
                 if label.basis == .per100g {
                     Text("Per 100 g")
                 } else if let grams = label.servingGrams {
-                    Text("Per serving — about \(Int(grams.rounded())) g")
+                    Text("Per serving, about \(Int(grams.rounded())) g")
                 } else {
                     Text("Per serving")
                 }

@@ -550,7 +550,7 @@ private struct WaterGoalEditor: View {
             } header: {
                 Text("Your own target")
             } footer: {
-                Text("Senku works out \(Int(goal.baseML + goal.trainingBonusML + goal.creatineBonusML)) ml for today — \(goal.explanation.lowercased()). Setting your own replaces that until you clear it.")
+                Text("Senku works out \(Int(goal.baseML + goal.trainingBonusML + goal.creatineBonusML)) ml for today: \(goal.explanation.lowercased()). Your own target replaces it until cleared.")
             }
         }
         .dismissableKeyboard()

@@ -273,7 +273,7 @@ public struct PlanInputForm: View {
                 ? "Lean-mass based. The best choice now that body fat is known."
                 : "Needs a measured body fat, so it is running on a BMI estimate."
         case .harrisBenedict:
-            "The 1984 revision. Included for comparison; tends to run high."
+            "The 1984 revision. Included for comparison, tends to run high."
         }
     }
 }

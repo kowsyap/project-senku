@@ -54,8 +54,8 @@ public enum SpokenSummary {
         if day.isMet {
             let over = Int(day.overML.rounded())
             return over > 0
-                ? "\(total) millilitres — goal met, \(over.formatted()) over."
-                : "\(total) millilitres — goal met."
+                ? "\(total) millilitres. Goal met, \(over.formatted()) over."
+                : "\(total) millilitres. Goal met."
         }
 
         let left = Int(day.remainingML.rounded()).formatted()

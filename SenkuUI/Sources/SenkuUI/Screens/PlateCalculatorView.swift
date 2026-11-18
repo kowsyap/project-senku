@@ -292,7 +292,7 @@ struct PlateCalculatorView: View {
     private func perSideCard(_ load: PlateLoad) -> some View {
         Card("Per side") {
             if load.perSide.isEmpty {
-                Text("Nothing — the bar is enough.")
+                Text("Nothing. The bar is enough.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {

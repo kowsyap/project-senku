@@ -82,7 +82,7 @@ public struct CalculatorView: View {
             Button("Save", role: .destructive) { commitSave() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This replaces your profile — the plan on the Me tab, the targets on your watch, and the weight the chart starts from.")
+            Text("This replaces your profile, plan, watch targets and the chart's starting weight.")
         }
         .animation(.snappy(duration: 0.28), value: action)
         .animation(.snappy(duration: 0.2), value: draft.goal)

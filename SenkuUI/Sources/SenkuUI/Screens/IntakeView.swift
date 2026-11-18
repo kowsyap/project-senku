@@ -367,7 +367,7 @@ public struct IntakeView: View {
                         .minimumScaleFactor(0.8)
                 }
             } else if store.favourites.isEmpty {
-                Text("Save the things you eat often — in the editor, or behind the gear — and they appear here.")
+                Text("Save foods you eat often and they appear here.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -28,7 +28,7 @@ struct FoodIntelligenceSettings: View {
             }
 
             Section {
-                SecureField(hasStoredKey ? "Stored — type to replace" : "API key", text: $key)
+                SecureField(hasStoredKey ? "Stored. Type to replace" : "API key", text: $key)
                     .textContentType(.password)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()

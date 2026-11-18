@@ -396,7 +396,7 @@ public struct RestTimerView: View {
             // the system refused. Either way the taps happened and the sound
             // did not, and saying so is better than a rest that looks broken.
             Label(
-                landing.heldSession ? "Muted — tapped only" : "Muted, no session",
+                landing.heldSession ? "Muted, tapped only" : "Muted, no session",
                 systemImage: "speaker.slash.fill"
             )
             .font(.system(size: 11, weight: .semibold))

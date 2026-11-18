@@ -565,7 +565,7 @@ struct ExerciseInfoSheet: View {
 
                     Card("How it is done") {
                         Text(exercise.description.isEmpty
-                             ? "No description — this is one of yours."
+                             ? "No description. This one is yours."
                              : exercise.description)
                             .font(.callout)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -767,7 +767,7 @@ struct CustomExerciseEditor: View {
                         Toggle("Timed", isOn: $isTimed)
                     } footer: {
                         Text(isTimed
-                             ? "Sets are logged as seconds held — a dead hang, a carry, a plank."
+                             ? "Sets are logged as seconds held, like a plank."
                              : "Sets are logged as reps. Turn this on for something you hold rather than repeat.")
                     }
                 }

@@ -259,7 +259,7 @@ public struct WeightLogView: View {
     }
 
     private var chartFootnote: String {
-        let base = "Line is a 7-day half-life moving average. Each dot is a day — the average, where you weighed more than once."
+        let base = "Line is a 7-day moving average. Each dot is a day's average."
         return trendSegments.count > 1
             ? base + " It breaks where you went more than ten days without weighing in."
             : base
@@ -469,7 +469,7 @@ public struct WeightLogView: View {
         ContentUnavailableView {
             Label("No weigh-ins yet", systemImage: "scalemass")
         } description: {
-            Text("Log one and Senku starts tracking the trend underneath the noise — and, in time, what your maintenance calories actually are.")
+            Text("Log one to start your trend. In time it shows your maintenance calories.")
         } actions: {
             Button("Log a weigh-in") { isAdding = true }
                 .buttonStyle(.borderedProminent)

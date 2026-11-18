@@ -145,7 +145,7 @@ public enum DueReminderPlan {
         switch days {
         case ...0: return "Due today"
         case 1: return "Due tomorrow"
-        default: return "Due in \(days) days — \(due.formatted(.dateTime.weekday(.abbreviated).day().month()))"
+        default: return "Due in \(days) days, \(due.formatted(.dateTime.weekday(.abbreviated).day().month()))"
         }
     }
 

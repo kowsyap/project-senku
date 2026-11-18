@@ -123,11 +123,11 @@ extension ValidationError: LocalizedError {
         case .bodyFatOutOfRange:
             "Body fat must be between 3% and 70%."
         case .waterOutOfRange:
-            "That is not a drink — give an amount between 1 ml and 5 litres."
+            "Give an amount between 1 ml and 5 litres."
         case .macroOutOfRange:
             "Grams must be between 0 and 1,000. Anything outside that is a typing slip, not a meal."
         case .liftedWeightOutOfRange:
-            "A lift must be between 0 kg and 1,000 kg — zero meaning bodyweight."
+            "A lift must be 0 to 1,000 kg. Use 0 for bodyweight."
         case .repsOutOfRange:
             "Reps must be between 1 and 100."
         case .restDurationOutOfRange:

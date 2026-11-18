@@ -239,7 +239,7 @@ public struct WorkoutView: View {
 
             HStack(spacing: 6) {
                 if isDone {
-                    Text("Done this week — tap to see it")
+                    Text("Done this week. Tap to see it")
                 } else {
                     Text("\(exercises.count) exercises")
                     if let last {

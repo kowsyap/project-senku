@@ -82,7 +82,7 @@ import SenkuCore
             goal: WaterGoal(baseML: 2450)
         )
 
-        #expect(SpokenSummary.water(day).contains("goal met"))
+        #expect(SpokenSummary.water(day).contains("Goal met"))
     }
 
     // MARK: - Food

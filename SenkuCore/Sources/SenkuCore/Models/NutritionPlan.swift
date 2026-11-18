@@ -84,7 +84,7 @@ public struct NutritionPlan: Hashable, Sendable {
                 message: """
                 At your size the safe minimum is actually above what you burn in a day, so this \
                 target will hold your weight or add a little. Losing weight from here means \
-                moving more rather than eating less — and is worth a conversation with a doctor.
+                moving more rather than eating less. Talk to a doctor about it.
                 """
             ))
         }
@@ -120,7 +120,7 @@ public struct NutritionPlan: Hashable, Sendable {
                 id: "cut.alreadyLean",
                 severity: .caution,
                 message: """
-                You are already lean. An aggressive cut from here costs muscle and recovery — a \
+                You are already lean. An aggressive cut from here costs muscle and recovery. A \
                 mild cut will get you there in better shape.
                 """
             ))
