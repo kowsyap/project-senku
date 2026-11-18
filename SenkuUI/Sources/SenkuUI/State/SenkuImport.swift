@@ -62,6 +62,10 @@ public struct SenkuImportDocument: Codable, Sendable {
     public var water: [DrinkEntry]?
     public var intake: [MealEntry]?
     public var favourites: [FoodFavourite]?
+    /// Spends, and the categories added beside the built-in ones.
+    public var expenses: [MoneyEntry]?
+    public var expenseCategories: [String]?
+    public var income: [MoneyEntry]?
 
     /// A drink, as somebody would actually type it.
     ///
@@ -219,6 +223,8 @@ public struct SenkuImportDocument: Codable, Sendable {
         water: WaterStore,
         intake: IntakeStore,
         dueDates: DueDateStore? = nil,
+        expenses: MoneyStore? = nil,
+        income: MoneyStore? = nil,
         settingsFrom: UserDefaults? = nil
     ) -> SenkuImportDocument {
         var document = SenkuImportDocument()
@@ -255,6 +261,9 @@ public struct SenkuImportDocument: Codable, Sendable {
         document.cardioPlans = cardioPlans.protocols
         document.anime = anime.entries
         document.dueDates = dueDates?.items
+        document.expenses = expenses?.entries
+        document.expenseCategories = expenses.flatMap { $0.customCategories.isEmpty ? nil : $0.customCategories }
+        document.income = income?.entries
         document.watchlistScreens = anime.screens.isEmpty ? nil : anime.screens
         document.settings = settingsFrom.map { SettingsBackup.capture(from: $0) }
         document.water = water.entries.map {
@@ -360,6 +369,10 @@ public struct ImportSummary: Sendable {
     public var waterSkipped = 0
     public var mealsAdded = 0
     public var mealsSkipped = 0
+    public var expensesAdded = 0
+    public var expensesSkipped = 0
+    public var incomeAdded = 0
+    public var incomeSkipped = 0
     /// Entries the app could not make sense of, named so they can be fixed.
     public var problems: [String] = []
 
@@ -370,6 +383,7 @@ public struct ImportSummary: Sendable {
             && dueDatesAdded == 0 && !settingsRestored
             && waterAdded == 0
             && mealsAdded == 0
+            && expensesAdded == 0 && incomeAdded == 0
     }
 
     public var headline: String {
@@ -384,22 +398,21 @@ public struct ImportSummary: Sendable {
         if planReplaced { parts.append("your plan") }
         if workoutsAdded > 0 { parts.append("\(workoutsAdded) workout\(workoutsAdded == 1 ? "" : "s")") }
         if cardioAdded > 0 { parts.append("\(cardioAdded) cardio entr\(cardioAdded == 1 ? "y" : "ies")") }
-        if animeAdded > 0 { parts.append("\(animeAdded) anime") }
+        // The watchlist holds films and shows of every kind, not only anime.
+        if animeAdded > 0 { parts.append("\(animeAdded) watchlist title\(animeAdded == 1 ? "" : "s")") }
         if settingsRestored { parts.append("your settings") }
         if dueDatesAdded > 0 { parts.append("\(dueDatesAdded) due\(dueDatesAdded == 1 ? "" : "s")") }
         if waterAdded > 0 { parts.append("\(waterAdded) drink\(waterAdded == 1 ? "" : "s")") }
         if mealsAdded > 0 { parts.append("\(mealsAdded) meal\(mealsAdded == 1 ? "" : "s")") }
+        if expensesAdded > 0 { parts.append("\(expensesAdded) spend\(expensesAdded == 1 ? "" : "s")") }
+        if incomeAdded > 0 { parts.append("\(incomeAdded) income entr\(incomeAdded == 1 ? "y" : "ies")") }
         return "Imported " + parts.formatted(.list(type: .and))
     }
 
     public var detail: String? {
+        // What was already here is not mentioned: the headline says what
+        // came in, and "Nothing new to add" says the rest.
         var lines: [String] = []
-
-        let skipped = weighInsSkipped + recordsSkipped + exercisesSkipped
-            + workoutsSkipped + cardioSkipped + animeSkipped + dueDatesSkipped + waterSkipped + mealsSkipped
-        if skipped > 0 {
-            lines.append("\(skipped) already there, left alone.")
-        }
         if !problems.isEmpty {
             lines.append(problems.prefix(5).joined(separator: "\n"))
             if problems.count > 5 {
@@ -434,6 +447,8 @@ public enum SenkuImporter {
         water: WaterStore,
         intake: IntakeStore,
         dueDates: DueDateStore? = nil,
+        expenses: MoneyStore? = nil,
+        income: MoneyStore? = nil,
         settingsTo: UserDefaults? = nil
     ) -> ImportSummary {
         var summary = ImportSummary()
@@ -571,6 +586,18 @@ public enum SenkuImporter {
                 }
                 dueDates.restore(item)
                 summary.dueDatesAdded += 1
+            }
+        }
+
+        if let expenses {
+            expenses.restoreCategories(document.expenseCategories ?? [])
+            for entry in document.expenses ?? [] {
+                if expenses.restore(entry) { summary.expensesAdded += 1 } else { summary.expensesSkipped += 1 }
+            }
+        }
+        if let income {
+            for entry in document.income ?? [] {
+                if income.restore(entry) { summary.incomeAdded += 1 } else { summary.incomeSkipped += 1 }
             }
         }
 

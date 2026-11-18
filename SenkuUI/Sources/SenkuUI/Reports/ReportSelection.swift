@@ -19,6 +19,8 @@ public struct ReportSelection: Codable, Hashable, Sendable {
     public var food = true
     public var anime = true
     public var dues = true
+    public var expenses = true
+    public var income = true
 
     /// Charts alongside the figures. Separate from the sections rather than one
     /// per section: it is a question about how the report should look, not
@@ -47,6 +49,8 @@ public struct ReportSelection: Codable, Hashable, Sendable {
         food = try c.decodeIfPresent(Bool.self, forKey: .food) ?? true
         anime = try c.decodeIfPresent(Bool.self, forKey: .anime) ?? true
         dues = try c.decodeIfPresent(Bool.self, forKey: .dues) ?? true
+        expenses = try c.decodeIfPresent(Bool.self, forKey: .expenses) ?? true
+        income = try c.decodeIfPresent(Bool.self, forKey: .income) ?? true
         charts = try c.decodeIfPresent(Bool.self, forKey: .charts) ?? true
         backup = try c.decodeIfPresent(Bool.self, forKey: .backup) ?? true
     }
@@ -54,6 +58,7 @@ public struct ReportSelection: Codable, Hashable, Sendable {
     /// Every section off — the state the Export button refuses.
     public var isEmpty: Bool {
         !profile && !weight && !records && !plan && !workouts && !water && !food && !anime && !dues
+            && !expenses && !income
     }
 
     /// Nothing at all to share, report or backup.

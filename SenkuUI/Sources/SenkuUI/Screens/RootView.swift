@@ -38,6 +38,8 @@ public struct RootView: View {
     @State private var cardioRecords = CardioRecordStore()
     @State private var anime = AnimeStore()
     @State private var dueDates = DueDateStore()
+    @State private var expenses = MoneyStore(.expenses)
+    @State private var income = MoneyStore(.income)
     @State private var water = WaterStore()
     @State private var intake = IntakeStore()
     @State private var records = RecordStore()
@@ -110,6 +112,8 @@ public struct RootView: View {
         case records
         case anime
         case dueDates
+        case expenses
+        case income
         /// Not a screen: the way to the screens the bar has no room for.
         case more
 
@@ -136,6 +140,8 @@ public struct RootView: View {
             case .records: "PRs"
             case .anime: "Watchlist"
             case .dueDates: "Dues"
+            case .expenses: "Expenses"
+            case .income: "Income"
             case .more: "More"
             }
         }
@@ -180,6 +186,8 @@ public struct RootView: View {
             case .records: "trophy"
             case .anime: "sparkles.tv"
             case .dueDates: "calendar.badge.clock"
+            case .expenses: "creditcard"
+            case .income: "banknote"
             case .more: "ellipsis.circle"
             }
         }
@@ -187,7 +195,7 @@ public struct RootView: View {
         /// Every screen, in the order they are listed wherever all of them
         /// appear — the sidebar on iPad, and the More list on a phone. "More"
         /// is not in it, because it is not a screen.
-        public static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime, .dueDates]
+        public static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime, .dueDates, .expenses, .income]
 
         /// One hue each, spread around the wheel.
         ///
@@ -207,12 +215,14 @@ public struct RootView: View {
             case .quickCalc: Color(red: 0.62, green: 0.45, blue: 0.92)  // violet
             case .rest: Color(red: 0.90, green: 0.35, blue: 0.32)       // red
             case .workout: Color(red: 0.94, green: 0.51, blue: 0.16)    // orange
-            case .weight: Color(red: 0.28, green: 0.72, blue: 0.43)     // green
+            case .weight: Color(red: 0.70, green: 0.52, blue: 0.28)     // bronze
             case .food: Color(red: 0.09, green: 0.69, blue: 0.65)       // teal
             case .water: Color(red: 0.25, green: 0.60, blue: 0.94)      // azure
             case .records: Color(red: 0.35, green: 0.39, blue: 0.85)    // indigo
             case .anime: Color(red: 0.95, green: 0.45, blue: 0.75)      // pink
             case .dueDates: Color(red: 0.55, green: 0.74, blue: 0.20)   // lime
+            case .expenses: Color(red: 0.70, green: 0.32, blue: 0.85)   // purple
+            case .income: Color(red: 0.28, green: 0.72, blue: 0.43)     // green
             case .more: Color(red: 0.45, green: 0.50, blue: 0.58)        // slate
             }
         }
@@ -311,7 +321,12 @@ public struct RootView: View {
         //     SIMCTL_CHILD_SENKU_PLAN_FILE=/path/plan.json xcrun simctl launch <device> pk.Senku
         .task {
             if let path = ProcessInfo.processInfo.environment["SENKU_PLAN_FILE"] {
-                importFile(.success([URL(fileURLWithPath: path)]))
+                // A relative path is in the app's Documents, where
+                // `devicectl device copy to` puts a file on a phone.
+                let url = path.hasPrefix("/")
+                    ? URL(fileURLWithPath: path)
+                    : URL.documentsDirectory.appending(path: path)
+                importFile(.success([url]))
             }
         }
         #endif
@@ -573,6 +588,8 @@ public struct RootView: View {
                 water: water,
                 intake: intake,
                 dueDates: dueDates,
+                expenses: expenses,
+                income: income,
                 settingsTo: SenkuStorage.shared
             )
 
@@ -581,6 +598,8 @@ public struct RootView: View {
             // it back — data with no screen to show it would be lost again.
             if summary.dueDatesAdded > 0 { reinstall(.dues) }
             if summary.animeAdded > 0 { reinstall(.watchlist) }
+            if summary.expensesAdded > 0 { reinstall(.expenses) }
+            if summary.incomeAdded > 0 { reinstall(.income) }
 
             if summary.profileReplaced {
                 // The same nudge every other profile edit gives: the watch is
@@ -647,6 +666,8 @@ public struct RootView: View {
         cardioRecords = CardioRecordStore()
         anime = AnimeStore()
         dueDates = DueDateStore()
+        expenses = MoneyStore(.expenses)
+        income = MoneyStore(.income)
         water = WaterStore()
         intake = IntakeStore()
         extras.reload()
@@ -670,7 +691,8 @@ public struct RootView: View {
         #endif
     }
 
-    /// Two files, shared together: the report to read and the backup to restore.
+    /// Up to four files, shared together: health, money and watchlist reports
+    /// to read, and the backup to restore.
     ///
     /// The PDF is for a person — printable, sendable, readable in ten years by
     /// something that has never heard of Senku. The JSON is for the app, and it
@@ -682,27 +704,48 @@ public struct RootView: View {
     private func exportReport() {
         reportSelection.save()
 
-        let pdf = reportSelection.isEmpty ? nil : ReportPDF.build(
-            profile: store.profile,
-            weights: weightLog,
-            records: records,
-            library: library,
-            plans: plans,
-            workouts: workouts,
-            anime: anime,
-            water: water,
-            intake: intake,
-            dues: dueDates,
-            unitSystem: store.profile?.unitSystem ?? UnitPreference.current,
-            selection: reportSelection
-        )
+        // Each report only when something it holds is switched on and has
+        // anything in it, so a phone with no money logged gets no empty
+        // money report.
+        let selection = reportSelection
+        let wantsHealth = selection.profile || selection.weight || selection.records || selection.plan
+            || selection.workouts || selection.water || selection.food
+        let wantsWatchlist = selection.anime && extras.isInstalled(.watchlist) && !anime.entries.isEmpty
+        let wantsMoney = (selection.dues && extras.isInstalled(.dues) && !dueDates.items.isEmpty)
+            || (selection.expenses && extras.isInstalled(.expenses) && !expenses.entries.isEmpty)
+            || (selection.income && extras.isInstalled(.income) && !income.entries.isEmpty)
 
-        if !reportSelection.isEmpty, pdf == nil {
+        func report(_ part: ReportPDF.Part) -> URL? {
+            ReportPDF.build(
+                profile: store.profile,
+                weights: weightLog,
+                records: records,
+                library: library,
+                plans: plans,
+                workouts: workouts,
+                anime: anime,
+                water: water,
+                intake: intake,
+                dues: dueDates,
+                expenses: extras.isInstalled(.expenses) ? expenses : nil,
+                income: extras.isInstalled(.income) ? income : nil,
+                unitSystem: store.profile?.unitSystem ?? UnitPreference.current,
+                selection: selection,
+                part: part
+            )
+        }
+
+        let pdfs = [
+            wantsHealth ? report(.health) : nil,
+            wantsMoney ? report(.money) : nil,
+            wantsWatchlist ? report(.watchlist) : nil,
+        ]
+        if (wantsHealth || wantsMoney || wantsWatchlist), pdfs.allSatisfy({ $0 == nil }) {
             importFailure = "The report could not be written."
             return
         }
 
-        var files = [pdf].compactMap { $0 }
+        var files = pdfs.compactMap { $0 }
         if reportSelection.backup, let backup = writeBackup() { files.append(backup) }
 
         guard !files.isEmpty else {
@@ -727,6 +770,8 @@ public struct RootView: View {
             water: water,
             intake: intake,
             dueDates: dueDates,
+            expenses: expenses,
+            income: income,
             settingsFrom: SenkuStorage.shared
         )
 
@@ -937,6 +982,12 @@ public struct RootView: View {
         case .records: recordsScreen
         case .anime: animeScreen
         case .dueDates: dueDatesScreen
+        case .expenses:
+            MoneyView(store: expenses, counterpart: extras.isInstalled(.income) ? income : nil)
+                .navigationTitle("Expenses")
+        case .income:
+            MoneyView(store: income, counterpart: extras.isInstalled(.expenses) ? expenses : nil)
+                .navigationTitle("Income")
         case .more: EmptyView()   // the list itself, not a destination
         }
     }
@@ -1090,6 +1141,8 @@ public struct RootView: View {
                 stack(.anime)
             } dueDates: {
                 stack(.dueDates)
+            } money: { tab in
+                stack(tab)
             }
         } else {
             legacyTabs
@@ -1217,6 +1270,8 @@ public struct RootView: View {
                     library: library,
                     dues: dueDates,
                     anime: anime,
+                    expenses: expenses,
+                    income: income,
                     unitSystem: store.profile?.unitSystem ?? UnitPreference.current
                 )
             }
@@ -1326,7 +1381,8 @@ private struct AdaptiveTabs<
     Food: View,
     Records: View,
     Anime: View,
-    DueDates: View
+    DueDates: View,
+    Money: View
 >: View {
     @Binding var selection: RootView.Tab
     /// The extras added in Settings; the rest have no tab.
@@ -1342,6 +1398,8 @@ private struct AdaptiveTabs<
     @ViewBuilder var records: Records
     @ViewBuilder var anime: Anime
     @ViewBuilder var dueDates: DueDates
+    /// Expenses or income, whichever the tab is.
+    @ViewBuilder var money: (RootView.Tab) -> Money
 
     /// What the user has moved, pinned or hidden. Versioned, because a stored
     /// customization is keyed by the identifiers below: renaming one silently
@@ -1384,14 +1442,28 @@ private struct AdaptiveTabs<
             Tab("PRs", systemImage: "trophy", value: RootView.Tab.records) { records }
                 .customizationID("senku.tab.records")
 
-            if installed.contains(.watchlist) {
-                Tab("Watchlist", systemImage: "sparkles.tv", value: RootView.Tab.anime) { anime }
-                    .customizationID("senku.tab.anime")
-            }
+            // Grouped: a tab builder takes ten at most, and the extras would
+            // make twelve.
+            Group {
+                if installed.contains(.watchlist) {
+                    Tab("Watchlist", systemImage: "sparkles.tv", value: RootView.Tab.anime) { anime }
+                        .customizationID("senku.tab.anime")
+                }
 
-            if installed.contains(.dues) {
-                Tab("Dues", systemImage: "calendar.badge.clock", value: RootView.Tab.dueDates) { dueDates }
-                    .customizationID("senku.tab.dueDates")
+                if installed.contains(.dues) {
+                    Tab("Dues", systemImage: "calendar.badge.clock", value: RootView.Tab.dueDates) { dueDates }
+                        .customizationID("senku.tab.dueDates")
+                }
+
+                if installed.contains(.expenses) {
+                    Tab("Expenses", systemImage: "creditcard", value: RootView.Tab.expenses) { money(.expenses) }
+                        .customizationID("senku.tab.expenses")
+                }
+
+                if installed.contains(.income) {
+                    Tab("Income", systemImage: "banknote", value: RootView.Tab.income) { money(.income) }
+                        .customizationID("senku.tab.income")
+                }
             }
         }
         .tabViewStyle(.sidebarAdaptable)

@@ -8,6 +8,8 @@ import Observation
 public enum Extra: String, CaseIterable, Identifiable, Sendable {
     case dues
     case watchlist
+    case expenses
+    case income
 
     public var id: String { rawValue }
 
@@ -16,6 +18,8 @@ public enum Extra: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .dues: .dueDates
         case .watchlist: .anime
+        case .expenses: .expenses
+        case .income: .income
         }
     }
 
@@ -29,6 +33,8 @@ public enum Extra: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .dues: "Bills and deadlines, with reminders"
         case .watchlist: "Shows and films to keep track of"
+        case .expenses: "Spends by month, with a dashboard"
+        case .income: "What came in, by month and source"
         }
     }
 }
@@ -38,6 +44,8 @@ public enum Extra: String, CaseIterable, Identifiable, Sendable {
 struct ExtraData {
     let dues: DueDateStore
     let anime: AnimeStore
+    let expenses: MoneyStore
+    let income: MoneyStore
 }
 
 @MainActor
@@ -49,6 +57,8 @@ extension Extra {
         switch self {
         case .dues: !data.dues.items.isEmpty
         case .watchlist: !data.anime.entries.isEmpty
+        case .expenses: !data.expenses.entries.isEmpty
+        case .income: !data.income.entries.isEmpty
         }
     }
 
@@ -65,6 +75,11 @@ extension Extra {
         case .watchlist:
             document.anime = data.anime.entries
             document.watchlistScreens = data.anime.screens.isEmpty ? nil : data.anime.screens
+        case .expenses:
+            document.expenses = data.expenses.entries
+            document.expenseCategories = data.expenses.customCategories.isEmpty ? nil : data.expenses.customCategories
+        case .income:
+            document.income = data.income.entries
         }
 
         let day = Date.now.formatted(.iso8601.year().month().day())
@@ -81,6 +96,10 @@ extension Extra {
             data.dues.eraseAll()
         case .watchlist:
             data.anime.eraseAll()
+        case .expenses:
+            data.expenses.eraseAll()
+        case .income:
+            data.income.eraseAll()
         }
     }
 }

@@ -12,7 +12,9 @@ import Testing
     private func data(_ defaults: UserDefaults) -> ExtraData {
         ExtraData(
             dues: DueDateStore(defaults: defaults),
-            anime: AnimeStore(defaults: defaults)
+            anime: AnimeStore(defaults: defaults),
+            expenses: MoneyStore(.expenses, defaults: defaults),
+            income: MoneyStore(.income, defaults: defaults)
         )
     }
 
@@ -20,7 +22,7 @@ import Testing
     @Test func nothingStoredMeansBothAreIn() {
         let defaults = fresh()
 
-        #expect(ExtraStore(defaults: defaults).installed == [.dues, .watchlist])
+        #expect(ExtraStore(defaults: defaults).installed == Set(Extra.allCases))
         #expect(TabLayout(defaults: defaults).others.contains(.dueDates))
         #expect(TabLayout(defaults: defaults).others.contains(.anime))
     }

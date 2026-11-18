@@ -21,6 +21,47 @@ import SenkuCore
 /// it consumed, and the next page starts there. That is the whole algorithm,
 /// and it is why a workout history of any length cannot run off the bottom.
 public enum ReportPDF {
+    /// Separate reports, never one: health, money and the watchlist are read
+    /// by different people for different reasons, so each is its own file.
+    public enum Part: Sendable {
+        /// Profile, weight, PRs, plan, workouts, water, food.
+        case health
+        /// Expenses, income, money in and out, dues.
+        case money
+        case watchlist
+
+        var title: String {
+            switch self {
+            case .health: "Health"
+            case .money: "Money"
+            case .watchlist: "Watchlist"
+            }
+        }
+
+        /// The switches that belong to the other report, turned off.
+        func only(_ selection: ReportSelection) -> ReportSelection {
+            var kept = selection
+            if self != .health {
+                kept.profile = false
+                kept.weight = false
+                kept.records = false
+                kept.plan = false
+                kept.workouts = false
+                kept.water = false
+                kept.food = false
+            }
+            if self != .money {
+                kept.dues = false
+                kept.expenses = false
+                kept.income = false
+            }
+            if self != .watchlist {
+                kept.anime = false
+            }
+            return kept
+        }
+    }
+
     private static let pageSize = CGSize(width: 595, height: 842)  // A4 at 72dpi
     private static let margin: CGFloat = 48
 
@@ -35,9 +76,13 @@ public enum ReportPDF {
         water: WaterStore,
         intake: IntakeStore,
         dues: DueDateStore? = nil,
+        expenses: MoneyStore? = nil,
+        income: MoneyStore? = nil,
         unitSystem: UnitSystem,
-        selection: ReportSelection = ReportSelection()
+        selection: ReportSelection = ReportSelection(),
+        part: Part
     ) -> URL? {
+        let selection = part.only(selection)
         let blocks = compose(
             profile: profile,
             weights: weights,
@@ -49,16 +94,19 @@ public enum ReportPDF {
             water: water,
             intake: intake,
             dues: dues,
+            expenses: expenses,
+            income: income,
             unitSystem: unitSystem,
-            selection: selection
+            selection: selection,
+            part: part
         )
 
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Senku report \(Self.stamp()).pdf")
+            .appendingPathComponent("Senku \(part.title) report \(Self.stamp()).pdf")
 
         let renderer = UIGraphicsPDFRenderer(
             bounds: CGRect(origin: .zero, size: pageSize),
-            format: format()
+            format: format(part)
         )
 
         do {
@@ -242,12 +290,15 @@ public enum ReportPDF {
         water: WaterStore,
         intake: IntakeStore,
         dues: DueDateStore?,
+        expenses: MoneyStore? = nil,
+        income: MoneyStore? = nil,
         unitSystem: UnitSystem,
-        selection: ReportSelection
+        selection: ReportSelection,
+        part: Part
     ) -> [Block] {
         let out = Composer()
 
-        out.append(title("Senku"))
+        out.append(title("Senku \(part.title)"))
         out.append(body(Date.now.formatted(date: .complete, time: .shortened) + "\n\n"))
 
         // MARK: Profile
@@ -366,7 +417,7 @@ public enum ReportPDF {
                 // being a figure the reader has to take on trust.
                 for group in day.groups {
                     let coverage = MuscleCoverage.of(exercises, for: group, in: library.catalogue)
-                    out.append(body("\(group.title) — \(coverage.percentage)%\n"))
+                    out.append(body("\(group.title): \(coverage.percentage)%\n"))
 
                     let contributors = MuscleCoverage.contributors(
                         among: exercises,
@@ -405,7 +456,7 @@ public enum ReportPDF {
         if !workouts.history.isEmpty, selection.workouts {
             out.append(heading("Workouts"))
             for session in workouts.history {
-                out.append(subheading("\(session.dayName) — \(session.date.formatted(date: .abbreviated, time: .omitted))"))
+                out.append(subheading("\(session.dayName), \(session.date.formatted(date: .abbreviated, time: .omitted))"))
                 for entry in session.entries where entry.hasAnyWork {
                     let detail: String
                     if let cardio = entry.cardio {
@@ -433,7 +484,7 @@ public enum ReportPDF {
 
             let days = water.log.recentTotals(days: 30)
             let goalToday = water.goal(profile: profile, workouts: workouts)
-            out.append(row("Today's goal", "\(Int(goalToday.totalML)) ml — \(goalToday.explanation)"))
+            out.append(row("Today's goal", "\(Int(goalToday.totalML)) ml, \(goalToday.explanation)"))
 
             let logged = days.filter { $0.totalML > 0 }
             if !logged.isEmpty {
@@ -637,6 +688,54 @@ public enum ReportPDF {
             }
         }
 
+        // MARK: Expenses and income
+        let spends = selection.expenses ? expenses.flatMap { $0.entries.isEmpty ? nil : $0 } : nil
+        let earnings = selection.income ? income.flatMap { $0.entries.isEmpty ? nil : $0 } : nil
+        let now = YearMonth.current()
+        let lastYear = now.adding(-11)...now
+
+        for store in [spends, earnings].compactMap({ $0 }) {
+            let isSpending = store.kind == .expenses
+            out.append(heading(isSpending ? "Expenses" : "Income"))
+
+            let year = MoneyReport(store.entries, range: lastYear, grouping: store.grouping)
+            out.append(row(isSpending ? "Spent, last 12 months" : "Earned, last 12 months", MoneyStyle.money(year.total)))
+            out.append(row("Monthly average", MoneyStyle.money(year.monthlyAverage)))
+            out.append(body("\n"))
+
+            if !year.groups.isEmpty {
+                out.append(subheading(isSpending ? "By category, last 12 months" : "By source, last 12 months"))
+                for group in year.groups {
+                    out.append(row("\(group.key)  \(MoneyStyle.share(group.share))%", MoneyStyle.money(group.total)))
+                }
+                out.append(body("\n"))
+            }
+
+            // Every month there is anything in, newest first.
+            let all = MoneyReport(store.entries, range: (store.earliest ?? now)...max(now, store.entries.first?.month ?? now), grouping: store.grouping)
+            out.append(subheading("By month"))
+            for month in all.monthly.reversed() where month.count > 0 {
+                let top = MoneyReport(store.entries, range: month.month...month.month, grouping: store.grouping).groups.first?.key
+                let label = MoneyStyle.title(month.month, long: true) + (top.map { "  · \($0)" } ?? "")
+                out.append(row(label, MoneyStyle.money(month.total)))
+            }
+            out.append(body("\n"))
+        }
+
+        if let spends, let earnings {
+            out.append(heading("Money in and out, last 12 months"))
+            let spent = MoneyReport(spends.entries, range: lastYear, grouping: .category).monthly
+            let earned = MoneyReport(earnings.entries, range: lastYear, grouping: .name).monthly
+            for index in spent.indices.reversed() where spent[index].total > 0 || earned[index].total > 0 {
+                let saved = earned[index].total - spent[index].total
+                out.append(row(
+                    MoneyStyle.title(spent[index].month, long: true),
+                    "in \(MoneyStyle.money(earned[index].total)) · out \(MoneyStyle.money(spent[index].total)) · saved \(MoneyStyle.money(saved))"
+                ))
+            }
+            out.append(body("\n"))
+        }
+
         return out.finish()
     }
 
@@ -706,10 +805,10 @@ public enum ReportPDF {
         context.restoreGState()
     }
 
-    private static func format() -> UIGraphicsPDFRendererFormat {
+    private static func format(_ part: Part) -> UIGraphicsPDFRendererFormat {
         let format = UIGraphicsPDFRendererFormat()
         format.documentInfo = [
-            kCGPDFContextTitle as String: "Senku report",
+            kCGPDFContextTitle as String: "Senku \(part.title) report",
             kCGPDFContextCreator as String: "Senku",
         ]
         return format

@@ -20,6 +20,8 @@ struct SettingsView: View {
     let library: ExerciseLibrary
     let dues: DueDateStore
     let anime: AnimeStore
+    let expenses: MoneyStore
+    let income: MoneyStore
     let unitSystem: UnitSystem
 
     /// Opened fresh for the rack editor; the plate calculator reads the
@@ -76,7 +78,7 @@ struct SettingsView: View {
 
             screensSection
 
-            ExtrasSection(extras: .shared, layout: layout, data: ExtraData(dues: dues, anime: anime))
+            ExtrasSection(extras: .shared, layout: layout, data: ExtraData(dues: dues, anime: anime, expenses: expenses, income: income))
 
             Section {
                 NavigationLink {

@@ -40,3 +40,54 @@ struct SenkuBundleTests {
         #expect(WaterStore(defaults: suite).log.totalML(on: .now) == 500)
     }
 }
+
+#if os(iOS)
+import PDFKit
+
+/// The reports are drawn with UIKit, so they are checked here, on iOS.
+@MainActor
+struct SeparateReportsTests {
+    private func text(_ part: ReportPDF.Part) throws -> String {
+        let defaults = UserDefaults(suiteName: "reports.\(UUID().uuidString)")!
+        let weights = WeightLogStore(defaults: defaults)
+        weights.add(try WeighIn(date: .now, weightKG: 80))
+        let expenses = MoneyStore(.expenses, defaults: defaults)
+        expenses.save(MoneyEntry(month: .current(), name: "Costco", category: "Groceries", amounts: [40, 12]))
+        let income = MoneyStore(.income, defaults: defaults)
+        income.save(MoneyEntry(month: .current(), name: "GTA", amounts: [1050]))
+        let anime = AnimeStore(defaults: defaults)
+
+        let url = try #require(ReportPDF.build(
+            profile: nil,
+            weights: weights,
+            records: RecordStore(defaults: defaults),
+            library: ExerciseLibrary(defaults: defaults),
+            plans: TrainingPlanStore(defaults: defaults),
+            workouts: WorkoutStore(defaults: defaults),
+            anime: anime,
+            water: WaterStore(defaults: defaults),
+            intake: IntakeStore(defaults: defaults),
+            dues: DueDateStore(defaults: defaults),
+            expenses: expenses,
+            income: income,
+            unitSystem: .metric,
+            part: part
+        ))
+        #expect(url.lastPathComponent.hasPrefix("Senku \(part == .health ? "Health" : part == .money ? "Money" : "Watchlist") report"))
+        // Headings are drawn in capitals.
+        return try #require(PDFDocument(url: url)?.string).lowercased()
+    }
+
+    @Test func healthLeavesMoneyOut() throws {
+        let health = try text(.health)
+        #expect(health.contains("weight"))
+        #expect(!health.contains("costco") && !health.contains("income"))
+    }
+
+    @Test func moneyLeavesHealthOut() throws {
+        let money = try text(.money)
+        #expect(money.contains("expenses") && money.contains("income") && money.contains("groceries"))
+        #expect(!money.contains("weight"))
+    }
+}
+#endif

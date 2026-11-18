@@ -30,16 +30,18 @@ struct ReportOptionsView: View {
                     if ExtraStore.shared.isInstalled(.dues) {
                         Toggle("Dues", isOn: $selection.dues)
                     }
+                    if ExtraStore.shared.isInstalled(.expenses) {
+                        Toggle("Expenses", isOn: $selection.expenses)
+                    }
+                    if ExtraStore.shared.isInstalled(.income) {
+                        Toggle("Income", isOn: $selection.income)
+                    }
                 } header: {
                     Text("In the report")
-                } footer: {
-                    Text("A section with nothing in it is left out whether it is ticked or not.")
                 }
 
                 Section {
                     Toggle("Charts", isOn: $selection.charts)
-                } footer: {
-                    Text("Weight over time, and the last 30 days of water, protein and calories against their targets.")
                 }
 
                 Section {
@@ -47,10 +49,7 @@ struct ReportOptionsView: View {
                 } header: {
                     Text("Shared alongside")
                 } footer: {
-                    // Two files, two jobs. Worth saying plainly here, because
-                    // the share sheet shows them side by side and they look
-                    // interchangeable.
-                    Text("A JSON copy of everything, which Import Data takes back. The PDF is for reading; this is for restoring.")
+                    Text("A JSON copy of everything to restore back.")
                 }
 
                 Section {
@@ -79,7 +78,7 @@ struct ReportOptionsView: View {
     private var allOn: Bool {
         selection.profile && selection.weight && selection.records && selection.plan
             && selection.workouts && selection.water && selection.food && selection.anime
-            && selection.dues
+            && selection.dues && selection.expenses && selection.income
     }
 
     /// Charts and the backup are left alone: they are not sections, and
@@ -94,6 +93,8 @@ struct ReportOptionsView: View {
         selection.food = value
         selection.anime = value
         selection.dues = value
+        selection.expenses = value
+        selection.income = value
     }
 }
 #endif
