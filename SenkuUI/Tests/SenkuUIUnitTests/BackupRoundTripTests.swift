@@ -161,3 +161,25 @@ import SenkuCore
         #expect(selection.dues == true)
     }
 }
+
+@Suite struct SettingsNumberTests {
+    @Test func numbersAndSwitchesKeepTheirKind() throws {
+        let old = UserDefaults(suiteName: "SettingsNumberTests.old.\(UUID().uuidString)")!
+        let new = UserDefaults(suiteName: "SettingsNumberTests.new.\(UUID().uuidString)")!
+        old.set(4, forKey: "senku.dayBoundary.v1")
+        old.set(150.0, forKey: "senku.restTimer.lastDuration.v1")
+        old.set("arise", forKey: "senku.prAnimation.v1")
+        old.set(true, forKey: "senku.weightReminder.v1")
+
+        let backup = SettingsBackup.capture(from: old)
+        #expect(backup.values["senku.dayBoundary.v1"] == .number(4))
+        #expect(backup.values["senku.weightReminder.v1"] == .bool(true))
+
+        let decoded = try JSONDecoder().decode(SettingsBackup.self, from: JSONEncoder().encode(backup))
+        decoded.apply(to: new)
+        #expect(new.integer(forKey: "senku.dayBoundary.v1") == 4)
+        #expect(new.double(forKey: "senku.restTimer.lastDuration.v1") == 150)
+        #expect(new.string(forKey: "senku.prAnimation.v1") == "arise")
+        #expect(new.bool(forKey: "senku.weightReminder.v1"))
+    }
+}

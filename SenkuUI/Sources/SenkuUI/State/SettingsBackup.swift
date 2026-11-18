@@ -26,6 +26,8 @@ public struct SettingsBackup: Codable, Equatable, Sendable {
         case string(String)
         case strings([String])
         case bool(Bool)
+        /// A stored number that is not a switch, such as the hour a day starts.
+        case number(Double)
     }
 
     /// Everything carried. A key added here is backed up and restored; a key
@@ -52,6 +54,12 @@ public struct SettingsBackup: Codable, Equatable, Sendable {
         "senku.picker.groupStyle.v1",
         // Whether a logged set starts a rest, and for how long.
         "senku.restAfterSet.v1",
+        // The rest last chosen on the timer.
+        "senku.restTimer.lastDuration.v1",
+        // The hour a day starts.
+        "senku.dayBoundary.v1",
+        // What a new personal record plays.
+        "senku.prAnimation.v1",
         // Reminder switches. Restoring one also books it — see RootView.
         "senku.weightReminder.v1",
         "senku.creatineReminder.v1",
@@ -74,7 +82,12 @@ public struct SettingsBackup: Codable, Equatable, Sendable {
             case let data as Data: values[key] = .data(data)
             case let text as String: values[key] = .string(text)
             case let list as [String]: values[key] = .strings(list)
-            case let number as NSNumber: values[key] = .bool(number.boolValue)
+            case let number as NSNumber:
+                // A switch and a number are both NSNumber; only the boolean
+                // ones are CFBoolean underneath.
+                values[key] = CFGetTypeID(number) == CFBooleanGetTypeID()
+                    ? .bool(number.boolValue)
+                    : .number(number.doubleValue)
             default: break
             }
         }
@@ -94,6 +107,14 @@ public struct SettingsBackup: Codable, Equatable, Sendable {
             case .string(let text): defaults.set(text, forKey: key)
             case .strings(let list): defaults.set(list, forKey: key)
             case .bool(let flag): defaults.set(flag, forKey: key)
+            case .number(let value):
+                // Whole numbers back as integers, which is how `@AppStorage`
+                // of an `Int` reads them.
+                if value.rounded() == value, abs(value) < Double(Int.max) {
+                    defaults.set(Int(value), forKey: key)
+                } else {
+                    defaults.set(value, forKey: key)
+                }
             }
             wrote = true
         }

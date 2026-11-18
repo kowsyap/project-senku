@@ -473,7 +473,7 @@ public struct RootView: View {
             Button("Continue", role: .destructive) { isConfirmingResetAgain = true }
             Button("Keep my data", role: .cancel) {}
         } message: {
-            Text("Your profile, weight log, records, cardio plans, training plan and every logged workout are erased from this iPhone, and the watch stops being sent them.")
+            Text("Everything you logged, your progress photos, settings, reminders and Gemini key are erased from this iPhone, and the watch stops being sent them. What Senku wrote to Apple Health stays there.")
         }
         .alert("This cannot be undone", isPresented: $isConfirmingResetAgain) {
             Button("Yes", role: .destructive) { resetEverything() }
@@ -650,6 +650,10 @@ public struct RootView: View {
         water = WaterStore()
         intake = IntakeStore()
         extras.reload()
+        ProgressPhotoStore.shared.reload()
+        #if os(iOS)
+        HealthSync.shared.reload()
+        #endif
         for extra in Extra.allCases where !extras.isInstalled(extra) {
             layout.drop(extra.tab)
         }

@@ -514,7 +514,8 @@ public final class HealthSync {
     private static func writtenKey(_ kind: HealthKind) -> String { "senku.health.\(kind.rawValue).written.v2" }
     private static let profileKey = "senku.health.body.profile.v1"
 
-    private func reload() {
+    /// Re-read the switches; after a hard reset, which leaves them all off.
+    func reload() {
         if let data = defaults.data(forKey: Self.settingsKey),
            let decoded = try? JSONDecoder().decode(HealthSettings.self, from: data) {
             settings = decoded
