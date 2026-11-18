@@ -70,6 +70,7 @@ struct AboutView: View {
                         .font(.subheadline)
                     bullet("Apple Health: Senku only writes what you switch on, and never reads.")
                     bullet("Food photos are read on your iPhone by Apple Intelligence. If you switch on Gemini under Photo reading, the photo or label text goes to Google instead.")
+                    bullet("Progress photos stay inside Senku, never in your photo library or the JSON backup. Export them from Weight ▸ Evolution.")
                     bullet("Anime posters load from the addresses you add.")
                     bullet("Exercise pictures load from RepDB the first time you open an exercise, then stay on this iPhone.")
                 }

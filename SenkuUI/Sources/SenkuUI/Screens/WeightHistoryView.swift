@@ -31,6 +31,13 @@ struct WeightHistoryView: View {
 
                     Spacer(minLength: 8)
 
+                    if hasPhotos(weighIn) {
+                        Image(systemName: "camera.fill")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("Has photos")
+                    }
+
                     Text(Display.mass(weighIn.weightKG, in: unitSystem))
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
@@ -54,13 +61,22 @@ struct WeightHistoryView: View {
             isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
         ) {
             Button("Delete", role: .destructive) {
-                if let deleting { store.delete(deleting) }
+                if let deleting {
+                    store.delete(deleting)
+                    ProgressPhotoStore.shared.deletePhotos(of: deleting.id)
+                }
                 deleting = nil
             }
             Button("Keep", role: .cancel) { deleting = nil }
         } message: {
-            Text("The trend and your maintenance estimate are worked out from every reading, so removing one changes both.")
+            Text(deleting.map(hasPhotos) == true
+                ? "Its photos are deleted too, and the trend and maintenance estimate change."
+                : "The trend and your maintenance estimate are worked out from every reading, so removing one changes both.")
         }
+    }
+
+    private func hasPhotos(_ weighIn: WeighIn) -> Bool {
+        !ProgressPhotoStore.shared.album.photos(of: weighIn.id).isEmpty
     }
 }
 

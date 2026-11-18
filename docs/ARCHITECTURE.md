@@ -81,6 +81,13 @@ and `WeightLogStore`; all three are also re-read when the app comes forward.
 Where positions are involved — a list's swipe-to-delete — they are resolved to
 identifiers before re-reading, since a concurrent write shifts rows.
 
+**Progress photos are files, not defaults.** `ProgressPhotoStore` keeps HEIC
+files and a `photos.json` index in the app's own Application Support folder
+(not the App Group: no widget or watch shows them). Each photo carries its
+weigh-in's date and weight. They are never written to the Photos library and
+are left out of the JSON backup; Weight ▸ Evolution exports them as files, and the
+hard reset deletes the folder.
+
 ## Synchronisation
 
 ```

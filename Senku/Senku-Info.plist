@@ -14,13 +14,13 @@
 		</dict>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>To read the macros off a photograph of your food. The picture is read on this device and is not sent anywhere.</string>
+	<string>To read the macros off a photograph of your food, and to take progress photos. Pictures stay on this device and are not sent anywhere.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>To save the water, food, weight and workouts you log in Senku to Apple Health. Senku only writes; it never reads your Health data.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>To save a record card you chose to share to your photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>To read the macros off a photograph you have already taken. The picture is read on this device and is not sent anywhere.</string>
+	<string>To read the macros off a photograph you have already taken, or to use one as a progress photo. Pictures stay on this device and are not sent anywhere.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

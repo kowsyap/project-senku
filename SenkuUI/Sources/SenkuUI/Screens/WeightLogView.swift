@@ -18,6 +18,7 @@ public struct WeightLogView: View {
     #if !os(watchOS)
     @State private var isShowingHistory = false
     @State private var isShowingSettings = false
+    @State private var isShowingPhotos = false
     #endif
     @State private var window: Window = .threeMonths
 
@@ -144,7 +145,10 @@ public struct WeightLogView: View {
         .navigationDestination(isPresented: $isShowingSettings) {
             WeightSettingsView()
         }
-        .senkuPushed(isShowingHistory, isShowingSettings)
+        .navigationDestination(isPresented: $isShowingPhotos) {
+            ProgressPhotosView(unitSystem: unitSystem)
+        }
+        .senkuPushed(isShowingHistory, isShowingSettings, isShowingPhotos)
         #endif
         .sheet(isPresented: $isAdding) {
             // Seeded from the last weigh-in, not the day's mean: logging 307
@@ -153,9 +157,15 @@ public struct WeightLogView: View {
             WeighInEditor(
                 unitSystem: unitSystem,
                 suggested: store.weighIns.first?.weightKG ?? profile?.metrics.weightKG
-            ) {
-                store.add($0)
+            ) { entry, photos in
+                store.add(entry)
                 isAdding = false
+                guard !photos.isEmpty else { return }
+                Task {
+                    for (pose, image) in photos {
+                        await ProgressPhotoStore.shared.add(image, pose: pose, of: entry)
+                    }
+                }
             } onCancel: {
                 isAdding = false
             }
@@ -169,6 +179,11 @@ public struct WeightLogView: View {
             } else {
                 chartCard
                 figuresCard
+                #if !os(watchOS)
+                if !ProgressPhotoStore.shared.album.isEmpty {
+                    ProgressPhotosCard { isShowingPhotos = true }
+                }
+                #endif
                 profileNudge
             }
         }
@@ -470,16 +485,17 @@ public struct WeightLogView: View {
 private struct WeighInEditor: View {
     let unitSystem: UnitSystem
     let suggested: Double?
-    let onSave: (WeighIn) -> Void
+    let onSave: (WeighIn, [ProgressPhoto.Pose: CGImage]) -> Void
     let onCancel: () -> Void
 
     @State private var weight: Double?
     @State private var date = Date.now
+    @State private var photos: [ProgressPhoto.Pose: CGImage] = [:]
 
     init(
         unitSystem: UnitSystem,
         suggested: Double?,
-        onSave: @escaping (WeighIn) -> Void,
+        onSave: @escaping (WeighIn, [ProgressPhoto.Pose: CGImage]) -> Void,
         onCancel: @escaping () -> Void
     ) {
         self.unitSystem = unitSystem
@@ -531,10 +547,9 @@ private struct WeighInEditor: View {
                         .font(.subheadline)
                     }
 
-                    Text("Weigh yourself at the same time of day — first thing, before eating — or the trend measures your breakfast.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Card("Photos") {
+                        WeighInPhotoSlots(photos: $photos)
+                    }
                 }
                 .padding()
             }
@@ -551,7 +566,7 @@ private struct WeighInEditor: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         guard let weightKG, let entry = try? WeighIn(date: date, weightKG: weightKG) else { return }
-                        onSave(entry)
+                        onSave(entry, photos)
                     }
                     .disabled(weightKG == nil)
                 }
