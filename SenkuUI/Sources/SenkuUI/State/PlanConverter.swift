@@ -184,7 +184,7 @@ public enum PlanConverter {
     public static func files(own: [Exercise], aboutMe: String?) throws -> (make: URL, convert: URL) {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("SenkuPlanConverter", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let make = folder.appendingPathComponent("Senku make a plan prompt.md")
+        let make = folder.appendingPathComponent("Senku generate a plan prompt.md")
         let convert = folder.appendingPathComponent("Senku convert a plan prompt.md")
         try Data(try prompt(.make, own: own, aboutMe: aboutMe).utf8).write(to: make, options: .atomic)
         try Data(try prompt(.convert, own: own).utf8).write(to: convert, options: .atomic)

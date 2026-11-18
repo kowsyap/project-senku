@@ -31,7 +31,7 @@ struct PlanImportView: View {
 
         var title: String {
             switch self {
-            case .make: "Make"
+            case .make: "Generate"
             case .convert: "Convert"
             case .skill: "AI skill"
             }
@@ -39,9 +39,9 @@ struct PlanImportView: View {
 
         var subtitle: String {
             switch self {
-            case .make: "A new plan, from a few questions. Any AI chat."
-            case .convert: "A plan you already have. Any AI chat."
-            case .skill: "Both, for AIs that support skills."
+            case .make: "Generate a new workout plan using any AI chat"
+            case .convert: "Convert a plan you already have using any AI chat"
+            case .skill: "Use the skill to generate or convert the workout plan"
             }
         }
 
@@ -177,7 +177,7 @@ struct PlanImportView: View {
             // rather than a section's gap away from it.
             VStack(alignment: .leading, spacing: 4) {
                 Text("Don’t have a file yet?")
-                Text("Make or convert a plan with AI.")
+                Text("Generate or convert a plan with AI.")
                     .font(.subheadline)
                     .textCase(nil)
                     .foregroundStyle(.secondary)
