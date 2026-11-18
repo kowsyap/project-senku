@@ -169,4 +169,18 @@ import SenkuCore
         #expect(plan.target(for: "catalogue.press.overheadBarbell", on: days[0].id) == RepTarget(sets: 3, reps: 8))
         #expect(plan.target(for: "catalogue.squat.back", on: days[2].id) == RepTarget(sets: 4, reps: 6, maxReps: 8))
     }
+
+    /// The skill's made-from-scratch example imports whole, with no names the
+    /// app does not know, and from the exercise list this app has.
+    @Test func theSkillsMadePlanImportsWhole() throws {
+        let url = Self.repo.appendingPathComponent("skills/senku-plan/examples/made-upper-lower.senku.json")
+        let text = try String(contentsOf: url, encoding: .utf8)
+        var device = Device()
+        let summary = try device.load(text)
+
+        #expect(summary.problems.isEmpty, "\(summary.problems)")
+        #expect(device.plans.days.map(\.name) == ["Upper A", "Lower A", "Upper B", "Lower B"])
+        #expect(device.plans.days.allSatisfy { $0.exerciseIDs.count >= 6 })
+        #expect(text.contains("\"catalogueVersion\": \"\(ExerciseCatalogue.bundled.version)\""))
+    }
 }

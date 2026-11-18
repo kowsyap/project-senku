@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 /// A day's focus: chest, back, legs and so on.
 ///
@@ -308,6 +309,15 @@ public struct ExerciseCatalogue: Codable, Sendable {
         self.workoutGroups = workoutGroups
         self.muscleRegions = muscleRegions
         self.exercises = exercises
+    }
+
+    /// Eight hex characters naming this exact set of exercises: the SHA-256
+    /// of their ids, sorted, one per line. A plan file made from an older list
+    /// carries an older version, so the import can say why a name is unknown.
+    /// The plan skill's script works it out the same way.
+    public var version: String {
+        let joined = exercises.map(\.id).sorted().joined(separator: "\n")
+        return SHA256.hash(data: Data(joined.utf8)).prefix(4).map { String(format: "%02x", $0) }.joined()
     }
 
     /// The bundled catalogue.

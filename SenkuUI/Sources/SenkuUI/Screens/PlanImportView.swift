@@ -7,9 +7,9 @@ import UniformTypeIdentifiers
 /// from a coach, a list in Notes.
 ///
 /// Importing comes first, because most visits are a return with the file in
-/// hand. Below it, the two ways to make one: a prompt for any AI chat, and the
-/// skill — the same instructions with the exercise list and a checker — for an
-/// AI that reads files. Both are built from this app's own catalogue and your
+/// hand. Below it, the ways to get one from an AI: a prompt to make a plan, a
+/// prompt to convert one, and the skill, published on its own for AIs that
+/// take skills. The prompts are built from this app's own catalogue and your
 /// own exercises when you ask for them, so neither can be out of date.
 struct PlanImportView: View {
     @Bindable var store: TrainingPlanStore
@@ -18,43 +18,50 @@ struct PlanImportView: View {
     @State private var isPicking = false
     @State private var preview: PlanImportPreview?
     @State private var failure: String?
-    @State private var files: (prompt: URL, skill: URL)?
+    @State private var files: (make: URL, convert: URL)?
     @State private var copied = false
     @State private var imported: String?
-    @State private var converter: Converter = .prompt
-    @State private var isSavingSkill = false
+    @State private var converter: Converter = .make
+    @Environment(\.openURL) private var openURL
 
     enum Converter: String, CaseIterable, Identifiable {
-        case prompt, skill
+        case make, convert, skill
 
         var id: String { rawValue }
 
         var title: String {
             switch self {
-            case .prompt: "AI prompt"
+            case .make: "Make"
+            case .convert: "Convert"
             case .skill: "AI skill"
             }
         }
 
         var subtitle: String {
             switch self {
-            case .prompt: "Any AI chat"
-            case .skill: "Any AI that supports skills"
+            case .make: "A new plan, from a few questions. Any AI chat."
+            case .convert: "A plan you already have. Any AI chat."
+            case .skill: "Both, for AIs that support skills."
             }
         }
 
         var steps: [String] {
             switch self {
-            case .prompt: [
+            case .make: [
+                "Copy the prompt, or share it as a file.",
+                "Paste it into an AI chat and answer its questions.",
+                "Import the .json it gives you.",
+            ]
+            case .convert: [
                 "Copy the prompt, or share it as a file.",
                 "Paste it into an AI chat.",
-                "Attach your plan — PDF, Excel, Word, a photo or text.",
+                "Attach your plan: PDF, Excel, Word, a photo or text.",
                 "Import the .json it gives you.",
             ]
             case .skill: [
-                "Download the skill — one zip, kept as it is.",
-                "Install the skill into your AI.",
-                "Type /senku-plan and attach your plan — PDF, Excel, Word, a photo or text.",
+                "Open the skill page and download senku-plan.zip.",
+                "Install it in your AI. The page shows how.",
+                "Type /senku-plan, then ask for a plan or attach yours.",
                 "Import the .json it gives you.",
             ]
             }
@@ -83,14 +90,8 @@ struct PlanImportView: View {
         .task {
             // Built on arrival, from what the app has now — your own
             // exercises included — and not again while the page is open.
-            if files == nil { files = try? PlanConverter.files(own: library.custom) }
+            if files == nil { files = try? PlanConverter.files(own: library.custom, aboutMe: aboutMe) }
         }
-        .fileExporter(
-            isPresented: $isSavingSkill,
-            document: ZipDocument(url: files?.skill),
-            contentType: .zip,
-            defaultFilename: "senku-plan"
-        ) { _ in }
         .fileImporter(isPresented: $isPicking, allowedContentTypes: [.json, .plainText, .text]) { result in
             read(result)
         }
@@ -163,7 +164,7 @@ struct PlanImportView: View {
 
                 Group {
                     switch converter {
-                    case .prompt: promptActions
+                    case .make, .convert: promptActions
                     case .skill: skillActions
                     }
                 }
@@ -176,7 +177,7 @@ struct PlanImportView: View {
             // rather than a section's gap away from it.
             VStack(alignment: .leading, spacing: 4) {
                 Text("Don’t have a file yet?")
-                Text("Turn any plan into a JSON file with AI.")
+                Text("Make or convert a plan with AI.")
                     .font(.subheadline)
                     .textCase(nil)
                     .foregroundStyle(.secondary)
@@ -195,7 +196,7 @@ struct PlanImportView: View {
             .buttonStyle(.borderedProminent)
 
             if let files {
-                ShareLink(item: files.prompt) {
+                ShareLink(item: converter == .make ? files.make : files.convert) {
                     buttonLabel("Share", symbol: "square.and.arrow.up")
                 }
                 .buttonStyle(.bordered)
@@ -203,31 +204,23 @@ struct PlanImportView: View {
         }
     }
 
-    @ViewBuilder
-    private var skillActions: some View {
-        if let files {
-            HStack(spacing: 10) {
-                // Straight to Files, which is where a download belongs; Share
-                // is for sending it on — AirDrop to a Mac, Mail, an AI app.
-                Button {
-                    isSavingSkill = true
-                } label: {
-                    buttonLabel("Download", symbol: "arrow.down.circle")
-                }
-                .buttonStyle(.borderedProminent)
+    /// What the profile already says, for the make prompt.
+    private var aboutMe: String? {
+        PlanConverter.aboutMe(ProfileStore().profile)
+    }
 
-                ShareLink(item: files.skill) {
-                    buttonLabel("Share", symbol: "square.and.arrow.up")
-                }
-                .buttonStyle(.bordered)
-            }
-        } else {
-            ProgressView().frame(maxWidth: .infinity)
+    private var skillActions: some View {
+        Button {
+            openURL(PlanConverter.skillPage)
+        } label: {
+            buttonLabel("Open skill page", symbol: "arrow.up.right.square")
         }
+        .buttonStyle(.borderedProminent)
     }
 
     private func copyPrompt() {
-        guard let text = try? PlanConverter.prompt(own: library.custom) else { return }
+        let kind: PlanConverter.Kind = converter == .make ? .make : .convert
+        guard let text = try? PlanConverter.prompt(kind, own: library.custom, aboutMe: kind == .make ? aboutMe : nil) else { return }
         #if os(iOS)
         UIPasteboard.general.string = text
         #elseif os(macOS)
@@ -296,7 +289,7 @@ struct PlanImportPreviewSheet: View {
                 } header: {
                     Text("Will be skipped")
                 } footer: {
-                    Text("Paste these back to the AI that made the file and ask it to fix them — or import anyway and add them yourself.")
+                    Text("Ask the AI that made the file to fix these, or import anyway and add them yourself.")
                 }
             }
 
@@ -326,6 +319,14 @@ struct PlanImportPreviewSheet: View {
                     Text("New exercises")
                 } footer: {
                     Text("Not in Senku’s list, so they are added as your own.")
+                }
+            }
+
+            if preview.madeWithOtherCatalogue {
+                Section {
+                    Text("Made with an older exercise list. A skipped name may have changed since.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -461,22 +462,4 @@ struct PlanImportPreviewSheet: View {
     }
 }
 
-/// The skill zip, for the save dialog.
-struct ZipDocument: FileDocument {
-    static let readableContentTypes: [UTType] = [.zip]
-
-    let data: Data
-
-    init(url: URL?) {
-        data = url.flatMap { try? Data(contentsOf: $0) } ?? Data()
-    }
-
-    init(configuration: ReadConfiguration) throws {
-        data = configuration.file.regularFileContents ?? Data()
-    }
-
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        FileWrapper(regularFileWithContents: data)
-    }
-}
 #endif

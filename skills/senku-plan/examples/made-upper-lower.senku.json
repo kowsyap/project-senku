@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "catalogueVersion": "6af8c6ff",
+  "plan": {
+    "target": { "sets": 3, "minReps": 8, "maxReps": 12 },
+    "days": [
+      {
+        "name": "Upper A",
+        "groups": ["chest", "back", "shoulder", "bicep", "tricep"],
+        "exercises": [
+          { "name": "Barbell Bench Press", "sets": 4, "minReps": 6, "maxReps": 10 },
+          { "name": "Barbell Bent-Over Row", "minReps": 6, "maxReps": 10 },
+          "Dumbbell Shoulder Press",
+          "Wide-Grip Lat Pulldown",
+          { "name": "Dumbbell Lateral Raise", "sets": 4, "minReps": 10, "maxReps": 15 },
+          { "name": "Dumbbell Curl", "minReps": 10, "maxReps": 15 },
+          { "name": "Rope Triceps Pushdown", "sets": 4, "minReps": 10, "maxReps": 15 }
+        ]
+      },
+      {
+        "name": "Lower A",
+        "groups": ["legs", "abs"],
+        "exercises": [
+          { "name": "Barbell Back Squat", "minReps": 6, "maxReps": 10 },
+          "Barbell Romanian Deadlift",
+          "Leg Press",
+          { "name": "Seated Leg Curl", "minReps": 10, "maxReps": 15 },
+          { "name": "Standing Calf Raise", "minReps": 10, "maxReps": 15 },
+          { "name": "Cable Crunch", "minReps": 10, "maxReps": 15 }
+        ]
+      },
+      {
+        "name": "Upper B",
+        "groups": ["chest", "back", "shoulder", "bicep", "tricep"],
+        "exercises": [
+          { "name": "Incline Dumbbell Press", "sets": 4 },
+          "Seated Cable Row",
+          { "name": "Cable Fly", "minReps": 10, "maxReps": 15 },
+          { "name": "Cable Lateral Raise", "minReps": 12, "maxReps": 15 },
+          { "name": "Face Pull", "sets": 4, "minReps": 12, "maxReps": 15 },
+          { "name": "Incline Dumbbell Curl", "minReps": 10, "maxReps": 15 },
+          { "name": "Overhead Cable Triceps Extension", "minReps": 10, "maxReps": 15 }
+        ]
+      },
+      {
+        "name": "Lower B",
+        "groups": ["legs", "abs"],
+        "exercises": [
+          { "name": "Trap Bar Deadlift", "minReps": 6, "maxReps": 10 },
+          "Bulgarian Split Squat",
+          "Barbell Hip Thrust",
+          { "name": "Leg Extension", "minReps": 10, "maxReps": 15 },
+          { "name": "Lying Leg Curl", "minReps": 10, "maxReps": 15 },
+          { "name": "Seated Calf Raise", "minReps": 10, "maxReps": 15 }
+        ]
+      }
+    ]
+  }
+}

@@ -90,11 +90,12 @@ cannot explain where a number came from, it does not show it.**
   free.
 - **Bring your own programme** — a plan in Excel, PDF, Word, a photo or text
   becomes a file Senku imports: every exercise matched to the catalogue, sets
-  and rep ranges kept, anything unknown added as your own. *Import a Plan* on
-  the Week page hands out the two ways to make one — a prompt to paste into any
-  AI chat, or [the skill](skills/senku-plan) for any AI that takes skills,
-  started with `/senku-plan` — and shows the week the file makes, laid out like
-  yours, before anything is replaced.
+  and rep ranges kept, anything unknown added as your own. Or have an AI make
+  you a plan from a few questions. *Import a Plan* on the Week page hands out a
+  prompt for each, to paste into any AI chat, and links
+  [the skill](https://github.com/kowsyap/senku-plan-skill) for AIs that take
+  skills, started with `/senku-plan`. It shows the week the file makes, laid
+  out like yours, before anything is replaced.
 - **A summary at the end** — the session's sets and time, a body map of what got
   trained and what was planned but missed, and the workout's energy, sent to
   Apple Health when you press Done.

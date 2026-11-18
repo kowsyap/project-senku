@@ -5,11 +5,13 @@ Standard library only, Python 3.8+, so it runs anywhere an AI or a person can
 run Python. Subcommands:
 
     validate FILE        Check a Senku plan file exactly as the app will read it.
+    volume FILE          Weekly sets per muscle, and what is short, heavy or hit once.
     find QUERY...        Catalogue exercises that best match a name from a plan.
     list [--group G]     Every catalogue exercise, by muscle group.
     regions              Muscle ids, for describing a custom exercise.
     extract FILE         A plan file (xlsx, docx, pdf, csv, txt, md) as plain text.
     sync                 Refresh this skill's copy of the catalogue from the repo.
+    publish DIR          Copy the finished skill into DIR (the senku-plan-skill repo).
 
 The rules in `validate` mirror the app's importer (SenkuImport.swift,
 TrainingPlan.swift, RepTarget.swift, ExerciseLibrary.swift). When the two
@@ -18,6 +20,7 @@ disagree the app is right and this is a bug.
 
 import argparse
 import csv
+import hashlib
 import io
 import json
 import re
@@ -35,16 +38,17 @@ SKILL = HERE.parent
 BUNDLED = SKILL / "data" / "catalogue.json"
 CATALOGUE_MD = SKILL / "reference" / "catalogue.md"
 PROMPT_MD = SKILL / "prompt.md"
+PROMPT_MAKE_MD = SKILL / "prompt-make.md"
 # The copy the app carries, so it can hand the skill out. Generated files are
 # left out: the app makes its own, with the person's exercises in them.
 APP_COPY = Path("SenkuUI/Sources/SenkuUI/PlanSkill")
-GENERATED = {"data", "prompt.md", "reference/catalogue.md"}
+GENERATED = {"data", "prompt.md", "prompt-make.md", "reference/catalogue.md"}
 IN_REPO = Path("SenkuCore/Sources/SenkuCore/Resources/ExerciseCatalogue.json")
 
 SET_RANGE = (1, 10)
 REP_RANGE = (1, 50)
 EQUIPMENT = ["barbell", "dumbbell", "kettlebell", "machine", "cable", "bodyweight"]
-PLAN_SECTIONS = {"schemaVersion", "plan", "customExercises", "unitSystem"}
+PLAN_SECTIONS = {"schemaVersion", "catalogueVersion", "plan", "customExercises", "unitSystem"}
 
 
 # MARK: - The catalogue
@@ -83,6 +87,7 @@ class Catalogue:
         self.groups = list(data["workoutGroups"])
         self.regions = {r["id"]: r for r in data["muscleRegions"]}
         self.exercises = [self._shape(e) for e in data["exercises"]]
+        self.version = catalogue_version(e["id"] for e in data["exercises"])
 
     @staticmethod
     def _shape(raw):
@@ -94,7 +99,15 @@ class Catalogue:
             "equipment": raw.get("equipment", ""),
             "timed": bool(raw.get("isTimed")),
             "custom": False,
+            "contributions": raw.get("contributions") or {},
         }
+
+
+def catalogue_version(ids):
+    """Eight hex characters naming this exact set of exercises. The app works
+    it out the same way, so a file made from an older list can be told apart."""
+    joined = "\n".join(sorted(ids))
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()[:8]
 
 
 class Library:
@@ -226,6 +239,12 @@ def validate(document, catalogue):
             "Also contains " + ", ".join(extra) + " — those sections would be imported too. "
             "A plan file normally holds only \"plan\" and \"customExercises\"."
         )
+    version = document.get("catalogueVersion")
+    if version is not None and version != catalogue.version:
+        report.notes.append(
+            f"Made with exercise list {version}; the app's is {catalogue.version}. Names may have changed since."
+        )
+
     if "schemaVersion" in document and not is_int(document["schemaVersion"]):
         report.fail("\"schemaVersion\" must be a whole number.")
 
@@ -269,6 +288,9 @@ def validate(document, catalogue):
             "equipment": equipment,
             "timed": bool(entry.get("isTimed")),
             "custom": True,
+            # The main muscle in full, the rest as helpers — about how the
+            # catalogue weighs its own exercises.
+            "contributions": {r: (1.0 if i == 0 else 0.5) for i, r in enumerate(known)},
         })
 
     plan = document.get("plan")
@@ -459,6 +481,80 @@ def print_report(report, plan_target, days, source, catalogue_path):
     return 0
 
 
+# MARK: - Weekly volume
+
+# The muscles a week is judged on, by the catalogue's region ids. Abs and
+# calves are reported but not flagged: plenty of good plans leave them light.
+MUSCLES = [
+    ("Chest", ["chest.upper", "chest.mid", "chest.lower"], True),
+    ("Back", ["back.lats", "back.midBack"], True),
+    ("Shoulders", ["shoulder.sideDelts", "shoulder.rearDelts"], True),
+    ("Biceps", ["bicep.biceps", "bicep.brachialis"], True),
+    ("Triceps", ["tricep.longHead", "tricep.lateralHead", "tricep.medialHead"], True),
+    ("Quads", ["legs.quads"], True),
+    ("Hamstrings", ["legs.hamstrings"], True),
+    ("Glutes", ["legs.glutes"], True),
+    ("Calves", ["legs.calves"], False),
+    ("Abs", ["abs.upper", "abs.lower", "abs.obliques"], False),
+]
+# Flagged below 8 rather than 10: a short week for a beginner is fine there.
+LOW, HIGH = 8, 20
+
+
+def set_weight(contribution):
+    """A set that works a muscle hard counts whole; one that helps, half."""
+    if contribution >= 0.7:
+        return 1.0
+    if contribution >= 0.3:
+        return 0.5
+    return 0.0
+
+
+def weekly_volume(plan_target, days, per_week):
+    """(muscle, weekly sets, sessions a week, flagged?) for each muscle."""
+    rounds = per_week / max(len(days), 1)
+    rows = []
+    for muscle, regions, flagged in MUSCLES:
+        total, sessions = 0.0, 0.0
+        for day in days:
+            today = 0.0
+            for exercise in day["exercises"]:
+                if exercise["group"] == "cardio":
+                    continue
+                sets = (day["targets"].get(exercise["id"]) or plan_target).sets
+                share = max((exercise["contributions"].get(r, 0) for r in regions), default=0)
+                today += sets * set_weight(share)
+            total += today * rounds
+            if today >= 2:
+                sessions += rounds
+        rows.append((muscle, total, sessions, flagged))
+    return rows
+
+
+def print_volume(rows, per_week, day_count):
+    print(f"Weekly hard sets, training {per_week} day(s) a week over {day_count} plan day(s).")
+    print("A set counts whole for a muscle it mainly works, half for one it helps.\n")
+    warnings = 0
+    for muscle, total, sessions, flagged in rows:
+        mark = ""
+        if flagged:
+            if total < LOW:
+                mark = "  ⚠ low (aim for about 10–20; beginners can start nearer 8)"
+            elif total > HIGH:
+                mark = f"  ⚠ high (more than about {HIGH} rarely helps)"
+            elif per_week >= 3 and sessions < 1.75:
+                mark = "  ⚠ only once a week (aim for twice)"
+        if mark:
+            warnings += 1
+        print(f"  {muscle:<11} {total:>5.1f} sets  {sessions:>4.1f}×/week{mark}")
+    print()
+    if warnings:
+        print(f"⚠ {warnings} to look at. Adjust them, or say why they stay.")
+    else:
+        print("✓ Every main muscle gets a sensible week.")
+    return 0
+
+
 # MARK: - Finding exercises
 
 ABBREVIATIONS = {
@@ -618,6 +714,8 @@ def catalogue_markdown(catalogue):
         "Name exercises in a plan by **Name** (an alias works too, unless it is shared).",
         "Anything not listed here goes in `customExercises`.",
         "",
+        f"Catalogue version: `{catalogue.version}`. Copy it into the file as `catalogueVersion`.",
+        "",
     ]
     for group in catalogue.groups:
         lines += [f"## {group}", "", "| Name | Also called | Equipment | Notes |", "| --- | --- | --- | --- |"]
@@ -632,13 +730,27 @@ def catalogue_markdown(catalogue):
     return "\n".join(lines)
 
 
-def prompt_markdown(catalogue_md):
-    """Everything a chat AI needs in one paste: instructions, format, exercises."""
-    intro = (SKILL / "reference" / "prompt-intro.md").read_text(encoding="utf-8")
+VOLUME_LINE = (
+    "Check the week with `python3 scripts/senku_plan.py volume FILE --days-per-week N`.\n"
+    "It counts weekly sets per muscle from the catalogue's own muscle data and flags\n"
+    "what is under-trained, over-trained or hit only once."
+)
+VOLUME_BY_HAND = "Count the hard sets per muscle for the week yourself before answering."
+
+
+def prompt_markdown(catalogue_md, make=False):
+    """Everything a chat AI needs in one paste: what to do, the format, the
+    exercises. The app writes the same text, byte for byte."""
+    intro = (SKILL / "reference" / ("prompt-make-intro.md" if make else "prompt-intro.md")).read_text(encoding="utf-8")
     fmt = (SKILL / "reference" / "format.md").read_text(encoding="utf-8")
     fmt = fmt.replace("# The plan file", "# The file format", 1)
     fmt = fmt.replace("(`scripts/senku_plan.py regions`)", "(see the muscle id table at the end)")
-    return intro.rstrip("\n") + "\n\n" + fmt.rstrip("\n") + "\n\n" + catalogue_md
+    parts = [intro.rstrip("\n")]
+    if make:
+        design = (SKILL / "reference" / "design.md").read_text(encoding="utf-8")
+        parts.append(design.replace(VOLUME_LINE, VOLUME_BY_HAND).rstrip("\n"))
+    parts.append(fmt.rstrip("\n"))
+    return "\n\n".join(parts) + "\n\n" + catalogue_md
 
 
 def copy_into_app(repo):
@@ -658,6 +770,29 @@ def copy_into_app(repo):
     return destination
 
 
+def publish(destination, catalogue):
+    """The whole skill, generated files included, into the published repo's
+    `senku-plan/` folder. Run `sync` first so they are current."""
+    if not (destination / ".git").exists():
+        sys.exit(f"{destination} is not a git checkout of the skill repository.")
+    stale = BUNDLED.is_file() and catalogue_version(
+        e["id"] for e in json.loads(BUNDLED.read_text(encoding="utf-8"))["exercises"]) != catalogue.version
+    if stale:
+        sys.exit("The bundled catalogue is out of date. Run `sync` first.")
+    target = destination / SKILL.name
+    if target.exists():
+        shutil.rmtree(target)
+    for source in sorted(SKILL.rglob("*")):
+        relative = source.relative_to(SKILL)
+        if source.is_dir() or "__pycache__" in relative.parts or source.name == ".DS_Store":
+            continue
+        out = target / relative
+        out.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, out)
+    print(f"Copied the skill into {target} (catalogue {catalogue.version}). Commit, push and tag a release there.")
+    return 0
+
+
 # MARK: - Command line
 
 def main():
@@ -673,6 +808,10 @@ def main():
     commands.add_parser("regions")
     commands.add_parser("extract").add_argument("file")
     commands.add_parser("sync")
+    volume = commands.add_parser("volume")
+    volume.add_argument("file")
+    volume.add_argument("--days-per-week", type=int, help="How often they train (default: one round of the days).")
+    commands.add_parser("publish").add_argument("dir")
     args = parser.parse_args()
 
     if args.command == "extract":
@@ -692,6 +831,18 @@ def main():
             print("Note: this skill's bundled catalogue is out of date — run `sync`.")
         report, plan_target, days = validate(document, catalogue)
         return print_report(report, plan_target, days, source, path)
+
+    if args.command == "volume":
+        document = json.loads(Path(args.file).read_text(encoding="utf-8"))
+        report, plan_target, days = validate(document, catalogue)
+        if report.fatal or plan_target is None or not days:
+            print("✗ Fix the file first: run `validate`.")
+            return 2
+        per_week = args.days_per_week or len(days)
+        return print_volume(weekly_volume(plan_target, days, per_week), per_week, len(days))
+
+    if args.command == "publish":
+        return publish(Path(args.dir), catalogue)
 
     if args.command == "find":
         query = " ".join(args.query)
@@ -729,10 +880,11 @@ def main():
         markdown = catalogue_markdown(catalogue)
         CATALOGUE_MD.write_text(markdown, encoding="utf-8")
         PROMPT_MD.write_text(prompt_markdown(markdown), encoding="utf-8")
+        PROMPT_MAKE_MD.write_text(prompt_markdown(markdown, make=True), encoding="utf-8")
         repo = path.parents[len(IN_REPO.parts) - 1]
         app_copy = copy_into_app(repo)
         print(f"Copied {len(catalogue.exercises)} exercises to {BUNDLED}, wrote {CATALOGUE_MD.name} "
-              f"and {PROMPT_MD.name}, and refreshed the app's copy in {app_copy}.")
+              f"{PROMPT_MD.name} and {PROMPT_MAKE_MD.name}, and refreshed the app's copy in {app_copy}.")
         return 0
     return 0
 

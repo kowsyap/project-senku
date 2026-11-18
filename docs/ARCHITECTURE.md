@@ -136,11 +136,15 @@ against throwaway stores seeded with the person's own exercises, and the week it
 leaves behind is what the preview draws (`PlanImportPreview`). It cannot
 promise a different week from the one Replace makes.
 
-The converters are built on the phone (`PlanConverter`): the prompt and the
-skill's exercise list are generated from the bundled catalogue plus the
-person's own exercises, and the skill is zipped from `PlanSkill/`, a copy of
-`skills/senku-plan` kept by `senku_plan.py sync`. Tests hold the copy, the
-generated list and the prompt to the repository's bytes.
+The prompts are built on the phone (`PlanConverter`): one to make a plan, one
+to convert one, each with the exercise list generated from the bundled
+catalogue plus the person's own exercises, and the make prompt with what the
+profile says about them on top. They are built from `PlanSkill/`, a copy of
+`skills/senku-plan` kept by `senku_plan.py sync`; tests hold the copy, the list
+and both prompts to the repository's bytes. The skill itself is published to
+its own repository and linked, not zipped by the app. Plan files carry
+`catalogueVersion` (the catalogue's `version`, a hash of its ids) so the
+preview can say a file came from an older exercise list.
 
 ## Network
 
@@ -212,4 +216,4 @@ they are on display (S5-R4).
 | A6 | PDF drawn with Core Text and Core Graphics | Real pagination and vector charts |
 | A7 | Apple Health reconciled by difference, write-only | Edits and deletes follow; nothing read back competes with the app's own record |
 | A8 | The plan preview is a dry run of the importer | One implementation, so the preview cannot disagree with the import |
-| A9 | The skill mirrored into the app, held by tests | The app hands out exactly the skill in the repository, with its own catalogue |
+| A9 | The skill mirrored into the app, held by tests, and published on its own | The app's prompts match the skill exactly; the skill has a stable download for any AI |

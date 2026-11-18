@@ -23,3 +23,21 @@ file this skill makes from it, and it passes `validate`.
 
 - "6 week hypertrophy": there is no programme length.
 - The "Day 1, Day 2, Day 3" numbering: you choose the day when you train.
+
+# Made from scratch
+
+`made-upper-lower.senku.json` is a plan made in the skill's other mode, for
+these answers: build muscle, 4 days a week, 60 minutes, full gym, some
+experience, nothing to avoid.
+
+- **Shape:** Upper / Lower, with A and B versions of each so the same muscles
+  get different exercises.
+- **Volume:** checked with `volume --days-per-week 4`. The first draft had
+  chest, side delts and triceps under 10 sets a week; an extra set on bench,
+  incline press, lateral raises and pushdowns, and a cable lateral raise in
+  Upper B, brought every main muscle to 10–18.
+- **Sets and reps:** 3 × 8–12 for most; the first compound each day at 6–10;
+  isolation at 10–15.
+- **Guidance given with it:** rest about 2–3 minutes after heavy compounds and
+  1–2 after the rest; stop most sets with 1–3 reps in hand; train the days in
+  order and start again.

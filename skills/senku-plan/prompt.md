@@ -31,7 +31,8 @@ else in the app changes.
    forearm, legs, abs, cardio.
 7. **Check before answering:** every exercise name appears exactly in the catalogue
    or in your customExercises; every number is a whole number, not text; only
-   `schemaVersion`, `plan` and `customExercises` at the top level.
+   `schemaVersion`, `catalogueVersion`, `plan` and `customExercises` at the top
+   level. Copy the catalogue version into `catalogueVersion`.
 8. **Answer with** the JSON file (as a downloadable file if you can, otherwise one
    code block), then a short list of each day with exercises and sets × reps, what
    you assumed, and what you dropped.
@@ -43,10 +44,15 @@ One JSON object. Two sections, both optional, plus a version:
 ```json
 {
   "schemaVersion": 1,
+  "catalogueVersion": "1a2b3c4d",
   "customExercises": [ ... ],
   "plan": { ... }
 }
 ```
+
+`catalogueVersion` is optional: copy it from the top of the exercise catalogue.
+If the app's exercise list has changed since, it says so on import, so a name
+it no longer knows is explained rather than mysterious.
 
 Unknown keys are ignored. **A wrong type refuses the whole file**: `"3"` where a
 number belongs, `3.0` instead of `3`, or a day without a `name`. A name the app
@@ -143,6 +149,8 @@ not added again. The existing one is used.
 
 Name exercises in a plan by **Name** (an alias works too, unless it is shared).
 Anything not listed here goes in `customExercises`.
+
+Catalogue version: `6af8c6ff`. Copy it into the file as `catalogueVersion`.
 
 ## back
 

@@ -1,41 +1,54 @@
 ---
 name: senku-plan
-description: Convert a workout plan (Excel, PDF, Word, CSV, text, or pasted) into a JSON file the Senku app imports to set up its training split — days, muscle groups, exercises matched to Senku's catalogue, sets and rep ranges, and custom exercises for anything the catalogue lacks. Use when someone types /senku-plan (with or without a file), or wants to load a training programme or split into Senku.
+description: Make a workout plan, or convert one (Excel, PDF, Word, photo, text), into a JSON file the Senku app imports. Use for /senku-plan or any request for a plan or programme for Senku.
 ---
 
-# Senku plan import
+# Senku plan
 
-You turn someone's workout plan into **one JSON file** that the Senku iPhone app
-imports. Importing it replaces their training plan and adds any new exercises.
+You produce **one JSON file** that the Senku iPhone app imports as someone's
+training plan. Importing it replaces their plan and adds any new exercises.
 Nothing else in the app changes: workouts, records, food and water are left alone.
 
-The hard part is not the file format. It is reading a messy plan correctly and
-matching every exercise to the right one in Senku's catalogue. **Never guess
-between two real possibilities: ask.**
+There are two jobs, and both end in the same file:
+
+- **Convert** a plan they already have (a file, a photo, pasted text). Follow
+  **Converting a plan** below.
+- **Make** a new plan from their goal, schedule and equipment. Follow
+  **Making a plan** below, which uses `reference/design.md`.
+
+Either way, every exercise is a real one from Senku's catalogue, named exactly
+as it is listed. **Never guess between two real possibilities: ask.**
 
 ## The command: `/senku-plan`
 
 Typing **`/senku-plan`** starts this skill in any AI, with a plan attached, a
-file named after it (`/senku-plan my-plan.pdf`), or nothing at all. With
-nothing, ask for the plan in one line: *"Attach your workout plan — PDF, Excel,
-Word, a photo or text — or paste it here."* Then follow the steps below.
-Plain requests such as "convert my plan for Senku" start it as well.
+file named after it (`/senku-plan my-plan.pdf`), or nothing at all.
+
+- **A plan attached or named:** convert it.
+- **"Make me a plan" or similar:** make one.
+- **Nothing at all:** ask in one line: *"Do you want me to make you a plan, or
+  convert one you have? If converting, attach it: PDF, Excel, Word, a photo or
+  text."*
+
+Plain requests such as "convert my plan for Senku" or "make me a 4-day plan for
+Senku" start it as well.
 
 ## What you have
 
 | Path | What it is |
 | --- | --- |
-| `scripts/senku_plan.py` | Helper, Python 3 standard library only. `extract`, `find`, `list`, `regions`, `validate`. |
+| `scripts/senku_plan.py` | Helper, Python 3 standard library only. `extract`, `find`, `list`, `regions`, `validate`, `volume`. |
 | `reference/format.md` | The file format, field by field. Read it before writing the file. |
+| `reference/design.md` | How to design a week: questions, split, volume, order, sets and reps, exercise choice. For making a plan. |
 | `reference/catalogue.md` | Every exercise Senku knows, with other names, plus the muscle ids. Use it if you cannot run the script. |
-| `prompt.md` | The same job as one paste for a chat AI: instructions, format and exercises. Not needed when you have this file. |
-| `examples/` | A plan as text and the file it becomes. |
+| `prompt.md`, `prompt-make.md` | Converting, and making, as one paste each for a chat AI. Not needed when you have this file. |
+| `examples/` | A plan as text and the file it becomes, and a plan made from scratch. |
 
 Run the script from this folder, e.g. `python3 scripts/senku_plan.py find "lat pulldown"`.
 Inside the Senku repository it reads the app's live catalogue automatically;
 anywhere else it uses the copy in `data/`.
 
-## Steps
+## Converting a plan
 
 ### 1. Read the plan
 
@@ -156,6 +169,39 @@ Give the file, then a short message with:
    3. Choose the file.
 4. **The warning:** importing **replaces the current plan**. Workouts, records
    and everything else stay.
+
+## Making a plan
+
+Read `reference/design.md` first. Then:
+
+1. **Ask** the questions in its step 1, **one at a time**, each with numbered
+   options and the recommended one first. Wait for each answer before the
+   next. Skip anything already said. Stop and advise a doctor where it says to.
+2. **Use the split** they chose (design step 2), or the recommended one, and
+   lay out the days for the file.
+3. **Choose exercises** for each day: the movement patterns (step 3), the
+   equipment filter (step 7), heaviest first (step 5), sized to the time
+   (step 4). Use `python3 scripts/senku_plan.py list --group G` to see a
+   group's exercises with their equipment, and write each by its full **Name**.
+4. **Sets and reps** from the goal (step 6). Put the common scheme in
+   `plan.target`; give the rest their own numbers.
+5. **Write the file** (Converting, step 7), then check the week:
+
+   ```
+   python3 scripts/senku_plan.py validate senku-plan.json
+   python3 scripts/senku_plan.py volume senku-plan.json --days-per-week N
+   ```
+
+   Fix every ✗ from `validate`. For each ⚠ from `volume`, adjust (add a set, an
+   exercise, or move one to another day) unless there is a reason not to, such
+   as a two-day week, an injury or a once-a-week split they chose, and say why
+   you left it.
+6. **Hand it over** as in Converting, step 8, with the extra guidance in design
+   step 8, which split it is and why, and one line on how to run it: train the
+   days in order, then start again.
+
+Making a plan never needs custom exercises: everything comes from the
+catalogue.
 
 ## Rules
 

@@ -30,6 +30,9 @@ public struct PlanImportPreview {
     public let problems: [String]
     /// Sections of the file this import leaves alone.
     public let ignoredSections: [String]
+    /// The file was made from a different exercise list than this app has,
+    /// which explains a name it no longer knows.
+    public let madeWithOtherCatalogue: Bool
 
     public enum Failure: Error, LocalizedError {
         case unreadable(String)
@@ -40,12 +43,12 @@ public struct PlanImportPreview {
             case .unreadable(let reason):
                 "Senku can’t read this file. \(reason)"
             case .noPlan:
-                "This file has no plan in it — no days to import."
+                "This file has no plan in it."
             }
         }
     }
 
-    private static let planSections: Set<String> = ["schemaVersion", "plan", "customExercises", "unitSystem"]
+    private static let planSections: Set<String> = ["schemaVersion", "catalogueVersion", "plan", "customExercises", "unitSystem"]
 
     /// A file that is a plan and nothing else — what the AI converters make —
     /// as opposed to a backup, which carries a plan among everything else.
@@ -65,7 +68,9 @@ public struct PlanImportPreview {
         }
         guard let plan = full.plan, !plan.days.isEmpty else { throw Failure.noPlan }
 
-        let keys = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?.keys.map { $0 } ?? []
+        let object = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+        let keys = Array(object.keys)
+        let version = object["catalogueVersion"] as? String
         var document = SenkuImportDocument()
         document.schemaVersion = full.schemaVersion
         document.plan = plan
@@ -90,7 +95,8 @@ public struct PlanImportPreview {
             exercises: Dictionary(uniqueKeysWithValues: exercises.map { ($0.id, $0) }),
             newExercises: scratchLibrary.custom.filter { !existing.contains($0.id) }.map(\.name),
             problems: summary.problems,
-            ignoredSections: keys.filter { !planSections.contains($0) }.sorted()
+            ignoredSections: keys.filter { !planSections.contains($0) }.sorted(),
+            madeWithOtherCatalogue: version.map { $0 != library.catalogue.version } ?? false
         )
     }
 

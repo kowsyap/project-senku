@@ -5,10 +5,15 @@ One JSON object. Two sections, both optional, plus a version:
 ```json
 {
   "schemaVersion": 1,
+  "catalogueVersion": "1a2b3c4d",
   "customExercises": [ ... ],
   "plan": { ... }
 }
 ```
+
+`catalogueVersion` is optional: copy it from the top of the exercise catalogue.
+If the app's exercise list has changed since, it says so on import, so a name
+it no longer knows is explained rather than mysterious.
 
 Unknown keys are ignored. **A wrong type refuses the whole file**: `"3"` where a
 number belongs, `3.0` instead of `3`, or a day without a `name`. A name the app

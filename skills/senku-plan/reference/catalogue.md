@@ -3,6 +3,8 @@
 Name exercises in a plan by **Name** (an alias works too, unless it is shared).
 Anything not listed here goes in `customExercises`.
 
+Catalogue version: `6af8c6ff`. Copy it into the file as `catalogueVersion`.
+
 ## back
 
 | Name | Also called | Equipment | Notes |

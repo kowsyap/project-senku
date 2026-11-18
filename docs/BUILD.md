@@ -164,17 +164,26 @@ Two things to check after a sideloaded install:
 
 ## The plan skill
 
-`skills/senku-plan` is the source; the app carries a copy in
-`SenkuUI/Sources/SenkuUI/PlanSkill` and hands it out from Import a Plan. After
-changing the skill or the exercise catalogue:
+`skills/senku-plan` is the source. The app carries a copy in
+`SenkuUI/Sources/SenkuUI/PlanSkill`, which it builds its make and convert
+prompts from, and the skill is published on its own at
+[kowsyap/senku-plan-skill](https://github.com/kowsyap/senku-plan-skill), which
+Import a Plan links to. After changing the skill or the exercise catalogue:
 
 ```sh
 python3 skills/senku-plan/scripts/senku_plan.py sync
 ```
 
-It refreshes the skill's catalogue, its exercise list and `prompt.md`, and
-mirrors the hand-written files into the app. `PlanConverterTests` fails until
-it has been run.
+It refreshes the skill's catalogue, its exercise list, `prompt.md` and
+`prompt-make.md`, and mirrors the hand-written files into the app.
+`PlanConverterTests` fails until it has been run. Then publish a release:
+
+```sh
+git clone https://github.com/kowsyap/senku-plan-skill /tmp/senku-plan-skill
+python3 skills/senku-plan/scripts/senku_plan.py publish /tmp/senku-plan-skill
+cd /tmp/senku-plan-skill && git commit -am "…" && git push
+git tag v1.x.0 && git push --tags     # the release workflow zips and attaches it
+```
 
 ## README screenshots
 

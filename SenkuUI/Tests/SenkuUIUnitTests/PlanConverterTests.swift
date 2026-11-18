@@ -16,7 +16,7 @@ import SenkuCore
         .deletingLastPathComponent()      // the repo
         .appendingPathComponent("skills/senku-plan")
 
-    private static let generated: Set<String> = ["prompt.md", "reference/catalogue.md"]
+    private static let generated: Set<String> = ["prompt.md", "prompt-make.md", "reference/catalogue.md"]
 
     private func files(in folder: URL) -> [String: Data] {
         var out: [String: Data] = [:]
@@ -75,32 +75,30 @@ import SenkuCore
         #expect(decoded.equipment == "bodyweight")
     }
 
-    /// Opened by the same unzip anyone would use, with everything inside.
-    @Test func theSkillZipOpensWithEverythingInIt() throws {
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: folder) }
-        let zip = folder.appendingPathComponent("skill.zip")
-        try PlanConverter.skillArchive().write(to: zip)
+    /// The make prompt carries the design guide, with the script line a chat
+    /// AI cannot follow swapped out, and "about me" goes on top.
+    @Test func theMakePromptMatchesTheScriptAndPutsYouFirst() throws {
+        let prompt = try String(contentsOf: Self.skill.appendingPathComponent("prompt-make.md"), encoding: .utf8)
+        #expect(try PlanConverter.prompt(.make) == prompt)
+        #expect(prompt.contains("# Designing a plan"))
+        #expect(!prompt.contains("senku_plan.py volume"))
 
-        let unzip = Process()
-        unzip.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-        unzip.arguments = ["-q", zip.path, "-d", folder.path]
-        try unzip.run()
-        unzip.waitUntilExit()
-        #expect(unzip.terminationStatus == 0)
-
-        let root = folder.appendingPathComponent("senku-plan")
-        for path in ["SKILL.md", "README.md", "prompt.md", "scripts/senku_plan.py", "reference/format.md",
-                     "reference/catalogue.md", "data/catalogue.json", "examples/ppl-plan.senku.json"] {
-            #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent(path).path), "\(path)")
-        }
-        let catalogue = try Data(contentsOf: root.appendingPathComponent("data/catalogue.json"))
-        #expect(catalogue == ExerciseCatalogue.bundledData)
+        let about = "## About me\n\n- Male, 30, 80 kg."
+        #expect(try PlanConverter.prompt(.make, aboutMe: about).hasPrefix(about + "\n\n# Make me a workout plan"))
     }
 
-    @Test func crcIsTheStandardOne() {
-        #expect(ZipWriter.crc32(Data("123456789".utf8)) == 0xCBF4_3926)
+    /// A file stamped with another exercise list says so in the preview.
+    @Test func anOlderExerciseListIsNoticed() throws {
+        let (library, _) = stores()
+        let stamped = { (version: String) in
+            Data("""
+            { "catalogueVersion": "\(version)", "plan": { "days": [ { "name": "A", "exercises": ["Barbell Bench Press"] } ] } }
+            """.utf8)
+        }
+        #expect(try PlanImportPreview.make(from: stamped("00000000"), library: library).madeWithOtherCatalogue)
+        let current = try PlanImportPreview.make(from: stamped(library.catalogue.version), library: library)
+        #expect(!current.madeWithOtherCatalogue)
+        #expect(current.ignoredSections.isEmpty)
     }
 
     // MARK: - Preview

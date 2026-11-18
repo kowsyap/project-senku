@@ -31,7 +31,8 @@ else in the app changes.
    forearm, legs, abs, cardio.
 7. **Check before answering:** every exercise name appears exactly in the catalogue
    or in your customExercises; every number is a whole number, not text; only
-   `schemaVersion`, `plan` and `customExercises` at the top level.
+   `schemaVersion`, `catalogueVersion`, `plan` and `customExercises` at the top
+   level. Copy the catalogue version into `catalogueVersion`.
 8. **Answer with** the JSON file (as a downloadable file if you can, otherwise one
    code block), then a short list of each day with exercises and sets × reps, what
    you assumed, and what you dropped.
