@@ -316,8 +316,14 @@ public struct RecordsView: View {
                 onCardioSaved: { isAdding = false },
                 unitSystem: unitSystem,
                 library: library,
-                // Already has a record: the next one goes inside it, dated.
-                hidden: Set(store.book.exerciseIDs),
+                // Already has a record: shown with a PR tag, and picking it
+                // opens its history, where the next one goes in, dated.
+                recorded: Set(store.book.exerciseIDs),
+                onOpenRecorded: { id in
+                    isAdding = false
+                    // After the sheet is gone: one sheet at a time from here.
+                    DispatchQueue.main.async { detailID = ExerciseID(id) }
+                },
                 deletionRefusal: { exercise in
                     // The plan first: deleting an exercise a split names leaves
                     // that day with a row nothing can label.
@@ -640,23 +646,19 @@ private struct RecordDetailSheet: View {
                     )
                 }
             }
-            .confirmationDialog(
-                "Delete every record for \(name)?",
-                isPresented: $isConfirmingExerciseDelete,
-                titleVisibility: .visible
-            ) {
-                Button("Delete \(entry.records.count) records", role: .destructive) {
+            // Alerts rather than confirmation dialogs: on a phone a dialog
+            // drops its Cancel button and expects a tap outside, which nobody
+            // reads as "keep it".
+            .alert("Delete PR?", isPresented: $isConfirmingExerciseDelete) {
+                Button("Delete", role: .destructive) {
                     store.deleteAll(forExercise: exerciseID)
                     onClose()
                 }
-                Button("Keep them", role: .cancel) {}
-            } message: {
-                Text("The exercise stays in your list. Only what you lifted on it is removed, and that cannot be undone.")
+                Button("Cancel", role: .cancel) {}
             }
-            .confirmationDialog(
+            .alert(
                 "Delete this record?",
-                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
-                titleVisibility: .visible
+                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
             ) {
                 Button("Delete", role: .destructive) {
                     if let deleting { store.delete(deleting) }
@@ -664,10 +666,10 @@ private struct RecordDetailSheet: View {
                     // The last one gone means there is nothing left to look at.
                     if entry.records.isEmpty { onClose() }
                 }
-                Button("Keep it", role: .cancel) { deleting = nil }
+                Button("Cancel", role: .cancel) { deleting = nil }
             } message: {
                 if let deleting {
-                    Text("\(lift(deleting)) on \(deleting.date.formatted(date: .abbreviated, time: .omitted)).")
+                    Text("\(lift(deleting)) · \(deleting.date.formatted(date: .abbreviated, time: .omitted))")
                 }
             }
             .sheet(isPresented: $isAdding) {
@@ -870,22 +872,11 @@ private struct RecordValueEditor: View {
                     .font(.subheadline)
             }
 
-            if let duplicate {
-                // Said plainly, with the date, rather than leaving Save dead
-                // and the reason to be guessed at.
+            if duplicate != nil || shortOf != nil {
+                // The same as one you have, or short of your best: one line,
+                // saying what would make it a record.
                 Label(
-                    "You already have this one, from \(duplicate.date.formatted(date: .abbreviated, time: .omitted)). Change the weight or the reps.",
-                    systemImage: "exclamationmark.circle"
-                )
-                .font(.caption)
-                .foregroundStyle(Senku.Palette.caution)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else if let shortOf {
-                Label(
-                    "Not a record: your best is \(Display.set(weightKG: shortOf.weightKG, reps: shortOf.reps, seconds: shortOf.seconds, in: unitSystem)), from \(shortOf.date.formatted(date: .abbreviated, time: .omitted)). "
-                        + (isTimed
-                            ? "Hold longer, or as long with more weight."
-                            : "Go heavier, or the same weight for more reps."),
+                    isTimed ? "Not a record: Hold longer or add weight" : "Not a record: Go heavier or more reps",
                     systemImage: "exclamationmark.circle"
                 )
                 .font(.caption)
@@ -933,8 +924,9 @@ private struct RecordValueEditor: View {
 /// Starting a lift you do not yet track: pick the exercise, then say what you
 /// did on it.
 ///
-/// Exercises you already have a record on are not offered here — the next
-/// record on those is a dated line inside the exercise itself.
+/// Exercises you already have a record on are listed with a PR tag, and
+/// picking one opens its history instead — the next record on those is a
+/// dated line inside the exercise itself, not a second entry.
 private struct RecordEditor: View {
     @Bindable var protocols: CardioProtocolStore
     @Bindable var cardioRecords: CardioRecordStore
@@ -942,7 +934,8 @@ private struct RecordEditor: View {
 
     let unitSystem: UnitSystem
     @Bindable var library: ExerciseLibrary
-    let hidden: Set<String>
+    let recorded: Set<String>
+    let onOpenRecorded: (String) -> Void
     /// Why one of your own exercises cannot be deleted right now.
     let deletionRefusal: (Exercise) -> String?
     let onSave: (PersonalRecord) -> Void
@@ -978,10 +971,14 @@ private struct RecordEditor: View {
                 } else {
                     ExercisePicker(
                         library: library,
-                        hidden: hidden,
+                        marked: recorded,
                         deletionRefusal: deletionRefusal
                     ) { picked in
-                        chosen = picked
+                        if recorded.contains(picked.id) {
+                            onOpenRecorded(picked.id)
+                        } else {
+                            chosen = picked
+                        }
                     }
                     .navigationTitle("Pick an Exercise")
                     #if os(iOS)

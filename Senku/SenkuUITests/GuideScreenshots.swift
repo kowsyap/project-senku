@@ -82,6 +82,7 @@ final class GuideScreenshots: XCTestCase {
         let day = btn("Upper A", in: app)
         if day.waitForExistence(timeout: 3) {
             day.tap()
+            app.buttons["Start Upper A"].tap()
             shoot("guide-workout-session")
         }
     }
@@ -90,7 +91,7 @@ final class GuideScreenshots: XCTestCase {
         let app = launch()
         app.open("Workout")
         let day = btn("Upper A", in: app)
-        if day.waitForExistence(timeout: 3) { day.tap() }
+        if day.waitForExistence(timeout: 3) { day.tap(); app.buttons["Start Upper A"].tap() }
         let bench = btn("Dumbbell Bench Press", in: app)
         if reveal(bench, in: app) {
             bench.tap()
@@ -102,7 +103,7 @@ final class GuideScreenshots: XCTestCase {
         let app = launch()
         app.open("Workout")
         let day = btn("Upper B", in: app)
-        if day.waitForExistence(timeout: 3) { day.tap() }
+        if day.waitForExistence(timeout: 3) { day.tap(); app.buttons["Start Upper B"].tap() }
         let pullUp = btn("Pull-Up", in: app)
         if reveal(pullUp, in: app) {
             pullUp.tap()
@@ -114,7 +115,7 @@ final class GuideScreenshots: XCTestCase {
         let app = launch()
         app.open("Workout")
         let day = btn("Upper A", in: app)
-        if day.waitForExistence(timeout: 3) { day.tap() }
+        if day.waitForExistence(timeout: 3) { day.tap(); app.buttons["Start Upper A"].tap() }
         let info = app.buttons["About Dumbbell Bench Press"]
         if reveal(info, in: app) {
             info.tap()
@@ -136,7 +137,7 @@ final class GuideScreenshots: XCTestCase {
         let app = launch()
         app.open("Workout")
         let day = btn("Upper A", in: app)
-        if day.waitForExistence(timeout: 3) { day.tap() }
+        if day.waitForExistence(timeout: 3) { day.tap(); app.buttons["Start Upper A"].tap() }
         let addEx = app.buttons["Add an exercise"]
         if reveal(addEx, in: app) {
             addEx.tap()

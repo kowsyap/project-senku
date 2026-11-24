@@ -76,6 +76,10 @@ must have a text equivalent.
 - **S2-R6** The rest chime must not turn other audio down for the length of a
   rest. The session holding the app awake mixes with other audio; it ducks only
   for the chime, and lets go once the chime has sounded.
+- **S2-R7** A booked request keeps the words it was booked with, so every
+  reminder that is on is re-booked when the app comes forward — the weigh-in
+  week, the creatine repeat, water and dues — and new wording in an update
+  reaches the next one.
 
 Budget, declared once in `NotificationBudget` and summed by a test: water 12,
 rest 2, weigh-in 7, creatine 1, due dates 36 — 58 allocated, 6 held in reserve.
@@ -102,7 +106,11 @@ rest 2, weigh-in 7, creatine 1, due dates 36 — 58 allocated, 6 held in reserve
 
 - **S5-R1** The phone presents four navigation slots on a regular-width device
   and three on a compact one, plus an overflow destination.
-- **S5-R2** The user selects which screens occupy the bar, and their order.
+- **S5-R2** The user selects which screens occupy the bar, and their order. The
+  two calculators — macros and plates — are tools, not places, and are listed
+  under More only.
+- **S5-R2a** Fitting the bar to a narrow window trims it for as long as the
+  window is narrow and is never saved; only the user's own edits are.
 - **S5-R3** Screens remain mounted across navigation, so returning to one
   restores its state.
 - **S5-R4** A screen that performs work on appearing must not do so while it is
@@ -549,6 +557,57 @@ AnimeEntry
 
 ---
 
+## F8 — Dues
+
+**Purpose.** Bills, renewals and deadlines that repeat, ticked off rather than
+merely reminded.
+
+### Requirements
+
+- **F8-R1** Each occurrence is computed from the first due date, so a bill on
+  the 31st stays on the 31st.
+- **F8-R2** Every day a due keeps — first date, last paid, each history line —
+  is stored at noon of its day, so crossing time zones never moves it; items
+  saved before are moved on load.
+- **F8-R3** Categories offered: Credit Card, Loan, Utilities, any of the user's
+  own in use, and a custom one.
+- **F8-R4** With Expenses added, ticking a due paid logs a spend in the month it
+  was paid, the month it was for as the note: Loan under *Loan / EMI*, Utilities
+  under *Utilities*, a custom category under its own name unless its *Log in
+  Expenses* switch is off. A Credit Card due is never logged — its purchases are
+  the spending.
+- **F8-R5** Undoing a payment, from the list, the editor or the history, removes
+  the spend it logged.
+
+### Acceptance
+
+- [x] A due ticked in one time zone is still ticked in another — `DueItemTests`
+- [x] Paid dues reach Expenses by category, and undo takes them back — `DuesToExpensesTests`
+
+---
+
+## F9 — Expenses and Income
+
+**Purpose.** Money in and out, filed by month: spends by category, income by
+source.
+
+### Requirements
+
+- **F9-R1** A dashboard over a chosen stretch of months: monthly average,
+  highest month, a share by category or source, a month-by-month chart with its
+  average, and money in against money out when both are added.
+- **F9-R2** Long tables page six months at a time.
+- **F9-R3** Export writes a CSV of exactly what is on screen — the dashboard's
+  period and category, or the open month — named for it.
+- **F9-R4** Loans and repayments between people are not entries; a purchase made
+  for the user by someone else is the user's spend.
+
+### Acceptance
+
+- [x] Export follows the screen's filter and names the file for it — `MoneyExportTests`
+
+---
+
 ## F7 — Apple Health
 
 **Purpose.** Write what Senku records into Apple Health, so it sits beside what
@@ -611,5 +670,5 @@ Agreed, not started, and not yet specified as features of their own.
 | Plan builder in the plan skill | F3 | `/senku-plan` with no file offers to build a plan from goals, days, equipment and experience, using only catalogue exercises, written as the same import file and checked by the same script. Part of `skills/senku-plan`, not a separate skill |
 | SBD / powerlifting programmes | F3 | Week-by-week blocks: a top set and back-off sets per lift with prescribed weights, RPE, deload, peak and test week, pre-filled in the set logger. Not needed for now |
 | Loan / EMI tracker | new | Amount, rate, tenure, principal and interest split, prepayment effect; arithmetic only |
-| Expense tracker | new | Dated entries; receipt reading through the existing Vision pipeline |
+| Receipt reading for Expenses | F9 | Read a receipt through the existing Vision pipeline into a spend |
 | Wardrobe | new | Catalogue the clothes, then suggest outfits by occasion |

@@ -23,6 +23,8 @@ public struct WorkoutView: View {
     @State private var isShowingHistory = false
     @State private var finished: WorkoutSession?
     @State private var reviewing: WorkoutSession?
+    /// The day opened out to show its exercises and the button that starts it.
+    @State private var expanded: UUID?
 
     public init(
         plans: TrainingPlanStore,
@@ -69,7 +71,7 @@ public struct WorkoutView: View {
                 Button {
                     isCalculatingPlates = true
                 } label: {
-                    StackedActionLabel("Plates", symbol: "circle.hexagongrid.fill")
+                    StackedActionLabel("Plates", symbol: "dumbbell.fill")
                 }
             }
 
@@ -158,22 +160,38 @@ public struct WorkoutView: View {
                 ForEach(plans.readyDays) { day in
                     let isDone = done.contains(day.id)
 
-                    Button {
-                        // A day already trained this week opens as a record of
-                        // what you did, not as a fresh session. The week is the
-                        // unit the plan is written in, and starting Legs twice
-                        // in one week is nearly always a mis-tap rather than a
-                        // decision — so the second tap shows you the workout
-                        // you are half-remembering instead of quietly opening
-                        // an empty one over the top of it.
-                        if isDone {
-                            reviewing = workouts.lastSession(forDay: day.id)
-                        } else {
-                            workouts.start(day, target: plans.plan.target)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Button {
+                            // A day already trained this week opens as a record
+                            // of what you did, not as a fresh session. The week
+                            // is the unit the plan is written in, and starting
+                            // Legs twice in one week is nearly always a mis-tap
+                            // rather than a decision — so the second tap shows
+                            // you the workout you are half-remembering instead
+                            // of quietly opening an empty one over it.
+                            //
+                            // Any other day opens out first: what is in it, and
+                            // Start. A tap that starts a session straight away was
+                            // a session started by brushing the list.
+                            if isDone {
+                                reviewing = workouts.lastSession(forDay: day.id)
+                            } else {
+                                withAnimation(.snappy) {
+                                    expanded = expanded == day.id ? nil : day.id
+                                }
+                            }
+                        } label: {
+                            dayCard(day, isDone: isDone, isExpanded: expanded == day.id)
                         }
-                    } label: {
-                        dayCard(day, isDone: isDone)
+
+                        if expanded == day.id, !isDone {
+                            dayDetail(day)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
                     }
+                    // Borderless, so the header and Start are two buttons rather
+                    // than one row-sized one.
+                    .buttonStyle(.borderless)
                     // A grey ground for a day already trained. The tick and the
                     // faded glyphs say it too, but the row's own background is
                     // what reads at a glance, before anything on it is looked
@@ -199,9 +217,9 @@ public struct WorkoutView: View {
         let count = days.filter { done.contains($0.id) }.count
         let total = days.count
         let tint = RootView.Tab.workout.tint
-        let message = count == 0 ? "Fresh week. Your move."
-            : count == total ? "Week cleared."
-            : "\(total - count) to go this week"
+        // Counts down from the whole week, the same line before a day is
+        // trained as after.
+        let message = count == total ? "Week cleared." : "\(total - count) to go this week"
 
         return VStack(spacing: 12) {
             HStack(spacing: 0) {
@@ -273,7 +291,47 @@ public struct WorkoutView: View {
         #endif
     }
 
-    private func dayCard(_ day: SplitDay, isDone: Bool) -> some View {
+    /// An opened day: its muscles large on the left, and Start on the right.
+    private func dayDetail(_ day: SplitDay) -> some View {
+        HStack(spacing: 12) {
+            // From the left, under the day's name; scrolling only when a day
+            // has more muscles than the row has room for.
+            ViewThatFits(in: .horizontal) {
+                bigGroups(day).frame(maxWidth: .infinity, alignment: .leading)
+                ScrollView(.horizontal, showsIndicators: false) { bigGroups(day) }
+                    .scrollBounceBehavior(.basedOnSize)
+            }
+
+            Button {
+                expanded = nil
+                workouts.start(day, target: plans.plan.target)
+            } label: {
+                Text("Start")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .frame(height: 34)
+                    .background(Capsule().fill(Senku.Palette.surplus))
+            }
+            .accessibilityLabel("Start \(day.name)")
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func bigGroups(_ day: SplitDay) -> some View {
+        HStack(spacing: 18) {
+            ForEach(Array(Set(day.groups)).sorted { $0.rawValue < $1.rawValue }) { group in
+                VStack(spacing: 4) {
+                    GroupGlyph(group: group, size: 48)
+                    Text(group.title)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private func dayCard(_ day: SplitDay, isDone: Bool, isExpanded: Bool = false) -> some View {
         let exercises = day.exerciseIDs.compactMap { library.exercise($0) }
         let last = workouts.lastSession(forDay: day.id)
 
@@ -300,9 +358,11 @@ public struct WorkoutView: View {
                         Text("\(exercises.count) exercise\(exercises.count == 1 ? "" : "s")")
                         if let last {
                             // Named relative — "3 days ago" is the form the
-                            // question is asked in, never a date.
+                            // question is asked in, never a date. On its own:
+                            // "last" in front read "last last week" and
+                            // "last yesterday".
                             Text("·")
-                            Text("last \(last.date.formatted(.relative(presentation: .named)))")
+                            Text(last.date.formatted(.relative(presentation: .named)))
                         }
                     }
                 }
@@ -313,7 +373,8 @@ public struct WorkoutView: View {
 
             Spacer(minLength: 8)
 
-            if !day.groups.isEmpty {
+            // Opened, the muscles are drawn large underneath instead.
+            if !day.groups.isEmpty, !isExpanded {
                 MuscleGroupBox(groups: day.groups, size: 24)
                     // Faded rather than hidden: a finished day stays on the
                     // list and stays startable, because doing legs twice in a
@@ -324,9 +385,13 @@ public struct WorkoutView: View {
             Image(systemName: isDone ? "eye" : "chevron.right")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 .frame(width: 22, alignment: .trailing)
         }
         .padding(.vertical, 4)
+        // The whole row, gaps included: a borderless button is otherwise
+        // only hittable on what it draws.
+        .contentShape(Rectangle())
         // Primary underneath, so the grey lines are grey: inside a button they
         // otherwise come out in the button's tint, which reads as orange.
         .foregroundStyle(Color.primary)

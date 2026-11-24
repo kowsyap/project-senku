@@ -74,7 +74,9 @@ cannot explain where a number came from, it does not show it.**
   exercise's info sheet colours the muscles it works on the same figure, yellow
   for a little to red for most — down to the three heads of the chest.
 - **A week you build once** — name your training days, give each one its muscle
-  groups and its exercises, and run it every week. Start from a template if you
+  groups and its exercises, and run it every week. Tap a day to open it — its
+  muscles drawn large and a Start button — so a session never starts from a
+  brush of the list. Start from a template if you
   would rather not: Push / Pull / Legs, Upper / Lower, Arnold, or one group a
   day. The app tells you which groups the week never touches, and an Other card
   takes the finisher from outside the day's muscles.
@@ -107,8 +109,10 @@ cannot explain where a number came from, it does not show it.**
   intervals you repeat.
 - **PRs** — every record the sets produced, per exercise, newest first, with
   cardio records and protocols alongside, and each exercise's info a tap away. A record you add by hand has to beat
-  your best, so the page only ever goes up. Deleting a session never deletes the
-  PRs it produced.
+  your best, so the page only ever goes up — anything short says "Not a record:
+  Go heavier or more reps". Adding one lists every exercise, the ones you
+  already hold a record on tagged PR and opening into their history. Deleting a
+  session never deletes the PRs it produced.
 - **Share a PR** — swipe a record left, or tap share on its page, for a card
   sized for an Instagram or WhatsApp story: the lift, how much it beat the last
   one, the estimated 1RM, every record on the way there, and the muscles it
@@ -118,7 +122,7 @@ cannot explain where a number came from, it does not show it.**
   Your music keeps playing at its own volume and dips only for the chime.
 - **Plate calculator** — type a weight, get the per-side stack drawn to scale, in
   kg or lb, with ± steppers that snap to what is actually loadable and a rack
-  editor for the plates you own.
+  editor for the plates you own. From the Workout page, or under More.
 
 ### Nutrition
 
@@ -142,14 +146,29 @@ cannot explain where a number came from, it does not show it.**
 - **Streaks** — protein, calories, water and creatine, with any past day you
   forgot to log set right from the streak page. Each day is judged by the target
   it had, so changing your plan never rewrites the past.
-- **Anime** — because a personal app is allowed to hold unrelated parts of a
-  life. Seasons or totals, statuses, search, sorting, posters.
-- **Export** — a PDF report with vector charts and a picker for which sections go
-  in, plus a JSON backup that restores. No cloud, no account, no subscription.
+- **Extras** — Watchlist, Dues, Expenses and Income, added from Settings when
+  you want them and removed when you do not, with one prompt that saves their
+  data first if the Backup switch is on.
+- **Watchlist** — because a personal app is allowed to hold unrelated parts of a
+  life. Seasons or totals, statuses, search, sorting, posters, and collections.
+- **Dues** — bills, renewals and deadlines that repeat: tick one paid and its
+  reminder stops, with Credit Card, Loan and Utilities as categories or your
+  own. A paid loan or bill is logged in Expenses for you — never a card bill,
+  whose purchases are already there. A day ticked stays that day when you
+  travel across time zones.
+- **Expenses and Income** — spends by category and earnings by source, filed by
+  month: a dashboard for any stretch of months, a month-by-month chart with its
+  average, tables that page six months at a time, and money in against money
+  out. Export hands over a CSV of exactly what the screen is showing.
+- **Export Data** — a JSON backup that restores, on by default, plus a PDF
+  report when switched on, with vector charts and a picker for which sections
+  go in. A sample file beside Import Data shows the format, one of everything.
+  No cloud, no account, no subscription.
 - **A navbar that is yours** — four tabs visible (three on a small phone) and the
   rest under More; you choose which and in what order, and you switch pages by
   dragging the glass pill with your finger. The tab you are on stands up and
-  moves — Goku powers up, the figure curls, the timer runs.
+  moves — Goku powers up, the figure curls, the timer runs, the card and the
+  bank light up. The two calculators, macros and plates, live under More.
 - **One Settings page** — the navbar, Apple Health, and a way into every
   screen's own settings, which also sit on each screen behind its Adjust button.
 
@@ -295,10 +314,10 @@ of a life.
 
 <img src="docs/screenshots/more.png" width="260" align="right" alt="The More screen">
 
-Under *More* sit the plate calculator, the anime list, the streak page, the PDF
-export and Settings — the navbar, Apple Health, and every screen's own
-settings. Which screens live under More rather than in the bar is entirely your
-call.
+Under *More* sit the macro and plate calculators, the watchlist, dues,
+expenses and income, the streak page and Settings — the navbar, Apple Health,
+the extras, and every screen's own settings. Which screens live under More
+rather than in the bar is your call, the calculators aside.
 
 <br clear="right">
 

@@ -35,8 +35,8 @@ is needed only to distribute.
 
 ```sh
 # Packages, on the host
-cd SenkuCore && swift test        # 241 tests
-cd ../SenkuUI  && swift test      # 209 tests
+cd SenkuCore && swift test        # 285 tests
+cd ../SenkuUI  && swift test      # 284 tests
 
 # Package builds per platform
 xcodebuild -scheme SenkuUI -destination 'generic/platform=iOS' build
@@ -101,7 +101,7 @@ All are `#if DEBUG`, read at launch, and set as environment variables:
 | Variable | Effect |
 | --- | --- |
 | `SENKU_SAMPLE` | `1` loads `Senku/Senku/sample-data.json` through the production importer — three weeks of workouts, weigh-ins, water, food and anime. A path loads that file instead, such as a persona from `make_persona.py`. Only into an empty app |
-| `SENKU_PLAN_FILE` | opens a plan file's preview as though it had been picked — the one step a UI test cannot reach through the file picker |
+| `SENKU_PLAN_FILE` | hands a file to Import Data as though it had been picked — a plan opens its preview, anything else imports — the one step a UI test cannot reach through the file picker |
 | `SENKU_SCREEN` | opens the app directly on one screen (`water`, `food`, `records`…) |
 | `SENKU_REST` | watch only: starts a rest of N seconds at launch |
 
@@ -183,6 +183,27 @@ git clone https://github.com/kowsyap/senku-plan-skill /tmp/senku-plan-skill
 python3 skills/senku-plan/scripts/senku_plan.py publish /tmp/senku-plan-skill
 cd /tmp/senku-plan-skill && git commit -am "…" && git push
 git tag v1.x.0 && git push --tags     # the release workflow zips and attaches it
+```
+
+## The example file
+
+`docs/import-example.json` is the whole import format, one of everything. The
+app ships a copy as the data menu's *Sample file*; after editing the example,
+copy it over, or `ImportExampleTests` fails:
+
+```sh
+cp docs/import-example.json SenkuUI/Sources/SenkuUI/Resources/import-example.json
+```
+
+`ImportExampleUITests` imports it on a simulator through Import Data and
+screenshots every page it fills. Run it on an erased device, since the importer
+skips what is already there:
+
+```sh
+xcrun simctl erase <device>
+TEST_RUNNER_SENKU_SHOTS=/tmp/shots xcodebuild test -project Senku/Senku.xcodeproj \
+  -scheme Senku -destination 'platform=iOS Simulator,id=<device>' \
+  -only-testing:SenkuUITests/ImportExampleUITests
 ```
 
 ## README screenshots

@@ -391,7 +391,7 @@ struct FoodPhotoSheet: View {
 /// screen needs one still photo and nothing else, and the system camera already
 /// knows about the flash, the lenses and the permission prompt.
 @available(iOS 27.0, *)
-private struct CameraPicker: UIViewControllerRepresentable {
+struct CameraPicker: UIViewControllerRepresentable {
     let onFinish: (CGImage?, CGImagePropertyOrientation?) -> Void
 
     func makeUIViewController(context: Context) -> UIImagePickerController {

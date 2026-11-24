@@ -62,6 +62,10 @@ public struct RootView: View {
     @State private var isConfirmingReset = false
     @State private var isSettingUpProfile = false
     @State private var isConfirmingResetAgain = false
+    /// Whether Delete saves a backup first. On each time the question is asked.
+    @State private var backsUpBeforeReset = true
+    /// The backup being saved before a reset; the reset follows once it is.
+    @State private var resetBackup: ResetBackup?
     #if os(iOS)
     @State private var exportedReport: ExportedReport?
     @State private var isChoosingExport = false
@@ -104,6 +108,7 @@ public struct RootView: View {
     public enum Tab: String, Hashable, Identifiable, Sendable, CaseIterable {
         case me
         case quickCalc
+        case plates
         case rest
         case workout
         case weight
@@ -114,6 +119,7 @@ public struct RootView: View {
         case dueDates
         case expenses
         case income
+        case wardrobe
         /// Not a screen: the way to the screens the bar has no room for.
         case more
 
@@ -132,6 +138,7 @@ public struct RootView: View {
             switch self {
             case .me: "Me"
             case .quickCalc: "Macro Calculator"
+            case .plates: "Plate Calculator"
             case .rest: "Rest"
             case .workout: "Workout"
             case .weight: "Weight"
@@ -142,6 +149,7 @@ public struct RootView: View {
             case .dueDates: "Dues"
             case .expenses: "Expenses"
             case .income: "Income"
+            case .wardrobe: "Wardrobe"
             case .more: "More"
             }
         }
@@ -159,6 +167,10 @@ public struct RootView: View {
             default: title
             }
         }
+
+        /// The calculators: tools you open for a sum and close again, so they
+        /// live under More and are never offered a place in the bar.
+        public var staysInMore: Bool { self == .quickCalc || self == .plates }
 
         var mark: String? {
             self == .me ? "GokuMark" : nil
@@ -178,6 +190,7 @@ public struct RootView: View {
             switch self {
             case .me: "person.fill"
             case .quickCalc: "function"
+            case .plates: "dumbbell.fill"
             case .rest: "timer"
             case .workout: "figure.strengthtraining.traditional"
             case .weight: "scalemass"
@@ -188,6 +201,7 @@ public struct RootView: View {
             case .dueDates: "calendar.badge.clock"
             case .expenses: "creditcard"
             case .income: "dollarsign.bank.building"
+            case .wardrobe: "tshirt"
             case .more: "ellipsis.circle"
             }
         }
@@ -195,7 +209,10 @@ public struct RootView: View {
         /// Every screen, in the order they are listed wherever all of them
         /// appear — the sidebar on iPad, and the More list on a phone. "More"
         /// is not in it, because it is not a screen.
-        public static let ordered: [Tab] = [.me, .quickCalc, .rest, .workout, .weight, .water, .food, .records, .anime, .dueDates, .expenses, .income]
+        public static let ordered: [Tab] = [.me, .quickCalc, .plates, .rest, .workout, .weight, .water, .food, .records, .anime, .dueDates, .expenses, .income]
+        // `.wardrobe` is left out on purpose: the screen and its reader are
+        // built, but the on-device readings need more work before it ships.
+        // Adding it here is all it takes to put it back under More.
 
         /// One hue each, spread around the wheel.
         ///
@@ -213,6 +230,7 @@ public struct RootView: View {
             switch self {
             case .me: Senku.Palette.saiyan                              // gold
             case .quickCalc: Color(red: 0.62, green: 0.45, blue: 0.92)  // violet
+            case .plates: Color(red: 0.36, green: 0.60, blue: 0.72)     // steel
             case .rest: Color(red: 0.90, green: 0.35, blue: 0.32)       // red
             case .workout: Color(red: 0.94, green: 0.51, blue: 0.16)    // orange
             case .weight: Color(red: 0.70, green: 0.52, blue: 0.28)     // bronze
@@ -223,6 +241,7 @@ public struct RootView: View {
             case .dueDates: Color(red: 0.55, green: 0.74, blue: 0.20)   // lime
             case .expenses: Color(red: 0.70, green: 0.32, blue: 0.85)   // purple
             case .income: Color(red: 0.28, green: 0.72, blue: 0.43)     // green
+            case .wardrobe: Color(red: 0.86, green: 0.38, blue: 0.47)   // rose
             case .more: Color(red: 0.45, green: 0.50, blue: 0.58)        // slate
             }
         }
@@ -413,9 +432,16 @@ public struct RootView: View {
                 // and a bill that went overdue overnight needs its nudge.
                 refreshDueReminders()
                 // The weigh-in reminders are a week of single mornings; coming
-                // back is when the week is topped up.
+                // back is when the week is topped up. The creatine one repeats
+                // by itself, and is re-booked too: a repeating request keeps
+                // the words it was booked with, so new wording in an update
+                // never reached it until the switch was turned off and on.
                 #if canImport(UserNotifications) && !os(macOS)
-                Task { await WeightReminder.refresh() }
+                let takesCreatine = water.settings.takesCreatine
+                Task {
+                    await WeightReminder.refresh()
+                    await CreatineReminder.refresh(takesCreatine: takesCreatine)
+                }
                 #endif
             }
 
@@ -472,30 +498,44 @@ public struct RootView: View {
         // the app's data as a whole rather than any one screen — and all three
         // rare enough that a permanent control for them would be clutter on
         // every screen in the app.
-        .confirmationDialog("Senku data", isPresented: $isShowingDataMenu, titleVisibility: .visible) {
-            Button("Import Data") { isImporting = true }
-            #if os(iOS)
-            Button("Export PDF") { isChoosingExport = true }
-            #endif
-            Button("Hard Reset", role: .destructive) { isConfirmingReset = true }
-            Button("Cancel", role: .cancel) {}
+        // A sheet of its own rather than a confirmation dialog, which can only
+        // hold buttons: the sample file is a link under Import Data, not a
+        // fourth button as loud as the other three.
+        .sheet(isPresented: $isShowingDataMenu) {
+            dataMenu
+                .presentationDetents([.height(300)])
+                .presentationDragIndicator(.visible)
         }
         // Two alerts, not one. The first says what goes; the second is asked
         // after that has been read, and offers the way out that actually helps
         // — taking a copy — rather than only a Cancel. A single tap-through on
         // a destructive action this total is too cheap for what it costs.
         .alert("Delete everything?", isPresented: $isConfirmingReset) {
-            Button("Continue", role: .destructive) { isConfirmingResetAgain = true }
-            Button("Keep my data", role: .cancel) {}
+            Button("Continue", role: .destructive) {
+                backsUpBeforeReset = true
+                // After this alert has gone.
+                DispatchQueue.main.async { isConfirmingResetAgain = true }
+            }
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Everything you logged, your progress photos, settings, reminders and Gemini key are erased from this iPhone, and the watch stops being sent them. What Senku wrote to Apple Health stays there.")
+            Text("Everything you logged, your progress photos, settings, reminders and Gemini key are erased from this iPhone")
         }
-        .alert("This cannot be undone", isPresented: $isConfirmingResetAgain) {
-            Button("Yes", role: .destructive) { resetEverything() }
-            Button("No", role: .cancel) {}
-        } message: {
-            Text("There is no backup and no undo. Export a report first if you want a copy.")
+        // A sheet, not an alert: an alert cannot hold the Backup switch.
+        .sheet(isPresented: $isConfirmingResetAgain) {
+            resetConfirmation
+                .presentationDetents([.height(250)])
         }
+        #if os(iOS)
+        // Saved first, then wiped — only once the file has gone somewhere.
+        // Closing the share sheet without saving deletes nothing.
+        .sheet(item: $resetBackup) { backup in
+            ShareSheet(urls: [backup.url]) { saved in
+                resetBackup = nil
+                guard saved else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { resetEverything() }
+            }
+        }
+        #endif
         #if os(iOS)
         .sheet(isPresented: $isChoosingExport) {
             ReportOptionsView(selection: $reportSelection) {
@@ -607,7 +647,18 @@ public struct RootView: View {
                 profileEditionID = UUID()
             }
             publishWeight()
-            importSummary = summary
+            if summary.settingsRestored {
+                // After the rebuild restored settings set off, not with it: a
+                // summary raised in the same pass as the screens were remade
+                // was dropped with them, and a backup with settings in it
+                // imported without saying so.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(400))
+                    importSummary = summary
+                }
+            } else {
+                importSummary = summary
+            }
         } catch is CancellationError {
             return
         } catch {
@@ -700,6 +751,111 @@ public struct RootView: View {
     /// exercises, training plan, every workout, cardio records and cardio
     /// plans. Neither can do the other's job, so the export offers both rather
     /// than asking which you meant.
+    /// The last word before a reset: what it means, the Backup switch, and
+    /// Delete.
+    private var resetConfirmation: some View {
+        VStack(spacing: 14) {
+            Text("Cannot be undone")
+                .font(.headline)
+                .padding(.top, 22)
+            Text("Save data before reset?")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            #if os(iOS)
+            Toggle("Backup", isOn: $backsUpBeforeReset)
+                .padding(.horizontal, 4)
+            #endif
+
+            HStack(spacing: 12) {
+                Button {
+                    isConfirmingResetAgain = false
+                } label: {
+                    Text("Cancel").frame(maxWidth: .infinity).frame(height: 30)
+                }
+                .buttonStyle(.bordered)
+
+                Button(role: .destructive) {
+                    isConfirmingResetAgain = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { deleteEverything() }
+                } label: {
+                    Text("Delete").fontWeight(.semibold).frame(maxWidth: .infinity).frame(height: 30)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Senku.Palette.warning)
+            }
+        }
+        .padding(.horizontal, 20)
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    /// Delete, from the confirmation: straight away, or after the backup
+    /// has been saved when the switch is on.
+    private func deleteEverything() {
+        #if os(iOS)
+        if backsUpBeforeReset {
+            guard let url = writeBackup() else {
+                importFailure = "The backup could not be written, so nothing was deleted."
+                return
+            }
+            resetBackup = ResetBackup(url: url)
+            return
+        }
+        #endif
+        resetEverything()
+    }
+
+    /// Import, the sample, export and reset. Each action closes the sheet
+    /// first: the picker, the share sheet and the alerts it opens are presented
+    /// from the app, which cannot show a second sheet over this one.
+    private var dataMenu: some View {
+        VStack(spacing: 12) {
+            Text("Senku data")
+                .font(.headline)
+                .padding(.top, 20)
+
+            VStack(alignment: .trailing, spacing: 6) {
+                menuButton("Import Data", symbol: "square.and.arrow.down") { isImporting = true }
+                #if os(iOS)
+                Button("Sample file") { shareSample() }
+                    .font(.footnote)
+                    .underline()
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .padding(.trailing, 4)
+                #endif
+            }
+
+            #if os(iOS)
+            menuButton("Export Data", symbol: "square.and.arrow.up") {
+                // Each time: a backup, and no report until it is asked for.
+                reportSelection.setReport(false)
+                reportSelection.backup = true
+                isChoosingExport = true
+            }
+            #endif
+            menuButton("Hard Reset", symbol: "trash", role: .destructive) { isConfirmingReset = true }
+        }
+        .padding(.horizontal, 20)
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    private func menuButton(_ title: String, symbol: String, role: ButtonRole? = nil, action: @escaping () -> Void) -> some View {
+        Button(role: role) {
+            isShowingDataMenu = false
+            // Once the sheet has gone.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: action)
+        } label: {
+            Label(title, systemImage: symbol)
+                .font(.body.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .frame(height: 30)
+        }
+        .buttonStyle(.bordered)
+        .tint(role == .destructive ? Senku.Palette.warning : nil)
+    }
+
     #if os(iOS)
     private func exportReport() {
         reportSelection.save()
@@ -708,12 +864,12 @@ public struct RootView: View {
         // anything in it, so a phone with no money logged gets no empty
         // money report.
         let selection = reportSelection
-        let wantsHealth = selection.profile || selection.weight || selection.records || selection.plan
-            || selection.workouts || selection.water || selection.food
-        let wantsWatchlist = selection.anime && extras.isInstalled(.watchlist) && !anime.entries.isEmpty
-        let wantsMoney = (selection.dues && extras.isInstalled(.dues) && !dueDates.items.isEmpty)
+        let wantsHealth = selection.report && (selection.profile || selection.weight || selection.records || selection.plan
+            || selection.workouts || selection.water || selection.food)
+        let wantsWatchlist = selection.report && selection.anime && extras.isInstalled(.watchlist) && !anime.entries.isEmpty
+        let wantsMoney = selection.report && ((selection.dues && extras.isInstalled(.dues) && !dueDates.items.isEmpty)
             || (selection.expenses && extras.isInstalled(.expenses) && !expenses.entries.isEmpty)
-            || (selection.income && extras.isInstalled(.income) && !income.entries.isEmpty)
+            || (selection.income && extras.isInstalled(.income) && !income.entries.isEmpty))
 
         func report(_ part: ReportPDF.Part) -> URL? {
             ReportPDF.build(
@@ -754,6 +910,24 @@ public struct RootView: View {
         }
 
         exportedReport = ExportedReport(urls: files)
+    }
+
+    /// The example file — one of everything the import takes — handed to the
+    /// share sheet, to save and fill in, or to give an AI as the shape to
+    /// write. The same file as `docs/import-example.json`; a test keeps the
+    /// two the same.
+    private func shareSample() {
+        guard let bundled = SampleFile.url else { return }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("Senku Sample.json")
+        try? FileManager.default.removeItem(at: url)
+        do {
+            try FileManager.default.copyItem(at: bundled, to: url)
+            isShowingDataMenu = false
+            // After the menu is gone: the share sheet is presented from here.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { exportedReport = ExportedReport(urls: [url]) }
+        } catch {
+            importFailure = "The sample file could not be prepared."
+        }
     }
 
     private func writeBackup() -> URL? {
@@ -974,6 +1148,8 @@ public struct RootView: View {
         switch tab {
         case .me: meScreen
         case .quickCalc: quickCalcScreen
+        case .plates:
+            PlatesScreen(unitSystem: store.profile?.unitSystem ?? UnitPreference.current)
         case .rest: restScreen
         case .workout: workoutScreen
         case .weight: weightScreen
@@ -988,6 +1164,13 @@ public struct RootView: View {
         case .income:
             MoneyView(store: income, counterpart: extras.isInstalled(.expenses) ? expenses : nil)
                 .navigationTitle("Income")
+        case .wardrobe:
+            #if os(iOS)
+            WardrobeView()
+                .navigationTitle("Wardrobe")
+            #else
+            EmptyView()
+            #endif
         case .more: EmptyView()   // the list itself, not a destination
         }
     }
@@ -1088,7 +1271,7 @@ public struct RootView: View {
 
     @ViewBuilder
     private var dueDatesScreen: some View {
-        DueDatesView(store: dueDates)
+        DueDatesView(store: dueDates, expenses: extras.isInstalled(.expenses) ? expenses : nil)
             .navigationTitle("Dues")
     }
 
@@ -1501,4 +1684,23 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
 #endif
+/// The plate calculator as a page of its own under More, holding its own
+/// copy of the plates: read from storage each time it opens, so a rack edited
+/// from the Workout page is the rack it shows.
+private struct PlatesScreen: View {
+    @State private var plates: PlateStore
+
+    init(unitSystem: UnitSystem) {
+        _plates = State(initialValue: PlateStore(defaultUnit: unitSystem))
+    }
+
+    var body: some View {
+        PlateCalculatorView(plates: plates)
+    }
+}
+/// A backup written before a reset, waiting to be saved.
+private struct ResetBackup: Identifiable {
+    let url: URL
+    var id: URL { url }
+}
 #endif

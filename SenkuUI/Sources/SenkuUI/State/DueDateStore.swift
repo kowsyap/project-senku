@@ -12,9 +12,21 @@ public final class DueDateStore {
 
     public private(set) var items: [DueItem] = []
 
+    /// Where a paid due is logged as a spend. Nil when Expenses is not added,
+    /// and then nothing is logged.
+    public var expenses: MoneyStore?
+
     public init(defaults: UserDefaults = SenkuStorage.shared) {
         self.defaults = defaults
         self.items = Self.load(from: defaults)
+        // Written back once when loading moved anything — items saved before
+        // their days were kept at noon — so the move is not redone each launch
+        // in whatever time zone the phone is in by then.
+        // Never when nothing loaded: a file that failed to read is not overwritten.
+        if !items.isEmpty, let saved = defaults.data(forKey: Self.storageKey),
+           let current = try? JSONEncoder().encode(items), current != saved {
+            persist()
+        }
     }
 
     public func item(_ id: UUID) -> DueItem? {
@@ -29,6 +41,9 @@ public final class DueDateStore {
 
     public func save(_ item: DueItem) {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
+            // A tick taken back in the editor takes its spend with it.
+            let kept = Set(item.history.map(\.id))
+            unlog(items[index].history.filter { !kept.contains($0.id) })
             items[index] = item
         } else {
             items.append(item)
@@ -41,22 +56,57 @@ public final class DueDateStore {
         persist()
     }
 
-    public func markDone(_ id: UUID, paid: Double? = nil) {
+    public func markDone(_ id: UUID, paid: Double? = nil, at now: Date = .now) {
         guard let index = items.firstIndex(where: { $0.id == id }) else { return }
-        items[index].markDone(paid: paid)
+        items[index].markDone(at: now, paid: paid)
+        log(index, at: now)
         persist()
     }
 
     public func undoDone(_ id: UUID) {
         guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        let before = items[index].history
         items[index].undoDone()
+        let kept = Set(items[index].history.map(\.id))
+        unlog(before.filter { !kept.contains($0.id) })
         persist()
+    }
+
+    /// A payment, logged in Expenses in the month it was paid, with the month
+    /// it was for as the note — see `DueItem.expenseCategory` for which are.
+    /// Only with an amount: a spend of nothing is not worth a line. A category
+    /// of your own is added to Expenses' categories if it is not one already.
+    private func log(_ index: Int, at now: Date) {
+        guard let expenses, let named = items[index].expenseCategory,
+              let category = expenses.addCategory(named),
+              let last = items[index].history.indices.last,
+              let amount = items[index].history[last].amount, amount > 0
+        else { return }
+        let due = items[index].history[last].due
+        let entry = MoneyEntry(
+            month: YearMonth(now),
+            name: items[index].title,
+            category: category,
+            amounts: [amount],
+            note: due.formatted(.dateTime.month(.wide))
+        )
+        expenses.save(entry)
+        items[index].history[last].expenseID = entry.id
+    }
+
+    /// Takes the spends of ticks that were taken back out of Expenses.
+    private func unlog(_ completions: [DueCompletion]) {
+        guard let expenses else { return }
+        for id in completions.compactMap(\.expenseID) {
+            if let entry = expenses.entry(id) { expenses.delete(entry) }
+        }
     }
 
     /// Deletes one line of an item's history — see `DueItem.removeCompletion`
     /// for why the latest line is an undo and an older one is not.
     public func removeCompletion(_ completionID: UUID, from itemID: UUID) {
         guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+        unlog(items[index].history.filter { $0.id == completionID })
         items[index].removeCompletion(completionID)
         persist()
     }

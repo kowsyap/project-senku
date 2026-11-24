@@ -49,16 +49,22 @@ public final class TabLayout {
         return min(4, max(2, fits - 2))  // less Me and More
     }
 
-    /// Everything that can go in a slot: the nine screens, less "Me" which is
-    /// always first and "More" which is not a screen.
-    public static var selectable: [RootView.Tab] {
+    /// Every screen but "Me", which is always first — what the bar and More
+    /// share between them.
+    static var listed: [RootView.Tab] {
         RootView.Tab.ordered.filter { $0 != .me }
     }
 
-    /// The selectable ones, less any extra that has not been added.
+    /// Everything that can go in a slot: the listed ones, less the
+    /// calculators, which stay under More.
+    public static var selectable: [RootView.Tab] {
+        listed.filter { !$0.staysInMore }
+    }
+
+    /// The listed ones, less any extra that has not been added.
     static func available(in defaults: UserDefaults) -> [RootView.Tab] {
         let installed = ExtraStore.installed(in: defaults)
-        return selectable.filter { ExtraStore.isAvailable($0, installed: installed) }
+        return listed.filter { ExtraStore.isAvailable($0, installed: installed) }
     }
 
     private let defaults: UserDefaults
@@ -72,19 +78,28 @@ public final class TabLayout {
     /// How many the bar can carry, once it knows how wide it is.
     public private(set) var slots: Int = TabLayout.defaultSlots
 
+    /// What you chose, before any trimming to fit: `chosen` and `others` are
+    /// laid out from these each time the bar is measured, and only your own
+    /// edits change them. A narrow measurement once — a window still being
+    /// laid out at launch — used to trim a tab and save the trim, so a phone
+    /// with room for four came back with three for good.
+    private var preferredBar: [RootView.Tab]
+    private var preferredMore: [RootView.Tab]
+
     public init(defaults: UserDefaults = SenkuStorage.shared) {
         self.defaults = defaults
 
         let available = Self.available(in: defaults)
         let stored = (defaults.array(forKey: Self.storageKey) as? [String] ?? [])
             .compactMap(RootView.Tab.init(rawValue:))
-            .filter { available.contains($0) }
+            .filter { available.contains($0) && !$0.staysInMore }
 
         // Not trimmed here. The bar has not been measured yet, so trimming now
         // would cut a fourth tab against a default of three and never put it
         // back — `fit(screenWidth:)` does the trimming once the width is known.
         let inBar = stored.isEmpty ? Self.fallback : stored
         self.chosen = inBar
+        self.preferredBar = inBar
 
         let storedRest = (defaults.array(forKey: Self.restKey) as? [String] ?? [])
             .compactMap(RootView.Tab.init(rawValue:))
@@ -94,28 +109,20 @@ public final class TabLayout {
         // joins the end of More rather than vanishing.
         let missing = available.filter { !inBar.contains($0) && !storedRest.contains($0) }
         self.others = storedRest + missing
+        self.preferredMore = storedRest + missing
     }
 
     /// Told by the window, once its width is known.
     ///
-    /// Growing the bar does not fill the new slot — that is a choice, and the
-    /// app should not make it on your behalf. Shrinking it does drop the tail,
-    /// because the alternative is a tab you cannot see.
+    /// Shrinking drops the tail of the bar for as long as the window is that
+    /// narrow — to the front of More, where it is likeliest to be reached for
+    /// — and growing puts it back. Nothing is saved: the choice is yours, and
+    /// a measurement is not a choice.
     public func fit(screenWidth: CGFloat) {
         slots = Self.slots(forScreenWidth: screenWidth)
-
-        // Not guarded on the count having changed: a bar measured at three
-        // slots starts at three, so "no change" is exactly the case where a
-        // stored fourth tab is sitting off the end of it.
-        guard chosen.count > slots else { return }
-
-        // Pushed to the front of More rather than dropped: it was your fourth
-        // choice on a wider screen, and it is the likeliest thing you are
-        // reaching for on this one.
-        let overflow = chosen.suffix(from: slots)
-        chosen = Array(chosen.prefix(slots))
-        others.insert(contentsOf: overflow, at: 0)
-        persist()
+        let overflow = Array(preferredBar.dropFirst(slots))
+        chosen = Array(preferredBar.prefix(slots))
+        others = overflow + preferredMore.filter { !overflow.contains($0) }
     }
 
     /// What a fresh install gets: the timer you reach for mid-set, the session
@@ -182,7 +189,10 @@ public final class TabLayout {
         persist()
     }
 
+    /// Your edit, kept as the choice to lay out from.
     private func persist() {
+        preferredBar = chosen
+        preferredMore = others
         defaults.set(chosen.map(\.rawValue), forKey: Self.storageKey)
         defaults.set(others.map(\.rawValue), forKey: Self.restKey)
     }

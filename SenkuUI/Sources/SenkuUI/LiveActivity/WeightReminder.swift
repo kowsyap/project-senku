@@ -86,7 +86,7 @@ public enum WeightReminder {
 
         let content = UNMutableNotificationContent()
         content.title = "Weigh in"
-        content.body = "Same time, same scales. That is what makes the trend mean anything."
+        content.body = "Same time, same scale, every day for a consistent trend."
         content.sound = .default
 
         let calendar = Calendar.current

@@ -12,7 +12,7 @@ import SenkuCore
     {
       "schemaVersion": 1,
       "profile": {
-        "name": "Kowsyap",
+        "name": "Maya",
         "metrics": { "sex": "male", "age": 27, "heightCM": 178, "weightKG": 82.5 },
         "activityLevel": "moderate",
         "goal": "moderateCut",
@@ -37,7 +37,7 @@ import SenkuCore
     @Test func readsTheDocumentedExample() throws {
         let document = try SenkuImportDocument.decode(Data(example.utf8))
 
-        #expect(document.profile?.name == "Kowsyap")
+        #expect(document.profile?.name == "Maya")
         #expect(document.profile?.metrics.weightKG == 82.5)
         #expect(document.profile?.goalWeightKG == 75)
         #expect(document.weighIns?.count == 2)

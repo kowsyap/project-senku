@@ -13,6 +13,11 @@ import Testing
         calendar.date(from: DateComponents(year: year, month: month, day: day))!
     }
 
+    /// How a ticked-off day is kept.
+    private func noon(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
+    }
+
     private func amex() -> DueItem {
         DueItem(title: "Amex", firstDue: day(2026, 10, 5), repeats: .months)
     }
@@ -44,7 +49,7 @@ import Testing
     @Test func tickingOffMovesToTheNextOne() {
         var item = amex()
         item.markDone(calendar: calendar)
-        #expect(item.doneThrough == day(2026, 10, 5))
+        #expect(item.doneThrough == noon(2026, 10, 5))
         #expect(item.nextOpen(calendar: calendar) == day(2026, 11, 5))
     }
 
@@ -111,7 +116,7 @@ import Testing
         item.amount = 1500
 
         #expect(item.history.count == 1)
-        #expect(item.history.first?.due == day(2026, 10, 5))
+        #expect(item.history.first?.due == noon(2026, 10, 5))
         #expect(item.history.first?.amount == 1200)
     }
 
@@ -297,5 +302,82 @@ import Testing
         var lunch = DueItem(title: "Lunch", firstDue: day(2026, 10, 10), repeats: .days)
         lunch.amount = 100
         #expect(DueTotals([lunch], now: day(2026, 10, 10), calendar: calendar).toPay == 100)
+    }
+
+    // MARK: - Changing time zone
+
+    private func zone(_ identifier: String) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: identifier)!
+        return calendar
+    }
+
+    /// Ticked off in Chicago, looked at in Los Angeles: still ticked off.
+    @Test func aTickSurvivesFlyingWest() {
+        let chicago = zone("America/Chicago"), losAngeles = zone("America/Los_Angeles")
+        let first = chicago.date(from: DateComponents(year: 2026, month: 10, day: 5, hour: 23, minute: 30))!
+        var rent = DueItem(title: "Rent", firstDue: DueItem.noon(of: first, calendar: chicago), repeats: .months)
+        rent.markDone(calendar: chicago)
+        rent.markDone(calendar: chicago)
+
+        let next = rent.nextOpen(calendar: losAngeles)!
+        #expect(losAngeles.dateComponents([.month, .day], from: next) == DateComponents(month: 12, day: 5))
+        let now = losAngeles.date(from: DateComponents(year: 2026, month: 11, day: 23, hour: 19))!
+        #expect(!rent.isOpen(on: now, calendar: losAngeles))
+    }
+
+    /// The same, flying east as far as Berlin.
+    @Test func aTickSurvivesFlyingEast() {
+        let chicago = zone("America/Chicago"), berlin = zone("Europe/Berlin")
+        let first = chicago.date(from: DateComponents(year: 2026, month: 10, day: 5))!
+        var rent = DueItem(title: "Rent", firstDue: DueItem.noon(of: first, calendar: chicago), repeats: .months)
+        rent.markDone(calendar: chicago)
+        let next = rent.nextOpen(calendar: berlin)!
+        #expect(berlin.dateComponents([.month, .day], from: next) == DateComponents(month: 11, day: 5))
+    }
+
+    /// A rent saved before days were kept at noon: set up and ticked off in
+    /// Chicago, its first date picked at half past eleven at night, so in UTC
+    /// it already falls on the next day.
+    @Test func anOldItemMovesToNoonOnLoad() throws {
+        let json: [String: Any] = [
+            "id": UUID().uuidString, "title": "Rent", "category": "", "note": "",
+            "amount": 1200, "repeats": "months", "every": 1,
+            "remindDaysBefore": [7, 0], "remindAtMinute": 540,
+            "firstDue": 789802200,          // 10 Jan, 23:30 in Chicago
+            "doneThrough": 792396000,       // 10 Feb, midnight in Chicago
+            "history": [
+                ["id": UUID().uuidString, "due": 789717600, "doneAt": 789588000],
+                ["id": UUID().uuidString, "due": 792396000, "doneAt": 792352800],
+            ],
+            "createdAt": 789328800,
+        ]
+        // Loading moves it in the phone's own zone; marked as already moved
+        // here, so the test can do the move in each zone in turn.
+        var asIs = json
+        asIs["daysAtNoon"] = true
+        let data = try JSONSerialization.data(withJSONObject: asIs)
+        let loaded = try JSONDecoder().decode(DueItem.self, from: JSONSerialization.data(withJSONObject: json))
+        #expect(loaded.doneThrough != Date(timeIntervalSinceReferenceDate: 792396000))
+
+        for place in ["America/Chicago", "America/Los_Angeles", "Europe/London", "Asia/Kolkata", "Asia/Tokyo"] {
+            let here = zone(place)
+            var item = try JSONDecoder().decode(DueItem.self, from: data)
+            item.moveDaysToNoon(calendar: here)
+
+            let parts: (Date) -> DateComponents = { here.dateComponents([.month, .day], from: $0) }
+            #expect(parts(item.firstDue) == DateComponents(month: 1, day: 10), "\(place)")
+            #expect(parts(item.doneThrough!) == DateComponents(month: 2, day: 10), "\(place)")
+            #expect(item.history.map { parts($0.due) } == [DateComponents(month: 1, day: 10), DateComponents(month: 2, day: 10)], "\(place)")
+            #expect(parts(item.nextOpen(calendar: here)!) == DateComponents(month: 3, day: 10), "\(place)")
+        }
+    }
+
+    /// Saved after the move, an item loads as it was.
+    @Test func aNewItemIsNotMovedAgain() throws {
+        var item = amex()
+        item.markDone(calendar: calendar)
+        let decoded = try JSONDecoder().decode(DueItem.self, from: JSONEncoder().encode(item))
+        #expect(decoded == item)
     }
 }

@@ -69,6 +69,10 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
     /// Free text — "Bills", "Subscriptions", "Studies" — so the list groups
     /// the way you think rather than the way the app guessed.
     public var category: String
+    /// For a category of your own, whether paying it is logged in Expenses.
+    /// The defaults decide for themselves: a loan or a utility always is, a
+    /// card bill never.
+    public var logsExpense: Bool
     public var amount: Double?
     public var note: String
 
@@ -92,15 +96,44 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
 
     public var createdAt: Date
 
+    /// Saved with its days at noon — see `noon(of:)`. Missing from items saved
+    /// before, which is how they are found and moved on load.
+    private var daysAtNoon = true
+
     /// The one earlier reminder you can add to "on the day": a day, three, or a
     /// week ahead. One, not several — two warnings for the same bill is one
     /// more than anybody reads.
     public static let earlyReminderChoices = [1, 3, 7]
 
+    /// The categories offered before any of your own.
+    public static let defaultCategories = ["Credit Card", "Loan", "Utilities"]
+
+    /// The Expenses category a payment of this goes into: a loan under Loan /
+    /// EMI, a utility under Utilities, one of your own under its own name if
+    /// you have it logged. Never a card bill — what was bought on the card is
+    /// the spending, and logging the bill as well would count it twice — and
+    /// never one with no category, which has nowhere to go.
+    public var expenseCategory: String? {
+        let name = category.trimmingCharacters(in: .whitespaces)
+        switch name.lowercased() {
+        case "", "credit card": return nil
+        case "loan": return "Loan / EMI"
+        case "utilities": return "Utilities"
+        default: return logsExpense ? name : nil
+        }
+    }
+
+    /// A category you typed, not one of the defaults.
+    public var hasCustomCategory: Bool {
+        let name = category.trimmingCharacters(in: .whitespaces)
+        return !name.isEmpty && !Self.defaultCategories.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
     public init(
         id: UUID = UUID(),
         title: String,
         category: String = "",
+        logsExpense: Bool = true,
         amount: Double? = nil,
         note: String = "",
         firstDue: Date,
@@ -115,6 +148,7 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
         self.id = id
         self.title = title
         self.category = category
+        self.logsExpense = logsExpense
         self.amount = amount
         self.note = note
         self.firstDue = firstDue
@@ -134,6 +168,7 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
         id = try container.decode(UUID.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
         category = try container.decodeIfPresent(String.self, forKey: .category) ?? ""
+        logsExpense = try container.decodeIfPresent(Bool.self, forKey: .logsExpense) ?? true
         amount = try container.decodeIfPresent(Double.self, forKey: .amount)
         note = try container.decodeIfPresent(String.self, forKey: .note) ?? ""
         firstDue = try container.decode(Date.self, forKey: .firstDue)
@@ -144,7 +179,60 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
         doneThrough = try container.decodeIfPresent(Date.self, forKey: .doneThrough)
         history = try container.decodeIfPresent([DueCompletion].self, forKey: .history) ?? []
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? .now
+        if try container.decodeIfPresent(Bool.self, forKey: .daysAtNoon) != true {
+            moveDaysToNoon(calendar: .current)
+        }
         tidyRepeat()
+    }
+
+    // MARK: - Days that survive a change of time zone
+
+    /// Noon on `date`'s day.
+    ///
+    /// Every day an item keeps — its first date, the last one ticked off, each
+    /// one in the history — is kept at noon, not midnight. A saved date is a
+    /// moment, and which day a moment falls on depends on where the phone is:
+    /// midnight on the 5th in Chicago is still the 4th in Los Angeles, which
+    /// reopened a bill ticked off on the 5th. Noon is the same day anywhere
+    /// within eleven hours of where it was saved.
+    public static func noon(of date: Date, calendar: Calendar = .current) -> Date {
+        let day = calendar.dateComponents([.year, .month, .day], from: date)
+        return calendar.date(from: DateComponents(year: day.year, month: day.month, day: day.day, hour: 12)) ?? date
+    }
+
+    /// Moves an item saved before days were kept at noon: its done dates are
+    /// midnights wherever they were ticked, and its first date is whatever time
+    /// of day it was picked.
+    mutating func moveDaysToNoon(calendar: Calendar) {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+
+        // A midnight anywhere from UTC−11 to UTC+11 is under twelve hours from
+        // the UTC midnight of its own date, so that is the date it meant.
+        func day(ofMidnight date: Date) -> DateComponents {
+            utc.dateComponents([.year, .month, .day], from: date.addingTimeInterval(12 * 3600))
+        }
+        func noon(_ day: DateComponents) -> Date? {
+            calendar.date(from: DateComponents(year: day.year, month: day.month, day: day.day, hour: 12))
+        }
+
+        // The first date was picked where the first tick was made, and that
+        // tick's midnight says how far from UTC it was. With no tick, here.
+        let offset: TimeInterval
+        if let midnight = history.map(\.due).min() ?? doneThrough,
+           let utcMidnight = utc.date(from: day(ofMidnight: midnight)) {
+            offset = utcMidnight.timeIntervalSince(midnight)
+        } else {
+            offset = TimeInterval(calendar.timeZone.secondsFromGMT(for: firstDue))
+        }
+        let firstDay = utc.dateComponents([.year, .month, .day], from: firstDue.addingTimeInterval(offset))
+        if let first = noon(firstDay) { firstDue = first }
+
+        if let done = doneThrough, let moved = noon(day(ofMidnight: done)) { doneThrough = moved }
+        for index in history.indices {
+            if let moved = noon(day(ofMidnight: history[index].due)) { history[index].due = moved }
+        }
+        daysAtNoon = true
     }
 
     // MARK: - Reminders that make sense for the step
@@ -272,8 +360,9 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
     /// time, for an item with no set amount; it goes in the history only.
     public mutating func markDone(at now: Date = .now, paid: Double? = nil, calendar: Calendar = .current) {
         guard let next = nextOpen(calendar: calendar) else { return }
-        doneThrough = next
-        history.append(DueCompletion(due: next, doneAt: now, amount: paid ?? amount))
+        let day = Self.noon(of: next, calendar: calendar)
+        doneThrough = day
+        history.append(DueCompletion(due: day, doneAt: now, amount: paid ?? amount))
     }
 
     /// Takes back the last tick, and its line in the history.
@@ -282,7 +371,7 @@ public struct DueItem: Identifiable, Codable, Hashable, Sendable {
         if let index = history.lastIndex(where: { calendar.isDate($0.due, inSameDayAs: doneThrough) }) {
             history.remove(at: index)
         }
-        self.doneThrough = occurrence(before: doneThrough, calendar: calendar)
+        self.doneThrough = occurrence(before: doneThrough, calendar: calendar).map { Self.noon(of: $0, calendar: calendar) }
     }
 
     /// Removes one line of the history.
@@ -376,12 +465,16 @@ public struct DueCompletion: Identifiable, Codable, Hashable, Sendable {
     public var due: Date
     public var doneAt: Date
     public var amount: Double?
+    /// The spend this payment was logged as in Expenses, if it was — so taking
+    /// the tick back takes the spend with it.
+    public var expenseID: UUID?
 
-    public init(id: UUID = UUID(), due: Date, doneAt: Date = .now, amount: Double? = nil) {
+    public init(id: UUID = UUID(), due: Date, doneAt: Date = .now, amount: Double? = nil, expenseID: UUID? = nil) {
         self.id = id
         self.due = due
         self.doneAt = doneAt
         self.amount = amount
+        self.expenseID = expenseID
     }
 }
 

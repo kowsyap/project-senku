@@ -124,7 +124,7 @@ Five tabs along the bottom of the screen:
   Rest     & Rest timer between sets \\
   Workout  & Weekly plan, exercise logging \\
   Water    & Water intake, creatine tracking \\
-  More     & Weight, Food, PRs, Watchlist, Dues \\
+  More     & Everything else: Weight, Food, PRs, calculators, extras \\
   \bottomrule
 \end{tabular}
 }
@@ -162,7 +162,7 @@ Also runs as a \textbf{Live Activity} on the lock screen and Dynamic Island. The
 
 \screenshot{guide-workout-week.png}{Weekly training plan}
 
-Each session card shows a \textbf{green check} if done this week, the \textbf{session name}, \textbf{muscle icons}, exercise count and last-done date. Top-right: \textbf{Plates} (barbell calculator), \textbf{History}, \textbf{Week} summary. Tap \textbf{Edit my week} to rearrange, rename or add sessions.
+Each session card shows a \textbf{green check} if done this week, the \textbf{session name}, \textbf{muscle icons}, exercise count and last-done date. Tap a day to open it: its muscles drawn large and a green \textbf{Start} button. A track below counts the week down (``3 to go this week''). Top-right: \textbf{Plates} (barbell calculator, also under More), \textbf{History}, \textbf{Week} summary. Tap \textbf{Edit my week} to rearrange, rename or add sessions.
 
 \subsection{Inside a session}
 
@@ -246,7 +246,7 @@ Enable in \textbf{Settings\,$\rightarrow$\,Weight}. Rings at 10:00 each morning,
 
 \screenshot{guide-records.png}{PRs filtered by muscle group}
 
-Lists personal records for every logged exercise. Filter by muscle group chips. Each row shows exercise name, equipment, time since set, and weight. Tap \textbf{Add} to enter a record manually.
+Lists personal records for every logged exercise. Filter by muscle group chips. Each row shows exercise name, equipment, time since set, and weight. Tap \textbf{Add} to enter a record manually: exercises you already hold a record on carry a \textbf{PR} tag and open their history. A record must beat your best, or the screen says \textit{Not a record: Go heavier or more reps}. Deleting asks \textbf{Delete PR?} with Delete and Cancel.
 
 \subsection{Sharing}
 
@@ -266,21 +266,26 @@ Tracks shows, films or series. Summary shows \textbf{titles} (series and films),
 
 \screenshot{guide-dues.png}{Monthly dues with status}
 
-Tracks recurring bills and payments. Header shows \textbf{amount left this month}. Each due: progress ring, name, category, amount, due date with countdown. Overdue items shown in red. Reminders arrive 3 days before and on the day.
+Tracks recurring bills and payments. Header shows \textbf{amount left to pay}. Each due: progress ring, name, category, amount, due date with countdown. Overdue items shown in red. Reminders arrive on the day, and optionally a day, three days or a week before. Categories: \textbf{Credit Card}, \textbf{Loan}, \textbf{Utilities} or your own. With Expenses added, a paid Loan or Utilities due — or one of your own, unless its \textbf{Log in Expenses} switch is off — is logged as a spend; a card bill never is. \textbf{Undo last payment} reopens the latest date and takes its spend back. A ticked day stays put across time zones.
+
+% ── Expenses and Income ──
+\section{Expenses and Income}
+
+Money filed by month: spends by category, earnings by source. The \textbf{Dashboard} covers any stretch of months — average and highest month, a donut, and a month-by-month chart with a dashed \textbf{Average} line. \textbf{Months} and \textbf{Money in and out} tables page six months at a time. \textbf{Export} hands over a CSV of what the screen shows, named for it. Lending and borrowing are not logged; something bought for you is your expense, paying the friend back is not.
 
 % ── More ──
 \section{More}
 
 \screenshot{guide-more.png}{Hub for secondary screens}
 
-Hub for screens without their own tab: \textbf{Macro Calculator}, \textbf{Weight}, \textbf{Food}, \textbf{PRs}, \textbf{Watchlist}, \textbf{Dues}, and \textbf{Settings}.
+Hub for screens without their own tab: \textbf{Macro Calculator}, \textbf{Plate Calculator}, \textbf{Weight}, \textbf{Food}, \textbf{PRs}, \textbf{Watchlist}, \textbf{Dues}, \textbf{Expenses}, \textbf{Income}, and \textbf{Settings}. The two calculators always stay here.
 
 % ── Settings ──
 \section{Settings}
 
 \screenshot{guide-settings.png}{App configuration}
 
-\textbf{Navbar} — rearrange the five tabs. \textbf{Extras} — add or remove Dues and Watchlist; removing deletes the data, after offering to save it. \textbf{Day starts at} — roll the day over at Midnight, 1\,am, 2\,am or 3\,am (affects totals, streaks and all daily grouping; confirmation required). \textbf{Apple Health} — toggle writes for Water, Food, Body, Workouts (write-only, never reads). \textbf{Screen settings} — per-screen options for Workout, Weight, Water and Plates.
+\textbf{Navbar} — choose and order the tabs in the bar and the list under More; the calculators stay under More. \textbf{Extras} — add or remove Watchlist, Dues, Expenses and Income; removing asks once, with a \textbf{Backup} switch (on) that saves the data first. \textbf{Day starts at} — roll the day over at Midnight, 1\,am, 2\,am or 3\,am (affects totals, streaks and all daily grouping; confirmation required). \textbf{Apple Health} — toggle writes for Water, Food, Body, Workouts (write-only, never reads). \textbf{Screen settings} — per-screen options for Workout, Weight, Water and Plates.
 
 % ── About ──
 \section{About}
@@ -288,6 +293,10 @@ Hub for screens without their own tab: \textbf{Macro Calculator}, \textbf{Weight
 \screenshot{guide-about.png}{Privacy and credits}
 
 Shows version, developer (\textbf{kowsyap}), GitHub link and issue reporting.
+
+\subsection{Import, export and reset}
+
+Long-press the \textbf{SENKU} wordmark. \textbf{Import Data} loads a backup or your own file, with a summary of what came in. \textbf{Sample file}, underlined beneath it, is an example with one of everything. \textbf{Export Data} saves a \textbf{Backup file} (on by default) and, with \textbf{Report} switched on, a PDF of the sections you keep. \textbf{Hard Reset} asks twice; the last step has a \textbf{Backup} switch (on), and nothing is erased until that file is saved.
 
 \begin{privacybox}
 \textit{Everything you log stays on this iPhone and your Apple Watch. There is no account, no cloud and no tracking.}

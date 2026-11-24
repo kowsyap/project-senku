@@ -124,6 +124,29 @@ it and a delete removes it, and writes only categories switched on in Settings
 and only entries logged since they were. Restores and sample data never reach
 Health. A workout is written once, from its summary's Done.
 
+**Dues keep their days at noon.** A saved date is a moment, and which day it
+falls on depends on where the phone is: midnight on the 5th in Chicago is the
+4th in Los Angeles. `DueItem` stores its first date, last paid and history at noon,
+which stays on its day anywhere within eleven hours, and moves items saved
+before on load (`moveDaysToNoon`).
+
+**Dues write to Expenses.** `DueDateStore.expenses`, set by the Dues screen when
+Expenses is added, receives a `MoneyEntry` for each payment whose category is a
+spend (`DueItem.expenseCategory`: never Credit Card). The completion keeps the
+entry's id, so undoing a payment — from any of the three places that can —
+removes the spend with it.
+
+## Backup and sample
+
+`SenkuImportDocument` is the one file format: a backup, a hand-written file and
+an AI's plan are all it. `docs/import-example.json` is the full format, one of
+everything; `ImportExampleTests` imports it whole and checks every key is one
+the decoder reads and none is missing. The app carries a copy as the data
+menu's *Sample file* (`SampleFile`), held to the same bytes by a test.
+
+A restore that brings settings rebuilds the screens; its summary is raised
+after the rebuild, not with it, or it is dropped.
+
 ## Plan import
 
 A plan file goes through the same importer as a backup, trimmed to its plan and
@@ -167,7 +190,7 @@ once, in `NotificationBudget`, and a test sums it:
 | Water reminders | up to 12 |
 | Rest timer | 2, only while a rest runs |
 | Weigh-in reminder | 7 one-shots, a day already weighed left out |
-| Creatine reminder | 1 repeating |
+| Creatine reminder | 1 repeating, re-booked on return so its wording follows updates |
 | Due dates | up to 36 one-shots |
 | Reserve | 6 |
 
@@ -179,7 +202,10 @@ actions to run in the background.
 
 The phone does not use `TabView`. Screens sit in a floating glass bar the user
 drags a finger along; the remainder live under an overflow destination, and the
-selection and order are user-configurable (`TabLayout`, `TabBarEditor`).
+selection and order are user-configurable (`TabLayout`, `TabBarEditor`). The
+calculators (`Tab.staysInMore`) are never offered for the bar. `TabLayout` lays
+the bar out from the saved choice each time it is measured, so a narrow window
+trims it for as long as it is narrow without the trim being saved.
 
 Pages stay mounted, so returning to a tab restores its state. Screens that act
 on appearing read the `senkuScreenIsVisible` environment value and wait until
@@ -189,10 +215,10 @@ they are on display (S5-R4).
 
 | Suite | Runs on | Covers |
 | --- | --- | --- |
-| `SenkuCore/Tests` | host, `swift test` | calculations and model rules — 241 tests |
-| `SenkuUI/Tests` | host, `swift test` | stores, importer, plan import and preview, the skill's copy, body map, plate maths, tab layout, sample data — 209 tests |
+| `SenkuCore/Tests` | host, `swift test` | calculations and model rules — 285 tests |
+| `SenkuUI/Tests` | host, `swift test` | stores, importer, the example file, plan import and preview, the skill's copy, dues to expenses, money export, body map, plate maths, tab layout, sample data — 284 tests |
 | `Senku/SenkuTests` | simulator | bundle resources, App Group access |
-| `Senku/SenkuUITests` | simulator | launch, rest timer, calculator, Plan Builder; the README screenshots, on request |
+| `Senku/SenkuUITests` | simulator | launch, rest timer, calculator, Plan Builder, the example file imported and every page it fills; the README screenshots, on request |
 
 ## Conventions
 

@@ -4,10 +4,13 @@ import SenkuCore
 
 /// What to put in the export, asked before it is written.
 ///
-/// Everything starts on. The picker is not there to make you choose — it is
-/// there for the times the whole record is the wrong thing to hand over: a
-/// coach who needs your training and has no business with your anime list, or a
-/// doctor who wants the weight history and nothing else.
+/// The backup starts on and the report off: a copy to restore from is the
+/// usual reason to export. Switching the report on switches on every section
+/// under it, and charts; off, they all go off and grey out. They are not there
+/// to make you choose — they are there for the times the whole record is the
+/// wrong thing to hand over: a coach who needs your training and has no
+/// business with your anime list, or a doctor who wants the weight history
+/// and nothing else.
 struct ReportOptionsView: View {
     @Binding var selection: ReportSelection
     let onExport: () -> Void
@@ -17,39 +20,41 @@ struct ReportOptionsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Toggle("Profile", isOn: $selection.profile)
-                    Toggle("Weight", isOn: $selection.weight)
-                    Toggle("Personal records", isOn: $selection.records)
-                    Toggle("Training plan", isOn: $selection.plan)
-                    Toggle("Workouts", isOn: $selection.workouts)
-                    Toggle("Water", isOn: $selection.water)
-                    Toggle("Food", isOn: $selection.food)
-                    if ExtraStore.shared.isInstalled(.watchlist) {
-                        Toggle("Watchlist", isOn: $selection.anime)
-                    }
-                    if ExtraStore.shared.isInstalled(.dues) {
-                        Toggle("Dues", isOn: $selection.dues)
-                    }
-                    if ExtraStore.shared.isInstalled(.expenses) {
-                        Toggle("Expenses", isOn: $selection.expenses)
-                    }
-                    if ExtraStore.shared.isInstalled(.income) {
-                        Toggle("Income", isOn: $selection.income)
-                    }
-                } header: {
-                    Text("In the report")
-                }
-
-                Section {
-                    Toggle("Charts", isOn: $selection.charts)
-                }
-
-                Section {
                     Toggle("Backup file", isOn: $selection.backup)
-                } header: {
-                    Text("Shared alongside")
                 } footer: {
                     Text("A JSON copy of everything to restore back.")
+                }
+
+                Section {
+                    Toggle("Report", isOn: reportBinding)
+                } footer: {
+                    Text("A PDF copy of everything to read and analyse.")
+                }
+
+                Section {
+                    Group {
+                        Toggle("Profile", isOn: $selection.profile)
+                        Toggle("Weight", isOn: $selection.weight)
+                        Toggle("Personal records", isOn: $selection.records)
+                        Toggle("Training plan", isOn: $selection.plan)
+                        Toggle("Workouts", isOn: $selection.workouts)
+                        Toggle("Water", isOn: $selection.water)
+                        Toggle("Food", isOn: $selection.food)
+                        if ExtraStore.shared.isInstalled(.watchlist) {
+                            Toggle("Watchlist", isOn: $selection.anime)
+                        }
+                        if ExtraStore.shared.isInstalled(.dues) {
+                            Toggle("Dues", isOn: $selection.dues)
+                        }
+                        if ExtraStore.shared.isInstalled(.expenses) {
+                            Toggle("Expenses", isOn: $selection.expenses)
+                        }
+                        if ExtraStore.shared.isInstalled(.income) {
+                            Toggle("Income", isOn: $selection.income)
+                        }
+                        Toggle("Charts", isOn: $selection.charts)
+                    }
+                    .disabled(!selection.report)
                 }
 
                 Section {
@@ -60,7 +65,7 @@ struct ReportOptionsView: View {
                     .disabled(selection.producesNothing)
                 }
             }
-            .navigationTitle("Export")
+            .navigationTitle("Export Data")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -70,9 +75,19 @@ struct ReportOptionsView: View {
                     Button(allOn ? "None" : "All") {
                         setAll(!allOn)
                     }
+                    .disabled(!selection.report)
                 }
             }
         }
+    }
+
+    /// The report and everything under it together: on switches every section
+    /// on to pick from, off clears them.
+    private var reportBinding: Binding<Bool> {
+        Binding(
+            get: { selection.report },
+            set: { on in withAnimation(.snappy) { selection.setReport(on) } }
+        )
     }
 
     private var allOn: Bool {

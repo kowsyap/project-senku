@@ -62,6 +62,8 @@ measured inputs are kept distinct from estimated ones.
 | F5 | Protein and macro intake | Delivered |
 | F6 | Anime log | Delivered |
 | F7 | Apple Health, write-only | Delivered |
+| F8 | Dues | Delivered |
+| F9 | Expenses and Income | Delivered |
 
 Supporting capabilities: rest timer, plate calculator, Home Screen widgets,
 Apple Watch app, PDF report, JSON export and import, plan import from any AI

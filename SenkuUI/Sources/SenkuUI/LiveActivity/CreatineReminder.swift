@@ -41,7 +41,7 @@ public enum CreatineReminder {
 
         let content = UNMutableNotificationContent()
         content.title = "Creatine"
-        content.body = "Take it today. It works by staying topped up."
+        content.body = "Take it daily to stay saturated."
         content.sound = .default
 
         var components = DateComponents()

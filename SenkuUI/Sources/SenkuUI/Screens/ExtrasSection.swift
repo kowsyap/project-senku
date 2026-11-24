@@ -35,7 +35,8 @@ private struct ExtraRow: View {
     @State private var phase = Phase.idle
     @State private var progress: CGFloat = 0
     @State private var isConfirmingRemove = false
-    @State private var isAskingToSave = false
+    /// Whether Remove saves the extra's data first. On each time it is asked.
+    @State private var backsUp = true
     @State private var saved: SavedFile?
     @State private var failure: String?
 
@@ -56,26 +57,11 @@ private struct ExtraRow: View {
 
             control
         }
-        .alert("Remove \(extra.title)?", isPresented: $isConfirmingRemove) {
-            Button("Remove", role: .destructive) {
-                // Nothing saved in it, nothing to offer to keep.
-                guard extra.hasData(in: data) else { return remove() }
-                // After this alert has gone: one presented while another is
-                // still leaving is dropped.
-                DispatchQueue.main.async { isAskingToSave = true }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            if extra.hasData(in: data) { Text("Data will be deleted.") }
-        }
-        .background {
-            // On a view of its own: two alerts on one view can shadow each other.
-            Color.clear
-                .alert("Save data before remove?", isPresented: $isAskingToSave) {
-                    Button("Yes", action: saveThenRemove)
-                    Button("No", role: .destructive, action: remove)
-                    Button("Cancel", role: .cancel) {}
-                }
+        // One sheet rather than two alerts: the question, the Backup switch
+        // and Remove together — an alert cannot hold a switch.
+        .sheet(isPresented: $isConfirmingRemove) {
+            removeConfirmation
+                .presentationDetents([.height(extra.hasData(in: data) ? 250 : 170)])
         }
         .alert("Couldn't save", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
             Button("OK", role: .cancel) {}
@@ -120,7 +106,10 @@ private struct ExtraRow: View {
 
         case .idle:
             if extras.isInstalled(extra) {
-                Button { isConfirmingRemove = true } label: {
+                Button {
+                    backsUp = true
+                    isConfirmingRemove = true
+                } label: {
                     Image(systemName: "trash")
                         .font(.title3)
                         .foregroundStyle(Senku.Palette.warning)
@@ -170,6 +159,49 @@ private struct ExtraRow: View {
             try? await Task.sleep(for: .seconds(0.9))
             withAnimation(.easeInOut(duration: 0.2)) { phase = .idle }
         }
+    }
+
+    private var removeConfirmation: some View {
+        VStack(spacing: 14) {
+            Text("Remove \(extra.title)")
+                .font(.headline)
+                .padding(.top, 22)
+
+            // Nothing saved in it, nothing to offer to keep.
+            if extra.hasData(in: data) {
+                Text("Save data before remove?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                #if os(iOS)
+                Toggle("Backup", isOn: $backsUp)
+                    .padding(.horizontal, 4)
+                #endif
+            }
+
+            HStack(spacing: 12) {
+                Button {
+                    isConfirmingRemove = false
+                } label: {
+                    Text("Cancel").frame(maxWidth: .infinity).frame(height: 30)
+                }
+                .buttonStyle(.bordered)
+
+                Button(role: .destructive) {
+                    isConfirmingRemove = false
+                    let saving = backsUp && extra.hasData(in: data)
+                    // Once the sheet has gone: the share sheet comes from here.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        if saving { saveThenRemove() } else { remove() }
+                    }
+                } label: {
+                    Text("Remove").fontWeight(.semibold).frame(maxWidth: .infinity).frame(height: 30)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Senku.Palette.warning)
+            }
+        }
+        .padding(.horizontal, 20)
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func saveThenRemove() {

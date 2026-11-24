@@ -1,63 +1,429 @@
 {
   "schemaVersion": 1,
-
+  "unitSystem": "metric",
   "profile": {
-    "name": "Kowsyap",
+    "name": "Maya",
     "metrics": {
-      "sex": "male",
-      "age": 27,
-      "heightCM": 178,
-      "weightKG": 82.5
+      "sex": "female",
+      "age": 28,
+      "heightCM": 165,
+      "weightKG": 63.2,
+      "bodyFatPercentage": 27
     },
     "activityLevel": "moderate",
     "goal": "moderateCut",
-    "formula": "mifflinStJeor",
+    "formula": "automatic",
     "unitSystem": "metric",
-    "goalWeightKG": 75,
-    "updatedAt": "2026-09-17T08:00:00Z"
+    "goalWeightKG": 59,
+    "measuredMaintenanceCalories": 2150,
+    "calorieAdjustment": -50,
+    "proteinAdjustment": 10,
+    "updatedAt": "2026-09-01T08:00:00Z"
   },
-
   "weighIns": [
-    { "date": "2026-09-14", "weightKG": 83.1 },
-    { "date": "2026-09-15", "weightKG": 82.8, "note": "after a rest day" },
-    { "date": "2026-09-16T07:20:00Z", "weightKG": 82.5 }
+    {
+      "date": "2026-11-23T07:10:00Z",
+      "weightKG": 63.2,
+      "note": "After a rest day"
+    }
   ],
-
   "customExercises": [
     {
       "name": "Towel Row",
       "equipment": "bodyweight",
-      "regionIDs": ["back.lats", "forearm.flexors"]
+      "regionIDs": [
+        "back.lats",
+        "forearm.flexors"
+      ],
+      "isTimed": false
     }
   ],
-
+  "records": [
+    {
+      "exerciseID": "catalogue.bench.flat",
+      "weightKG": 45,
+      "reps": 8,
+      "date": "2026-11-17"
+    }
+  ],
   "plan": {
-    "target": { "sets": 3, "minReps": 8, "maxReps": 12 },
+    "target": {
+      "sets": 3,
+      "reps": 8,
+      "maxReps": 12
+    },
     "days": [
       {
-        "name": "Push",
-        "groups": ["chest", "shoulders", "triceps"],
-        "exercises": [
-          { "name": "Bench", "sets": 5, "reps": 5 },
-          "Incline Bench",
-          { "name": "OHP", "sets": 4, "minReps": 6, "maxReps": 8 },
-          { "name": "Skull Crusher", "maxReps": 15 }
-        ]
-      },
-      {
-        "name": "Pull",
-        "groups": ["back", "biceps"],
-        "exerciseIDs": ["Towel Row", "Lat Pulldown", "Hammer Curl"]
-      },
-      {
-        "name": "Legs",
-        "exerciseIDs": ["catalogue.squat.back", "Barbell Romanian Deadlift", "Lying Leg Curl"]
+        "id": "8A3E1C52-6B0F-4C1E-9D21-3F7A2B6C9E01",
+        "name": "Upper A",
+        "groups": [
+          "chest",
+          "back",
+          "shoulder",
+          "bicep",
+          "tricep"
+        ],
+        "exerciseIDs": [
+          "catalogue.bench.flat",
+          "catalogue.pullUp",
+          "Towel Row"
+        ],
+        "targets": {
+          "catalogue.bench.flat": {
+            "sets": 4,
+            "reps": 6,
+            "maxReps": 10
+          }
+        }
       }
     ]
   },
-
-  "records": [
-    { "exerciseID": "catalogue.bench.flat", "weightKG": 100, "reps": 5, "date": "2026-08-30" },
-    { "exerciseID": "catalogue.squat.back", "weightKG": 140, "reps": 3, "date": "2026-09-05" }
-  ]
+  "workouts": [
+    {
+      "id": "2C9D4E7A-1B35-4F68-A0C2-7E5D3B9F1A42",
+      "date": "2026-11-17T17:00:00Z",
+      "dayID": "8A3E1C52-6B0F-4C1E-9D21-3F7A2B6C9E01",
+      "dayName": "Upper A",
+      "groups": [
+        "chest",
+        "back",
+        "shoulder",
+        "bicep",
+        "tricep"
+      ],
+      "entries": [
+        {
+          "exerciseID": "catalogue.bench.flat",
+          "sets": [
+            {
+              "id": "6F1A3C8E-2D47-4B95-8E0C-5A9B7D3F1C26",
+              "weightKG": 45,
+              "reps": 8,
+              "completedAt": "2026-11-17T17:06:00Z"
+            }
+          ],
+          "isMarkedDone": false,
+          "isSkipped": false,
+          "target": {
+            "sets": 4,
+            "reps": 6,
+            "maxReps": 10
+          }
+        },
+        {
+          "exerciseID": "catalogue.abs.plank",
+          "sets": [
+            {
+              "id": "3B8E5D2A-7C14-4F69-9A3D-0E6C2B8F4A17",
+              "weightKG": 0,
+              "reps": 0,
+              "seconds": 60,
+              "completedAt": "2026-11-17T17:30:00Z"
+            }
+          ],
+          "isMarkedDone": false,
+          "isSkipped": false
+        },
+        {
+          "exerciseID": "catalogue.cardio.incline",
+          "sets": [],
+          "cardio": {
+            "id": "9C2F6A4D-1E83-4B57-A6D0-3F8B5C1E9A72",
+            "seconds": 1200,
+            "values": {
+              "speed": 5.5,
+              "incline": 12
+            },
+            "completedAt": "2026-11-17T17:55:00Z"
+          },
+          "isMarkedDone": false,
+          "isSkipped": false
+        }
+      ],
+      "finishedAt": "2026-11-17T18:00:00Z"
+    }
+  ],
+  "cardioRecords": [
+    {
+      "id": "4A7D1E9B-3C62-4F08-B5E1-8D2A6C9F3B45",
+      "exerciseID": "catalogue.cardio.incline",
+      "seconds": 1800,
+      "values": {
+        "speed": 5.8,
+        "incline": 12
+      },
+      "date": "2026-11-10T08:00:00Z",
+      "source": {
+        "manual": {}
+      }
+    }
+  ],
+  "cardioPlans": [
+    {
+      "exerciseID": "catalogue.cardio.incline",
+      "columns": [
+        "Time",
+        "Speed",
+        "Incline"
+      ],
+      "rows": [
+        [
+          "5",
+          "5.0",
+          "6"
+        ],
+        [
+          "20",
+          "5.5",
+          "12"
+        ],
+        [
+          "5",
+          "4.5",
+          "3"
+        ]
+      ],
+      "note": "Warm up, the 12-3-30 block, walk it off.",
+      "updatedAt": "2026-11-01T09:00:00Z"
+    }
+  ],
+  "anime": [
+    {
+      "id": "7E3B9A1C-5D24-4F86-B0A7-2C9E6D3F8B14",
+      "title": "Frieren: Beyond Journey's End",
+      "genres": [
+        "Adventure",
+        "Fantasy"
+      ],
+      "status": "airing",
+      "seasons": [
+        {
+          "id": "1D6A8F3C-9B27-4E54-A8C1-6F0B3D9E2A58",
+          "number": 1,
+          "title": "Season 1",
+          "episodes": 28
+        }
+      ],
+      "totalEpisodes": 28,
+      "seasonCountOverride": 2,
+      "isMovie": false,
+      "imageURL": "https://cdn.myanimelist.net/images/anime/1015/138006.jpg",
+      "note": "Season 2 in January.",
+      "addedAt": "2026-08-01T20:00:00Z",
+      "updatedAt": "2026-11-20T21:00:00Z",
+      "screenIDs": [
+        "5E7B2A19-C4D8-4E3F-B6A1-9C0D8F2E7B53"
+      ]
+    }
+  ],
+  "watchlistScreens": [
+    {
+      "id": "5E7B2A19-C4D8-4E3F-B6A1-9C0D8F2E7B53",
+      "name": "Anime"
+    }
+  ],
+  "dueDates": [
+    {
+      "id": "0B5E8C2F-6A19-4D73-9E4B-1C7F3A8D5E26",
+      "title": "Rent",
+      "category": "Rent",
+      "logsExpense": true,
+      "amount": 1450,
+      "note": "Paid to the landlord",
+      "firstDue": "2026-10-01T12:00:00Z",
+      "repeats": "months",
+      "every": 1,
+      "remindDaysBefore": [
+        3,
+        0
+      ],
+      "remindAtMinute": 540,
+      "doneThrough": "2026-11-01T12:00:00Z",
+      "history": [
+        {
+          "id": "E2A9C6F1-4B38-4D57-8C0E-7B3D1F9A6C42",
+          "due": "2026-11-01T12:00:00Z",
+          "doneAt": "2026-10-30T18:00:00Z",
+          "amount": 1450,
+          "expenseID": "D41C7B3E-8A25-4F90-B6E2-1C9A7D5F3E64"
+        }
+      ],
+      "createdAt": "2026-09-20T10:00:00Z",
+      "daysAtNoon": true
+    }
+  ],
+  "expenses": [
+    {
+      "id": "D41C7B3E-8A25-4F90-B6E2-1C9A7D5F3E64",
+      "month": {
+        "year": 2026,
+        "month": 10
+      },
+      "name": "Rent",
+      "category": "Rent",
+      "amounts": [
+        1450
+      ],
+      "note": "November"
+    }
+  ],
+  "expenseCategories": [
+    "Gym gear"
+  ],
+  "income": [
+    {
+      "id": "A6C3F8E1-2D59-4B74-9F0A-3E8C5B1D7A96",
+      "month": {
+        "year": 2026,
+        "month": 11
+      },
+      "name": "Salary",
+      "category": "",
+      "amounts": [
+        2100,
+        2100
+      ],
+      "note": "Two pay days"
+    }
+  ],
+  "water": [
+    {
+      "id": "C8E1A5D3-7F42-4B96-A0C5-2D9B6E3F1A87",
+      "date": "2026-11-23T09:15:00Z",
+      "ml": 250,
+      "containerID": "2E6A9C14-7B3F-4D58-A0E2-9F1C5B8D3A67"
+    }
+  ],
+  "intake": [
+    {
+      "id": "F3B7D0A9-1C64-4E28-B5F9-8A2D6C4E1B39",
+      "date": "2026-11-23T13:10:00Z",
+      "name": "Chicken burrito bowl",
+      "proteinG": 46,
+      "carbsG": 68,
+      "fatG": 15,
+      "fiberG": 9,
+      "calories": 610
+    }
+  ],
+  "favourites": [
+    {
+      "id": "B9D2E6A4-3F17-4C85-A1B8-5E0C9F2D7A63",
+      "name": "Protein shake",
+      "proteinG": 26,
+      "carbsG": 6,
+      "fatG": 2,
+      "fiberG": 1,
+      "enteredCalories": 150,
+      "timesUsed": 51
+    }
+  ],
+  "settings": {
+    "values": {
+      "senku.water.settings.v1": {
+        "data": {
+          "_0": "eyJyZW1pbmRlclN0YXJ0SG91ciI6OCwicmVtaW5kZXJFbmRIb3VyIjoyMSwicmVtaW5kZXJJbnRlcnZhbE1pbnV0ZXMiOjEyMCwiY29udGFpbmVycyI6W3siaWQiOiIyRTZBOUMxNC03QjNGLTRENTgtQTBFMi05RjFDNUI4RDNBNjciLCJuYW1lIjoiR2xhc3MiLCJtaWxsaWxpdHJlcyI6MjUwfSx7ImlkIjoiNEYyQjhENjEtQTNDNy00RTk1LUIxRDAtN0M2RTlBMkY1QjM4IiwibmFtZSI6IkJvdHRsZSIsIm1pbGxpbGl0cmVzIjo1MDB9LHsiaWQiOiI4QTFFNkMzRC01QjkyLTRGMDctOUQ0QS0yRTdCMEM4RjZEMTUiLCJuYW1lIjoiSnVnIiwibWlsbGlsaXRyZXMiOjc1MH1dLCJ0YWtlc0NyZWF0aW5lIjp0cnVlLCJyZW1pbmRlcnNPbiI6dHJ1ZX0="
+        }
+      },
+      "senku.water.creatineDays.v1": {
+        "data": {
+          "_0": "WzgxNzA4NDgwMF0="
+        }
+      },
+      "senku.forgivenDays.v1": {
+        "data": {
+          "_0": "e30="
+        }
+      },
+      "senku.intake.targetHistory.v1": {
+        "data": {
+          "_0": "W3siZGF5Ijo4MTcwODQ4MDAsInZhbHVlIjp7ImNhbG9yaWVzIjoxODUwLCJwcm90ZWluR3JhbXMiOjEyMH19XQ=="
+        }
+      },
+      "senku.water.targetHistory.v1": {
+        "data": {
+          "_0": "W3siZGF5Ijo4MTcwODQ4MDAsInZhbHVlIjp7ImJhc2VNTCI6MjIwMCwiY3JlYXRpbmVNTCI6NTAwLCJ0cmFpbmluZ0V4dHJhTUwiOjUwMH19XQ=="
+        }
+      },
+      "senku.maintenanceCycle.v1": {
+        "data": {
+          "_0": "ODE1MjcwNDAw"
+        }
+      },
+      "senku.plates.v1": {
+        "data": {
+          "_0": "eyJtZXRyaWMiOnsiYmFyIjoyMCwicGxhdGVzIjpbMjAsMTUsMTAsNSwyLjUsMS4yNV0sInVuaXQiOiJtZXRyaWMifX0="
+        }
+      },
+      "senku.plates.unit.v1": {
+        "string": {
+          "_0": "metric"
+        }
+      },
+      "senku.tabs.visible.v2": {
+        "strings": {
+          "_0": [
+            "rest",
+            "workout",
+            "water"
+          ]
+        }
+      },
+      "senku.tabs.hidden.v1": {
+        "strings": {
+          "_0": [
+            "food",
+            "weight",
+            "records",
+            "quickCalc",
+            "plates",
+            "anime",
+            "dueDates",
+            "expenses",
+            "income"
+          ]
+        }
+      },
+      "senku.picker.groupStyle.v1": {
+        "string": {
+          "_0": "body"
+        }
+      },
+      "senku.restAfterSet.v1": {
+        "data": {
+          "_0": "eyJzZWNvbmRzIjo5MCwiaXNPbiI6dHJ1ZX0="
+        }
+      },
+      "senku.restTimer.lastDuration.v1": {
+        "number": {
+          "_0": 90
+        }
+      },
+      "senku.dayBoundary.v1": {
+        "number": {
+          "_0": 4
+        }
+      },
+      "senku.prAnimation.v1": {
+        "string": {
+          "_0": "saiyan"
+        }
+      },
+      "senku.weightReminder.v1": {
+        "bool": {
+          "_0": true
+        }
+      },
+      "senku.creatineReminder.v1": {
+        "bool": {
+          "_0": true
+        }
+      },
+      "senku.report.selection.v1": {
+        "data": {
+          "_0": "eyJwcm9maWxlIjp0cnVlLCJ3ZWlnaHQiOnRydWUsInJlY29yZHMiOnRydWUsInBsYW4iOnRydWUsIndvcmtvdXRzIjp0cnVlLCJ3YXRlciI6dHJ1ZSwiZm9vZCI6dHJ1ZSwiYW5pbWUiOnRydWUsImR1ZXMiOnRydWUsImV4cGVuc2VzIjp0cnVlLCJpbmNvbWUiOnRydWUsImNoYXJ0cyI6dHJ1ZSwiYmFja3VwIjp0cnVlLCJyZXBvcnQiOmZhbHNlfQ=="
+        }
+      }
+    }
+  }
 }

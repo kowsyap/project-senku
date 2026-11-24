@@ -30,6 +30,10 @@ public struct ExercisePicker: View {
     /// attempts rather than a list of lifts.
     private let hidden: Set<String>
 
+    /// Exercises shown with a PR tag beside the name — the PR page's, so
+    /// one you already have a record on is still in the list, and says so.
+    private let marked: Set<String>
+
     @State private var group: WorkoutGroup?
     /// The one group this picker offers, when it was opened for one.
     private let fence: WorkoutGroup?
@@ -52,6 +56,7 @@ public struct ExercisePicker: View {
     public init(
         library: ExerciseLibrary,
         hidden: Set<String> = [],
+        marked: Set<String> = [],
         /// Offers one group and nothing else, for a caller that already knows
         /// which muscle is being filled — "add to chest" shows chest, and its
         /// search looks in chest. A day that wants something from outside its
@@ -63,6 +68,7 @@ public struct ExercisePicker: View {
     ) {
         self.library = library
         self.hidden = hidden
+        self.marked = marked
         self.deletionRefusal = deletionRefusal
         self.onPick = onPick
         self.fence = group
@@ -440,10 +446,21 @@ public struct ExercisePicker: View {
                     // the accent colour of wherever the picker was opened from
                     // — green inside the workout tab, violet from the PR page —
                     // and an exercise's name is content, not a link.
-                    Text(exercise.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(Color.primary)
-                        .multilineTextAlignment(.leading)
+                    HStack(spacing: 6) {
+                        Text(exercise.name)
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Color.primary)
+                            .multilineTextAlignment(.leading)
+                        if marked.contains(exercise.id) {
+                            Text("PR")
+                                .font(.caption2.weight(.heavy))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Capsule().fill(RootView.Tab.records.tint.opacity(0.18)))
+                                .foregroundStyle(RootView.Tab.records.tint)
+                                .accessibilityLabel("Has a PR")
+                        }
+                    }
                     // Why it is here at all, when the search was for a name
                     // that is not this one's: "skull" turning up "Lying EZ-Bar
                     // Triceps Extension" otherwise looks like a wrong result.

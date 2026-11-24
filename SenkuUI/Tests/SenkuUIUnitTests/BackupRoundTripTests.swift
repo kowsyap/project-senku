@@ -159,6 +159,26 @@ import SenkuCore
         let selection = try JSONDecoder().decode(ReportSelection.self, from: Data(old.utf8))
         #expect(selection.water == false)
         #expect(selection.dues == true)
+        #expect(selection.report == false)
+    }
+
+    /// The report is off until switched on, and its sections count for
+    /// nothing while it is: only the backup can make an export.
+    @Test func theReportIsOffUntilAskedFor() {
+        var selection = ReportSelection()
+        #expect(!selection.report)
+        #expect(!selection.producesNothing)
+
+        selection.backup = false
+        #expect(selection.producesNothing)
+
+        selection.setReport(true)
+        #expect(!selection.producesNothing)
+        #expect(selection.weight && selection.charts)
+
+        selection.setReport(false)
+        #expect(!selection.weight && !selection.charts)
+        #expect(selection.producesNothing)
     }
 }
 

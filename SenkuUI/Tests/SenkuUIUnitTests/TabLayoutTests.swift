@@ -128,6 +128,24 @@ import Testing
         #expect(layout.others.first == .food)
     }
 
+    /// A narrow measurement is not a choice: widening again puts the tab
+    /// back, and nothing about the trim is saved.
+    @Test func aNarrowMomentDoesNotCostATab() {
+        let suite = UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.set(["workout", "food", "water", "rest"], forKey: TabLayout.storageKey)
+
+        let layout = TabLayout(defaults: defaults)
+        layout.fit(screenWidth: 0)
+        #expect(layout.chosen == [.workout, .food])
+        layout.fit(screenWidth: 440)
+        #expect(layout.chosen == [.workout, .food, .water, .rest])
+        #expect(!layout.others.contains(.rest))
+
+        layout.fit(screenWidth: 390)
+        #expect(TabLayout(defaults: defaults).chosen == [.workout, .food, .water, .rest])
+    }
+
     /// A bar of "Me" and "More" is a menu with extra steps.
     @Test func theLastOneCannotBeRemoved() {
         let layout = TabLayout(defaults: UserDefaults(suiteName: UUID().uuidString)!)
@@ -136,5 +154,21 @@ import Testing
         layout.toggle(.water)
 
         #expect(layout.chosen.count == 1)
+    }
+
+    /// The calculators live under More: never offered for the bar, and moved
+    /// out of it if an older version had put one there.
+    @Test func theCalculatorsStayUnderMore() {
+        let defaults = UserDefaults(suiteName: "TabLayoutTests.calc.\(UUID().uuidString)")!
+        defaults.set(["quickCalc", "workout"], forKey: TabLayout.storageKey)
+        let layout = TabLayout(defaults: defaults)
+
+        #expect(layout.chosen == [.workout])
+        #expect(layout.others.contains(.quickCalc))
+        #expect(layout.others.contains(.plates))
+
+        layout.toggle(.plates)
+        #expect(!layout.chosen.contains(.plates))
+        #expect(!TabLayout.selectable.contains(.quickCalc))
     }
 }

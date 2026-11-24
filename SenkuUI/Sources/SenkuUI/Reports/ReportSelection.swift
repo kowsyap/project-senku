@@ -22,6 +22,11 @@ public struct ReportSelection: Codable, Hashable, Sendable {
     public var expenses = true
     public var income = true
 
+    /// Whether a PDF report is written at all. Off unless switched on, so
+    /// Export Data is a backup by default; the sections below only count when
+    /// it is on.
+    public var report = false
+
     /// Charts alongside the figures. Separate from the sections rather than one
     /// per section: it is a question about how the report should look, not
     /// about what it should contain, and nobody wants eight of those.
@@ -53,6 +58,24 @@ public struct ReportSelection: Codable, Hashable, Sendable {
         income = try c.decodeIfPresent(Bool.self, forKey: .income) ?? true
         charts = try c.decodeIfPresent(Bool.self, forKey: .charts) ?? true
         backup = try c.decodeIfPresent(Bool.self, forKey: .backup) ?? true
+        report = try c.decodeIfPresent(Bool.self, forKey: .report) ?? false
+    }
+
+    /// The report switched on with every section and charts, or off with none.
+    public mutating func setReport(_ on: Bool) {
+        report = on
+        profile = on
+        weight = on
+        records = on
+        plan = on
+        workouts = on
+        water = on
+        food = on
+        anime = on
+        dues = on
+        expenses = on
+        income = on
+        charts = on
     }
 
     /// Every section off — the state the Export button refuses.
@@ -62,7 +85,7 @@ public struct ReportSelection: Codable, Hashable, Sendable {
     }
 
     /// Nothing at all to share, report or backup.
-    public var producesNothing: Bool { isEmpty && !backup }
+    public var producesNothing: Bool { (!report || isEmpty) && !backup }
 
     // MARK: - Remembering
 

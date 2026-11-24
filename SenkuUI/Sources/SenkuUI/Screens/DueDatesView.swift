@@ -14,6 +14,7 @@ import SenkuCore
 /// difference between this and a calendar alarm.
 public struct DueDatesView: View {
     @Bindable private var store: DueDateStore
+    private let expenses: MoneyStore?
 
     @State private var editing: DueItem?
     @State private var isAdding = false
@@ -23,8 +24,9 @@ public struct DueDatesView: View {
     @State private var askingPaid: DueItem?
     @State private var paidText = ""
 
-    public init(store: DueDateStore) {
+    public init(store: DueDateStore, expenses: MoneyStore? = nil) {
         self.store = store
+        self.expenses = expenses
     }
 
     public var body: some View {
@@ -36,6 +38,8 @@ public struct DueDatesView: View {
             }
         }
         .senkuBottomBarInset()
+        // Where a paid loan or utility bill is logged — nowhere without Expenses.
+        .onAppear { store.expenses = expenses }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { isShowingHistory = true } label: {
@@ -161,7 +165,7 @@ public struct DueDatesView: View {
                                 Button {
                                     store.undoDone(item.id)
                                 } label: {
-                                    Label("Undo last done", systemImage: "arrow.uturn.backward")
+                                    Label("Undo last payment", systemImage: "arrow.uturn.backward")
                                 }
                             }
                         }
@@ -394,6 +398,8 @@ struct DueItemEditor: View {
 
     @State private var item: DueItem
     @State private var amountText: String
+    /// Typing a category of your own rather than picking one.
+    @State private var isCustomCategory = false
     @Bindable var store: DueDateStore
 
     private let isNew: Bool
@@ -404,6 +410,10 @@ struct DueItemEditor: View {
         // it, in which case it starts with none rather than over the budget.
         if isNew, DueReminderPlan.cost(of: item) > DueReminderPlan.slotsLeft(store.items) {
             item.remindDaysBefore = []
+        }
+        // "credit card" typed before the defaults existed is the default one.
+        if let named = DueItem.defaultCategories.first(where: { $0.caseInsensitiveCompare(item.category) == .orderedSame }) {
+            item.category = named
         }
         _item = State(initialValue: item)
         _amountText = State(initialValue: item.amount.map { $0.formatted(.number.grouping(.never).precision(.fractionLength(0...2))) } ?? "")
@@ -419,34 +429,36 @@ struct DueItemEditor: View {
                     .textInputAutocapitalization(.words)
                     #endif
 
-                // Category and amount share a line: both short, both optional.
-                HStack {
-                    TextField("Category", text: $item.category)
+                TextField("Amount", text: $amountText)
+                    .monospacedDigit()
+                    #if os(iOS)
+                    .keyboardType(.decimalPad)
+                    #endif
+
+                Picker("Category", selection: categoryChoice) {
+                    Text("None").tag("")
+                    ForEach(categoryOptions, id: \.self) { Text($0).tag($0) }
+                    Text("Custom…").tag(Self.customTag)
+                }
+
+                if isCustomCategory {
+                    TextField("Category name", text: $item.category)
                         #if os(iOS)
                         .textInputAutocapitalization(.words)
                         #endif
-                    if !store.categories.isEmpty {
-                        Menu {
-                            ForEach(store.categories, id: \.self) { category in
-                                Button(category) { item.category = category }
-                            }
-                        } label: {
-                            Image(systemName: "chevron.down.circle")
-                        }
-                    }
+                }
 
-                    Divider()
-
-                    TextField("Amount", text: $amountText)
-                        .multilineTextAlignment(.trailing)
-                        .monospacedDigit()
-                        .frame(maxWidth: 120)
-                        #if os(iOS)
-                        .keyboardType(.decimalPad)
-                        #endif
+                // Yours to choose for a category of your own; the defaults
+                // decide for themselves.
+                if store.expenses != nil, item.hasCustomCategory {
+                    Toggle("Log in Expenses", isOn: $item.logsExpense)
                 }
             } header: {
                 Text("What")
+            } footer: {
+                if store.expenses != nil, !item.hasCustomCategory, item.expenseCategory != nil {
+                    Text("Logged in Expenses when paid.")
+                }
             }
 
             Section {
@@ -512,15 +524,20 @@ struct DueItemEditor: View {
 
             if !isNew {
                 Section {
-                    if item.doneThrough != nil {
-                        Button("Undo last done") { item.undoDone() }
+                    // One row: undo on the left, delete on the right.
+                    // Borderless, or a list row takes both taps as one.
+                    HStack {
+                        if item.doneThrough != nil {
+                            Button("Undo last payment") { item.undoDone() }
+                                .tint(Senku.Palette.caution)
+                        }
+                        Spacer()
+                        Button("Delete", role: .destructive) {
+                            store.delete(item)
+                            dismiss()
+                        }
                     }
-                    Button(role: .destructive) {
-                        store.delete(item)
-                        dismiss()
-                    } label: {
-                        Text("Delete").frame(maxWidth: .infinity)
-                    }
+                    .buttonStyle(.borderless)
                 }
             }
         }
@@ -541,6 +558,32 @@ struct DueItemEditor: View {
                     .disabled(!item.isComplete)
             }
         }
+    }
+
+    // MARK: Category
+
+    private static let customTag = "\u{0}custom"
+
+    /// The defaults, then your own in use on other dues.
+    private var categoryOptions: [String] {
+        DueItem.defaultCategories + store.categories.filter { mine in
+            !DueItem.defaultCategories.contains { $0.caseInsensitiveCompare(mine) == .orderedSame }
+        }
+    }
+
+    private var categoryChoice: Binding<String> {
+        Binding(
+            get: { isCustomCategory ? Self.customTag : item.category },
+            set: { choice in
+                if choice == Self.customTag {
+                    isCustomCategory = true
+                    item.category = ""
+                } else {
+                    isCustomCategory = false
+                    item.category = choice
+                }
+            }
+        )
     }
 
     /// The earlier reminder, if one is set: 0 for none.
@@ -623,6 +666,8 @@ struct DueItemEditor: View {
         let parsed = try? Double(amountText.trimmingCharacters(in: .whitespaces), format: .number)
         item.amount = parsed.flatMap { $0 > 0 ? $0 : nil }
         item.every = max(1, item.every)
+        // At noon, so the day it falls on does not move with the time zone.
+        item.firstDue = DueItem.noon(of: item.firstDue)
 
         store.save(item)
         dismiss()

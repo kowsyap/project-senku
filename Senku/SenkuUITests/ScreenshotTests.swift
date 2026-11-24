@@ -153,7 +153,7 @@ final class ScreenshotTests: XCTestCase {
         let app = launch()
         app.open("Workout")
         let day = button(containing: "Upper B", in: app)
-        if day.waitForExistence(timeout: 3) { day.tap() }
+        if day.waitForExistence(timeout: 3) { day.tap(); app.buttons["Start Upper B"].tap() }
         let pullUp = button(containing: "Pull-Up", in: app)
         if reveal(pullUp, in: app) {
             pullUp.tap()

@@ -130,9 +130,10 @@ import SenkuCore
         let summary = try device.load(String(contentsOf: url, encoding: .utf8))
 
         #expect(summary.problems.isEmpty, "\(summary.problems)")
-        #expect(device.plans.days.map(\.name) == ["Push", "Pull", "Legs"])
-        #expect(device.plans.days.allSatisfy { $0.exerciseIDs.count >= 3 })
-        #expect(device.plans.days[2].groups == [.legs])
+        #expect(device.plans.days.map(\.name) == ["Upper A"])
+        // The custom exercise named in the same file resolves too.
+        #expect(device.plans.days.first?.exerciseIDs.count == 3)
+        #expect(device.plans.days.first?.groups == [.chest, .back, .shoulder, .bicep, .tricep])
     }
 
     /// Targets written against the names a file used are kept against the

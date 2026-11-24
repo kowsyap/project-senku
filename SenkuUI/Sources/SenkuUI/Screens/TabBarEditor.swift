@@ -62,20 +62,28 @@ struct TabBarEditor: View {
     /// be annoying.
     private func row(_ tab: RootView.Tab, isInBar: Bool) -> some View {
         HStack(spacing: 12) {
-            Button {
-                layout.toggle(tab)
-                Feedback.control()
-            } label: {
-                Image(systemName: isInBar ? "minus.circle.fill" : "plus.circle.fill")
+            if tab.staysInMore {
+                // The calculators stay under More: no button to move them, and
+                // the space kept so the icons still line up.
+                Image(systemName: "plus.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(isInBar ? Senku.Palette.warning : Senku.Palette.surplus)
-                    .contentShape(Circle())
+                    .hidden()
+            } else {
+                Button {
+                    layout.toggle(tab)
+                    Feedback.control()
+                } label: {
+                    Image(systemName: isInBar ? "minus.circle.fill" : "plus.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(isInBar ? Senku.Palette.warning : Senku.Palette.surplus)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                // Full, and this one is not in it: the tap would do nothing, so it
+                // says so rather than swallowing it.
+                .disabled(!isInBar && layout.isFull)
+                .opacity(!isInBar && layout.isFull ? 0.35 : 1)
             }
-            .buttonStyle(.plain)
-            // Full, and this one is not in it: the tap would do nothing, so it
-            // says so rather than swallowing it.
-            .disabled(!isInBar && layout.isFull)
-            .opacity(!isInBar && layout.isFull ? 0.35 : 1)
 
             Image(systemName: tab.symbol)
                 .foregroundStyle(tab.tint)

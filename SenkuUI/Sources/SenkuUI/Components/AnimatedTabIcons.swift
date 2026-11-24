@@ -36,12 +36,12 @@ struct TabIcon: View {
                 .frame(height: 21)
         case .weight:
             symbol.modifier(StepOn(isActive: isActive))
-        case .quickCalc, .records:
+        case .quickCalc, .plates, .records:
             symbol.modifier(Wiggle(isActive: isActive))
         case .dueDates:
             PageFlip(isActive: isActive) { symbol }
-        case .anime:
-            MovieGlow(isActive: isActive, weight: weight)
+        case .anime, .expenses, .income:
+            MovieGlow(symbol: tab.symbol, isActive: isActive, weight: weight)
         default:
             symbol
         }
@@ -474,8 +474,10 @@ struct PageFlip<Content: View>: View {
 
 /// The Anime tab's television lighting up and dimming like a screen showing
 /// a film: the filled symbol faded in over the outline, in a slow swell with
-/// a flicker on top.
+/// a flicker on top. Expenses' card and Income's bank do the same.
 struct MovieGlow: View {
+    /// The outline; its `.fill` twin is the one that glows in over it.
+    let symbol: String
     let isActive: Bool
     let weight: Font.Weight
 
@@ -491,8 +493,8 @@ struct MovieGlow: View {
                 : 0
 
             ZStack {
-                Image(systemName: "sparkles.tv")
-                Image(systemName: "sparkles.tv.fill")
+                Image(systemName: symbol)
+                Image(systemName: symbol + ".fill")
                     .opacity(glow)
             }
             .font(.system(size: 18, weight: weight))

@@ -18,6 +18,9 @@ struct MoneyView: View {
     @State private var focus: String?
     @State private var listMonth = YearMonth.current()
     @State private var page: Page = .dashboard
+    /// Which page of rows each table is on; see `pageSize`.
+    @State private var monthsPage = 0
+    @State private var inOutPage = 0
 
     enum Page: Hashable { case dashboard, list }
     @State private var editing: Editing?
@@ -228,8 +231,7 @@ struct MoneyView: View {
 
     private var figures: some View {
         let change = report.change(from: previous)
-        return VStack(spacing: 10) {
-            HStack(spacing: 10) {
+        return HStack(spacing: 10) {
             tile(
                 "Monthly average",
                 MoneyStyle.money(report.monthlyAverage),
@@ -237,10 +239,6 @@ struct MoneyView: View {
             )
             if let highest = report.highestMonth, report.monthCount > 1 {
                 tile("Highest month", MoneyStyle.money(highest.total), MoneyStyle.title(highest.month, long: true))
-            }
-            }
-            if let top = whole.groups.first, focus == nil {
-                tile(kind == .expenses ? "Top category" : "Top source", top.key, "\(Int((top.share * 100).rounded()))% · \(MoneyStyle.money(top.total))")
             }
         }
     }
@@ -375,6 +373,11 @@ struct MoneyView: View {
                 RuleMark(y: .value("Average", average))
                     .foregroundStyle(.secondary)
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .annotation(position: .top, alignment: .leading, spacing: 2) {
+                        Text("Average")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
             }
             .chartForegroundStyleScale(domain: keys, range: keys.map { colors[$0] ?? MoneyStyle.other })
             .chartLegend(split ? .visible : .hidden)
@@ -397,17 +400,11 @@ struct MoneyView: View {
             }
             .frame(height: split ? 240 : 200)
 
-            Group {
-                if let selected, let selectedTotal {
-                    Text("\(MoneyStyle.title(selected, long: true)): \(MoneyStyle.money(selectedTotal))")
-                        .fontWeight(.semibold)
-                } else {
-                    Text("Dashed line: average, \(MoneyStyle.money(average)) a month")
-                        .foregroundStyle(.secondary)
-                }
+            if let selected, let selectedTotal {
+                Text("\(MoneyStyle.title(selected, long: true)): \(MoneyStyle.money(selectedTotal))")
+                    .font(.footnote.weight(.semibold))
+                    .monospacedDigit()
             }
-            .font(.footnote)
-            .monospacedDigit()
         }
     }
 
@@ -470,14 +467,14 @@ struct MoneyView: View {
     }
 
     private var monthTable: some View {
-        let rows = report.monthly.reversed().filter { $0.count > 0 }
+        let all = Array(report.monthly.reversed().filter { $0.count > 0 })
+        let rows = Self.slice(all, page: monthsPage)
         return Card("Months") {
             Grid(alignment: .trailing, horizontalSpacing: 10, verticalSpacing: 8) {
                 GridRow {
                     Text("Month").frame(maxWidth: .infinity, alignment: .leading).gridColumnAlignment(.leading)
                     Text("Total")
                     Text("Entries")
-                    Text(kind == .expenses ? "Top category" : "Top source")
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
@@ -485,7 +482,6 @@ struct MoneyView: View {
                 Divider().gridCellUnsizedAxes(.horizontal)
 
                 ForEach(rows, id: \.month) { row in
-                    let top = MoneyReport(store.entries, range: row.month...row.month, grouping: store.grouping, only: focus).groups.first
                     GridRow {
                         Button {
                             listMonth = row.month
@@ -497,15 +493,70 @@ struct MoneyView: View {
                         .gridColumnAlignment(.leading)
                         Text(MoneyStyle.money(row.total))
                         Text("\(row.count)")
-                        Text(top?.key ?? "—")
-                            .lineLimit(1)
-                            .foregroundStyle(.secondary)
                     }
                     .font(.footnote)
                     .monospacedDigit()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            pager(count: all.count, page: $monthsPage)
+        }
+        .onChange(of: period) { monthsPage = 0 }
+        .onChange(of: focus) { monthsPage = 0 }
+    }
+
+    // MARK: Paging
+
+    /// Rows a table shows at once. Past that, it pages, newest first.
+    static let pageSize = 6
+
+    /// The rows on `page`, held to the last page when there are fewer rows
+    /// than there were.
+    static func slice<Row>(_ rows: [Row], page: Int) -> [Row] {
+        let last = max(0, (rows.count - 1) / pageSize)
+        let start = min(max(page, 0), last) * pageSize
+        return Array(rows[start..<min(start + pageSize, rows.count)])
+    }
+
+    /// "‹  7–12 of 27  ›" under a table, only when it has more than a page.
+    @ViewBuilder
+    private func pager(count: Int, page: Binding<Int>) -> some View {
+        if count > Self.pageSize {
+            let last = (count - 1) / Self.pageSize
+            let current = min(page.wrappedValue, last)
+            let first = current * Self.pageSize + 1
+            HStack {
+                Button {
+                    page.wrappedValue = current - 1
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .frame(width: 36, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .disabled(current == 0)
+                .accessibilityLabel("Newer")
+
+                Spacer()
+                Text("\(first)–\(min(first + Self.pageSize - 1, count)) of \(count)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                Spacer()
+
+                Button {
+                    page.wrappedValue = current + 1
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .frame(width: 36, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .disabled(current == last)
+                .accessibilityLabel("Older")
+            }
+            .buttonStyle(.borderless)
+            .font(.subheadline.weight(.semibold))
+            .animation(.snappy, value: current)
         }
     }
 
@@ -520,6 +571,7 @@ struct MoneyView: View {
         let rows = months.indices.map { (month: months[$0], income: income[$0].total, spent: spent[$0].total) }
         let inColor = MoneyStyle.series[0], outColor = MoneyStyle.series[1]
         let totalIn = rows.reduce(0) { $0 + $1.income }, totalOut = rows.reduce(0) { $0 + $1.spent }
+        let listed = Array(rows.reversed().filter { $0.income > 0 || $0.spent > 0 })
 
         return Card("Money in and out") {
             HStack(spacing: 16) {
@@ -572,7 +624,7 @@ struct MoneyView: View {
 
                 Divider().gridCellUnsizedAxes(.horizontal)
 
-                ForEach(rows.reversed().filter { $0.income > 0 || $0.spent > 0 }, id: \.month) { row in
+                ForEach(Self.slice(listed, page: inOutPage), id: \.month) { row in
                     let saved = row.income - row.spent
                     GridRow {
                         Text(MoneyStyle.title(row.month)).gridColumnAlignment(.leading)
@@ -588,7 +640,10 @@ struct MoneyView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            pager(count: listed.count, page: $inOutPage)
         }
+        .onChange(of: period) { inOutPage = 0 }
     }
 
     private func legend(_ title: String, _ color: Color?, _ amount: Double) -> some View {
@@ -735,32 +790,24 @@ struct MoneyView: View {
     // MARK: - Export
 
     #if os(iOS)
+    /// What is on screen, as a CSV: the dashboard's period and the category
+    /// or source picked on it, or the one month open in the list.
     private func export() {
-        var lines = ["Month,Name,\(kind == .expenses ? "Category," : "")Amounts,Total,Note"]
-        for entry in store.entries {
-            var fields = [
-                "\(entry.month.year)-\(String(format: "%02d", entry.month.month))",
-                Self.csv(entry.name),
-            ]
-            if kind == .expenses { fields.append(Self.csv(entry.category)) }
-            fields.append(Self.csv(entry.amounts.map { String(format: "%.2f", $0) }.joined(separator: " + ")))
-            fields.append(String(format: "%.2f", entry.total))
-            fields.append(Self.csv(entry.note))
-            lines.append(fields.joined(separator: ","))
+        var filter = MoneyExport(
+            from: page == .dashboard ? range.lowerBound : listMonth,
+            to: page == .dashboard ? range.upperBound : listMonth
+        )
+        if page == .dashboard, let focus {
+            filter.excluded = Set(MoneyExport.groups(store.entries, kind: kind)).subtracting([focus])
         }
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Senku \(kind.title) \(Date.now.formatted(.iso8601.year().month().day())).csv")
+            .appendingPathComponent(filter.fileName(store.entries, kind: kind))
         do {
-            try lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+            try filter.csv(store.entries, kind: kind).write(to: url, atomically: true, encoding: .utf8)
             exported = ExportedReport(urls: [url])
         } catch {}
     }
     #endif
-
-    private static func csv(_ text: String) -> String {
-        guard text.contains(where: { $0 == "," || $0 == "\"" || $0 == "\n" }) else { return text }
-        return "\"" + text.replacingOccurrences(of: "\"", with: "\"\"") + "\""
-    }
 
     /// "$1.2k" on an axis, where a full amount would crowd it.
     private static func short(_ amount: Double) -> String {

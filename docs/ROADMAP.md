@@ -2,7 +2,7 @@
 
 Milestones in delivery order. Each one ends with something usable on a device.
 
-**Status:** M0–M8, M10 and M11 complete. M9 is the current backlog.
+**Status:** M0–M8 and M10–M12 complete. M9 is the current backlog.
 
 ---
 
@@ -134,6 +134,29 @@ Milestones in delivery order. Each one ends with something usable on a device.
 - [x] MIT license, and an About page with the license notices in full (S5-R6)
 - [x] README screenshots of a generated persona, taken by a UI test
 
+## M12 — Extras, money and data
+
+- [x] Extras added and removed in Settings: Watchlist, Dues, Expenses, Income;
+      removal asks once, with a Backup switch that saves the data first
+- [x] Dues (F8): repeating bills ticked off, reminders that stop when paid,
+      Credit Card / Loan / Utilities or custom categories, Undo last payment
+- [x] Dues days kept at noon, so a time-zone change never reopens a paid bill
+- [x] Paid dues logged in Expenses (never a card bill), undone with the payment
+- [x] Expenses and Income (F9): dashboard, average line, paged tables, money in
+      and out, CSV export of the screen's own filter
+- [x] Export Data: backup on by default, the PDF report behind its own switch
+- [x] Data menu as a sheet, with a sample file — one of everything — under
+      Import Data, kept identical to `docs/import-example.json` by a test
+- [x] Hard Reset with a Backup switch; nothing erased until the file is saved
+- [x] Import summary shown after a restore that includes settings
+- [x] Plate Calculator under More; both calculators kept out of the bar
+- [x] A narrow window no longer saves a trimmed navbar
+- [x] Workout days open to their muscles and a Start button
+- [x] PR picker lists every exercise, tagging and opening existing records;
+      "Not a record" and "Delete PR?" in a line each
+- [x] Reminders re-booked on return, so new wording reaches them (S2-R7)
+- [x] Expenses and Income tab icons animate like Watchlist's
+
 ---
 
 ## Release history
@@ -152,3 +175,4 @@ Milestones in delivery order. Each one ends with something usable on a device.
 | M9 — Backlog | in progress |
 | M10 — Apple Health | ✅ |
 | M11 — Plans, targets and sharing | ✅ |
+| M12 — Extras, money and data | ✅ |

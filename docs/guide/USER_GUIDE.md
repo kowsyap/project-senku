@@ -10,7 +10,7 @@ This guide walks through every screen, from the tabs you see on launch to the se
 
 ## Navigation
 
-Senku has five tabs along the bottom of the screen:
+Senku has five tabs along the bottom of the screen (six on a Pro Max). The three in the middle are yours to choose under **Settings → Navbar**; these are the defaults:
 
 | Tab | What it does |
 |-----|-------------|
@@ -18,7 +18,7 @@ Senku has five tabs along the bottom of the screen:
 | **Rest** | A rest timer for between sets |
 | **Workout** | Your weekly plan and exercise logging |
 | **Water** | Daily water intake and creatine tracking |
-| **More** | Weight, Food, PRs, Watchlist, Dues, Settings and About |
+| **More** | Everything else — Weight, Food, PRs, the calculators, the extras, Settings and About |
 
 ---
 
@@ -89,11 +89,13 @@ The **Workout** tab shows your weekly training plan. Each day is a card showing:
 - **Muscle group icons** for what that session trains.
 - How many exercises and when you last did it.
 
-Sessions you have finished this week show "Done this week — tap to see it." The next session to do is expanded and ready.
+Sessions you have finished this week show "Done this week. Tap to see it". Tap any other day to open it: its muscle groups drawn large, and a green **Start** button on the right that begins the session. Tap the day again to close it.
+
+Under the days, a track shows the week: a circle per day, ticked as you train, and how many are left — "3 to go this week", then "Week cleared."
 
 At the top-right:
 
-- **Plates** — a plate calculator for loading barbells.
+- **Plates** — a plate calculator for loading barbells (also under More).
 - **History** — your past workouts by week. This week's are listed one by one until every day of your plan is done; earlier weeks are cards showing days trained, exercises, PRs and the share of muscles reached. Tap a week to open its analysis — sets, time, volume against the week before, your plan's days, a body map — and its workouts.
 - **Week** — the current week's summary.
 
@@ -268,7 +270,9 @@ The **PRs** screen (under More) lists your personal records for every exercise y
 
 - Filter by muscle group using the chips at the top: **All**, **Back**, **Bicep**, **Tricep**, **Chest**, **Legs**, etc.
 - Each row shows the exercise name, its equipment and muscle group, how long ago the record was set, and the weight in large green text.
-- Tap **Add** (top-right) to manually enter a record.
+- Tap **Add** (top-right) to manually enter a record. Every exercise is listed; the ones you already hold a record on carry a **PR** tag, and tapping one opens its history, where the new record goes.
+- A record added by hand has to beat your best. If it does not, the screen says **Not a record: Go heavier or more reps** (or *Hold longer or add weight* for a hold).
+- Deleting asks **Delete PR?** for the whole exercise, or **Delete this record?** for one line, each with **Delete** and **Cancel**.
 
 ### Sharing a record
 
@@ -318,7 +322,42 @@ Each due shows:
 - The **name**, **category** and **amount**.
 - The **due date** and how many days remain — or "Overdue by X days" / "Due today" in red.
 
-Tap **Add** (top-right) to create a new due. Tap **History** to see past payments. Senku sends you reminders before each due date (3 days before and on the day), drawn from the app's notification budget.
+Tap **Add** (top-right) to create a new due. Tap **History** to see past payments. Senku sends you reminders before each due date (on the day, and optionally a day, three days or a week before), drawn from the app's notification budget.
+
+A due joins **To pay** a while before its date — a week before for a monthly one, three days for weekly, on the day for daily, a month for yearly and one-off — and moves to **Paid** once ticked.
+
+### Categories
+
+Pick **Credit Card**, **Loan** or **Utilities**, one of your own already in use, or **Custom…** to type a new one.
+
+### Paid dues in Expenses
+
+With Expenses added, ticking a due paid logs it as a spend, in the month you paid with the month it was for as the note:
+
+- **Loan** goes under *Loan / EMI*, **Utilities** under *Utilities*.
+- **Your own categories** go under their own name; a **Log in Expenses** switch on the due turns this off.
+- **Credit Card** is never logged: what you bought on the card is the spending, and the bill would count it twice.
+
+Undoing the payment takes its spend back out.
+
+### Undo last payment
+
+Long-press a due, or open it, for **Undo last payment** (orange) — the latest date paid opens again. **Delete** sits on the right of the same row.
+
+A due you ticked stays on its day when you travel: crossing time zones no longer reopens a paid bill.
+
+---
+
+## Expenses and Income
+
+The **Expenses** and **Income** screens (under More, once added) file money by month: spends by category, earnings by source.
+
+- **Dashboard** — pick a stretch: this month, 6 or 12 months, this year, all, or custom. It shows the monthly average and highest month, a donut by category or source, and a month-by-month chart with a dashed **Average** line. Tap a category to look at it alone.
+- **Months** and **Money in and out** tables show six months at a time; **‹ ›** under a table pages through the rest.
+- **Spends / Earnings** — the list for one month, to add, edit or delete entries.
+- **Export** (top-right) hands over a CSV of what the screen is showing — the dashboard's period and category, or the open month — named for it, such as *Senku Expenses Jun–Nov 2026.csv*.
+
+Lending and borrowing are not logged: money lent comes back, and a loan's repayments are the spending. Something bought for you on a friend's card is your expense; paying them back is not.
 
 ---
 
@@ -329,12 +368,16 @@ Tap **Add** (top-right) to create a new due. Tap **History** to see past payment
 The **More** tab is the hub for everything that does not have its own tab:
 
 - **Macro Calculator** — a standalone calculator for working out macros from scratch.
+- **Plate Calculator** — the same one as on the Workout page.
 - **Weight** — your weight tracking and trend.
 - **Food** — your daily nutrition log.
 - **PRs** — your personal records.
 - **Watchlist** — your shows, films and series.
 - **Dues** — your recurring bills.
+- **Expenses** and **Income** — money out and in.
 - **Settings** — app configuration.
+
+The two calculators always stay under More; they are tools you open for a sum, not places you live in.
 
 ---
 
@@ -346,11 +389,11 @@ The **Settings** screen lets you configure the app:
 
 ### Navbar
 
-Rearrange the five tabs at the bottom of the screen to put the ones you use most within easy reach.
+Choose the tabs in the middle of the bar and their order, and the order of everything under More. The calculators are listed under More only. On a narrow screen the bar shows fewer for as long as it is narrow, and your choice comes back when it widens.
 
 ### Extras
 
-**Dues** and **Watchlist** are extras: add them with the download button, remove them with the trash button. Removing one deletes its data — if it has any, Senku first offers to save it as a file, which Import Data brings back.
+**Watchlist**, **Dues**, **Expenses** and **Income** are extras: add them with the download button, remove them with the trash button. Removing one asks once — **Remove Dues?** — with a **Backup** switch, on by default, when it holds data. With it on, the data is saved as a file first (and nothing is removed unless the file is saved); Import Data brings it back.
 
 ### Day starts at
 
@@ -388,6 +431,15 @@ The **About** screen shows:
 - **Made by kowsyap** — the developer.
 - **View on GitHub** — link to the source code.
 - **Report a problem** — link to file an issue.
+
+### Import, export and reset
+
+Long-press the **SENKU** wordmark for the data menu:
+
+- **Import Data** — load a backup or a file of your own. A summary says what came in; anything already there is skipped, never doubled. A plan on its own is shown before it replaces your week.
+- **Sample file** — the underlined link under Import Data: an example with one of everything Import Data takes, to see the format or fill in.
+- **Export Data** — **Backup file** (on by default) saves everything as a JSON file Import Data restores. Switch on **Report** for a PDF too — every section and charts come on with it, and you turn off the ones you do not want.
+- **Hard Reset** — erases everything Senku keeps on this iPhone. **Delete everything?** → **Continue**, then a last step with a **Backup** switch (on by default) and **Delete**. With Backup on, nothing is erased until the backup file is saved. What Senku wrote to Apple Health stays there.
 
 ### Your data
 
