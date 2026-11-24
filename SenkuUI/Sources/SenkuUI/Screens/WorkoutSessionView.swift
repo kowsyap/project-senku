@@ -328,10 +328,10 @@ struct WorkoutSessionView: View {
                         .foregroundStyle(entry.isSkipped ? Color.secondary : Color.primary)
                         .strikethrough(entry.isSkipped)
 
-                    if stepUp(for: entry) != nil {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .foregroundStyle(Senku.Palette.surplus)
-                            .accessibilityLabel("Ready to go heavier")
+                    if let step = stepUp(for: entry) {
+                        Image(systemName: step.symbol)
+                            .foregroundStyle(step.tint)
+                            .accessibilityLabel(step.isDown ? "Try a lighter weight" : "Ready to go heavier")
                     }
                 }
 
@@ -600,19 +600,36 @@ private struct SetLogger: View {
                 }
             }
 
-            if let standing = records.book.records(for: exerciseID).best, newRecord == nil {
+            // The record to beat, by a gold cup, and the reps this exercise
+            // aims for: the range that decides heavier or lighter next time.
+            let standing = newRecord == nil ? records.book.records(for: exerciseID).best : nil
+            if standing != nil || !isTimed {
                 Section {
-                    LabeledContent("Your record") {
-                        Text(Display.set(
-                            weightKG: standing.weightKG,
-                            reps: standing.reps,
-                            seconds: standing.seconds,
-                            in: unitSystem
-                        ))
+                    if let standing {
+                        LabeledContent {
+                            Text(Display.set(
+                                weightKG: standing.weightKG,
+                                reps: standing.reps,
+                                seconds: standing.seconds,
+                                in: unitSystem
+                            ))
                             .monospacedDigit()
+                        } label: {
+                            Label {
+                                Text("PR")
+                            } icon: {
+                                Image(systemName: "trophy.fill")
+                                    .foregroundStyle(Senku.Palette.saiyan)
+                            }
+                        }
                     }
-                } footer: {
-                    Text("Beat it here and the PR page updates itself.")
+                    if !isTimed {
+                        LabeledContent(
+                            "Reps",
+                            value: target.topReps > target.reps ? "\(target.reps)–\(target.topReps)" : "\(target.reps)"
+                        )
+                        .monospacedDigit()
+                    }
                 }
             }
 
@@ -724,7 +741,7 @@ private struct SetLogger: View {
             .tint(Senku.Palette.protein)
         } footer: {
             if let stepUp, entry?.sets.isEmpty ?? true {
-                Label(stepUp.explanation(target: target, in: unitSystem), systemImage: "arrow.up.circle.fill")
+                Label(stepUp.explanation(target: target, in: unitSystem), systemImage: stepUp.symbol)
             }
         }
     }
@@ -769,10 +786,11 @@ private struct SetLogger: View {
             reps = max(1, last.reps)
             if let held = last.seconds { seconds = held }
         } else if let stepUp {
-            // Earned last time, so the next weight up is what to open on —
-            // ahead of the record, which is a figure already beaten.
+            // Earned last time, so the next weight up — or down, after a
+            // weight that was too heavy — is what to open on, ahead of the
+            // record.
             weight = converted(stepUp.toKG)
-            // Back to the bottom of the range at the new weight; a bodyweight
+            // The bottom of the range at the new weight; a bodyweight
             // movement goes one past the top instead.
             reps = stepUp.isBodyweight ? target.topReps + 1 : target.reps
         } else if let record = records.book.records(for: exerciseID).best {
@@ -1263,17 +1281,26 @@ enum AddedWeight {
     }
 }
 
-/// "Go heavier": the last time this exercise was done, it met the target.
+/// "Go heavier", or "go lighter": what the last time this exercise was done
+/// says about the weight.
 ///
-/// The step is the smallest one nearly every gym can make — 2.5 kg, or 5 lb —
-/// whatever the exercise. A machine with a 5 kg stack will need the figure
-/// changing, and that is one edit in the logger rather than a setting per
-/// exercise. A bodyweight movement steps up in reps instead.
+/// Heavier when it met the target — every set at the top of the range at one
+/// weight. Lighter when most sets at the heaviest weight fell short of the
+/// bottom of it. The step is the smallest one nearly every gym can make —
+/// 2.5 kg, or 5 lb — whatever the exercise. A machine with a 5 kg stack will
+/// need the figure changing, and that is one edit in the logger rather than a
+/// setting per exercise. A bodyweight movement steps up in reps instead, and
+/// never steps down.
 struct StepUp {
     let fromKG: Double
     let toKG: Double
+    /// Lighter, not heavier.
+    var isDown = false
 
     var isBodyweight: Bool { fromKG == 0 }
+
+    var symbol: String { isDown ? "arrow.down.circle.fill" : "arrow.up.circle.fill" }
+    var tint: Color { isDown ? Senku.Palette.caution : Senku.Palette.surplus }
 
     static func earned(
         for exerciseID: String,
@@ -1281,13 +1308,17 @@ struct StepUp {
         target: RepTarget,
         unitSystem: UnitSystem
     ) -> StepUp? {
-        guard let (_, last) = workouts.lastEntry(forExercise: exerciseID),
-              let top = last.earnedStepUp(for: target)
-        else { return nil }
-
-        guard top > 0 else { return StepUp(fromKG: 0, toKG: 0) }
+        guard let (_, last) = workouts.lastEntry(forExercise: exerciseID) else { return nil }
         let step = unitSystem == .metric ? 2.5 : Convert.kilograms(fromPounds: 5)
-        return StepUp(fromKG: top, toKG: top + step)
+
+        if let top = last.earnedStepUp(for: target) {
+            guard top > 0 else { return StepUp(fromKG: 0, toKG: 0) }
+            return StepUp(fromKG: top, toKG: top + step)
+        }
+        if let top = last.earnedStepDown(for: target) {
+            return StepUp(fromKG: top, toKG: max(0, top - step), isDown: true)
+        }
+        return nil
     }
 
     /// "try 42.5 kg" — short enough for the checklist row.
@@ -1296,6 +1327,9 @@ struct StepUp {
     }
 
     func explanation(target: RepTarget, in system: UnitSystem) -> String {
+        if isDown {
+            return "Last time most sets at \(Display.lifted(fromKG, in: system)) fell short of \(target.reps) reps. Go down to \(Display.lifted(toKG, in: system))."
+        }
         let hit = "Last time you did \(target.sets)×\(target.topReps)"
         return isBodyweight
             ? "\(hit). Go for more reps."

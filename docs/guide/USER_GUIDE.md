@@ -160,9 +160,9 @@ Tap **Add an exercise** at the bottom of a session to browse the full catalogue 
 
 ### Importing a plan
 
-![Import a plan](../screenshots/guide-import.png)
+![Plan Builder](../screenshots/guide-import.png)
 
-From the week editor, tap **Import a plan** to load a workout plan from a JSON file. If you do not have a file yet:
+From the week editor, tap **Plan Builder** to load a workout plan from a JSON file. If you do not have a file yet:
 
 1. Copy the AI prompt (or share it as a file).
 2. Paste it into any AI chat.

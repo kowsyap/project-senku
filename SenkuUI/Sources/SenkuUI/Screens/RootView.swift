@@ -187,7 +187,7 @@ public struct RootView: View {
             case .anime: "sparkles.tv"
             case .dueDates: "calendar.badge.clock"
             case .expenses: "creditcard"
-            case .income: "banknote"
+            case .income: "dollarsign.bank.building"
             case .more: "ellipsis.circle"
             }
         }
@@ -565,7 +565,7 @@ public struct RootView: View {
             let data = try Data(contentsOf: url)
 
             // A plan and nothing else — what the AI converters make — is shown
-            // before it replaces the week, as the Import a Plan page does. A
+            // before it replaces the week, as the Plan Builder page does. A
             // backup still restores in one go: it is a whole device, and a
             // preview of every section would be a second app.
             if PlanImportPreview.isPlanOnly(data) {
@@ -1461,7 +1461,7 @@ private struct AdaptiveTabs<
                 }
 
                 if installed.contains(.income) {
-                    Tab("Income", systemImage: "banknote", value: RootView.Tab.income) { money(.income) }
+                    Tab("Income", systemImage: "dollarsign.bank.building", value: RootView.Tab.income) { money(.income) }
                         .customizationID("senku.tab.income")
                 }
             }

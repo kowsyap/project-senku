@@ -1,6 +1,6 @@
 import XCTest
 
-/// Import a Plan, driven the way a person would: from the Week page to the
+/// Plan Builder, driven the way a person would: from the Week page to the
 /// page itself, both converter tabs, and the preview a plan file opens.
 ///
 /// The system file picker cannot be driven from a test, so the preview is
@@ -36,11 +36,11 @@ final class PlanImportUITests: XCTestCase {
         // person would.
         XCTAssertTrue(app.navigationBars["Your Week"].waitForExistence(timeout: 5))
         shoot("1-week-page")
-        let row = app.buttons["Import a plan"]
+        let row = app.buttons["Plan Builder"]
         for _ in 0..<6 where !(row.exists && row.isHittable) {
             app.swipeUp()
         }
-        XCTAssertTrue(row.exists && row.isHittable, "Import a plan is not on the Week page")
+        XCTAssertTrue(row.exists && row.isHittable, "Plan Builder is not on the Week page")
         shoot("1b-week-page-import-row")
         row.tap()
 

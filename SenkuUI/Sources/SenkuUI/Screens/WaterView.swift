@@ -204,36 +204,41 @@ public struct WaterView: View {
             // put — "I take creatine" is one — while this is a thing you do
             // once a day and tick off, and a row of switches on one screen
             // makes the two look like the same kind of decision.
-            Button {
-                store.setCreatine(!store.tookCreatine())
-                Feedback.control()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: store.tookCreatine() ? "checkmark.square.fill" : "square")
-                        .font(.title2)
-                        .foregroundStyle(store.tookCreatine() ? Senku.Palette.surplus : Color.secondary)
+            HStack(spacing: 8) {
+                Button {
+                    store.setCreatine(!store.tookCreatine())
+                    Feedback.control()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: store.tookCreatine() ? "checkmark.square.fill" : "square")
+                            .font(.title2)
+                            .foregroundStyle(store.tookCreatine() ? Senku.Palette.surplus : Color.secondary)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Taken today")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.primary)
-                        // Saturation is the mechanism, so consecutive days is
-                        // the only figure about creatine worth reporting — a
-                        // single dose means nothing on its own.
-                        Text(store.creatineStreak > 0
-                             ? "\(store.creatineStreak) day\(store.creatineStreak == 1 ? "" : "s") in a row"
-                             : "It works by staying topped up, not by any one dose")
-                            .font(.caption)
-                            .foregroundStyle(Color.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Taken today")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.primary)
+                            // Saturation is the mechanism, so consecutive days
+                            // is the only figure about creatine worth reporting.
+                            if store.creatineStreak > 0 {
+                                Text("\(store.creatineStreak) day\(store.creatineStreak == 1 ? "" : "s") in a row")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.secondary)
+                            }
+                        }
+
+                        Spacer(minLength: 0)
                     }
-
-                    Spacer(minLength: 0)
+                    .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .accessibilityLabel("Creatine taken today")
+                .accessibilityValue(store.tookCreatine() ? "Yes" : "No")
+
+                // Beside the tick rather than inside it, so tapping it reads
+                // the note instead of ticking the day.
+                InfoButton("It works by staying topped up, not by any one dose.")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Creatine taken today")
-            .accessibilityValue(store.tookCreatine() ? "Yes" : "No")
 
             Divider()
 

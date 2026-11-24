@@ -168,7 +168,7 @@ Two things to check after a sideloaded install:
 `SenkuUI/Sources/SenkuUI/PlanSkill`, which it builds its make and convert
 prompts from, and the skill is published on its own at
 [kowsyap/senku-plan-skill](https://github.com/kowsyap/senku-plan-skill), which
-Import a Plan links to. After changing the skill or the exercise catalogue:
+Plan Builder links to. After changing the skill or the exercise catalogue:
 
 ```sh
 python3 skills/senku-plan/scripts/senku_plan.py sync

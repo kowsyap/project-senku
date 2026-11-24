@@ -691,11 +691,11 @@ struct RepTargetFields: View {
                 LabeledContent("Reps Max", value: maxReps == reps ? "—" : "\(maxReps)")
             }
         } header: {
-            if let header { Text(header) }
-        } footer: {
-            Text(maxReps > reps
-                ? "Done at \(sets) sets. Reach \(maxReps) reps on all \(sets) at one weight and the next workout offers a heavier one, back at \(reps)."
-                : "Done at \(sets) sets. Reach \(reps) reps on all \(sets) at one weight and the next workout offers a heavier one.")
+            // What the range does, behind an ⓘ rather than under the fields.
+            HStack(spacing: 4) {
+                Text(header ?? "Target")
+                InfoButton("• Hit Max on every set: go heavier.\n• Fall under Min on most sets: go lighter.")
+            }
         }
     }
 }

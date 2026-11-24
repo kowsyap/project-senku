@@ -265,7 +265,7 @@ public struct PlanInputForm: View {
         case .automatic:
             draft.usesMeasuredBodyFat
                 ? "Using Katch-McArdle, because you gave a measured body fat."
-                : "Using Mifflin-St Jeor. Add a measured body fat to unlock Katch-McArdle."
+                : "Using Mifflin-St Jeor."
         case .mifflinStJeor:
             "The modern default. Most accurate across the general population."
         case .katchMcArdle:

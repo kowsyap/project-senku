@@ -180,6 +180,66 @@ public enum PlanConverter {
         return text
     }
 
+    // MARK: - Asking an AI directly
+
+    /// The AI chats a prompt can be opened in, already typed in.
+    public enum Chat: String, CaseIterable, Identifiable, Sendable {
+        case claude, chatgpt, gemini
+
+        public var id: String { rawValue }
+
+        public var name: String {
+            switch self {
+            case .claude: "Claude"
+            case .chatgpt: "ChatGPT"
+            case .gemini: "Gemini"
+            }
+        }
+
+        /// Its mark, a template image in the package's assets, drawn in the
+        /// button's colour.
+        public var mark: String { "ai.\(rawValue)" }
+
+        /// The chat's own "start with this prompt" link. Claude and ChatGPT
+        /// document theirs; Gemini's works in a browser but is not promised,
+        /// which is why the prompt is copied as well when one is opened.
+        public func url(for prompt: String) -> URL? {
+            var parts = switch self {
+            case .claude: URLComponents(string: "https://claude.ai/new")
+            case .chatgpt: URLComponents(string: "https://chatgpt.com/")
+            case .gemini: URLComponents(string: "https://gemini.google.com/app")
+            }
+            parts?.queryItems = [URLQueryItem(name: "q", value: prompt)]
+            return parts?.url
+        }
+    }
+
+    /// Where the published prompts can be read, for a chat that fetches links.
+    static func hostedPrompt(_ kind: Kind) -> String {
+        "https://raw.githubusercontent.com/kowsyap/senku-plan-skill/main/senku-plan/"
+            + (kind == .make ? "prompt-make.md" : "prompt.md")
+    }
+
+    /// A prompt short enough for a link: read the published instructions,
+    /// then whatever only this phone knows — the profile, and your own
+    /// exercises. The full prompt is tens of kilobytes, far past what a chat
+    /// accepts in a link, which is why this one points at it instead.
+    public static func linkPrompt(_ kind: Kind, own: [Exercise] = [], aboutMe: String? = nil) -> String {
+        var lines = [
+            kind == .make
+                ? "Read \(hostedPrompt(.make)) and follow it to generate my workout plan for the Senku app."
+                : "Read \(hostedPrompt(.convert)) and follow it to convert my workout plan for the Senku app. I'll attach my plan next.",
+        ]
+        if kind == .make, let aboutMe, !aboutMe.isEmpty {
+            lines.append(aboutMe.replacingOccurrences(of: "## About me\n\n", with: "About me:\n"))
+        }
+        if !own.isEmpty {
+            lines.append("My own exercises, already in Senku. To use one, name it and copy its line into customExercises:")
+            lines += own.sorted { $0.name < $1.name }.prefix(10).map { customEntry(for: $0) }
+        }
+        return lines.joined(separator: "\n\n")
+    }
+
     /// Both prompts, written where the share sheet can hand them on.
     public static func files(own: [Exercise], aboutMe: String?) throws -> (make: URL, convert: URL) {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("SenkuPlanConverter", isDirectory: true)

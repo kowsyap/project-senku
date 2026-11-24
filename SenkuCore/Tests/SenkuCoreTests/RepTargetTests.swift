@@ -42,6 +42,42 @@ import Testing
         #expect(pullUps.earnedStepUp(for: .standard) == 0)
     }
 
+    // MARK: Going lighter
+
+    private let eightToTwelve = RepTarget(sets: 3, reps: 8, maxReps: 12)
+
+    @Test func mostSetsUnderTheBottomMeanGoLighter() throws {
+        let heavy = try entry([(40, 10), (40, 7), (40, 6)])
+        #expect(heavy.earnedStepDown(for: eightToTwelve) == 40)
+    }
+
+    @Test func oneTiredLastSetDoesNot() throws {
+        let tired = try entry([(40, 9), (40, 8), (40, 7)])
+        #expect(tired.earnedStepDown(for: eightToTwelve) == nil)
+    }
+
+    @Test func onlyTheHeaviestWeightIsJudged() throws {
+        // Dropping to 35 to finish does not hide that 40 was too much.
+        let dropped = try entry([(40, 6), (40, 5), (35, 9)])
+        #expect(dropped.earnedStepDown(for: eightToTwelve) == 40)
+    }
+
+    @Test func bodyweightAndHoldsNeverGoLighter() throws {
+        let pullUps = try entry([(0, 4), (0, 3), (0, 3)])
+        #expect(pullUps.earnedStepDown(for: eightToTwelve) == nil)
+        let plank = WorkoutEntry(
+            exerciseID: "catalogue.plank",
+            sets: try (0..<3).map { _ in try LoggedSet(weightKG: 0, seconds: 20) }
+        )
+        #expect(plank.earnedStepDown(for: eightToTwelve) == nil)
+    }
+
+    @Test func meetingTheTopIsNeverTooHeavy() throws {
+        let done = try entry([(40, 12), (40, 12), (40, 12)])
+        #expect(done.earnedStepDown(for: eightToTwelve) == nil)
+        #expect(done.earnedStepUp(for: eightToTwelve) == 40)
+    }
+
     @Test func holdsNeverDo() throws {
         let plank = WorkoutEntry(
             exerciseID: "catalogue.plank",

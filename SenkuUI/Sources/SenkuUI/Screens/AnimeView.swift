@@ -17,7 +17,8 @@ public struct AnimeView: View {
 
     @State private var search = ""
     /// Opens on what is airing — the handful of shows with an episode out this
-    /// week is the reason to look at a list of 179.
+    /// week is the reason to look at a list of 179 — or on everything, for a
+    /// collection with nothing airing, rather than an empty list.
     @State private var status: AnimeStatus? = .airing
     @State private var sort: AnimeSort = .status
     @State private var reversed = false
@@ -51,6 +52,11 @@ public struct AnimeView: View {
             }
         }
         .senkuBottomBarInset()
+        // Chosen afresh for each collection opened: Airing where something is,
+        // All where nothing is.
+        .task(id: current?.id) {
+            status = store.list(status: .airing, screen: current?.id).isEmpty ? nil : .airing
+        }
         .navigationTitle(current.flatMap { $0.name.isEmpty ? nil : $0.name } ?? "Watchlist")
         #if os(iOS)
         // Small from the start once there is a choice of screens: the picker

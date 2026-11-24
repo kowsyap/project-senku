@@ -149,7 +149,7 @@ final class GuideScreenshots: XCTestCase {
         app.open("Workout")
         let edit = app.buttons["Edit my week"]
         if edit.waitForExistence(timeout: 3) { edit.tap() }
-        let importRow = app.buttons["Import a plan"]
+        let importRow = app.buttons["Plan Builder"]
         if reveal(importRow, in: app) {
             importRow.tap()
             shoot("guide-import")

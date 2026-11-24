@@ -80,8 +80,6 @@ struct PlateRackEditor: View {
                     }
                 } header: {
                     Text("Bar")
-                } footer: {
-                    Text("Everything below is worked out from whatever is selected here.")
                 }
 
                 Section {
@@ -109,11 +107,6 @@ struct PlateRackEditor: View {
                     }
                 } header: {
                     Text("Plates on the rack")
-                } footer: {
-                    // The figure that decides whether a small progression is
-                    // even possible — and the reason to care which small plates
-                    // the gym has.
-                    Text("Smallest change you can make to the bar: \(PlateLoad.trim(set.smallestStep)) \(unitSystem.massLabel). Plates go on in pairs, so it is twice your smallest plate.")
                 }
 
                 Section {

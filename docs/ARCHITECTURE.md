@@ -192,7 +192,7 @@ they are on display (S5-R4).
 | `SenkuCore/Tests` | host, `swift test` | calculations and model rules — 241 tests |
 | `SenkuUI/Tests` | host, `swift test` | stores, importer, plan import and preview, the skill's copy, body map, plate maths, tab layout, sample data — 209 tests |
 | `Senku/SenkuTests` | simulator | bundle resources, App Group access |
-| `Senku/SenkuUITests` | simulator | launch, rest timer, calculator, Import a Plan; the README screenshots, on request |
+| `Senku/SenkuUITests` | simulator | launch, rest timer, calculator, Plan Builder; the README screenshots, on request |
 
 ## Conventions
 

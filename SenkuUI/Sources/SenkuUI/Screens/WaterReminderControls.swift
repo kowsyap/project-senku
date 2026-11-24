@@ -20,13 +20,8 @@ struct WaterReminderControls: View {
                 }
             }
         )) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Remind me to drink")
-                    .font(.subheadline)
-                Text(summary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text("Remind me to drink")
+                .font(.subheadline)
         }
 
         if store.settings.remindersOn {
@@ -42,17 +37,8 @@ struct WaterReminderControls: View {
                 LabeledContent("Until", value: "\(store.settings.reminderEndHour):00")
             }
 
-            Text("Stops for the day once you hit the target.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
         }
         #endif
-    }
-
-    private var summary: String {
-        store.settings.remindersOn
-            ? "\(intervalText) between \(store.settings.reminderStartHour):00 and \(store.settings.reminderEndHour):00"
-            : "Off"
     }
 
     private var intervalText: String {

@@ -50,59 +50,48 @@ struct IntakeEditor: View {
                         } label: {
                             Label("Read a packet or a plate", systemImage: "camera")
                         }
-                    } footer: {
-                        // Lives here rather than in the toolbar because it is
-                        // a way of filling this form in, not a separate way of
-                        // logging food. Whatever it reads lands in the fields
-                        // below and is yours to correct before anything is
-                        // saved.
-                        Text("To get estimates")
                     }
                 }
                 #endif
 
                 Section {
-                    TextField(Self.defaultName, text: $name)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.sentences)
-                        #endif
+                    // The name, and beside it whether to keep it as a button:
+                    // a small "Quick-add" over the switch.
+                    HStack(spacing: 12) {
+                        TextField(Self.defaultName, text: $name)
+                            #if os(iOS)
+                            .textInputAutocapitalization(.sentences)
+                            #endif
+                        if editing == nil {
+                            VStack(spacing: 2) {
+                                Text("Quick-add")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(Color.secondary)
+                                Toggle("Quick-add", isOn: $saveAsFavourite)
+                                    .labelsHidden()
+                            }
+                            .disabled(trimmedName.isEmpty)
+                        }
+                    }
                 }
 
                 Section {
-                    row("Protein", value: $protein, tint: Senku.Palette.protein)
-                    row("Carbs", value: $carbs, tint: Senku.Palette.carbs)
-                    row("Fat", value: $fat, tint: Senku.Palette.fat)
-                    row("Fibre", value: $fibre, tint: Senku.Palette.surplus)
+                    row("Protein", value: macro($protein), tint: Senku.Palette.protein)
+                    row("Carbs", value: macro($carbs), tint: Senku.Palette.carbs)
+                    row("Fat", value: macro($fat), tint: Senku.Palette.fat)
+                    row("Fibre", value: macro($fibre), tint: Senku.Palette.surplus)
                 } header: {
                     Text("Macros")
-                } footer: {
-                    Text("\(Int(derivedCalories.rounded())) kcal at 4/4/9.")
                 }
 
                 Section {
-                    LabeledContent("From the packet") {
+                    LabeledContent {
                         NumericField(value: $calories, range: 0 ... 5000, unit: "kcal", width: 76)
-                    }
-                } header: {
-                    Text("Calories")
-                } footer: {
-                    // The rule from F5: two figures that disagree are shown as
-                    // two figures. A label knows about the oil in the pan; 4/4/9
-                    // does not, and neither of them is wrong enough to overwrite
-                    // the other silently.
-                    Text(calories == nil
-                         ? "Leave this empty and the calories come from the macros above."
-                         : "Kept as you typed it. The figure from the macros is \(Int(derivedCalories.rounded())) kcal, and both are shown where they disagree.")
-                }
-
-                if editing == nil {
-                    Section {
-                        Toggle("Save as a quick-add", isOn: $saveAsFavourite)
-                            .disabled(trimmedName.isEmpty)
-                    } footer: {
-                        Text(trimmedName.isEmpty
-                             ? "Give it a name to keep it as a button."
-                             : "Adds \(trimmedName) to the quick-add menu.")
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Calories")
+                            InfoButton("Calories are worked out at 4 per gram of protein and carbs, and 9 per gram of fat.")
+                        }
                     }
                 }
 
@@ -153,7 +142,8 @@ struct IntakeEditor: View {
                 carbs = editing.carbsG
                 fat = editing.fatG
                 fibre = editing.fiberG
-                calories = editing.enteredCalories
+                // The figure it was saved with, or the one its macros give.
+                calories = editing.enteredCalories ?? (derivedCalories > 0 ? derivedCalories.rounded() : nil)
             }
         }
     }
@@ -174,6 +164,19 @@ struct IntakeEditor: View {
     /// named by you — a menu full of "Meal" would be no menu at all.
     private var savedName: String {
         trimmedName.isEmpty ? Self.defaultName : trimmedName
+    }
+
+    /// A macro field that refills Calories from the macros as you type them.
+    /// Calories can still be typed over; changing a macro again recalculates.
+    /// Only typing does this — loading an entry to edit leaves its calories.
+    private func macro(_ value: Binding<Double?>) -> Binding<Double?> {
+        Binding(
+            get: { value.wrappedValue },
+            set: { new in
+                value.wrappedValue = new
+                calories = derivedCalories > 0 ? derivedCalories.rounded() : nil
+            }
+        )
     }
 
     private func row(_ title: String, value: Binding<Double?>, tint: Color) -> some View {
@@ -201,7 +204,7 @@ struct IntakeEditor: View {
         carbs = proposal.carbsG
         fat = proposal.fatG
         fibre = proposal.fiberG
-        calories = proposal.enteredCalories
+        calories = proposal.enteredCalories ?? (derivedCalories > 0 ? derivedCalories.rounded() : nil)
     }
     #endif
 
@@ -214,7 +217,9 @@ struct IntakeEditor: View {
             carbsG: carbs ?? 0,
             fatG: fat ?? 0,
             fiberG: fibre,
-            enteredCalories: calories
+            // The figure from the macros, kept as the macros rather than as a
+            // typed number; only a different figure is saved as typed.
+            enteredCalories: calories.flatMap { abs($0 - derivedCalories) < 1 ? nil : $0 }
         ) else { return }
 
         if editing == nil {
@@ -263,8 +268,6 @@ struct IntakeSettingsView: View {
             if #available(iOS 27, *) {
                 Section {
                     NavigationLink("Photo reading") { FoodIntelligenceSettings() }
-                } footer: {
-                    Text("Reading macros with AI.")
                 }
             }
             #endif
@@ -310,8 +313,6 @@ struct IntakeSettingsView: View {
                 }
             } header: {
                 Text("Quick add")
-            } footer: {
-                Text("The menu on the food screen.")
             }
 
         }

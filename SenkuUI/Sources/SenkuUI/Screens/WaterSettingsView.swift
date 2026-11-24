@@ -43,9 +43,10 @@ struct WaterSettingsView: View {
                 }
                 #endif
             } header: {
-                Text("Creatine")
-            } footer: {
-                Text("Creatine draws water into muscle, so the target goes up while you are taking it. Turning this on also puts a daily tick on the water screen.")
+                HStack(spacing: 4) {
+                    Text("Creatine")
+                    InfoButton("Creatine draws water into muscle, so the target goes up while you are taking it.")
+                }
             }
 
             Section {

@@ -17,6 +17,7 @@ struct FoodIntelligenceSettings: View {
     @State private var key = ""
     @State private var hasStoredKey = GeminiAccount.key != nil
     @State private var saveFailed = false
+    @State private var isConfirmingRemove = false
 
     var body: some View {
         Form {
@@ -28,23 +29,33 @@ struct FoodIntelligenceSettings: View {
             }
 
             Section {
-                SecureField(hasStoredKey ? "Stored. Type to replace" : "API key", text: $key)
-                    .textContentType(.password)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-
-                HStack {
-                    // Borderless on both: without it a row containing two
-                    // buttons behaves as one tappable row, and whichever is
-                    // first swallows the tap wherever you land.
-                    Button("Save key") { save() }
-                        .buttonStyle(.borderless)
-                        .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty)
-
-                    if hasStoredKey {
+                if hasStoredKey {
+                    // A key is kept: shown as dots, never as text, and only
+                    // replaced by removing it first — so there is no field
+                    // to half-type a new one into over the old.
+                    HStack(spacing: 12) {
+                        Text(String(repeating: "●", count: 12))
+                            .font(.system(size: 13))
+                            .tracking(3)
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("Key saved")
                         Spacer()
-                        Button("Remove key", role: .destructive) { clear() }
+                        Button(role: .destructive) { isConfirmingRemove = true } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("Remove key")
+                    }
+                } else {
+                    HStack(spacing: 12) {
+                        SecureField("API key", text: $key)
+                            .textContentType(.password)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        Button("Save") { save() }
                             .buttonStyle(.borderless)
+                            .fontWeight(.semibold)
+                            .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
                 }
             } header: {
@@ -59,6 +70,12 @@ struct FoodIntelligenceSettings: View {
         .navigationTitle("Photo Reading")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: isEnabled) { _, new in GeminiAccount.isEnabled = new }
+        .alert("Remove the key?", isPresented: $isConfirmingRemove) {
+            Button("Remove", role: .destructive) { clear() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Photo reading turns off until you add one again.")
+        }
         .alert("That key could not be saved.", isPresented: $saveFailed) {
             Button("OK", role: .cancel) {}
         } message: {

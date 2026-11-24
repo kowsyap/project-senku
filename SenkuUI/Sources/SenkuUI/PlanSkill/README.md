@@ -70,15 +70,15 @@ If not, tell it:
 
 Paste `prompt-make.md` (to make a plan) or `prompt.md` (to convert one) into
 the chat. Each holds the instructions, the format and every exercise. The
-Senku app hands out the same prompts from **Workout → Your Week → Import a
-plan**, with your own exercises, and for making a plan what your profile
+Senku app hands out the same prompts from **Workout → Your Week → Plan
+Builder**, with your own exercises, and for making a plan what your profile
 already says about you, added.
 
 ## Importing into Senku
 
 1. Get the `.json` file onto your iPhone: AirDrop, Files or Mail.
 2. In Senku, **press and hold the SENKU logo** at the top of any screen for a
-   second, or use **Import plan** on the Import a plan page.
+   second, or use **Import plan** on the Plan Builder page.
 3. Pick the file. The preview shows the week before anything changes.
 
 Importing **replaces your current plan**. Workouts, records, food, water and

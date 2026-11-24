@@ -87,6 +87,28 @@ import SenkuCore
         #expect(try PlanConverter.prompt(.make, aboutMe: about).hasPrefix(about + "\n\n# Make me a workout plan"))
     }
 
+    /// A chat opened from the app gets a short prompt pointing at the
+    /// published instructions, small enough for a link, with what only the
+    /// phone knows added.
+    @Test func theLinkPromptIsShortAndPointsAtThePublishedPrompt() throws {
+        let generate = PlanConverter.linkPrompt(.make, aboutMe: "## About me\n\n- Male, 30, 80 kg.")
+        #expect(generate.contains("senku-plan-skill/main/senku-plan/prompt-make.md"))
+        #expect(generate.contains("About me:\n- Male, 30, 80 kg."))
+        #expect(generate.count < 1_000)
+
+        let convert = PlanConverter.linkPrompt(.convert, aboutMe: "## About me")
+        #expect(convert.contains("senku-plan/prompt.md"))
+        #expect(!convert.contains("About me"))
+
+        for chat in PlanConverter.Chat.allCases {
+            let url = try #require(chat.url(for: generate))
+            let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "q" }?.value
+            #expect(q == generate, "\(chat.name)")
+        }
+        #expect(PlanConverter.Chat.claude.url(for: "x")?.host() == "claude.ai")
+        #expect(PlanConverter.Chat.gemini.url(for: "x")?.host() == "gemini.google.com")
+    }
+
     /// A file stamped with another exercise list says so in the preview.
     @Test func anOlderExerciseListIsNoticed() throws {
         let (library, _) = stores()

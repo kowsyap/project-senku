@@ -104,11 +104,11 @@ final class ScreenshotTests: XCTestCase {
             }
         }
 
-        // Import a Plan, from the Week page.
+        // Plan Builder, from the Week page.
         app = launch()
         app.open("Workout")
         app.buttons["Edit my week"].tap()
-        let row = app.buttons["Import a plan"]
+        let row = app.buttons["Plan Builder"]
         if reveal(row, in: app) {
             row.tap()
             shoot("import")

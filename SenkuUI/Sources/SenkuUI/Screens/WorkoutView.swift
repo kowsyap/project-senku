@@ -180,19 +180,85 @@ public struct WorkoutView: View {
                     // at — which is the whole question this screen answers.
                     .listRowBackground(rowBackground(isDone: isDone))
                 }
-            } header: {
-                // What is left of the round, rather than a flat instruction.
-                // "1 of 3 left" is the thing being asked when this screen is
-                // opened, and the answer changes as the week goes on.
-                if outstanding.isEmpty {
-                    Text("Every day done this week")
-                } else if done.isEmpty {
-                    Text("What are you doing today?")
-                } else {
-                    Text("\(outstanding.count) of \(plans.readyDays.count) left this week")
+            }
+
+            // Where the week stands, after the days rather than over them:
+            // a track with a segment per day, lit as each one is trained.
+            Section {
+                weekTrack(days: plans.readyDays, done: done)
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
+        }
+    }
+
+    /// The week as steps: a circle per day joined by a line, ticked from the
+    /// left as days are trained in whatever order — two done ticks 1 and 2 —
+    /// the next ringed, the rest waiting, and a line saying how far through.
+    private func weekTrack(days: [SplitDay], done: Set<UUID>) -> some View {
+        let count = days.filter { done.contains($0.id) }.count
+        let total = days.count
+        let tint = RootView.Tab.workout.tint
+        let message = count == 0 ? "Fresh week. Your move."
+            : count == total ? "Week cleared."
+            : "\(total - count) to go this week"
+
+        return VStack(spacing: 12) {
+            HStack(spacing: 0) {
+                ForEach(Array(days.indices), id: \.self) { index in
+                    if index > 0 {
+                        Rectangle()
+                            .fill(tint.opacity(0.7))
+                            .frame(height: 2)
+                    }
+                    stepNode(index + 1, isDone: index < count, isNext: index == count, tint: tint)
                 }
             }
+            // Room for the ring round the next day, which is drawn outside
+            // its circle so the line runs right up to every circle.
+            .padding(6)
+
+            HStack(spacing: 6) {
+                if count == total, total > 0 {
+                    Image(systemName: "flame.fill")
+                        .foregroundStyle(tint)
+                }
+                Text(message)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(count == total ? Color.primary : Color.secondary)
+            }
         }
+        .frame(maxWidth: .infinity)
+        .animation(.snappy, value: count)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(count) of \(total) days done this week")
+    }
+
+    private func stepNode(_ number: Int, isDone: Bool, isNext: Bool, tint: Color) -> some View {
+        let size: CGFloat = 34
+        return ZStack {
+            if isDone {
+                Circle().fill(tint)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 15, weight: .heavy))
+                    .foregroundStyle(.white)
+            } else if isNext {
+                Circle().fill(tint)
+                Circle()
+                    .strokeBorder(tint, lineWidth: 2)
+                    .padding(-5)
+                Text("\(number)")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            } else {
+                Circle().fill(.background)
+                Circle().strokeBorder(tint, lineWidth: 2)
+                Text("\(number)")
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundStyle(tint)
+            }
+        }
+        .frame(width: size, height: size)
     }
 
     /// Grey for a day already trained, and the list's own card colour
@@ -211,49 +277,59 @@ public struct WorkoutView: View {
         let exercises = day.exerciseIDs.compactMap { library.exercise($0) }
         let last = workouts.lastSession(forDay: day.id)
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(day.groups) { group in
-                    GroupGlyph(group: group, size: 26)
-                        // Faded rather than hidden: a finished day stays on the
-                        // list and stays startable, because doing legs twice in
-                        // a week is a decision the app has no business
-                        // refusing.
-                        .opacity(isDone ? 0.45 : 1)
+        // Laid out like the Week page: name and summary on the left, the
+        // muscles in a bordered box and the way in on the right, centred on
+        // the row.
+        return HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    if isDone {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(Senku.Palette.surplus)
+                    }
+                    Text(day.name)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(isDone ? Color.secondary : Color.primary)
+                        .lineLimit(1)
                 }
-                Spacer()
-                Image(systemName: isDone ? "eye" : "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
 
-            HStack(spacing: 6) {
-                if isDone {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Senku.Palette.surplus)
-                }
-                Text(day.name)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(isDone ? Color.secondary : Color.primary)
-            }
-
-            HStack(spacing: 6) {
-                if isDone {
-                    Text("Done this week. Tap to see it")
-                } else {
-                    Text("\(exercises.count) exercises")
-                    if let last {
-                        // Named relative — "3 days ago" is the form the question
-                        // is asked in, never a date.
-                        Text("·")
-                        Text("last \(last.date.formatted(.relative(presentation: .named)))")
+                HStack(spacing: 6) {
+                    if isDone {
+                        Text("Done this week. Tap to see it")
+                    } else {
+                        Text("\(exercises.count) exercise\(exercises.count == 1 ? "" : "s")")
+                        if let last {
+                            // Named relative — "3 days ago" is the form the
+                            // question is asked in, never a date.
+                            Text("·")
+                            Text("last \(last.date.formatted(.relative(presentation: .named)))")
+                        }
                     }
                 }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .layoutPriority(1)
+
+            Spacer(minLength: 8)
+
+            if !day.groups.isEmpty {
+                MuscleGroupBox(groups: day.groups, size: 24)
+                    // Faded rather than hidden: a finished day stays on the
+                    // list and stays startable, because doing legs twice in a
+                    // week is a decision the app has no business refusing.
+                    .opacity(isDone ? 0.45 : 1)
+            }
+
+            Image(systemName: isDone ? "eye" : "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .frame(width: 22, alignment: .trailing)
         }
         .padding(.vertical, 4)
+        // Primary underneath, so the grey lines are grey: inside a button they
+        // otherwise come out in the button's tint, which reads as orange.
+        .foregroundStyle(Color.primary)
     }
 }
 
@@ -361,6 +437,7 @@ struct WorkoutHistoryView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                .foregroundStyle(Color.primary)
             }
         }
         .onDelete { offsets in

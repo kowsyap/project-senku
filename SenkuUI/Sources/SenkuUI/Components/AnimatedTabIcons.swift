@@ -7,7 +7,7 @@ import SwiftUI
 /// timer — and every one of them stands still on a tab you are not on, and
 /// when Reduce Motion is on. Most are the tab's own SF Symbol, moved or cut
 /// apart in code, so they keep the symbol's size, weight and tint; the curl
-/// and the aura are drawn frames.
+/// is drawn frames.
 struct TabIcon: View {
     let tab: RootView.Tab
     /// Selected: the one the loops play for.
@@ -63,15 +63,7 @@ struct TabIcon: View {
             .resizable()
             .scaledToFit()
             .frame(height: 21)
-            // Before the aura, so he moves and it holds still.
             .modifier(PoweringUp(isActive: isActive))
-            // An aura flickering behind him, wider than his slot.
-            .background {
-                AuraIcon(isActive: isActive)
-                    .frame(width: 38, height: 38)
-                    .offset(y: -2)
-                    .allowsHitTesting(false)
-            }
     }
 }
 
@@ -265,35 +257,9 @@ private struct SplashScene: View {
     }
 }
 
-/// The aura behind Goku on the Me tab: nine frames of a flickering ki field,
-/// played on a loop while the tab is selected. Nothing at all when it is not,
-/// or when Reduce Motion is on — he is only powered up while you are there.
-struct AuraIcon: View {
-    let isActive: Bool
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    static let frameCount = 9
-    static let frameDuration = 0.08
-
-    var body: some View {
-        if isActive && !reduceMotion {
-            TimelineView(.animation(minimumInterval: Self.frameDuration)) { context in
-                let tick = Int(context.date.timeIntervalSinceReferenceDate / Self.frameDuration)
-
-                Image("goku.aura.\(tick % Self.frameCount + 1)", bundle: .module)
-                    .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-            }
-            .transition(.opacity)
-        }
-    }
-}
-
 /// Goku charging: a slow float — up about a point and back every 1.6 seconds
 /// — with a faint, fast tremble on top. Offsets only, so the slot does not
-/// move and the aura behind him holds still.
+/// move.
 struct PoweringUp: ViewModifier {
     let isActive: Bool
 

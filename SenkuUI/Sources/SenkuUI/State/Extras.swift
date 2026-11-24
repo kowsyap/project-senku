@@ -33,8 +33,8 @@ public enum Extra: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .dues: "Bills and deadlines, with reminders"
         case .watchlist: "Shows and films to keep track of"
-        case .expenses: "Spends by month, with a dashboard"
-        case .income: "What came in, by month and source"
+        case .expenses: "Tracks your spending"
+        case .income: "Tracks what you earn"
         }
     }
 }

@@ -92,4 +92,23 @@ extension WorkoutEntry {
 
         return top
     }
+
+    /// The weight that was too heavy, if it was: the other half of the range.
+    ///
+    /// Reps Max says when to go up; Reps Min says when you have gone too far.
+    /// Too heavy means most sets at the heaviest weight used fell short of the
+    /// bottom of the range — more than half, so one tired last set does not
+    /// send you back down. 10, 7, 6 on 3 × 8–12 is too heavy; 9, 8, 7 is not.
+    ///
+    /// Holds and bodyweight are left out: there is no lighter than nothing.
+    public func earnedStepDown(for target: RepTarget) -> Double? {
+        let counted = sets.filter { !$0.isTimed }
+        guard let top = counted.map(\.weightKG).max(), top > 0 else { return nil }
+
+        let atTop = counted.filter { abs($0.weightKG - top) < 0.01 }
+        let short = atTop.filter { $0.reps < target.reps }.count
+        guard short * 2 > atTop.count else { return nil }
+
+        return top
+    }
 }

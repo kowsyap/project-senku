@@ -163,10 +163,10 @@ public enum SplitTemplate: String, CaseIterable, Identifiable, Sendable {
 
     public var detail: String {
         switch self {
-        case .pushPullLegs: "Three days. The common one, and it scales to six."
-        case .upperLower: "Two days. Everything twice a week if you run it twice."
-        case .arnold: "Three days, pairing muscles that work together."
-        case .bodyPart: "Six days, one group each. The most volume per group."
+        case .pushPullLegs: "Partner muscles train together, then get enough rest to recover."
+        case .upperLower: "Every muscle twice a week in just four sessions."
+        case .arnold: "Superset chest with back, and give arms their own day."
+        case .bodyPart: "Maximum volume per muscle, once a week."
         }
     }
 

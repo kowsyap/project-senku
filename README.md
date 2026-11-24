@@ -91,7 +91,7 @@ cannot explain where a number came from, it does not show it.**
 - **Bring your own programme** — a plan in Excel, PDF, Word, a photo or text
   becomes a file Senku imports: every exercise matched to the catalogue, sets
   and rep ranges kept, anything unknown added as your own. Or have an AI make
-  you a plan from a few questions. *Import a Plan* on the Week page hands out a
+  you a plan from a few questions. *Plan Builder* on the Week page hands out a
   prompt for each, to paste into any AI chat, and links
   [the skill](https://github.com/kowsyap/senku-plan-skill) for AIs that take
   skills, started with `/senku-plan`. It shows the week the file makes, laid
@@ -189,10 +189,10 @@ delts says so.
 
 <br clear="right">
 
-<img src="docs/screenshots/import.png" width="260" align="right" alt="Import a Plan">
+<img src="docs/screenshots/import.png" width="260" align="right" alt="Plan Builder">
 
 **Or bring the week you already have.** A programme from a coach or a
-spreadsheet goes through *Import a Plan*: copy the prompt into any AI chat with
+spreadsheet goes through *Plan Builder*: copy the prompt into any AI chat with
 the plan attached, or give your AI the skill and type `/senku-plan`. It matches
 every exercise to the catalogue, asks when a name could mean two, and hands back
 a file. Importing shows that week first — every day, its muscles and coverage,

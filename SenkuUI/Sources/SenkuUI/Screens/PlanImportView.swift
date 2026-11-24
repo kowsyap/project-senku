@@ -22,6 +22,8 @@ struct PlanImportView: View {
     @State private var copied = false
     @State private var imported: String?
     @State private var converter: Converter = .make
+    @AppStorage("senku.planImport.chat.v1", store: SenkuStorage.shared)
+    private var chat: PlanConverter.Chat = .claude
     @Environment(\.openURL) private var openURL
 
     enum Converter: String, CaseIterable, Identifiable {
@@ -48,13 +50,12 @@ struct PlanImportView: View {
         var steps: [String] {
             switch self {
             case .make: [
-                "Copy the prompt, or share it as a file.",
-                "Paste it into an AI chat and answer its questions.",
+                "Ask Claude, ChatGPT or Gemini, or copy the prompt into any AI chat.",
+                "Answer its questions.",
                 "Import the .json it gives you.",
             ]
             case .convert: [
-                "Copy the prompt, or share it as a file.",
-                "Paste it into an AI chat.",
+                "Ask Claude, ChatGPT or Gemini, or copy the prompt into any AI chat.",
                 "Attach your plan: PDF, Excel, Word, a photo or text.",
                 "Import the .json it gives you.",
             ]
@@ -83,7 +84,7 @@ struct PlanImportView: View {
         }
         // Clear of the floating tab bar, like every other page under it.
         .senkuBottomBarInset()
-        .navigationTitle("Import a Plan")
+        .navigationTitle("Plan Builder")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -120,17 +121,6 @@ struct PlanImportView: View {
         } message: {
             Text(imported ?? "")
         }
-    }
-
-    /// Icon and word drawn side by side by hand: inside a list row, a
-    /// prominent button's `Label` was showing the word without the icon.
-    private func buttonLabel(_ title: String, symbol: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: symbol)
-            Text(title)
-        }
-        .font(.body.weight(.semibold))
-        .frame(maxWidth: .infinity)
     }
 
     /// The two ways to make a file, as one card: the prompt for any AI chat,
@@ -185,23 +175,107 @@ struct PlanImportView: View {
         }
     }
 
-    @ViewBuilder
+    /// Pick a chat, then ask it — or copy or share the whole prompt for any
+    /// other. Drawn as one panel of rounded rectangles: the chats on the
+    /// left, the actions on the right.
     private var promptActions: some View {
-        HStack(spacing: 10) {
-            Button {
-                copyPrompt()
-            } label: {
-                buttonLabel(copied ? "Copied" : "Copy", symbol: copied ? "checkmark" : "doc.on.doc")
-            }
-            .buttonStyle(.borderedProminent)
-
-            if let files {
-                ShareLink(item: converter == .make ? files.make : files.convert) {
-                    buttonLabel("Share", symbol: "square.and.arrow.up")
+        VStack(alignment: .trailing, spacing: 10) {
+            HStack(spacing: 4) {
+                ForEach(PlanConverter.Chat.allCases) { option in
+                    Button {
+                        withAnimation(.snappy) { chat = option }
+                    } label: {
+                        // Marks only: the Ask button below names the chosen one.
+                        Image(option.mark, bundle: .module)
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .padding(.horizontal, 12)
+                            .frame(height: 38)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(chat == option ? Color.primary : .clear)
+                            )
+                            .foregroundStyle(chat == option ? AnyShapeStyle(.background) : AnyShapeStyle(.secondary))
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(option.name)
+                    .accessibilityAddTraits(chat == option ? .isSelected : [])
                 }
-                .buttonStyle(.bordered)
             }
+            .padding(4)
+            .background(roundedBox(radius: 14))
+            .fixedSize()
+            .frame(maxWidth: .infinity, alignment: .trailing)
+
+            HStack(spacing: 8) {
+                Button(action: copyPrompt) {
+                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                        .font(.body.weight(.semibold))
+                        .frame(width: 48, height: 48)
+                        .background(roundedBox(radius: 14))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(copied ? "Copied" : "Copy prompt")
+
+                if let files {
+                    ShareLink(item: converter == .make ? files.make : files.convert) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.body.weight(.semibold))
+                            .frame(width: 48, height: 48)
+                            .background(roundedBox(radius: 14))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Share prompt")
+                }
+
+                Spacer(minLength: 0)
+
+                Button(action: ask) {
+                    HStack(spacing: 10) {
+                        Text("Ask \(chat.name)")
+                            .font(.body.weight(.semibold))
+                        Image(systemName: "arrow.up.right")
+                            .font(.footnote.weight(.bold))
+                            .frame(width: 30, height: 30)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(RootView.Tab.workout.tint)
+                            )
+                    }
+                    .padding(.leading, 16)
+                    .padding(.trailing, 9)
+                    .frame(minHeight: 48)
+                    .foregroundStyle(.background)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color.primary)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            .foregroundStyle(.primary)
         }
+    }
+
+    /// A rounded rectangle with a hairline border, the panel's one shape.
+    private func roundedBox(radius: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: radius, style: .continuous)
+            .strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1)
+    }
+
+    /// Opens the chat with the short prompt typed in. Copied too, since not
+    /// every chat keeps a prompt given in a link — then it is one paste away.
+    private func ask() {
+        let kind: PlanConverter.Kind = converter == .make ? .make : .convert
+        let text = PlanConverter.linkPrompt(kind, own: library.custom, aboutMe: kind == .make ? aboutMe : nil)
+        #if os(iOS)
+        UIPasteboard.general.string = text
+        #endif
+        Feedback.control()
+        if let url = chat.url(for: text) { openURL(url) }
     }
 
     /// What the profile already says, for the make prompt.
@@ -213,9 +287,28 @@ struct PlanImportView: View {
         Button {
             openURL(PlanConverter.skillPage)
         } label: {
-            buttonLabel("Open skill page", symbol: "arrow.up.right.square")
+            HStack(spacing: 10) {
+                Text("Open skill page")
+                    .font(.body.weight(.semibold))
+                Image(systemName: "arrow.up.right")
+                    .font(.footnote.weight(.bold))
+                    .frame(width: 30, height: 30)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(RootView.Tab.workout.tint)
+                    )
+            }
+            .padding(.leading, 16)
+            .padding(.trailing, 9)
+            .frame(minHeight: 48)
+            .foregroundStyle(.background)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.primary)
+            )
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     private func copyPrompt() {

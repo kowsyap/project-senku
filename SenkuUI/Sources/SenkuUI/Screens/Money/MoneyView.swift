@@ -107,7 +107,7 @@ struct MoneyView: View {
             VStack(spacing: Senku.Metrics.stackSpacing) {
                 if store.entries.isEmpty {
                     ContentUnavailableView {
-                        Label("Nothing yet", systemImage: kind == .expenses ? "creditcard" : "banknote")
+                        Label("Nothing yet", systemImage: kind == .expenses ? "creditcard" : "dollarsign.bank.building")
                     } actions: {
                         Button("Add \(kind == .expenses ? "a spend" : "income")") { editing = Editing(entry: nil) }
                             .buttonStyle(.borderedProminent)
@@ -695,7 +695,7 @@ struct MoneyView: View {
     private func row(_ entry: MoneyEntry) -> some View {
         Button { editing = Editing(entry: entry) } label: {
             HStack(spacing: 12) {
-                Image(systemName: kind == .expenses ? MoneyStyle.symbol(for: entry.category) : "banknote")
+                Image(systemName: kind == .expenses ? MoneyStyle.symbol(for: entry.category) : "dollarsign.bank.building")
                     .foregroundStyle(.secondary)
                     .frame(width: 22)
                 VStack(alignment: .leading, spacing: 2) {

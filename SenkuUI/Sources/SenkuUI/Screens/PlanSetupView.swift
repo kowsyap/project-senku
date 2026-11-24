@@ -16,6 +16,7 @@ public struct PlanSetupView: View {
     @State private var isAddingDay = false
     @State private var deleting: SplitDay?
     @State private var isSwitching = false
+    @State private var isBuilding = false
     @State private var switchingTo: SplitTemplate?
 
     public init(store: TrainingPlanStore, library: ExerciseLibrary) {
@@ -137,7 +138,7 @@ public struct PlanSetupView: View {
         NavigationLink {
             PlanImportView(store: store, library: library)
         } label: {
-            Label("Import a plan", systemImage: "square.and.arrow.down")
+            Label("Plan Builder", systemImage: "wand.and.sparkles")
         }
     }
 
@@ -149,22 +150,20 @@ public struct PlanSetupView: View {
                     onPick(template)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
+                        // Colours, not hierarchical styles: inside a button
+                        // those take the button's tint, and the line went orange.
                         Text(template.name)
                             .font(.headline)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(Color.primary)
                         Text(template.detail)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
-                        groupRow(template.days.flatMap(\.groups))
-                            .padding(.top, 2)
+                            .foregroundStyle(Color.secondary)
                     }
                     .padding(.vertical, 4)
                 }
             }
         } header: {
             Text("Start from a shape")
-        } footer: {
-            Text("These set the days and the muscles. You pick the exercises.")
         }
     }
 
@@ -192,12 +191,18 @@ public struct PlanSetupView: View {
                 Text("Days")
             }
 
+            // Stated, not scolded: leaving legs out may be a choice. One line,
+            // laid out like a day so its box lines up with theirs.
             if !store.plan.untrainedGroups.isEmpty {
                 Section {
-                    groupRow(store.plan.untrainedGroups)
-                } header: {
-                    // Stated, not scolded: leaving legs out may be a choice.
-                    Text("Not in your week")
+                    HStack(spacing: 10) {
+                        Text("Not in your week")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer(minLength: 8)
+                        groupBox(store.plan.untrainedGroups)
+                        countColumn { Color.clear.frame(height: 1) }
+                    }
                 }
             }
 
@@ -207,26 +212,56 @@ public struct PlanSetupView: View {
 
             PRAnimationSection()
 
+            // Side by side: both are ways to replace the week wholesale.
             Section {
-                importRow
-                Button {
-                    isSwitching = true
-                } label: {
-                    Label("Change split", systemImage: "arrow.triangle.2.circlepath")
+                HStack(spacing: 10) {
+                    wideButton("Change split", symbol: "arrow.triangle.2.circlepath") { isSwitching = true }
+                    wideButton("Plan Builder", symbol: "wand.and.sparkles") { isBuilding = true }
                 }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
             }
         }
+        .navigationDestination(isPresented: $isBuilding) {
+            PlanImportView(store: store, library: library)
+        }
+    }
+
+    /// A button filling half a row, as a rounded rectangle.
+    private func wideButton(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: symbol)
+                    .font(.title3)
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .frame(maxWidth: .infinity, minHeight: 64)
+            .foregroundStyle(RootView.Tab.workout.tint)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.secondary.opacity(0.12))
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(title)
     }
 
     /// The sets and reps every exercise aims for, unless it has its own on a
     /// day. Hit them at one weight and the workout offers the next weight up.
     private var targetSection: some View {
         let target = store.plan.target
+        // Read afresh on every write, not from `target` above. Changing Reps
+        // Min writes twice — the bottom, then a top raised to match — and the
+        // second write built from the captured target put the old bottom
+        // back, so Reps Min never moved.
         func set(sets: Int? = nil, reps: Int? = nil, maxReps: Int? = nil) {
+            let now = store.plan.target
             store.setTarget(RepTarget(
-                sets: sets ?? target.sets,
-                reps: reps ?? target.reps,
-                maxReps: maxReps ?? target.topReps
+                sets: sets ?? now.sets,
+                reps: reps ?? now.reps,
+                maxReps: maxReps ?? now.topReps
             ))
         }
         return Group {
@@ -239,35 +274,51 @@ public struct PlanSetupView: View {
         }
     }
 
+    /// Name and coverage on the left; on the right, centred on the whole
+    /// row, its muscles in a bordered box and then the count in a fixed
+    /// two-digit column, so every day's box ends at the same place.
     private func dayRow(_ day: SplitDay) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
+        HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(day.name.isEmpty ? "Untitled day" : day.name)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                Spacer()
-                Text(day.isEmpty ? "No exercises" : "\(day.exerciseIDs.count)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                if !day.isEmpty {
+                    Text(coverageSummary(for: day))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
+            .layoutPriority(1)
 
-            groupRow(day.groups)
-
-            if !day.isEmpty {
-                Text(coverageSummary(for: day))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            if !day.groups.isEmpty {
+                groupBox(day.groups)
+            }
+            countColumn {
+                Text("\(day.exerciseIDs.count)")
+                    .accessibilityLabel(day.isEmpty ? "No exercises" : "\(day.exerciseIDs.count) exercises")
             }
         }
         .padding(.vertical, 2)
+        // Primary underneath, so the grey lines are grey: inside a button they
+        // otherwise come out in the button's tint, which reads as orange.
+        .foregroundStyle(Color.primary)
     }
 
-    private func groupRow(_ groups: [WorkoutGroup]) -> some View {
-        HStack(spacing: 6) {
-            ForEach(Array(Set(groups)).sorted(by: { $0.rawValue < $1.rawValue })) { group in
-                GroupGlyph(group: group, size: 22)
-            }
-        }
+    private func groupBox(_ groups: [WorkoutGroup]) -> some View {
+        MuscleGroupBox(groups: groups)
+    }
+
+    /// The right-hand column the counts sit in, kept even when empty so the
+    /// boxes beside it line up.
+    private func countColumn<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .font(.subheadline)
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .frame(width: 22, alignment: .trailing)
     }
 
     /// "Back 71% · Biceps 90%" — the day's own report card.

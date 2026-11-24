@@ -190,12 +190,20 @@ struct PRAnimationSection: View {
 
     var body: some View {
         Section {
-            Picker("Animation", selection: $chosen) {
-                ForEach(PRAnimation.allCases) { animation in
-                    Text(animation.title).tag(animation)
+            HStack(spacing: 12) {
+                Picker("Animation", selection: $chosen) {
+                    ForEach(PRAnimation.allCases) { animation in
+                        Text(animation.title).tag(animation)
+                    }
                 }
+                // Beside the choice it plays, rather than a row of its own.
+                Button { previewing = chosen } label: {
+                    Image(systemName: "play.circle.fill")
+                        .font(.title3)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Preview")
             }
-            Button("Preview") { previewing = chosen }
         } header: {
             Text("New PR")
         }
